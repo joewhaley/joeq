@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -129,6 +130,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
         if (!jq.boot_types.contains(type)) {
             System.err.println("--> class "+type+" is not in the set of boot types!");
+            return 0;
         }
         int addr, size;
         if (type.isArrayType()) {
@@ -156,7 +158,8 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e == null) {
-            jq.UNREACHABLE(o.getClass()+" "+jq.hex(System.identityHashCode(o)));
+	    System.err.println("Unknown object of type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" value: "+o);
+	    throw new UnknownObjectException(o);
         }
         Class objType = o.getClass();
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
@@ -170,52 +173,62 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
     }
     
     public void addStaticFieldReloc(jq_StaticField f) {
-        if (TRACE) out.println("Initializing static field "+f);
         Object val = obj_trav.getStaticFieldValue(f);
         jq_Type ftype = f.getType();
         if (ftype.isPrimitiveType()) {
             if (ftype == jq_Primitive.INT) {
                 // some "int" fields actually refer to addresses
                 if (f.isCodeAddressType()) {
+                    if (TRACE) out.println("Adding code reloc for "+f+": "+jq.hex8(f.getAddress())+" "+((Integer)val).intValue());
                     addCodeReloc(f.getAddress(), ((Integer)val).intValue());
                 } else if (f.isHeapAddressType()) {
+                    if (TRACE) out.println("Adding data reloc for "+f+": "+jq.hex8(f.getAddress())+" "+((Integer)val).intValue());
                     addDataReloc(f.getAddress(), ((Integer)val).intValue());
                 }
             }
         } else {
             if (val != null) {
                 int addr = Unsafe.addressOf(val);
+                if (TRACE) out.println("Adding data reloc for "+f+": "+jq.hex8(f.getAddress())+" "+jq.hex8(addr));
                 addDataReloc(f.getAddress(), addr);
             }
         }
     }
     
     public void initStaticField(jq_StaticField f) {
-        if (TRACE) out.println("Initializing static field "+f);
         Object val = obj_trav.getStaticFieldValue(f);
         jq_Class k = f.getDeclaringClass();
         jq_Type ftype = f.getType();
         if (ftype.isPrimitiveType()) {
-            if (ftype == jq_Primitive.INT)
-                k.setStaticData(f, (val==null)?0:((Integer)val).intValue());
-            else if (ftype == jq_Primitive.FLOAT)
-                k.setStaticData(f, (val==null)?0F:((Float)val).floatValue());
-            else if (ftype == jq_Primitive.LONG)
-                k.setStaticData(f, (val==null)?0L:((Long)val).longValue());
-            else if (ftype == jq_Primitive.DOUBLE)
-                k.setStaticData(f, (val==null)?0.:((Double)val).doubleValue());
-            else if (ftype == jq_Primitive.BOOLEAN)
-                k.setStaticData(f, (val==null)?0:((Boolean)val).booleanValue()?1:0);
-            else if (ftype == jq_Primitive.BYTE)
-                k.setStaticData(f, (val==null)?0:((Byte)val).byteValue());
-            else if (ftype == jq_Primitive.SHORT)
-                k.setStaticData(f, (val==null)?0:((Short)val).shortValue());
-            else if (ftype == jq_Primitive.CHAR)
-                k.setStaticData(f, (val==null)?0:((Character)val).charValue());
-            else
+            if (ftype == jq_Primitive.INT) {
+                int v = (val==null)?0:((Integer)val).intValue();
+                k.setStaticData(f, v);
+            } else if (ftype == jq_Primitive.FLOAT) {
+                float v = (val==null)?0F:((Float)val).floatValue();
+                k.setStaticData(f, v);
+            } else if (ftype == jq_Primitive.LONG) {
+                long v = (val==null)?0L:((Long)val).longValue();
+                k.setStaticData(f, v);
+            } else if (ftype == jq_Primitive.DOUBLE) {
+                double v = (val==null)?0.:((Double)val).doubleValue();
+                k.setStaticData(f, v);
+            } else if (ftype == jq_Primitive.BOOLEAN) {
+                int v = (val==null)?0:((Boolean)val).booleanValue()?1:0;
+                k.setStaticData(f, v);
+            } else if (ftype == jq_Primitive.BYTE) {
+                byte v = (val==null)?0:((Byte)val).byteValue();
+                k.setStaticData(f, v);
+            } else if (ftype == jq_Primitive.SHORT) {
+                short v = (val==null)?0:((Short)val).shortValue();
+                k.setStaticData(f, v);
+            } else if (ftype == jq_Primitive.CHAR) {
+                char v = (val==null)?0:((Character)val).charValue();
+                k.setStaticData(f, v);
+            } else
                 jq.UNREACHABLE();
         } else {
             int addr = Unsafe.addressOf(val);
+            if (TRACE) out.println("Initializing static field "+f+" to "+jq.hex8(addr));
             k.setStaticData(f, addr);
         }
     }
@@ -632,24 +645,29 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
     }
 
     public int addVTableRelocs(List list) {
-        jq_StaticField[] fs = SystemInterface._class.getDeclaredStaticFields();
         int total = 0;
         Iterator i = jq.boot_types.iterator();
         while (i.hasNext()) {
             jq_Type t = (jq_Type)i.next();
             if (t.isReferenceType()) {
                 if (t == Unsafe._class) continue;
-                if (TRACE) System.out.println("Adding vtable relocs for: "+t);
-                int[] vtable = (int[])((jq_Reference)t).getVTable();
-                int/*HeapAddress*/ addr = getAddressOf(vtable);
-                jq.assert(vtable[0] != 0, t.toString());
-                Heap2HeapReference r1 = new Heap2HeapReference(addr, vtable[0]);
-                list.add(r1);
-                for (int j=1; j<vtable.length; ++j) {
-                    Heap2CodeReference r2 = new Heap2CodeReference(addr+(j*4), vtable[j]);
-                    list.add(r2);
-                }
-                total += vtable.length;
+		try {
+		    if (TRACE) System.out.println("Adding vtable relocs for: "+t);
+		    int[] vtable = (int[])((jq_Reference)t).getVTable();
+		    int/*HeapAddress*/ addr = getAddressOf(vtable);
+		    jq.assert(vtable[0] != 0, t.toString());
+		    Heap2HeapReference r1 = new Heap2HeapReference(addr, vtable[0]);
+		    list.add(r1);
+		    for (int j=1; j<vtable.length; ++j) {
+			Heap2CodeReference r2 = new Heap2CodeReference(addr+(j*4), vtable[j]);
+			list.add(r2);
+		    }
+		    total += vtable.length;
+		} catch (UnknownObjectException x) {
+		    x.appendMessage("vtable for "+t);
+		    x.setObject(null);
+		    throw x;
+		}
             }
         }
         return total;
@@ -704,7 +722,14 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         out.flush();
         
         // write data section
-        dumpHeap(out);
+	try {
+	    dumpHeap(out);
+	} catch (UnknownObjectException x) {
+	    Object u = x.getObject();
+	    HashSet visited = new HashSet();
+	    findReferencePath(u, x, visited);
+	    throw x;
+	}
         
         // write data relocs
         if (ndatareloc > 65535) {
@@ -738,6 +763,85 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         
         out.flush();
     }
+
+    private jq_StaticField searchStaticVariables(Object p) {
+	Iterator i = PrimordialClassLoader.loader.getAllTypes().iterator();
+	while (i.hasNext()) {
+	    Object o = i.next();
+	    if (!(o instanceof jq_Class)) continue;
+	    jq_Class k = (jq_Class)o;
+	    if (!k.isLoaded()) continue;
+	    jq_StaticField[] fs = k.getDeclaredStaticFields();
+	    for (int j=0; j<fs.length; ++j) {	
+		jq_StaticField f = fs[j];
+		Object val = obj_trav.getStaticFieldValue(f);
+		if (val == p) return f;
+	    }
+	}
+	return null;
+    }
+
+    private boolean findReferencePath(Object p, UnknownObjectException x, HashSet visited) {
+	jq_StaticField sf = searchStaticVariables(p);
+	if (sf != null) {
+	    x.appendMessage(sf.getDeclaringClass()+"."+sf.getName());
+	    return true;
+	}
+        Iterator i = entries.iterator();
+        int currentAddr=0;
+        int j=0;
+	String possible = ".<unknown>";
+        while (i.hasNext()) {
+            Entry e = (Entry)i.next();
+            Object o = e.getObject();
+	    IdentityHashCodeWrapper w = IdentityHashCodeWrapper.create(o);
+	    if (visited.contains(w)) continue;
+            Class objType = o.getClass();
+            jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
+            if (jqType.isArrayType()) {
+                jq_Type elemType = ((jq_Array)jqType).getElementType();
+                if (elemType.isReferenceType()) {
+                    int length = Array.getLength(o);
+                    Object[] v = (Object[])o;
+                    for (int k=0; k<length; ++k) {
+                        Object o2 = v[k];
+			if (o2 == p) {
+			    System.err.println("Possible path: ["+k+"]");
+			    visited.add(w);
+			    if (findReferencePath(o, x, visited)) {
+				x.appendMessage("["+k+"]");
+				return true;
+			    } else {
+				System.err.println("Backtracking ["+k+"]");
+			    }
+			}
+                    }
+                }
+            } else {
+                jq.assert(jqType.isClassType());
+                jq_Class clazz = (jq_Class)jqType;
+                jq_InstanceField[] fields = clazz.getInstanceFields();
+                for (int k=0; k<fields.length; ++k) {
+                    jq_InstanceField f = fields[k];
+                    jq_Type ftype = f.getType();
+                    if (ftype.isReferenceType()) {
+                        Object val = obj_trav.getInstanceFieldValue(o, f);
+                        if (val == p) {
+			    System.err.println("Possible path: ."+f.getName());
+			    visited.add(w);
+			    if (findReferencePath(o, x, visited)) {
+				x.appendMessage("."+f.getName());
+				return true;
+			    } else {
+				System.err.println("Backtracking ."+f.getName());
+			    }
+                        }
+                    }
+                }
+            }
+	}
+	return false;
+    }
     
     private void dumpHeap(OutputStream out)
     throws IOException {
@@ -761,7 +865,13 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
                 jq.UNREACHABLE(jqType.toString());
                 return;
             }
-            int vtable = getAddressOf(jqType.getVTable());
+            int vtable;
+	    try { vtable = getAddressOf(jqType.getVTable()); }
+	    catch (UnknownObjectException x) {
+		x.appendMessage("vtable for "+jqType);	
+		x.setObject(null);
+		throw x;
+	    }
             if (jqType.isArrayType()) {
                 while (currentAddr+ARRAY_HEADER_SIZE < addr) {
                     write_char(out, (byte)0); ++currentAddr;
@@ -817,8 +927,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
                     } else jq.UNREACHABLE();
                 } else {
                     Object[] v = (Object[])o;
-                    for (int k=0; k<length; ++k)
-                        write_ulong(out, getAddressOf(v[k]));
+                    for (int k=0; k<length; ++k) {
+			write_ulong(out, getAddressOf(v[k]));
+		    }
                     currentAddr += length << 2;
                 }
             } else {
@@ -860,7 +971,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
                             write_ushort(out, (val==null)?(char)0:((Character)val).charValue());
                         else jq.UNREACHABLE();
                     } else {
-                        write_ulong(out, getAddressOf(val));
+			write_ulong(out, getAddressOf(val));
                     }
                     currentAddr += f.getSize();
                 }
@@ -959,4 +1070,17 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         }
     }
     
+}
+
+class UnknownObjectException extends RuntimeException {
+    Object o; String message;
+    UnknownObjectException(Object o) {
+	this.o = o;
+	this.message = "type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" ";
+    }
+    public void setObject(Object o) { this.o = o; }
+    public Object getObject() { return o; }
+    public void prependMessage(String s) { this.message = s + this.message; }
+    public void appendMessage(String s) { this.message += s; }
+    public String toString() { return this.message; }
 }
