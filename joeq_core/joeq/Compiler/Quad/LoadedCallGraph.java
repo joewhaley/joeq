@@ -36,6 +36,7 @@ import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 public class LoadedCallGraph extends CallGraph {
 
     public static void write(CallGraph cg, PrintWriter out) throws IOException {
+        Assert._assert(cg.getAllMethods().containsAll(cg.getRoots()));
         MultiMap classesToMethods = new GenericMultiMap();
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
@@ -208,6 +209,15 @@ public class LoadedCallGraph extends CallGraph {
      * @see Compil3r.Quad.CallGraph#getCallers(Clazz.jq_Method)
      */
     public Collection getCallers(jq_Method callee) {
+        MultiMap m1 = edges.invert();
+        Collection c1 = m1.getValues(callee);
+        return c1;
+    }
+    
+    /* (non-Javadoc)
+     * @see Compil3r.Quad.CallGraph#getCallerMethods(Clazz.jq_Method)
+     */
+    public Collection getCallerMethods(jq_Method callee) {
         MultiMap m1 = edges.invert();
         Collection c1 = m1.getValues(callee);
         Iterator i = c1.iterator();
