@@ -39,6 +39,7 @@ import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
 import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_NameAndDesc;
@@ -836,7 +837,7 @@ public class PA {
     ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth, String path) {
         ConcreteTypeNode h = ConcreteTypeNode.get(type, null, new Integer(++opn));
         if (depth > 0) {
-        	System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
+            System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
             if (type.isClassType()) {
                 jq_Class c = (jq_Class) type;
                 c.prepare();
@@ -3046,6 +3047,10 @@ public class PA {
         PathNumbering pn = null;
         if (CONTEXT_SENSITIVE)
             if(BETTER_CONTEXT_NUMBERING){
+                Set sccs = SCComponent.buildSCC(cg);
+                SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
+                
+                StringMethodSelector selector = new StringMethodSelector(graph);
                 pn = new GlobalPathNumbering(varPathSelector);
             } else {
                 pn = new SCCPathNumbering(varPathSelector);
@@ -3271,6 +3276,72 @@ public class PA {
                 return false;
             }
             return isImportant(scc1, o, num);
+        }
+    }
+    
+    public class StringMethodSelector implements Selector {
+        SCComponent select;
+        
+        StringMethodSelector(SCCTopSortedGraph sccGraph){
+            
+            this.select = getSelectSCC(sccGraph);
+        }
+        
+        private SCComponent getSelectSCC(SCCTopSortedGraph sccGraph) {
+            jq_Class string_buffer_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/StringBuffer;");
+            Assert._assert(string_buffer_class != null);
+            string_buffer_class.prepare();
+            jq_InstanceMethod string_buffer_append = null;
+            jq_InstanceMethod[] methods = string_buffer_class.getDeclaredInstanceMethods();
+            
+            for(int i = 0; i < methods.length; i++) {
+                jq_InstanceMethod m = methods[i];
+                if(m.getName().toString().equals("append")) {
+                    string_buffer_append = m;
+                    break;
+                }
+            }
+            Assert._assert(string_buffer_append != null);
+                        
+            // initialize the necessary SCC #
+            SCComponent string_buffer_append_scc = null;
+            for(SCComponent c = sccGraph.getFirst(); c.nextTopSort() != null; c = c.nextTopSort()) {
+                if(c.contains(string_buffer_append)) {
+                    string_buffer_append_scc = c;
+                    break;
+                }
+            }
+            Assert._assert(string_buffer_append_scc != null);
+            
+            return string_buffer_append_scc;
+        }
+        StringMethodSelector(SCComponent select){
+            this.select = select;
+        }
+        /**
+         * Return true if the edge scc1->scc2 is important.
+         */
+        public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
+            Assert._assert(false);
+            
+            return false;
+        }
+        
+        /**
+         * Return true if the edge a->b is important.
+         */
+        public boolean isImportant(Object a, Object b, BigInteger num) {
+            boolean result;
+            //if (num.bitLength() > maxBits) return false;
+            if (b instanceof ProgramLocation) {
+                result = true;
+            } else {
+                jq_Method m = (jq_Method) b;               
+                result = select.contains(m);
+            }
+            System.err.println("Returning isImportant=" + result);
+            
+            return result;         
         }
     }
     
