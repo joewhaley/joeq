@@ -123,6 +123,8 @@ public abstract class Bootstrapper implements ObjectLayout {
         Reflection.obj_trav = obj_trav;
         Unsafe.installRemapper(objmap = new BootImage(obj_trav, bca));
         
+        ClassLibInterface.i.initializeDefaults();
+        
         long starttime = System.currentTimeMillis();
         jq_Class c;
         c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName+";");

@@ -14,6 +14,7 @@ import Clazz.*;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Allocator.DefaultCodeAllocator;
+import Scheduler.jq_NativeThread;
 import jq;
 
 public final class Interface extends ClassLib.ClassLibInterface {
@@ -54,6 +55,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
     public java.util.Set bootstrapNullInstanceFields() {
         java.util.Set nullInstanceFields = new java.util.HashSet();
         return nullInstanceFields;
+    }
+    
+    public void initializeDefaults() {
+        jq_NativeThread.USE_INTERRUPTER_THREAD = true;
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {

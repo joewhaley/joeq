@@ -56,6 +56,9 @@ public final class Interface extends ClassLib.ClassLibInterface {
         return nullInstanceFields;
     }
     
+    public void initializeDefaults() {
+    }
+    
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
         return ClassLib.Common.java.lang.Class.createNewClass(f);
     }

@@ -228,7 +228,7 @@ public class jq_NativeThread implements x86Constants {
         jq.UNREACHABLE();
     }
 
-    public static /*final*/ boolean USE_INTERRUPTER_THREAD = false;
+    public static boolean USE_INTERRUPTER_THREAD = false;
 
     /** The entry point for new native threads.
      */

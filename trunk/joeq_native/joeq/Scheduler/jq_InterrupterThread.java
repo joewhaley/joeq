@@ -49,9 +49,10 @@ public class jq_InterrupterThread extends Thread {
 	for (;;) {
             SystemInterface.msleep(QUANTA);
             other_nt.suspend();
+            // The other thread may hold a system lock, so outputting any debug info here may lead to deadlock
             jq_Thread javaThread = other_nt.getCurrentJavaThread();
-            if (TRACE) SystemInterface.debugmsg("TICK! "+other_nt+" Java Thread = "+javaThread);
             if (javaThread.isThreadSwitchEnabled()) {
+                if (TRACE) SystemInterface.debugmsg("TICK! "+other_nt+" Java Thread = "+javaThread);
                 javaThread.disableThreadSwitch();
                 jq_RegisterState regs = javaThread.getRegisterState();
                 regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL |
@@ -68,7 +69,7 @@ public class jq_InterrupterThread extends Thread {
 		if (TRACE) SystemInterface.debugmsg(other_nt+" : simulating a call to threadSwitch");
             } else {
                 // the current Java thread does not have thread switching enabled.
-                if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" Thread switch not enabled");
+                //if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" Thread switch not enabled");
             }
             other_nt.resume();
 	}

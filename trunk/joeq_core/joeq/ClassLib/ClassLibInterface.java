@@ -139,6 +139,7 @@ public abstract class ClassLibInterface {
     public abstract java.util.Set bootstrapNullStaticFields() ;
     public abstract java.util.Set bootstrapNullInstanceFields() ;
     public abstract java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) ;
+    public abstract void initializeDefaults() ;
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
     
