@@ -215,7 +215,9 @@ public class BDDRelation extends Relation {
     }
     
     public String activeDomains() {
-        int[] a = relation.support().scanSetDomains();
+        BDD s = relation.support();
+        int[] a = s.scanSetDomains();
+        s.free();
         if (a == null) return "(none)";
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < a.length; ++i) {
