@@ -50,21 +50,36 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     }
     
     public jq_Method resolve(jq_Method m) {
-        jq_Method m2 = m.resolve();
-        if (m != m2) updateMemberReference(m2);
-        return m2;
+        try {
+            jq_Method m2 = m.resolve();
+            if (m != m2) updateMemberReference(m2);
+            return m2;
+        } catch (Error e) {
+            System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
+            throw e;
+        }
     }
     
     public jq_StaticField resolve(jq_StaticField m) {
-        jq_StaticField m2 = m.resolve();
-        if (m != m2) updateMemberReference(m2);
-        return m2;
+        try {
+            jq_StaticField m2 = m.resolve();
+            if (m != m2) updateMemberReference(m2);
+            return m2;
+        } catch (Error e) {
+            System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
+            throw e;
+        }
     }
     
     public jq_InstanceField resolve(jq_InstanceField m) {
-        jq_InstanceField m2 = m.resolve();
-        if (m != m2) updateMemberReference(m2);
-        return m2;
+        try {
+            jq_InstanceField m2 = m.resolve();
+            if (m != m2) updateMemberReference(m2);
+            return m2;
+        } catch (Error e) {
+            System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
+            throw e;
+        }
     }
     
     public void updateMemberReference(jq_Member m) {
