@@ -39,9 +39,13 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
 import Compil3r.Analysis.IPA.CSPA.ThreadRootMap;
 import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
+import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Quad.CallGraph;
+import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
+import Compil3r.Quad.Operator;
+import Compil3r.Quad.Quad;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
@@ -49,6 +53,7 @@ import Util.Collections.GenericMultiMap;
 import Util.Collections.IndexMap;
 import Util.Collections.MultiMap;
 import Util.Collections.SortedArraySet;
+import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.PathNumbering;
 import Util.Graphs.PathNumbering.Path;
 import Util.IO.ByteSequence;
@@ -77,13 +82,13 @@ public class CSPAResults {
     IndexMap heapobjIndexMap;
 
     /** BDD domain for context number of variable. */
-    BDDDomain V1c;
+    public BDDDomain V1c;
     /** BDD domain for variable number. */
-    BDDDomain V1o;
+    public BDDDomain V1o;
     /** BDD domain for context number of heap object. */
-    BDDDomain H1c;
+    public BDDDomain H1c;
     /** BDD domain for heap object number. */
-    BDDDomain H1o;
+    public BDDDomain H1o;
     
     /** Points-to BDD: V1c x V1o x H1c x H1o.
      * This contains the result of the points-to analysis.
@@ -91,21 +96,29 @@ public class CSPAResults {
      */
     BDD pointsTo;
 
-    BDD getAliasedLocations(Node variable) {
+    public TypedBDD getPointsToSet(int var) {
+        BDD context = V1c.set();
+        context.andWith(H1c.set());
+        BDD ci_pointsTo = pointsTo.exist(context);
+        BDD result = ci_pointsTo.restrict(V1o.ithVar(var));
+        ci_pointsTo.free();
+        return new TypedBDD(result, H1o);
+    }
+
+    public TypedBDD getAliasedLocations(int var) {
         BDD context = V1c.set();
         context.andWith(H1c.set());
         BDD ci_pointsTo = pointsTo.exist(context);
         context.free();
-        int i = variableIndexMap.get(variable);
-        BDD a = V1o.ithVar(i);
+        BDD a = V1o.ithVar(var);
         BDD heapObjs = ci_pointsTo.restrict(a);
         a.free();
-        BDD result = ci_pointsTo.relprod(heapObjs, H1o.set());
+        TypedBDD result = new TypedBDD(ci_pointsTo.relprod(heapObjs, H1o.set()), V1o);
         heapObjs.free();
         return result;
     }
     
-    BDD getAllHeapOfType(jq_Reference type) {
+    public TypedBDD getAllHeapOfType(jq_Reference type) {
         int j=0;
         BDD result = bdd.zero();
         for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ++j) {
@@ -114,7 +127,7 @@ public class CSPAResults {
             if (n != null && n.getDeclaredType() == type)
                 result.orWith(H1o.ithVar(j));
         }
-        return result;
+        return new TypedBDD(result, H1o);
         /*
         {
             int i = typeIndexMap.get(type);
@@ -130,10 +143,10 @@ public class CSPAResults {
      * It achieves this by merging all of the contexts together.  The
      * returned BDD is: V1o x H1o.
      */
-    public BDD getContextInsensitivePointsTo() {
+    public TypedBDD getContextInsensitivePointsTo() {
         BDD context = V1c.set();
         context.andWith(H1c.set());
-        return pointsTo.exist(context);
+        return new TypedBDD(pointsTo.exist(context), V1o, H1o);
     }
 
     /** Load call graph from the given file name.
@@ -170,18 +183,24 @@ public class CSPAResults {
     /** Load points-to results from the given file name prefix.
      */
     public void load(String fn) throws IOException {
-        DataInput di;
+        FileInputStream fis;
+        DataInputStream di;
         
-        di = new DataInputStream(new FileInputStream(fn+".config"));
+        di = new DataInputStream(fis = new FileInputStream(fn+".config"));
         readConfig(di);
+        di.close();
         
         this.pointsTo = bdd.load(fn+".bdd");
         
         di = new DataInputStream(new FileInputStream(fn+".vars"));
         variableIndexMap = readIndexMap("Variable", di);
+        di.close();
         
         di = new DataInputStream(new FileInputStream(fn+".heap"));
         heapobjIndexMap = readIndexMap("Heap", di);
+        di.close();
+        
+        initializeMethodMap();
     }
 
     private void readConfig(DataInput in) throws IOException {
@@ -236,16 +255,34 @@ public class CSPAResults {
     }
 
     public static void main(String[] args) throws IOException {
+        CSPAResults r = runAnalysis(args, null);
+        r.interactive();
+    }
+    
+    public static CSPAResults runAnalysis(String[] args, String addToClasspath) throws IOException {
+        // We use bytecode maps.
+        CodeCache.AlwaysMap = true;
         HostedVM.initialize();
         
-        int nodeCount = 1000000;
-        int cacheSize = 100000;
+        if (addToClasspath != null)
+            PrimordialClassLoader.loader.addToClasspath(addToClasspath);
+        
+        String prefix = "";
+        String sep = System.getProperty("file.separator");
+        if (args.length > 0) {
+            prefix = args[0];
+            if (!prefix.endsWith(sep))
+                prefix += sep;
+        }
+        
+        int nodeCount = 500000;
+        int cacheSize = 50000;
         BDDFactory bdd = BDDFactory.init(nodeCount, cacheSize);
         bdd.setMaxIncrease(nodeCount/4);
         CSPAResults r = new CSPAResults(bdd);
-        r.loadCallGraph("callgraph");
-        r.load("cspa");
-        r.interactive();
+        r.loadCallGraph(prefix+"callgraph");
+        r.load(prefix+"cspa");
+        return r;
     }
 
     public static String domainName(BDDDomain d) {
@@ -298,19 +335,54 @@ public class CSPAResults {
         
     };
     
+    public static final boolean USE_BC_LOCATION = false;
+    
     public static ProgramLocation getLoadLocation(jq_Class klass, int lineNum) {
-        return getProgramLocation(klass, lineNum, Bytecodes.LoadInstruction.class, 0);
+        if (USE_BC_LOCATION)
+            return getBCProgramLocation(klass, lineNum, Bytecodes.LoadInstruction.class, 0);
+        else {
+            ProgramLocation pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.ALoad.ALOAD_A.class, 0);
+            if (pl != null) return pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.ALoad.ALOAD_P.class, 0);
+            if (pl != null) return pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.Getfield.GETFIELD_A.class, 0);
+            if (pl != null) return pl;
+            return getQuadProgramLocation(klass, lineNum, Operator.Getfield.GETFIELD_P.class, 0);
+        }
     }
     
     public static ProgramLocation getAllocLocation(jq_Class klass, int lineNum) {
-        return getProgramLocation(klass, lineNum, Bytecodes.AllocationInstruction.class, 0);
+        if (USE_BC_LOCATION)
+            return getBCProgramLocation(klass, lineNum, Bytecodes.AllocationInstruction.class, 0);
+        else {
+            ProgramLocation pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.New.class, 0);
+            if (pl != null) return pl;
+            return getQuadProgramLocation(klass, lineNum, Operator.NewArray.class, 0);
+        }
+    }
+    
+    public static ProgramLocation getConstLocation(jq_Class klass, int lineNum) {
+        if (USE_BC_LOCATION) {
+            ProgramLocation pl = getBCProgramLocation(klass, lineNum, Bytecodes.LDC.class, 0);
+            if (pl != null) return pl;
+            return getBCProgramLocation(klass, lineNum, Bytecodes.LDC2_W.class, 0);
+        } else {
+            return getQuadProgramLocation(klass, lineNum, Operator.Move.class, 0);
+        }
     }
     
     public static ProgramLocation getInvokeLocation(jq_Class klass, int lineNum) {
-        return getProgramLocation(klass, lineNum, Bytecodes.InvokeInstruction.class, 0);
+        if (USE_BC_LOCATION)
+            return getBCProgramLocation(klass, lineNum, Bytecodes.InvokeInstruction.class, 0);
+        else {
+            return getQuadProgramLocation(klass, lineNum, Operator.Invoke.class, 0);
+        }
     }
     
-    public static ProgramLocation getProgramLocation(jq_Class klass, int lineNum, Class instructionType, int k) {
+    public static ProgramLocation getBCProgramLocation(jq_Class klass, int lineNum, Class instructionType, int k) {
+        klass.load();
         jq_Method m = klass.getMethodContainingLine((char) lineNum);
         if (m == null) return null;
         jq_LineNumberBC[] ln = m.getLineNumberTable();
@@ -340,13 +412,89 @@ public class CSPAResults {
         return null;
     }
     
+    public static ProgramLocation getQuadProgramLocation(jq_Class klass, int lineNum, Class instructionType, int k) {
+        klass.load();
+        jq_Method m = klass.getMethodContainingLine((char) lineNum);
+        if (m == null) return null;
+        jq_LineNumberBC[] ln = m.getLineNumberTable();
+        if (ln == null) return null;
+        int i = 0;
+        for ( ; i<ln.length; ++i) {
+            if (ln[i].getLineNum() == lineNum) break;
+        }
+        if (i == ln.length) return null;
+        int loIndex = ln[i].getStartPC();
+        int hiIndex = m.getBytecode().length;
+        if (i < ln.length-1) hiIndex = ln[i+1].getStartPC();
+        Map bc_map = CodeCache.getBCMap(m);
+        for (Iterator j = bc_map.entrySet().iterator(); j.hasNext(); ) {
+            Map.Entry e = (Map.Entry) j.next();
+            Quad q = (Quad) e.getKey();
+            if (!instructionType.isInstance(q.getOperator()))
+                continue;
+            int index = ((Integer) e.getValue()).intValue();
+            if (index >= loIndex && index < hiIndex)
+                return new QuadProgramLocation(m, q);
+        }
+        return null;
+    }
+    
+    public static ProgramLocation mapCall(ProgramLocation callSite) {
+        if (callSite instanceof ProgramLocation.QuadProgramLocation) {
+            jq_Method m = (jq_Method) callSite.getMethod();
+            Map map = CodeCache.getBCMap(m);
+            Quad q = ((ProgramLocation.QuadProgramLocation) callSite).getQuad();
+            if (q == null) {
+                Assert.UNREACHABLE("Error: cannot find call site "+callSite);
+            }
+            Integer i = (Integer) map.get(q);
+            if (i == null) {
+                Assert.UNREACHABLE("Error: no mapping for quad "+q);
+            }
+            int bcIndex = i.intValue();
+            callSite = new ProgramLocation.BCProgramLocation(m, bcIndex);
+        }
+        return callSite;
+    }
+    
     /** ProgramLocation is the location of the method invocation that you want the return value of. */
     public int getReturnValueIndex(ProgramLocation pl) {
-        return variableIndexMap.get(new ReturnValueNode(pl));
+        Collection c = methodToVariables.getValues(pl.getMethod());
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            Node o = (Node) i.next();
+            if (o instanceof ReturnValueNode) {
+                ReturnValueNode ctn = (ReturnValueNode) o;
+                ProgramLocation pl2 = ctn.getMethodCall();
+                Assert._assert(pl2.getMethod() == pl.getMethod());
+                Assert._assert(pl.getClass() == pl2.getClass());
+                if (pl2 != null && pl.equals(pl2)) {
+                    return variableIndexMap.get(o);
+                }
+            }
+        }
+        return -1;
     }
     
     public int getThrownExceptionIndex(ProgramLocation pl) {
-        return variableIndexMap.get(new ThrownExceptionNode(pl));
+        Collection c = methodToVariables.getValues(pl.getMethod());
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            Node o = (Node) i.next();
+            if (o instanceof ThrownExceptionNode) {
+                ThrownExceptionNode ctn = (ThrownExceptionNode) o;
+                ProgramLocation pl2 = ctn.getMethodCall();
+                Assert._assert(pl2.getMethod() == pl.getMethod());
+                Assert._assert(pl.getClass() == pl2.getClass());
+                if (pl2 != null && pl.equals(pl2)) {
+                    return variableIndexMap.get(o);
+                }
+            }
+        }
+        return -1;
+    }
+    
+    public int getInvokeParamIndex(ProgramLocation pl, int k) {
+        // todo!
+        return -1;
     }
     
     MultiMap methodToVariables;
@@ -355,7 +503,8 @@ public class CSPAResults {
         methodToVariables = new GenericMultiMap();
         for (Iterator i = variableIndexMap.iterator(); i.hasNext(); ) {
             Node o = (Node) i.next();
-            methodToVariables.add(o.getDefiningMethod(), o);
+            if (o != null)
+                methodToVariables.add(o.getDefiningMethod(), o);
         }
     }
     
@@ -366,7 +515,24 @@ public class CSPAResults {
             if (o instanceof FieldNode) {
                 FieldNode ctn = (FieldNode) o;
                 if (ctn.getLocations().contains(pl))
-                    return heapobjIndexMap.get(o);
+                    return variableIndexMap.get(o);
+            }
+        }
+        return -1;
+    }
+    
+    public int getHeapVariableIndex(ProgramLocation pl) {
+        Collection c = methodToVariables.getValues(pl.getMethod());
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            Node o = (Node) i.next();
+            if (o instanceof ConcreteTypeNode) {
+                ConcreteTypeNode ctn = (ConcreteTypeNode) o;
+                ProgramLocation pl2 = ctn.getLocation();
+                Assert._assert(pl2.getMethod() == pl.getMethod());
+                Assert._assert(pl.getClass() == pl2.getClass());
+                if (pl2 != null && pl.equals(pl2)) {
+                    return variableIndexMap.get(o);
+                }
             }
         }
         return -1;
@@ -379,12 +545,28 @@ public class CSPAResults {
             if (o instanceof ConcreteTypeNode) {
                 ConcreteTypeNode ctn = (ConcreteTypeNode) o;
                 ProgramLocation pl2 = ctn.getLocation();
-                if (pl2 != null && pl2.equals(pl)) return heapobjIndexMap.get(o);
+                Assert._assert(pl2.getMethod() == pl.getMethod());
+                Assert._assert(pl.getClass() == pl2.getClass());
+                if (pl2 != null && pl.equals(pl2)) {
+                    return heapobjIndexMap.get(o);
+                }
             }
         }
         return -1;
     }
     
+    public Node getVariableNode(int v) {
+        Node n = (Node) variableIndexMap.get(v);
+        return n;
+    }
+    
+    public ProgramLocation getHeapProgramLocation(int v) {
+        Node n = (Node) heapobjIndexMap.get(v);
+        if (n instanceof ConcreteTypeNode)
+            return ((ConcreteTypeNode) n).getLocation();
+        return null;
+    }
+
     public static jq_Class getClass(String classname) {
         jq_Class klass = (jq_Class) jq_Type.parseType(classname);
         return klass;
@@ -504,7 +686,7 @@ public class CSPAResults {
             return domainNames(dom);
         }
         
-        BDD getDomains() {
+        private BDD getDomains() {
             BDDFactory f = bdd.getFactory();
             BDD r = f.one();
             for (Iterator i=dom.iterator(); i.hasNext(); ) {
@@ -556,6 +738,30 @@ public class CSPAResults {
             }
             //sb.append(bdd.toStringWithDomains());
             return sb.toString();
+        }
+
+        public Iterator iterator() {
+            Assert._assert(dom.size() == 1);
+            final BDD t = this.bdd.id();
+            final BDDDomain d = (BDDDomain) this.dom.iterator().next();
+            return new UnmodifiableIterator() {
+
+                public boolean hasNext() {
+                    return !t.isZero();
+                }
+
+                public int nextInt() {
+                    int v = t.scanVar(d);
+                    if (v == -1)
+                        throw new NoSuchElementException();
+                    t.applyWith(d.ithVar(v), BDDFactory.diff);
+                    return v;
+                }
+
+                public Object next() {
+                    return new Integer(nextInt());
+                }
+            };
         }
     }
 
@@ -662,13 +868,12 @@ public class CSPAResults {
                     break;
                 } else if (command.equals("aliased")) {
                     int z = Integer.parseInt(st.nextToken());
-                    Node node = (Node) variableIndexMap.get(z);
-                    TypedBDD r = new TypedBDD(getAliasedLocations(node), V1o);
+                    TypedBDD r = getAliasedLocations(z);
                     results.add(r);
                 } else if (command.equals("heapType")) {
                     jq_Reference typeRef = (jq_Reference) jq_Type.parseType(st.nextToken());
                     if (typeRef != null) {
-                        TypedBDD r = new TypedBDD(getAllHeapOfType(typeRef), H1o);
+                        TypedBDD r = getAllHeapOfType(typeRef);
                         results.add(r);
                     }
                 } else if (command.equals("list")) {
