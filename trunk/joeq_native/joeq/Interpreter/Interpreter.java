@@ -30,7 +30,7 @@ public abstract class Interpreter {
     public Object invokeMethod(jq_Method m, State callee) throws Throwable {
         jq_Class k = m.getDeclaringClass();
         jq.assert(k.isClsInitialized());
-        jq.assert(!m.isNative() && !m.isAbstract());
+        jq.assert(m.getBytecode() != null);
         jq_Type[] paramTypes = m.getParamTypes();
         Object[] params = new Object[paramTypes.length];
         for (int i=paramTypes.length-1; i>=0; --i) {
