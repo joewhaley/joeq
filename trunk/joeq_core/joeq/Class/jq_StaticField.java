@@ -123,7 +123,8 @@ public final class jq_StaticField extends jq_Field {
     public final void sf_initialize(int[] static_data, int offset) {
         jq.Assert(state == STATE_PREPARED);
         state = STATE_SFINITIALIZED;
-        this.address = (HeapAddress)HeapAddress.addressOf(static_data).offset(offset);
+        if (!jq.DontCompile)
+            this.address = (HeapAddress)HeapAddress.addressOf(static_data).offset(offset);
     }
     public final HeapAddress getAddress() {
         chkState(STATE_SFINITIALIZED);
