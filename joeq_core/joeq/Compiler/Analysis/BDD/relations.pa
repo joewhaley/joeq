@@ -20,4 +20,4 @@ Iret ( invoke:I bdd=I0 , v:V bdd=V0 ) load
 Ithr ( invoke:I bdd=I0 , v:V bdd=V0 ) load
 mI ( method:M bdd=M0 , invoke:I bdd=I0 , name:N bdd=N0 ) load
 IE0 ( invoke:I , target:M bdd=M0 ) load
-IE ( invoke:I , target:M bdd=M0 ) save savetuples
+IE ( invoke:I , target:M bdd=M0 ) save

@@ -423,6 +423,10 @@ public abstract class Operator {
             for (int i=0; i<a.length; ++i) a[i] = plo.get(i);
             return new UnmodifiableList.RegisterOperand(a);
         }
+        public void accept(Quad q, QuadVisitor qv) {
+            qv.visitPhi(q);
+            super.accept(q, qv);
+        }
         public static class PHI extends Phi {
             public static final PHI INSTANCE = new PHI();
             private PHI() { }

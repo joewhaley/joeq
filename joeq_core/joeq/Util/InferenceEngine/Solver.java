@@ -27,7 +27,7 @@ import java.io.PrintStream;
  */
 public abstract class Solver {
     
-    boolean NOISY = true;
+    boolean NOISY = !System.getProperty("noisy", "yes").equals("no");
     boolean SPLIT_RULES = true;
     boolean REPORT_STATS = true;
     boolean TRACE = System.getProperty("tracesolve") != null;
@@ -102,11 +102,11 @@ public abstract class Solver {
             if (dis.NOISY) dis.out.println("done.");
         }
         
-        if (dis.NOISY) dis.out.println("Solving...");
+        dis.out.println("Solving...");
         time = System.currentTimeMillis();
         dis.solve();
         time = System.currentTimeMillis() - time;
-        if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
+        dis.out.println("done. ("+time+" ms)");
         
         dis.finish();
         
