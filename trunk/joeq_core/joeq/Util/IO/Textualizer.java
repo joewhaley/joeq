@@ -3,16 +3,15 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.IO;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
 import joeq.Util.Collections.IndexedMap;
@@ -34,7 +33,7 @@ public interface Textualizer {
     void writeEdge(String edgeName, Textualizable object) throws IOException;
     void writeReference(Textualizable object) throws IOException;
 
-    void writeBytes(String s) throws IOException;
+    void writeString(String s) throws IOException;
     
     StringTokenizer nextLine() throws IOException;
 
@@ -42,16 +41,16 @@ public interface Textualizer {
     boolean contains(Textualizable object);
     
     public static class Simple implements Textualizer {
-        protected DataInput in;
-        protected DataOutput out;
+        protected BufferedReader in;
+        protected BufferedWriter out;
         protected StringTokenizer st;
         protected String currentLine;
         
-        public Simple(DataInput in) {
+        public Simple(BufferedReader in) {
             this.in = in;
         }
         
-        public Simple(DataOutput out) {
+        public Simple(BufferedWriter out) {
             this.out = out;
         }
         
@@ -94,7 +93,7 @@ public interface Textualizer {
         
         public void writeTypeOf(Textualizable object) throws IOException {
             if (object != null) {
-                out.writeBytes(object.getClass().getName());
+                out.write(object.getClass().getName());
                 out.write(' ');
             }
         }
@@ -103,7 +102,7 @@ public interface Textualizer {
             if (object != null) {
                 object.write(this);
             } else {
-                out.writeBytes("null");
+                out.write("null");
             }
         }
         
@@ -115,8 +114,8 @@ public interface Textualizer {
             throw new InternalError();
         }
 
-        public void writeBytes(String s) throws IOException {
-            out.writeBytes(s);
+        public void writeString(String s) throws IOException {
+            out.write(s);
         }
 
         public int getIndex(Textualizable object) {
@@ -132,16 +131,16 @@ public interface Textualizer {
         protected IndexedMap map;
         protected java.util.Map deferredEdges;
         
-        public Map(DataInput in) {
+        public Map(BufferedReader in) {
             this(in, new IndexMap(""));
         }
         
-        public Map(DataInput in, IndexedMap map) {
+        public Map(BufferedReader in, IndexedMap map) {
             super(in);
             this.map = map;
         }
         
-        public Map(DataOutput out, IndexedMap map) {
+        public Map(BufferedWriter out, IndexedMap map) {
             super(out);
             this.map = map;
         }
@@ -202,14 +201,14 @@ public interface Textualizer {
                 writeObject(object);
             } else {
                 int id = map.get(object);
-                out.writeBytes(Integer.toString(id));
+                out.write(Integer.toString(id));
             }
         }
 
         public void writeEdge(String edgeName, Textualizable target) throws IOException {
-            out.writeByte(' ');
-            out.writeBytes(edgeName);
-            out.writeByte(' ');
+            out.write(' ');
+            out.write(edgeName);
+            out.write(' ');
             map.get(target);
             writeReference(target);
         }

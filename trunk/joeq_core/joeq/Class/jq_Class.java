@@ -2680,7 +2680,7 @@ uphere2:
         }
         public void write(Textualizer t) throws IOException {
             jq_Class.this.write(t);
-            t.writeBytes(" "+(int)cpindex);
+            t.writeString(" "+(int)cpindex);
         }
         public String getString() {
             load();

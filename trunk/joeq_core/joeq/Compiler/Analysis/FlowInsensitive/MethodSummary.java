@@ -17,12 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
-import java.io.DataOutput;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -133,7 +132,7 @@ public class MethodSummary {
             MethodSummary s = getSummary(cfg);
             //System.out.println(s.toString());
             try {
-                DataOutputStream dos = new DataOutputStream(System.out);
+                BufferedWriter dos = new BufferedWriter(new OutputStreamWriter(System.out));
                 s.dotGraph(dos);
             } catch (IOException x) {
                 x.printStackTrace();
@@ -1180,7 +1179,7 @@ public class MethodSummary {
         public String toString() { return "Param "+paramNum+" for "+m; }
         public void write(Textualizer t) throws IOException {
             m.write(t);
-            t.writeBytes(" "+paramNum);
+            t.writeString(" "+paramNum);
         }
         public void writeEdges(Textualizer t) throws IOException { }
         public void addEdge(String edgeName, Textualizable t) { }
@@ -2103,9 +2102,9 @@ public class MethodSummary {
                     for (Iterator j = c.iterator(); j.hasNext(); ) {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
-                        t.writeBytes(" succ ");
+                        t.writeString(" succ ");
                         t.writeObject(f);
-                        t.writeBytes(" ");
+                        t.writeString(" ");
                         t.writeReference(n);
                     }
                 }
@@ -2122,9 +2121,9 @@ public class MethodSummary {
                     for (Iterator j = c.iterator(); j.hasNext(); ) {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
-                        t.writeBytes(" pred ");
+                        t.writeString(" pred ");
                         t.writeObject(f);
-                        t.writeBytes(" ");
+                        t.writeString(" ");
                         t.writeReference(n);
                     }
                 }
@@ -2219,7 +2218,7 @@ public class MethodSummary {
 
         public void write(Textualizer t) throws IOException {
             dstType.write(t);
-            t.writeBytes(" ");
+            t.writeString(" ");
             q.write(t);
             super.write(t);
         }
@@ -2296,13 +2295,13 @@ public class MethodSummary {
         }
 
         public void write(Textualizer t) throws IOException {
-            if (type == null) t.writeBytes("null ");
+            if (type == null) t.writeString("null ");
             else {
                 type.write(t);
-                t.writeBytes(" ");
+                t.writeString(" ");
             }
-            if (opn == null) t.writeBytes("null ");
-            else t.writeBytes(opn.toString()+" ");
+            if (opn == null) t.writeString("null ");
+            else t.writeString(opn.toString()+" ");
             t.writeObject(q);
             super.write(t);
         }
@@ -2521,25 +2520,25 @@ public class MethodSummary {
         }
 
         public void write(Textualizer t) throws IOException {
-            if (object == null && q instanceof ProgramLocation) t.writeBytes("nullconstant");
+            if (object == null && q instanceof ProgramLocation) t.writeString("nullconstant");
             else if (key instanceof Pair) {
-                t.writeBytes("stringconstant ");
+                t.writeString("stringconstant ");
                 Pair p = (Pair)key;
                 ((jq_Class.StringConstant)p.left).write(t);
-                t.writeBytes(" ");
+                t.writeString(" ");
                 t.writeObject((jq_Method)p.right);
             } else {
-                t.writeBytes("object");
+                t.writeString("object");
                 List l = (List)key;
-                t.writeBytes(" " + l.size());
+                t.writeString(" " + l.size());
                 for (int i = 0; i < l.size(); i++) {
-                    t.writeBytes(" ");
+                    t.writeString(" ");
                     jq_Field f = ((jq_Field)l.get(i));
                     t.writeObject(f);
                 }
             }
 
-            t.writeBytes(" ");
+            t.writeString(" ");
             t.writeObject(q);
             super.write(t);
         }
@@ -2912,7 +2911,7 @@ public class MethodSummary {
          */
         public void write(Textualizer t) throws IOException {
             m.write(t);
-            t.writeBytes(" "+n);
+            t.writeString(" "+n);
             super.write(t);
         }
         public static ParamNode read(StringTokenizer st) {
@@ -3224,9 +3223,9 @@ public class MethodSummary {
          */
         public void write(Textualizer t) throws IOException {
             t.writeObject(f);
-            t.writeBytes(" "+locs.size());
+            t.writeString(" "+locs.size());
             for (Iterator i = locs.iterator(); i.hasNext(); ) {
-                t.writeBytes(" ");
+                t.writeString(" ");
                 ProgramLocation pl = (ProgramLocation) i.next();
                 pl.write(t);
             }
@@ -5055,17 +5054,17 @@ outer:
     }
 
     /** Dumps this method summary as a dot graph. */
-    public void dotGraph(DataOutput out) throws IOException {
-        out.writeBytes("digraph \""+this.method+"\" {\n");
+    public void dotGraph(BufferedWriter out) throws IOException {
+        out.write("digraph \""+this.method+"\" {\n");
         IndexMap m = new IndexMap("MethodCallMap");
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
-            out.writeBytes("n"+n.id+" [label=\""+n.toString_short()+"\"];\n");
+            out.write("n"+n.id+" [label=\""+n.toString_short()+"\"];\n");
         }
         for (Iterator i=getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
             int k = m.get(mc);
-            out.writeBytes("mc"+k+" [label=\""+mc+"\"];\n");
+            out.write("mc"+k+" [label=\""+mc+"\"];\n");
         }
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
@@ -5077,7 +5076,7 @@ outer:
                 else k = Collections.singleton(e.getValue()).iterator();
                 while (k.hasNext()) {
                     Node n2 = (Node) k.next();
-                    out.writeBytes("n"+n.id+" -> n"+n2.id+" [label=\""+fieldName+"\"];\n");
+                    out.write("n"+n.id+" -> n"+n2.id+" [label=\""+fieldName+"\"];\n");
                 }
             }
             for (Iterator j=n.getAccessPathEdges().iterator(); j.hasNext(); ) {
@@ -5088,20 +5087,20 @@ outer:
                 else k = Collections.singleton(e.getValue()).iterator();
                 while (k.hasNext()) {
                     Node n2 = (Node) k.next();
-                    out.writeBytes("n"+n.id+" -> n"+n2.id+" [label=\""+fieldName+"\",style=dashed];\n");
+                    out.write("n"+n.id+" -> n"+n2.id+" [label=\""+fieldName+"\",style=dashed];\n");
                 }
             }
             if (n.getPassedParameters() != null) {
                 for (Iterator j=n.getPassedParameters().iterator(); j.hasNext(); ) {
                     PassedParameter pp = (PassedParameter) j.next();
                     int k = m.get(pp.m);
-                    out.writeBytes("n"+n.id+" -> mc"+k+" [label=\"p"+pp.paramNum+"\",style=dotted];\n");
+                    out.write("n"+n.id+" -> mc"+k+" [label=\"p"+pp.paramNum+"\",style=dotted];\n");
                 }
             }
             if (n instanceof ReturnedNode) {
                 ReturnedNode rn = (ReturnedNode) n;
                 int k = m.get(rn.m);
-                out.writeBytes("mc"+k+" -> n"+n.id+" [label=\"r\",style=dotted];\n");
+                out.write("mc"+k+" -> n"+n.id+" [label=\"r\",style=dotted];\n");
             }
         }
         for (Iterator i=castMap.entrySet().iterator(); i.hasNext(); ) {
@@ -5109,9 +5108,9 @@ outer:
             Node n = (Node)((Pair)e.getKey()).left;
             Node n2 = (Node)e.getValue();
             if (nodes.containsKey(n2))
-                out.writeBytes("n"+n.id+" -> n"+n2.id+" [label=\"(cast)\"];\n");
+                out.write("n"+n.id+" -> n"+n2.id+" [label=\"(cast)\"];\n");
         }
-        out.writeBytes("}\n");
+        out.write("}\n");
     }
 
     public static final boolean DUMP_DOTGRAPH = System.getProperty("ms.dotgraph") != null;
@@ -5128,7 +5127,7 @@ outer:
             if (name.equals(fakeCloneName)) {
                 MethodSummary ms = fakeCloneMethodSummary((jq_FakeInstanceMethod)jq_FakeInstanceMethod.fakeMethod(c, 
                                                                                 fakeCloneName, "()"+c.getName()));
-                if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
+                if (DUMP_DOTGRAPH) ms.dotGraph(new BufferedWriter(new OutputStreamWriter(System.out)));
                 else System.out.println(ms);
                 return;
             }
@@ -5162,7 +5161,7 @@ outer:
 //            out.println("CFG AFTER SSA:");
 //            out.println(cfg.fullDump());
             MethodSummary ms = getSummary(cfg);
-            if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
+            if (DUMP_DOTGRAPH) ms.dotGraph(new BufferedWriter(new OutputStreamWriter(System.out)));
             else System.out.println(ms);
         }
     }
@@ -5275,11 +5274,11 @@ outer:
                     s.builder.s = state.copy();
                     for (Iterator k = bb.iterator(); k.hasNext(); ) {
                         Quad q = (Quad) k.next();
-                        t.writeBytes("quad "+q.getID()+" ");
+                        t.writeString("quad "+q.getID()+" ");
                         int num = 0;
                         for (Iterator l = q.getUsedRegisters().iterator(); l.hasNext(); ) {
                             RegisterOperand op = (RegisterOperand) l.next();
-                            t.writeBytes("op ");
+                            t.writeString("op ");
                             Register r = ((RegisterOperand) op).getRegister();
                             Object o = s.builder.getRegister(r);
                             Set set;

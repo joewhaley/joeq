@@ -17,14 +17,13 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
@@ -884,7 +883,7 @@ public class CSPAResults {
     public static final byte HYPVIEW = 2;
     public static byte format = DOT;
 
-    public void dumpObjectConnectivityGraph(int heapnum, DataOutput out) throws IOException {
+    public void dumpObjectConnectivityGraph(int heapnum, BufferedWriter out) throws IOException {
         BDD context = H1c.set();
         context.andWith(H2c.set());
         BDD ci_fieldPt = hP.exist(context);
@@ -894,7 +893,7 @@ public class CSPAResults {
         BDD reachable = reach.bdd;
         reachable.orWith(H1.ithVar(heapnum));
 
-        out.writeBytes("digraph \"ObjectConnectivity\" {\n");
+        out.write("digraph \"ObjectConnectivity\" {\n");
         BDD iter;
         iter = reachable.id();
         while (!iter.isZero()) {
@@ -915,7 +914,7 @@ public class CSPAResults {
             String name = null;
             if (t != null) name = t.shortName();
             int j = Hmap.get(h);
-            out.writeBytes("n"+j+" [label=\""+name+"\"];\n");
+            out.write("n"+j+" [label=\""+name+"\"];\n");
             iter.applyWith(s, BDDFactory.diff);
         }
         iter.free();
@@ -950,7 +949,7 @@ public class CSPAResults {
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
-                out.writeBytes("n"+target_i+
+                out.write("n"+target_i+
                                " -> n"+target2_i+
                                " [label=\""+fieldName+"\"];\n");
                 pt.applyWith(s2, BDDFactory.diff);
@@ -958,15 +957,15 @@ public class CSPAResults {
             iter.applyWith(s, BDDFactory.diff);
         }
         iter.free();
-        out.writeBytes("}\n");
+        out.write("}\n");
     }
     
-    public void dumpObjectConnectivityGraph(DataOutput out) throws IOException {
+    public void dumpObjectConnectivityGraph(BufferedWriter out) throws IOException {
         BDD context = H1c.set();
         context.andWith(H2c.set());
         BDD ci_fieldPt = hP.exist(context);
 
-        out.writeBytes("digraph \"ObjectConnectivity\" {\n");
+        out.write("digraph \"ObjectConnectivity\" {\n");
         int j = 0;
         for (Iterator i = Hmap.iterator(); i.hasNext(); ++j) {
             HeapObject h = (HeapObject) i.next();
@@ -978,7 +977,7 @@ public class CSPAResults {
             }
             String name = null;
             if (t != null) name = t.shortName();
-            out.writeBytes("n"+j+" [label=\""+name+"\"];\n");
+            out.write("n"+j+" [label=\""+name+"\"];\n");
         }
         
         j = 0;
@@ -1001,13 +1000,13 @@ public class CSPAResults {
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
-                out.writeBytes("n"+j+
+                out.write("n"+j+
                                " -> n"+target_i+
                                " [label=\""+fieldName+"\"];\n");
                 pt.applyWith(s, BDDFactory.diff);
             }
         }
-        out.writeBytes("}\n");
+        out.write("}\n");
     }
 
     public static boolean TRACE_ESCAPE = false;
@@ -1202,9 +1201,9 @@ public class CSPAResults {
     /** Load points-to results from the given file name prefix.
      */
     public void load(String fn) throws IOException {
-        DataInputStream di = null;
+        BufferedReader di = null;
         try {
-            di = new DataInputStream(new FileInputStream(fn+".config"));
+            di = new BufferedReader(new FileReader(fn+".config"));
             readConfig(di);
         } finally {
             if (di != null) di.close();
@@ -1244,23 +1243,23 @@ public class CSPAResults {
         this.passedParams = new GenericInvertibleMultiMap();
         
         System.out.print("Loading maps...");
-        di = new DataInputStream(new FileInputStream(fn+".Vmap"));
+        di = new BufferedReader(new FileReader(fn+".Vmap"));
         Vmap = IndexMap.load("Variable", di);
         di.close();
         
-        di = new DataInputStream(new FileInputStream(fn+".Imap"));
+        di = new BufferedReader(new FileReader(fn+".Imap"));
         Imap = IndexMap.load("Invoke", di);
         di.close();
         
-        di = new DataInputStream(new FileInputStream(fn+".Hmap"));
+        di = new BufferedReader(new FileReader(fn+".Hmap"));
         Hmap = IndexMap.load("Heap", di);
         di.close();
         
-        di = new DataInputStream(new FileInputStream(fn+".Mmap"));
+        di = new BufferedReader(new FileReader(fn+".Mmap"));
         Mmap = IndexMap.load("Method", di);
         di.close();
         
-        di = new DataInputStream(new FileInputStream(fn+".Fmap"));
+        di = new BufferedReader(new FileReader(fn+".Fmap"));
         Fmap = IndexMap.load("Field", di);
         di.close();
         System.out.println("done.");
@@ -1365,7 +1364,7 @@ public class CSPAResults {
     int V_BITS=1, I_BITS=1, H_BITS=1, Z_BITS=1, F_BITS=1, T_BITS=1, N_BITS=1, M_BITS=1;
     int VC_BITS=1, HC_BITS=1;
 
-    private void readConfig(DataInput in) throws IOException {
+    private void readConfig(BufferedReader in) throws IOException {
         for (;;) {
             String s = in.readLine();
             if (s == null) break;
@@ -2250,7 +2249,7 @@ public class CSPAResults {
     void interactive() {
         int i = 1;
         List results = new ArrayList();
-        DataInput in = new DataInputStream(System.in);
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         for (;;) {
             boolean increaseCount = true;
             boolean listAll = false;
@@ -2398,13 +2397,13 @@ public class CSPAResults {
                     int heapNum = Integer.parseInt(st.nextToken());
                     String filename = "connect.dot";
                     if (st.hasMoreTokens()) filename = st.nextToken();
-                    DataOutputStream dos = new DataOutputStream(new FileOutputStream(filename));
+                    BufferedWriter dos = new BufferedWriter(new FileWriter(filename));
                     dumpObjectConnectivityGraph(heapNum, dos);
                     increaseCount = false;
                 } else if (command.equals("dumpallconnect")) {
                     String filename = "connect.dot";
                     if (st.hasMoreTokens()) filename = st.nextToken();
-                    DataOutputStream dos = new DataOutputStream(new FileOutputStream(filename));
+                    BufferedWriter dos = new BufferedWriter(new FileWriter(filename));
                     dumpObjectConnectivityGraph(dos);
                     increaseCount = false;
                 } else if (command.equals("escape")) {
@@ -2771,7 +2770,7 @@ public class CSPAResults {
         }
     }
     
-    public void dumpUseDefChain(DataOutput out, BDD vPrelation) throws IOException {
+    public void dumpUseDefChain(BufferedWriter out, BDD vPrelation) throws IOException {
         BDD visited = bdd.zero();
         vPrelation = vPrelation.id();
         HashSet visitedNodes = new HashSet();
@@ -2783,7 +2782,7 @@ public class CSPAResults {
                     Node n = (Node) Vmap.get(V_i);
                     String name = n.getDefiningMethod().toString();
                     if (!visitedNodes.contains(n)) {
-                        out.writeBytes("n"+V_i+" [label=\""+name+"\"];\n");
+                        out.write("n"+V_i+" [label=\""+name+"\"];\n");
                         visitedNodes.add(n);
                     }
                 }

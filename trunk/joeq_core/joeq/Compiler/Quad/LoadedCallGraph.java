@@ -3,11 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,11 +12,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-
+import java.io.BufferedWriter;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_Member;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.BCProgramLocation;
@@ -91,7 +90,7 @@ public class LoadedCallGraph extends CallGraph {
         }
     }
     
-    public static void write(CallGraph cg, DataOutput out) throws IOException {
+    public static void write(CallGraph cg, BufferedWriter out) throws IOException {
         Assert._assert(cg.getAllMethods().containsAll(cg.getRoots()));
         MultiMap classesToMethods = new GenericMultiMap(treeMapFactory, sortedArraySetFactory);
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
@@ -100,26 +99,26 @@ public class LoadedCallGraph extends CallGraph {
         }
         for (Iterator i = classesToMethods.keySet().iterator(); i.hasNext(); ) {
             jq_Class klass = (jq_Class) i.next();
-            out.writeBytes("CLASS "+klass.getJDKName().replace('.', '/')+"\n");
+            out.write("CLASS "+klass.getJDKName().replace('.', '/')+"\n");
             for (Iterator j = classesToMethods.getValues(klass).iterator(); j.hasNext(); ) {
                 jq_Method m = (jq_Method) j.next();
-                out.writeBytes(" METHOD "+m.getName()+" "+m.getDesc());
-                if (cg.getRoots().contains(m)) out.writeBytes(" ROOT");
-                if (m instanceof jq_FakeInstanceMethod) out.writeBytes(" FAKE");
-                out.writeByte('\n');
+                out.write(" METHOD "+m.getName()+" "+m.getDesc());
+                if (cg.getRoots().contains(m)) out.write(" ROOT");
+                if (m instanceof jq_FakeInstanceMethod) out.write(" FAKE");
+                out.write('\n');
                 // put them in a set for deterministic iteration.
                 Set s = sortedArraySetFactory.makeSet(callsite_comparator, cg.getCallSites(m));
                 for (Iterator k = s.iterator(); k.hasNext(); ) {
                     ProgramLocation pl = (ProgramLocation) k.next();
-                    out.writeBytes("  CALLSITE "+pl.getBytecodeIndex()+"\n");
+                    out.write("  CALLSITE "+pl.getBytecodeIndex()+"\n");
                     // put them in a set for deterministic iteration.
                     Set s2 = sortedArraySetFactory.makeSet(cg.getTargetMethods(pl));
                     for (Iterator l = s2.iterator(); l.hasNext(); ) {
                         jq_Method target = (jq_Method) l.next();
-                        out.writeBytes("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc());
+                        out.write("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc());
                         if (target instanceof jq_FakeInstanceMethod)
-                            out.writeBytes(" FAKE");
-                        out.writeBytes("\n");
+                            out.write(" FAKE");
+                        out.write("\n");
                     }
                 }
             }

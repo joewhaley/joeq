@@ -3,14 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Collections;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import joeq.Util.Assert;
 import joeq.Util.IO.Textualizable;
 import joeq.Util.IO.Textualizer;
@@ -92,25 +91,25 @@ public class IndexMap implements IndexedMap {
         return before != size();
     }
     
-    public void dump(final DataOutput out) throws IOException {
+    public void dump(final BufferedWriter out) throws IOException {
         Textualizer t = new Textualizer.Map(out, this);
-        t.writeBytes(size()+"\n");
+        t.writeString(size()+"\n");
         for (int j = 0; j < size(); ++j) {
             Textualizable o = (Textualizable) get(j);
             t.writeTypeOf(o);
             t.writeObject(o);
-            t.writeBytes("\n");
+            t.writeString("\n");
         }
     }
     
-    public void dumpStrings(final DataOutput out) throws IOException {
+    public void dumpStrings(final BufferedWriter out) throws IOException {
         for (int j = 0; j < size(); ++j) {
             Object o = get(j);
-            out.writeBytes(o+"\n");
+            out.write(o+"\n");
         }
     }
     
-    public static IndexMap load(String name, DataInput in) throws IOException {
+    public static IndexMap load(String name, BufferedReader in) throws IOException {
         String s = in.readLine();
         int size = Integer.parseInt(s);
         IndexMap dis = new IndexMap(name, size);
@@ -124,7 +123,7 @@ public class IndexMap implements IndexedMap {
         return dis;
     }
     
-    public static IndexMap loadStringMap(String name, DataInput in) throws IOException {
+    public static IndexMap loadStringMap(String name, BufferedReader in) throws IOException {
         IndexMap dis = new IndexMap(name);
         for (;;) {
             String o = in.readLine();

@@ -3,15 +3,14 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
-
+import java.io.IOException;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
-import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_LineNumberBC;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
@@ -236,7 +235,7 @@ public abstract class ProgramLocation implements Textualizable {
         */
         
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("quad "+q.getID()+" ");
+            t.writeString("quad "+q.getID()+" ");
             t.writeObject(m);
         }
         
@@ -459,7 +458,7 @@ public abstract class ProgramLocation implements Textualizable {
         */
         
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("bc "+bcIndex+" ");
+            t.writeString("bc "+bcIndex+" ");
             t.writeObject(m);
         }
         
@@ -474,7 +473,7 @@ public abstract class ProgramLocation implements Textualizable {
         }
 
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("fake "+label.replace(' ', '_') + " ");
+            t.writeString("fake "+label.replace(' ', '_') + " ");
             t.writeObject(m);
         }
 

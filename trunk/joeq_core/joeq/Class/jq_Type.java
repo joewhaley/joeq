@@ -232,7 +232,7 @@ public abstract class jq_Type implements Textualizable {
     public String toString() { return getName(); }
     
     public void write(Textualizer t) throws IOException {
-        t.writeBytes(getDesc().toString());
+        t.writeString(getDesc().toString());
     }
     public void writeEdges(Textualizer t) throws IOException { }
     public void addEdge(String edgeName, Textualizable t) { }
