@@ -164,7 +164,9 @@ public class PA {
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
+    boolean FORNAME_STAT = !System.getProperty("pa.fornamestat", "no").equals("no");
     String REFLECTION_STAT_FILE = System.getProperty("pa.reflectionstatfile", "reflection.txt");
+    String FORNAME_STAT_FILE = System.getProperty("pa.fornamestatfile", "forname.txt");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     public static boolean TRACE_REFLECTION_DOMAINS = !System.getProperty("pa.tracereflectiondomains", "no").equals("no");
     boolean TRACE_FORNAME = !System.getProperty("pa.traceforname", "no").equals("no");
@@ -2013,6 +2015,7 @@ public class PA {
     Map cantCastTypes     = new HashMap();
     Map circularClasses   = new HashMap();
     Map wellFormedClasses = new HashMap();
+    Set unresolvedCalls   = new HashSet();
     // currently resolved reflective calls, used for iterative computation
     BDD reflectiveCalls;                            // IxM 
     
@@ -2180,16 +2183,23 @@ public class PA {
             //if(TRACE_REFLECTION_DOMAINS) out.println("h: " + getBDDDomains(h));
             int h_i = h.scanVar(H1).intValue();
             Object node = Hmap.get(h_i);
+            int i_i = h.scanVar(I2).intValue();
+            ProgramLocation mc = (ProgramLocation) Imap.get(i_i);
             if(!(node instanceof ConcreteTypeNode)) {
                 //System.err.println("Can't cast " + node + " to ConcreteTypeNode for " + h.toStringWithDomains(TS));
                 continue;
             }
+            boolean unresolved = false;
             MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) node;
             String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
             if(stringConst == null){
-                if(missingConst.get(stringConst) == null){
-                    if(TRACE_REFLECTION) System.err.println("No constant string for " + n + " at " + h.toStringWithDomains(TS));                                    
-                    missingConst.put(stringConst, new Integer(0));
+                unresolved = true;          // not full resolved -- points to something other than a const
+                if(missingConst.get(n) == null){
+                    if(TRACE_REFLECTION) {
+                        System.err.println("No constant string for " + 
+                            n + " at " + h.toStringWithDomains(TS));
+                    }
+                    missingConst.put(n, new Integer(0));
                 }                
                 continue;
             }
@@ -2250,7 +2260,10 @@ public class PA {
             }
             // add the relation to IE
             BDD constructorCall = M.ithVar(Mmap.get(constructor)).and(h);
-            constructorIE.orWith(constructorCall);                       
+            constructorIE.orWith(constructorCall);
+            if(unresolved){
+                unresolvedCalls.add(mc);
+            }
         }
         
         BDD old_reflectiveCalls  = reflectiveCalls.id();
@@ -2317,7 +2330,8 @@ public class PA {
     
     SubtypeHelper retrieveSubtypeHelper(){
         if(this._subtypeHelper == null){
-            this._subtypeHelper = SubtypeHelper.newSubtypeHelper(this, System.getProperty("pa.subtypehelpertype")); 
+            this._subtypeHelper = SubtypeHelper.newSubtypeHelper(
+                    this, System.getProperty("pa.subtypehelpertype")); 
         }
         
         return this._subtypeHelper;
@@ -3165,43 +3179,10 @@ public class PA {
             analyzeIE();
         }
         if(REFLECTION_STAT){
-            PrintWriter w = null;
-            try {
-                out.println("Saving reflection statistics in " + REFLECTION_STAT_FILE);
-                w = new PrintWriter(new FileWriter(REFLECTION_STAT_FILE));                
-                BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
-                
-                if(RESOLVE_REFLECTION){
-                    w.println("Used " + (USE_CASTS_FOR_REFLECTION ? "casts" : "strings") + " for reflection resolution.");
-                }else{
-                    w.println("Reflection wasn't resolved.");
-                }
-                w.println("There are " + newInstanceCalls.satCount(Iset) + " calls to Class.newInstance");
-                
-                int pos = 1;
-                for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext(); pos++){
-                    BDD i = (BDD)iter.next();
-                    int i_i = i.scanVar(I).intValue();
-                    ProgramLocation mc = (ProgramLocation)Imap.get(i_i);
-                    
-                    BDD callees = IE.relprod(i, Iset);
-                    if(!callees.isZero()){
-                        w.println("[" + pos + "]\t" + mc.toStringLong() + ": " + 
-                            (callees.satCount(Mset)==1 ? "UNRESOLVED":""));
-                        for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
-                            BDD callee = (BDD)iter2.next();
-                            
-                            int m_i = callee.scanVar(M).intValue();
-                            jq_Method m = (jq_Method)Mmap.get(m_i);
-                            
-                            w.println("\t" + m.toString());
-                        }
-                        w.println();
-                    }
-                }
-            }finally{
-                if(w != null) w.close();
-            }
+            saveReflectionStats();
+        }
+        if(FORNAME_STAT){
+            saveReflectionStats();
         }
         //initializeForNameMapEntries();
 
@@ -3220,6 +3201,89 @@ public class PA {
         }
     }
    
+    void saveReflectionStats() throws IOException {
+        PrintWriter w = null;
+        try {
+            out.println("Saving reflection statistics in " + REFLECTION_STAT_FILE);
+            w = new PrintWriter(new FileWriter(REFLECTION_STAT_FILE));                
+            BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
+            
+            if(RESOLVE_REFLECTION){
+                w.println("Used " + (USE_CASTS_FOR_REFLECTION ? "casts" : "strings") + " for reflection resolution.");
+            }else{
+                w.println("Reflection wasn't resolved.");
+            }
+            w.println("There are " + newInstanceCalls.satCount(Iset) + " calls to Class.newInstance");
+            
+            int pos = 1;
+            for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext(); pos++){
+                BDD i = (BDD)iter.next();
+                int i_i = i.scanVar(I).intValue();
+                ProgramLocation mc = (ProgramLocation)Imap.get(i_i);
+                
+                BDD callees = IE.relprod(i, Iset);
+                if(!callees.isZero()){
+                    w.println("[" + pos + "]\t" + mc.toStringLong() + ": " + 
+                        //(callees.satCount(Mset)==1 ? "UNRESOLVED":""));
+                        (unresolvedCalls.contains(mc) ? "UNRESOLVED":""));
+                    for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
+                        BDD callee = (BDD)iter2.next();
+                        
+                        int m_i = callee.scanVar(M).intValue();
+                        jq_Method m = (jq_Method)Mmap.get(m_i);
+                        
+                        w.println("\t" + m.toString());
+                    }
+                    w.println();
+                }
+            }
+        }finally{
+            if(w != null) w.close();
+        }
+    }
+    
+    void saveForNameStats() throws IOException {
+        PrintWriter w = null;
+        try {
+            out.println("Saving forName statistics in " + FORNAME_STAT_FILE);
+            w = new PrintWriter(new FileWriter(FORNAME_STAT_FILE));                
+            jq_Method forNameMethod = class_class.getDeclaredMethod("forName");
+            BDD forNameCalls = IE.restrict(M.ithVar(Mmap.get(forNameMethod)));   // I
+            
+            if(RESOLVE_REFLECTION){
+                w.println("Used " + (USE_CASTS_FOR_REFLECTION ? "casts" : "strings") + " for reflection resolution.");
+            }else{
+                w.println("Reflection wasn't resolved.");
+            }
+            w.println("There are " + forNameCalls.satCount(Iset) + " calls to Class.forName");
+            
+            int pos = 1;
+            for(Iterator iter = forNameCalls.iterator(Iset); iter.hasNext(); pos++){
+                BDD i = (BDD)iter.next();
+                int i_i = i.scanVar(I).intValue();
+                ProgramLocation mc = (ProgramLocation)Imap.get(i_i);
+                
+                BDD callees = IE.relprod(i, Iset);
+                if(!callees.isZero()){
+                    w.println("[" + pos + "]\t" + mc.toStringLong() + ": " + 
+                        //(callees.satCount(Mset)==1 ? "UNRESOLVED":""));
+                        (unresolvedCalls.contains(mc) ? "UNRESOLVED":""));
+                    for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
+                        BDD callee = (BDD)iter2.next();
+                        
+                        int m_i = callee.scanVar(M).intValue();
+                        jq_Method m = (jq_Method)Mmap.get(m_i);
+                        
+                        w.println("\t" + m.toString());
+                    }
+                    w.println();
+                }
+            }
+        }finally{
+            if(w != null) w.close();
+        }
+    }
+
     Set provideStubsFor = new HashSet();
     /**
      * Initializes provideStubsFor.
