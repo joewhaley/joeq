@@ -13,12 +13,8 @@ import java.io.*;
  * @author  John Whaley
  * @version 
  */
-public class RelocEntry {
+public class RelocEntry implements ELFConstants {
 
-    public static final byte R_386_NONE = 0;
-    public static final byte R_386_32   = 1;
-    public static final byte R_386_PC32 = 2;
-    
     protected int offset;
     protected SymbolTableEntry e;
     protected byte type;
@@ -32,9 +28,18 @@ public class RelocEntry {
     public final int getType() { return type; }
     public final int getInfo() { return (e.getIndex() << 8) | (type & 0xFF); }
     
-    public void write(ELFFile file, OutputStream out) throws IOException {
-        file.write_addr(out, getOffset());
-        file.write_word(out, getInfo());
+    public void write(ELF file) throws IOException {
+        file.write_addr(getOffset());
+        file.write_word(getInfo());
+    }
+    
+    public static RelocEntry read(ELF file, Section.SymTabSection s) throws IOException {
+        int offset = file.read_addr();
+        int info = file.read_word();
+        int stindex = (info >>> 8);
+        byte type = (byte)info;
+        SymbolTableEntry e = s.getSymbolTableEntry(stindex);
+        return new RelocEntry(offset, e, type);
     }
     
     public static int getEntrySize() { return 8; }
