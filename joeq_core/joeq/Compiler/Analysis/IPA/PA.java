@@ -159,6 +159,7 @@ public class PA {
     boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
     boolean USE_CASTS_FOR_REFLECTION = !System.getProperty("pa.usecastsforreflection", "no").equals("no");
+    boolean USE_KNOWN_SUBTYPES_FOR_REFLECTION = !System.getProperty("pa.useknonwsubtypesforreflection", "no").equals("no");
     boolean RESOLVE_FORNAME = !System.getProperty("pa.resolveforname", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
@@ -2025,6 +2026,8 @@ public class PA {
         return sb.toString();
     }
     private static int printed = 0;
+
+    private SubtypeHelper _subtypeHelper;
     private static void fdd_printset_rec(BDDFactory bdd, StringBuffer sb, BDD r, int[] set) {
         int fdvarnum = bdd.numberOfDomains();
         
@@ -2311,6 +2314,14 @@ public class PA {
         }
     }
     
+    SubtypeHelper retrieveSubtypeHelper(){
+        if(this._subtypeHelper == null){
+            this._subtypeHelper = new SubtypeHelper(this); 
+        }
+        
+        return this._subtypeHelper;
+    }
+    
     private boolean bindReflectionsWithCasts() {
         if(TRACE_REFLECTION) out.println("Call graph edges before: "+IE.satCount(IMset));
         BDD t1 = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
@@ -2331,12 +2342,12 @@ public class PA {
         //System.out.println("t33: " + t33.toStringWithDomains(TS));
         BDD t34 = t33.relprod(vT.replace(V1toV2).replace(T1toT2), bdd.zero());          // I2xV1xV2xT1 x V2xT2 = I2xV1xV2xT1xT2
         //System.out.println("t34: " + t34.toStringWithDomains(TS));
-        BDD t35 = t34.relprod(notEqualTypes, T2set);
+        BDD tuples = t34.relprod(notEqualTypes, T2set);
         //System.out.println("t35: " + t35.toStringWithDomains(TS));      // V1xV2xIxT1
         t1.free(); t3.free(); t32.free(); t33.free(); t34.free();
         
         BDD constructorIE = bdd.zero();
-        for(Iterator iter = t35.iterator(V1set.and(V2set).and(Iset).and(T1set)); iter.hasNext();){
+        for(Iterator iter = tuples.iterator(V1set.and(V2set).and(Iset).and(T1set)); iter.hasNext();){
             BDD tuple = (BDD) iter.next();
             int V1_i = tuple.scanVar(V1).intValue();
             int V2_i = tuple.scanVar(V2).intValue();
@@ -2357,16 +2368,12 @@ public class PA {
                 " is cast at " + v1 + 
                 " to type " + t);
             }
+            
+            SubtypeHelper subtypeHelper = retrieveSubtypeHelper();
+            Collection subtypes = subtypeHelper.getSubtypes((jq_Class) t, USE_KNOWN_SUBTYPES_FOR_REFLECTION); 
 
-            BDD subtypes = aT.relprod(T1.ithVar(T1_i), T1set);          // T2
-            for(Iterator typeIter = subtypes.iterator(T2set); typeIter.hasNext();){
-                jq_Reference subtype = (jq_Reference) Tmap.get(((BDD)typeIter.next()).scanVar(T2).intValue());
-                if (subtype == null || subtype == jq_NullType.NULL_TYPE) continue;
-                if(!(subtype instanceof jq_Class)){
-                    System.err.println("Skipping a non-class type: " + t);
-                    continue;
-                }
-                jq_Class c = (jq_Class) subtype;    
+            for(Iterator typeIter = subtypes.iterator(); typeIter.hasNext();){
+                jq_Class c = (jq_Class) typeIter.next();    
                 jq_Method constructor = (jq_Method) c.getDeclaredMember(
                     new jq_NameAndDesc(
                         Utf8.get("<init>"), 
@@ -3155,7 +3162,7 @@ public class PA {
         if(REFLECTION_STAT){
             BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
             
-            int pos = 0;
+            int pos = 1;
             for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext(); pos++){
                 BDD i = (BDD)iter.next();
                 int i_i = i.scanVar(I).intValue();
@@ -3163,7 +3170,8 @@ public class PA {
                 
                 BDD callees = IE.relprod(i, Iset);
                 if(!callees.isZero()){
-                    System.out.println("[" + pos + "]\t" + mc.toStringLong() + ": ");
+                    System.out.println("[" + pos + "]\t" + mc.toStringLong() + ": " + 
+                        (callees.satCount(Mset)==1 ? "UNRESOLVED":""));
                     for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
                         BDD callee = (BDD)iter2.next();
                         
