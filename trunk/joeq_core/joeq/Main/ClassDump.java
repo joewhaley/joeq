@@ -57,8 +57,8 @@ public abstract class ClassDump {
         //jq_Class c2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("Ljava/lang/Exception;");
         //System.out.println(Run_Time.TypeCheck.isAssignable(c, c2));
         //System.out.println(Run_Time.TypeCheck.isAssignable(c2, c));
-        Allocator.DefaultCodeAllocator.default_allocator = new BootstrapCodeAllocator();
-        Allocator.DefaultCodeAllocator.default_allocator.init();
+        //Allocator.DefaultCodeAllocator.default_allocator = new BootstrapCodeAllocator();
+        //Allocator.DefaultCodeAllocator.default_allocator.init();
         compileClass(System.out, c);
     }
 
@@ -67,14 +67,27 @@ public abstract class ClassDump {
         for(it = new ArrayIterator(t.getDeclaredStaticMethods());
             it.hasNext(); ) {
             jq_StaticMethod c = (jq_StaticMethod)it.next();
-            Compil3r.Reference.x86.x86ReferenceCompiler comp = new Compil3r.Reference.x86.x86ReferenceCompiler(c);
-            comp.compile();
+            if (c.isNative()) continue;
+            //if (c.getName().toString().equals("right"))
+            {
+                out.println(c.toString());
+                Compil3r.Quad.BytecodeToQuad b2q = new Compil3r.Quad.BytecodeToQuad(c);
+		Compil3r.Quad.ControlFlowGraph cfg = b2q.convert();
+		System.out.println(cfg.fullDump());
+            }
         }
         for(it = new ArrayIterator(t.getDeclaredInstanceMethods());
             it.hasNext(); ) {
             jq_InstanceMethod c = (jq_InstanceMethod)it.next();
-            Compil3r.Reference.x86.x86ReferenceCompiler comp = new Compil3r.Reference.x86.x86ReferenceCompiler(c);
-            comp.compile();
+            if (c.isAbstract()) continue;
+            if (c.isNative()) continue;
+            //if (c.getName().toString().equals("right"))
+            {
+                out.println(c.toString());
+                Compil3r.Quad.BytecodeToQuad b2q = new Compil3r.Quad.BytecodeToQuad(c);
+		Compil3r.Quad.ControlFlowGraph cfg = b2q.convert();
+		System.out.println(cfg.fullDump());
+            }
         }
     }
     

@@ -109,6 +109,7 @@ public abstract class Unsafe {
     public static final jq_StaticMethod _intBitsToFloat;
     public static final jq_StaticMethod _doubleToLongBits;
     public static final jq_StaticMethod _longBitsToDouble;
+    public static final jq_StaticMethod _installRemapper;
     
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Unsafe;");
@@ -142,6 +143,7 @@ public abstract class Unsafe {
         _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
         _doubleToLongBits = _class.getOrCreateStaticMethod("doubleToLongBits", "(D)J");
         _longBitsToDouble = _class.getOrCreateStaticMethod("longBitsToDouble", "(J)D");
+        _installRemapper = _class.getOrCreateStaticMethod("installRemapper", "(LRun_Time/Unsafe$Remapper;)V");
     }
     
 }

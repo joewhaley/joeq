@@ -94,9 +94,11 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         return isSuperclassOf((jq_Class)t2, (jq_Class)s2);
     }
     
+    // Returns true if t1 is a superclass of t2
     public static boolean isSuperclassOf(jq_Class t1, jq_Class t2) {
         // doesn't do equality test.
         for (;;) {
+            t2.load();
             t2 = t2.getSuperclass();
             if (t2 == null) return false;
             if (t1 == t2) return true;
@@ -104,6 +106,10 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
     }
     
     public static jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2) {
+        return findCommonSuperclass(t1, t2, false);
+    }
+    
+    public static jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2, boolean load) {
         if (t1 == t2) return t1;
         if (t1.isPrimitiveType() && t2.isPrimitiveType()) {
             jq_Type result = null;
@@ -134,30 +140,37 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
             t2 = ((jq_Array)t2).getElementType();
         }
         if (t1.isPrimitiveType() || t2.isPrimitiveType()) {
-            jq_Reference result = ClassLib.sun13.java.lang.Object._class;
+            jq_Reference result = PrimordialClassLoader.loader.getJavaLangObject();
             --dim;
             while (--dim >= 0) result.getArrayTypeForElementType();
             return result;
         }
         if (!t1.isClassType() || !t2.isClassType()) {
-            jq_Reference result = ClassLib.sun13.java.lang.Object._class;
+            jq_Reference result = PrimordialClassLoader.loader.getJavaLangObject();
             while (--dim >= 0) result.getArrayTypeForElementType();
             return result;
         }
         jq_Class c1 = (jq_Class)t1;
         jq_Class c2 = (jq_Class)t2;
         Stack s1 = new Stack();
-        if (!c1.isLoaded() || !c2.isLoaded()) return ClassLib.sun13.java.lang.Object._class;
         do {
+            if (!c1.isLoaded()) {
+                if (load) c1.load();
+                else return PrimordialClassLoader.loader.getJavaLangObject();
+            }
             s1.push(c1);
             c1 = c1.getSuperclass();
         } while (c1 != null);
         Stack s2 = new Stack();
         do {
+            if (!c2.isLoaded()) {
+                if (load) c2.load();
+                else return PrimordialClassLoader.loader.getJavaLangObject();
+            }
             s2.push(c2);
             c2 = c2.getSuperclass();
         } while (c2 != null);
-        jq_Class result = ClassLib.sun13.java.lang.Object._class;
+        jq_Class result = PrimordialClassLoader.loader.getJavaLangObject();
         while (!s1.empty() && !s2.empty()) {
             jq_Class temp = (jq_Class)s1.pop();
             if (temp == s2.pop()) result = temp;
