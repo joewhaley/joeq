@@ -122,6 +122,12 @@ public class BDDPointerAnalysis {
     BDD loadAss;      // (H1 x FD) x V2
     BDD loadPt;       // V2 x H2
 
+    BDD V1set;
+    BDD T1set;
+    BDD T2set;
+    BDD H1andFDset;
+    BDD H1andT3set;
+
     public BDDPointerAnalysis() {
         this(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
     }
@@ -162,6 +168,12 @@ public class BDDPointerAnalysis {
         H1ToH2 = bdd.makePair(H1, H2);
         H2ToH1 = bdd.makePair(H2, H1);
         T2ToT1 = bdd.makePair(T2, T1);
+        
+        V1set = V1.set();
+        T1set = T1.set();
+        T2set = T2.set();
+        H1andFDset = H1.set(); H1andFDset.andWith(FD.set());
+        H1andT3set = H1.set(); H1andT3set.andWith(T3.set());
     }
 
     int[][] localOrders;
@@ -290,21 +302,20 @@ public class BDDPointerAnalysis {
     }
     
     void done() {
-        aC.andWith(bdd.zero());
-        vC.andWith(bdd.zero());
-        cC.andWith(bdd.zero());
-        cTypes.andWith(bdd.zero());
-        cTypes.andWith(bdd.zero());
-        pointsTo.andWith(bdd.zero());
-        edgeSet.andWith(bdd.zero());
-        typeFilter.andWith(bdd.zero());
-        stores.andWith(bdd.zero());
-        loads.andWith(bdd.zero());
-        storePt.andWith(bdd.zero());
-        fieldPt.andWith(bdd.zero());
-        loadAss.andWith(bdd.zero());
-        loadPt.andWith(bdd.zero());
-        vtable_bdd.andWith(bdd.zero());
+        aC.free();
+        vC.free();
+        cC.free();
+        cTypes.free();
+        pointsTo.free();
+        edgeSet.free();
+        typeFilter.free();
+        stores.free();
+        loads.free();
+        storePt.free();
+        fieldPt.free();
+        loadAss.free();
+        loadPt.free();
+        vtable_bdd.free();
         System.gc(); System.gc();
         bdd.done();
     }
@@ -421,6 +432,11 @@ public class BDDPointerAnalysis {
 
         System.out.println("Total time: "+time/1000.+" seconds.");
         
+        if (!IGNORE_CLINIT) {
+            roots = new HashSet(roots);
+            roots.addAll(class_initializers);
+        }
+        
         CallGraph cg = new BDDCallGraph(roots);
         return cg;
     }
@@ -498,6 +514,11 @@ public class BDDPointerAnalysis {
 
         System.out.println("Total time: "+time/1000.+" seconds.");
         
+        if (!IGNORE_CLINIT) {
+            roots = new HashSet(roots);
+            roots.addAll(class_initializers);
+        }
+        
         CallGraph cg = new BDDCallGraph(roots);
         return cg;
     }
@@ -518,82 +539,6 @@ public class BDDPointerAnalysis {
             b.printSetWithDomains();
         System.out.println();
     }
-    
-    void printSet(String desc, BDD b, String type) {
-        printSet(desc+" ("+type+")", b);
-        
-        if (false) {
-            int i = 0, n = 1;
-            while ((i = type.indexOf('x', i)+1) > 0) {
-                n++;
-            }
-            BDDDomain[] d = new BDDDomain[n];
-            IndexMap[] m = new IndexMap[n];
-            String[] names = new String[n];
-            i = 0;
-            for (int j=0; j<d.length; ++j) {
-                i = type.indexOf('x', i);
-                String s;
-                if (i >= 0) {
-                    s = type.substring(0, i);
-                    type = type.substring(i+1);
-                } else {
-                    Assert._assert(j == d.length-1);
-                    s = type;
-                }
-                names[j] = s;
-                BDDDomain t1;
-                IndexMap t2;
-                if (s.equals("V1")) {
-                    t1 = V1; t2 = variableIndexMap;
-                } else if (s.equals("V2")) {
-                    t1 = V1; t2 = variableIndexMap;
-                } else if (s.equals("FD")) {
-                    t1 = FD; t2 = fieldIndexMap;
-                } else if (s.equals("H1")) {
-                    t1 = H1; t2 = heapobjIndexMap;
-                } else if (s.equals("H2")) {
-                    t1 = H2; t2 = heapobjIndexMap;
-                } else if (s.equals("T1")) {
-                    t1 = T1; t2 = typeIndexMap;
-                } else if (s.equals("T2")) {
-                    t1 = T2; t2 = typeIndexMap;
-                } else if (s.equals("T3")) {
-                    t1 = T3; t2 = methodIndexMap;
-                } else if (s.equals("T4")) {
-                    t1 = T4; t2 = targetIndexMap;
-                } else {
-                    System.out.println("Unknown domain "+s);
-                    return;
-                }
-                d[j] = t1;
-                m[j] = t2;
-            }
-    
-            System.out.print(desc+": ");
-            printSet_recurse(b.id(), d, m, names, 0);
-            System.out.println();
-        }
-    }
-
-    void printSet_recurse(BDD b, BDDDomain[] d, IndexMap[] m, String[] names, int i) {
-        System.out.print(names[i]+": ");
-        int k=0;
-        for (;;++k) {
-            int p = b.scanVar(d[i]);
-            if (p < 0) break;
-            if (k != 0) System.out.print("/");
-            System.out.print(m[i].get(p));
-            BDD r = d[i].ithVar(p);
-            if (i < d.length-1) {
-                BDD b2 = b.restrict(r);
-                System.out.print(", ");
-                printSet_recurse(b2, d, m, names, i+1);
-                b2.free();
-            }
-            b.applyWith(r, BDDFactory.diff);
-        }
-    }
 
     BDD cTypes; // H1 x T1
 
@@ -612,7 +557,7 @@ public class BDDPointerAnalysis {
                 System.out.print(i+": "+node.toString());
                 BDD var = V1.ithVar(i);
                 BDD p = pointsTo.restrict(var);
-                printSet(" can point to", p, "H1");
+                printSet(" can point to", p);
             }
         }
     }
@@ -642,6 +587,7 @@ public class BDDPointerAnalysis {
     }
 
     public static final boolean IGNORE_CLINIT = false;
+    Set class_initializers = new HashSet();
 
     public void addClassInit(jq_Type t) {
         if (IGNORE_CLINIT) return;
@@ -650,6 +596,7 @@ public class BDDPointerAnalysis {
             c.prepare();
             jq_ClassInitializer i = c.getClassInitializer();
             if (i != null && i.getBytecode() != null) {
+                class_initializers.add(i);
                 ControlFlowGraph cfg = CodeCache.getCode(i);
                 MethodSummary ms = MethodSummary.getSummary(cfg);
                 handleMethodSummary(ms);
@@ -756,7 +703,7 @@ public class BDDPointerAnalysis {
                 }
                 if (TRACE) {
                     System.out.println("Virtual call "+method+" receiver vars "+receiverObjects);
-                    printSet("receiverBDD", receiverBDD, "V1");
+                    printSet("receiverBDD", receiverBDD);
                 }
                 CallSite cs = new CallSite(ms, mc);
                 virtualCallSites.add(cs);
@@ -780,8 +727,6 @@ public class BDDPointerAnalysis {
         Iterator h=new LinkedList(virtualCallSites).iterator();
         Iterator i=new LinkedList(virtualCallReceivers).iterator();
         Iterator j=new LinkedList(virtualCallMethods).iterator();
-        BDD V1set = V1.set();
-        BDD H1andT3set = H1.set(); H1andT3set.andWith(T3.set());
         for (int index=0; h.hasNext(); ++index) {
             CallSite cs = (CallSite) h.next();
             MethodSummary caller = cs.caller;
@@ -790,7 +735,7 @@ public class BDDPointerAnalysis {
             if (TRACE_VIRTUAL) {
                 System.out.println("Caller: "+caller.getMethod());
                 System.out.println("Call: "+mc);
-                printSet(" receiverVars", receiverVars, "V1");
+                printSet(" receiverVars", receiverVars);
             }
             BDD pt = (index < last_vcalls) ? newPointsTo : pointsTo;
             BDD receiverObjects;
@@ -801,7 +746,7 @@ public class BDDPointerAnalysis {
                 receiverObjects = pt.relprod(receiverVars, V1set); // time-consuming!
             }
             if (TRACE_VIRTUAL) {
-                printSet(" receiverObjects", receiverObjects, "H1");
+                printSet(" receiverObjects", receiverObjects);
             }
             jq_InstanceMethod method = (jq_InstanceMethod) j.next();
             if (receiverObjects.equals(bdd.zero())) {
@@ -810,17 +755,17 @@ public class BDDPointerAnalysis {
             int methodIndex = getMethodIndex(method);
             BDD methodBDD = T3.ithVar(methodIndex);
             if (TRACE_VIRTUAL) {
-                printSet("Method "+method+" index "+methodIndex, methodBDD, "T3");
+                printSet("Method "+method+" index "+methodIndex, methodBDD);
             }
             receiverObjects.andWith(methodBDD);
             if (TRACE_VIRTUAL) {
-                printSet(" receiverObjects", receiverObjects, "H1xT3");
+                printSet(" receiverObjects", receiverObjects);
             }
             // (H1 x T3) * (H1 x T3 x T4) 
             BDD targets = receiverObjects.relprod(vtable_bdd, H1andT3set);
             receiverObjects.free();
             if (TRACE_VIRTUAL) {
-                printSet(" targets", targets, "T4");
+                printSet(" targets", targets);
             }
             if (TRACE_VIRTUAL) {
                 System.out.println("# of targets: "+targets.satCount(T4.set()));
@@ -846,8 +791,6 @@ public class BDDPointerAnalysis {
             }
             targets.free();
         }
-        V1set.free();
-        H1andT3set.free();
         last_vcalls = n;
     }
     
@@ -969,11 +912,10 @@ public class BDDPointerAnalysis {
         dest_bdd.andWith(site_bdd);
         if (TRACE_INST) {
             System.out.println("Adding object allocation site="+site_i+" dest="+dest_i);
-            //printSet("Adding object allocation site="+site_i+" dest="+dest_i, dest_bdd, "V1xH1");
         }
         pointsTo.orWith(dest_bdd);
         if (TRACE) {
-            printSet("Points-to is now", pointsTo, "V1xH1");
+            printSet("Points-to is now", pointsTo);
         }
     }
 
@@ -987,11 +929,10 @@ public class BDDPointerAnalysis {
             src_bdd.andWith(dest_bdd.id());
             if (TRACE_INST) {
                 System.out.println("Adding direct assignment dest="+dest_i+" src="+src_i);
-                //printSet("Adding direct assignment dest="+dest_i+" src="+src_i, src_bdd, "V1xV2");
             }
             edgeSet.orWith(src_bdd);
             if (TRACE) {
-                printSet("Edge-set is now", edgeSet, "V1xV2");
+                printSet("Edge-set is now", edgeSet);
             }
         }
         dest_bdd.free();
@@ -1005,11 +946,10 @@ public class BDDPointerAnalysis {
         dest_bdd.andWith(src_bdd);
         if (TRACE_INST) {
             System.out.println("Adding direct assignment dest="+dest_i+" src="+src_i);
-            //printSet("Adding direct assignment dest="+dest_i+" src="+src_i, dest_bdd, "V1xV2");
         }
         edgeSet.orWith(dest_bdd);
         if (TRACE) {
-            printSet("Edge-set is now", edgeSet, "V1xV2");
+            printSet("Edge-set is now", edgeSet);
         }
     }
 
@@ -1024,11 +964,10 @@ public class BDDPointerAnalysis {
         dest_bdd.andWith(base_bdd);
         if (TRACE_INST) {
             System.out.println("Adding load field dest="+dest_i+" base="+base_i+" f="+f_i);
-            //printSet("Adding load field dest="+dest_i+" base="+base_i+" f="+f_i, dest_bdd, "V1xV2xFD");
         }
         loads.orWith(dest_bdd);
         if (TRACE) {
-            printSet("Loads-set is now", loads, "V1xV2xFD");
+            printSet("Loads-set is now", loads);
         }
     }
 
@@ -1045,11 +984,10 @@ public class BDDPointerAnalysis {
             dest_bdd.andWith(base_bdd.id());
             if (TRACE_INST) {
                 System.out.println("Adding load field dest="+dest_i+" base="+base_i+" f="+f_i);
-                //printSet("Adding load field dest="+dest_i+" base="+base_i+" f="+f_i, dest_bdd, "V1xV2xFD");
             }
             loads.orWith(dest_bdd);
             if (TRACE) {
-                printSet("Loads-set is now", loads, "V1xV2xFD");
+                printSet("Loads-set is now", loads);
             }
         }
         base_bdd.free(); f_bdd.free();
@@ -1066,11 +1004,10 @@ public class BDDPointerAnalysis {
         base_bdd.andWith(f_bdd);
         if (TRACE_INST) {
             System.out.println("Adding store field base="+base_i+" f="+f_i+" src="+src_i);
-            //printSet("Adding store field base="+base_i+" f="+f_i+" src="+src_i, base_bdd, "V1xV2xFD");
         }
         stores.orWith(base_bdd);
         if (TRACE) {
-            printSet("Stores-set is now", stores, "V1xV2xFD");
+            printSet("Stores-set is now", stores);
         }
     }
 
@@ -1091,7 +1028,7 @@ public class BDDPointerAnalysis {
             }
             stores.orWith(src_bdd);
             if (TRACE) {
-                printSet("Stores-set is now", stores, "V1xV2xFD");
+                printSet("Stores-set is now", stores);
             }
         }
         base_bdd.free(); f_bdd.free();
@@ -1124,11 +1061,11 @@ public class BDDPointerAnalysis {
         BDD type_bdd = T2.ithVar(type_i);
         type_bdd.andWith(site_bdd);
         if (TRACE) {
-            printSet("Adding alloc type site="+site_i+" type="+type_i, type_bdd, "H1xT2");
+            printSet("Adding alloc type site="+site_i+" type="+type_i, type_bdd);
         }
         aC.orWith(type_bdd);
         if (TRACE) {
-            printSet("AllocClass is now", aC, "H1xT2");
+            printSet("AllocClass is now", aC);
         }
     }
 
@@ -1140,11 +1077,11 @@ public class BDDPointerAnalysis {
         BDD type_bdd = T1.ithVar(type_i);
         type_bdd.andWith(var_bdd);
         if (TRACE) {
-            printSet("Adding var type var="+var_i+" type="+type_i, type_bdd, "V1xT1");
+            printSet("Adding var type var="+var_i+" type="+type_i, type_bdd);
         }
         vC.orWith(type_bdd);
         if (TRACE) {
-            printSet("VarClass is now", vC, "V1xT1");
+            printSet("VarClass is now", vC);
         }
     }
     
@@ -1157,7 +1094,7 @@ public class BDDPointerAnalysis {
             jq_Type t1 = (jq_Type) typeIndexMap.get(i1);
             if (t1 == null) {
                 BDD type1_bdd = T1.ithVar(i1);
-                BDD type2_bdd = T2.set();
+                BDD type2_bdd = T2.domain();
                 type1_bdd.andWith(type2_bdd);
                 cC.orWith(type1_bdd);
                 continue;
@@ -1167,7 +1104,7 @@ public class BDDPointerAnalysis {
             for ( ; i2<n1; ++i2) {
                 jq_Type t2 = (jq_Type) typeIndexMap.get(i2);
                 if (t2 == null) {
-                    BDD type1_bdd = T1.set();
+                    BDD type1_bdd = T1.domain();
                     BDD type2_bdd = T2.ithVar(i2);
                     type1_bdd.andWith(type2_bdd);
                     cC.orWith(type1_bdd);
@@ -1188,13 +1125,10 @@ public class BDDPointerAnalysis {
     public void calculateTypeFilter() {
         calculateTypeHierarchy();
         
-        BDD T1set = T1.set();
-        BDD T2set = T2.set();
         // (T1 x T2) * (H1 x T2) => (T1 x H1)
         BDD assignableTypes = cC.relprod(aC, T2set);
         // (T1 x H1) * (V1 x T1) => (V1 x H1)
         typeFilter = assignableTypes.relprod(vC, T1set);
-        T1set.free(); T2set.free();
         cTypes = aC.replace(T2ToT1);
         //cC.free(); vC.free(); aC.free();
 
@@ -1252,7 +1186,7 @@ public class BDDPointerAnalysis {
         last_methodIndex = n1;
         last_heapobjIndex = n2;
         if (TRACE) {
-            printSet("vtable", vtable_bdd, "H1xT3xT4");
+            printSet("vtable", vtable_bdd);
         }
     }
     
@@ -1273,7 +1207,7 @@ public class BDDPointerAnalysis {
                 //          o \in pt(l2)
 
                 // (V1 x V2) * (V1 x H1) => (V2 x H1)
-                BDD newPt1 = edgeSet.relprod(pointsTo, V1.set());
+                BDD newPt1 = edgeSet.relprod(pointsTo, V1set);
                 // (V2 x H1) => (V1 x H1)
                 BDD newPt2 = newPt1.replace(V2ToV1);
 
@@ -1282,7 +1216,7 @@ public class BDDPointerAnalysis {
                 BDD newPt3 = newPt2.and(typeFilter);
                 if (TRACE) {
                     BDD temp = newPt2.apply(typeFilter, BDDFactory.diff);
-                    printSet("removed by type filter", temp, "V1xH1");
+                    printSet("removed by type filter", temp);
                     temp.free();
                 }
                 // (V1 x H1)
@@ -1297,11 +1231,11 @@ public class BDDPointerAnalysis {
             // -----------------------------------------
             //                  o2 \in pt(o1.f) 
             // (V1 x (V2 x FD)) * (V1 x H1) => ((V2 x FD) x H1)
-            BDD tmpRel1 = stores.relprod(pointsTo, V1.set());
+            BDD tmpRel1 = stores.relprod(pointsTo, V1set);
             // ((V2 x FD) x H1) => ((V1 x FD) x H2)
             BDD tmpRel2 = tmpRel1.replace(V2ToV1).replace(H1ToH2);
             // ((V1 x FD) x H2) * (V1 x H1) => ((H1 x FD) x H2)
-            fieldPt = tmpRel2.relprod(pointsTo, V1.set());
+            fieldPt = tmpRel2.relprod(pointsTo, V1set);
 
             /* --- rule (3) --- */
             //
@@ -1309,19 +1243,19 @@ public class BDDPointerAnalysis {
             // -----------------------------------------
             //                 o2 \in pt(l)
             // ((V1 x FD) x V2) * (V1 x H1) => ((H1 x FD) x V2)
-            BDD tmpRel3 = loads.relprod(pointsTo, V1.set());
+            BDD tmpRel3 = loads.relprod(pointsTo, V1set);
             // ((H1 x FD) x V2) * ((H1 x FD) x H2) => (V2 x H2)
-            BDD newPt4 = tmpRel3.relprod(fieldPt, H1.set().and(FD.set()));
+            BDD newPt4 = tmpRel3.relprod(fieldPt, H1andFDset);
             // (V2 x H2) => (V1 x H1)
             BDD newPt5 = newPt4.replace(V2ToV1).replace(H2ToH1);
 
             /* --- apply type filtering and merge into pointsTo relation --- */
             if (TRACE) {
-                printSet("before type filter", newPt5, "V1xH1");
+                printSet("before type filter", newPt5);
             }
             BDD newPt6 = newPt5.and(typeFilter);
             if (TRACE) {
-                printSet("after type filter", newPt6, "V1xH1");
+                printSet("after type filter", newPt6);
             }
             pointsTo = pointsTo.or(newPt6);
 
@@ -1332,13 +1266,8 @@ public class BDDPointerAnalysis {
     
     public void solveIncremental() {
 
-        BDD empty = bdd.zero();
-        
         BDD oldPointsTo = bdd.zero();
         BDD newPointsTo = pointsTo.id();
-        BDD V1set = V1.set();
-        BDD H1andFDset = H1.set();
-        H1andFDset.andWith(FD.set());
 
         // start solving 
         for (;;) {
@@ -1352,7 +1281,7 @@ public class BDDPointerAnalysis {
                 newPt2.applyWith(pointsTo.id(), BDDFactory.diff);
                 newPt2.andWith(typeFilter.id());
                 newPointsTo = newPt2;
-                if (newPointsTo.equals(empty)) break;
+                if (newPointsTo.isZero()) break;
                 pointsTo.orWith(newPointsTo.id());
             }
             newPointsTo.free();
@@ -1406,13 +1335,11 @@ public class BDDPointerAnalysis {
 
             // apply typeFilter
             newPointsTo.andWith(typeFilter.id());
-            if (newPointsTo.equals(empty)) break;
+            if (newPointsTo.isZero()) break;
             pointsTo.orWith(newPointsTo.id());
         }
         
         newPointsTo.free();
-        empty.free();
-        V1set.free(); H1andFDset.free();
     }
 
     public class BDDCallGraph extends CallGraph {
@@ -1428,11 +1355,15 @@ public class BDDPointerAnalysis {
          */
         public Collection getTargetMethods(Object context, ProgramLocation callSite) {
             jq_Method method = (jq_Method) callSite.getTargetMethod();
-            if (callSite.isSingleTarget())
+            if (callSite.isSingleTarget()) {
                 return Collections.singleton(method);
+            }
             Collection targets = (Collection) callSiteToTargets.get(callSite);
-            if (targets != null) return targets;
-            else return Collections.EMPTY_SET;
+            if (targets != null) {
+                return targets;
+            } else {
+                return Collections.EMPTY_SET;
+            } 
         }
 
         /* (non-Javadoc)
