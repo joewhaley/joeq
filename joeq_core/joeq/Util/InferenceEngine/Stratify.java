@@ -73,18 +73,18 @@ public class Stratify {
         
         for (int i = 1; ; ++i) {
             // Discover current stratum.
+            if (TRACE) out.println("Discovering Stratum #"+i+"...");
             Set stratumSccs = discoverStratum(depNav, allRelations, inputs);
             
             if (TRACE) out.println("Stratum #"+i+": "+stratumSccs);
             
-            Set stratumNodes = getStratumNodes(stratumSccs);
-            
             // Make a navigator for this stratum.
+            Set stratumNodes = getStratumNodes(stratumSccs);
             InferenceRule.DependenceNavigator depNav2 = new InferenceRule.DependenceNavigator(depNav);
             depNav2.retainAll(stratumNodes);
             
             // Break current stratum into SCCs.
-            SCComponent first = sortSCCs(stratumSccs, depNav2);
+            SCComponent first = breakIntoSCCs(stratumNodes, depNav2);
             firstSCCs.add(first);
             
             // Any relations that have been totally computed are inputs to the
@@ -182,7 +182,9 @@ public class Stratify {
         return stratum;
     }
     
-    SCComponent sortSCCs(Collection sccs, InferenceRule.DependenceNavigator depNav) {
+    SCComponent breakIntoSCCs(Collection stratumNodes, InferenceRule.DependenceNavigator depNav) {
+        
+        Collection/*<SCComponent>*/ sccs = SCComponent.buildSCC(stratumNodes, depNav);
         
         // Find root SCCs.
         Set roots = new HashSet();
@@ -211,10 +213,8 @@ public class Stratify {
                 depNav2.retainAll(nodeSet);
                 // Remove a backedge.
                 removeABackedge(scc, depNav2);
-                // Build inner SCCs.
-                Collection/*<SCComponent>*/ sccsInner = SCComponent.buildSCC(nodeSet, depNav2);
-                // Sort inner SCCs.
-                SCComponent first2 = sortSCCs(sccsInner, depNav2);
+                // Break into inner SCCs and sort them.
+                SCComponent first2 = breakIntoSCCs(nodeSet, depNav2);
                 if (TRACE) {
                     out.print("Order for SCC"+scc.getId()+": ");
                     for (SCComponent scc2 = first2; scc2 != null; scc2 = scc2.nextTopSort()) {
