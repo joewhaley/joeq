@@ -552,7 +552,7 @@ void* __stdcall allocate_stack(const int size)
         fprintf(stderr, "PANIC! Cannot allocate stack!\n");
         lpvAddr = calloc(sizeof(char), size);
         if (lpvAddr != NULL)
-            lpvAddr = ((char*)lpvAddr) + size;
+            lpvAddr = (void*)((DWORD_PTR)lpvAddr+size);
         return lpvAddr;
     }
     if (!VirtualProtect(lpvAddr, dwPageSize, PAGE_GUARD | PAGE_READWRITE, &oldProtect)) {
@@ -857,7 +857,8 @@ void* __stdcall allocate_stack(const int size)
     // TODO
     void* p = calloc(sizeof(char), size);
     //printf("Allocating stack at 0x%08x of size %d.\n", p, size);
-    return (char*)p+size;
+    if (p != NULL) p = (char*)p+size;
+    return p;
 }
 
 #if defined(linux)
