@@ -23,10 +23,12 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
 import Util.Assert;
+import Util.Collections.Pair;
 
 /**
  * @author jwhaley
@@ -270,6 +272,15 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             }
             
             visitNode(node);
+        }
+
+        for (Iterator i = ms.getCastMap().entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            Node from = (Node)((Pair)e.getKey()).left;
+            CheckCastNode to = (CheckCastNode)e.getValue();
+            int V_i = pa.Vmap.get(to);
+            BDD V_bdd = pa.V1.ithVar(V_i);
+            pa.addToA(V_bdd, pa.Vmap.get(from));
         }
     }
     
