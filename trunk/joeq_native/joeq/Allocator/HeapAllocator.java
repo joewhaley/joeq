@@ -215,6 +215,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
             SystemInterface.die(-1);
         }
         isOutOfMemory = true;
+        SystemInterface.debugmsg("Out of memory!");
         throw outofmemoryerror;
     }
     

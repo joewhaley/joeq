@@ -27,7 +27,7 @@ public class SimpleAllocator extends HeapAllocator {
     
     /** Maximum memory, in bytes, to be allocated from the OS.
      */
-    public static final int MAX_MEMORY = 33554432;
+    public static final int MAX_MEMORY = 67108864;
     
     /** Threshold for direct OS allocation.  When an array overflows the current block
      * and is larger than this size, it is allocated directly from the OS.

@@ -12,6 +12,7 @@ package Run_Time;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_StaticField;
+import Clazz.jq_InstanceField;
 import Clazz.jq_NameAndDesc;
 import UTF.Utf8;
 import Run_Time.Unsafe;
@@ -23,6 +24,7 @@ import jq;
 public abstract class SystemInterface {
 
     public static int/*CodeAddress*/ debugmsg_4;
+    public static int/*CodeAddress*/ debugwmsg_8;
     public static int/*CodeAddress*/ syscalloc_4;
     public static int/*CodeAddress*/ die_4;
     public static int/*CodeAddress*/ currentTimeMillis_0;
@@ -72,16 +74,32 @@ public abstract class SystemInterface {
 
     public static final jq_Class _class;
     public static final jq_StaticField _debugmsg;
+    public static final jq_InstanceField _string_value;
+    public static final jq_InstanceField _string_offset;
+    public static final jq_InstanceField _string_count;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/SystemInterface;");
         _debugmsg = _class.getOrCreateStaticField("debugmsg_4", "I");
+        _string_value = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("value", "[C");
+        _string_offset = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("offset", "I");
+        _string_count = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("count", "I");
     }
 
     public static void debugmsg(String msg) {
-        if (jq.Bootstrapping) System.err.println(msg);
-        else {
-            debugmsg(toCString(msg));
+        if (jq.Bootstrapping) {
+            System.err.println(msg);
+            return;
         }
+        int/*HeapAddress*/ value = Unsafe.peek(Unsafe.addressOf(msg)+_string_value.getOffset());
+        int offset = Unsafe.peek(Unsafe.addressOf(msg)+_string_offset.getOffset());
+        int count = Unsafe.peek(Unsafe.addressOf(msg)+_string_count.getOffset());
+        Unsafe.pushArg(value + offset*2);
+        Unsafe.pushArg(count);
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            Unsafe.invoke(debugwmsg_8);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+        } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     
     public static void debugmsg(byte[] msg) {
