@@ -109,9 +109,11 @@ public abstract class Bootstrapper implements ObjectLayout {
         Reflection.obj_trav = obj_trav;
         Unsafe.installRemapper(objmap = new BootImage(obj_trav, bca));
         
+        long starttime = System.currentTimeMillis();
         jq_Class c;
         c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName+";");
         c.load(); c.verify(); c.prepare();
+        long loadtime = System.currentTimeMillis() - starttime;
 
         jq_StaticMethod rootm = null;
         Utf8 rootm_name = Utf8.get(rootMethodName);
@@ -129,6 +131,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         Set classset;
         Set memberset;
         
+        starttime = System.currentTimeMillis();
         if (classList != null) {
             DataInputStream dis = new DataInputStream(new FileInputStream(classList));
             classset = new HashSet();
@@ -185,10 +188,21 @@ public abstract class Bootstrapper implements ObjectLayout {
                         ((jq_Class)t).trim(trim);
                     }
                 }
+                System.out.println("Number of instance fields kept: "+jq_Class.NumOfIFieldsKept);
+                System.out.println("Number of static fields kept: "+jq_Class.NumOfSFieldsKept);
+                System.out.println("Number of instance methods kept: "+jq_Class.NumOfIMethodsKept);
+                System.out.println("Number of static methods kept: "+jq_Class.NumOfSMethodsKept);
+
+                System.out.println("Number of instance fields eliminated: "+jq_Class.NumOfIFieldsEliminated);
+                System.out.println("Number of static fields eliminated: "+jq_Class.NumOfSFieldsEliminated);
+                System.out.println("Number of instance methods eliminated: "+jq_Class.NumOfIMethodsEliminated);
+                System.out.println("Number of static methods eliminated: "+jq_Class.NumOfSMethodsEliminated);
             }
             
             memberset = trim.getNecessaryMembers();
         }
+        loadtime += System.currentTimeMillis() - starttime;
+        System.out.println("Load time: "+loadtime);
         
         // initialize the set of boot types
         jq.boot_types = classset;
@@ -210,6 +224,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         //          "entrypoint is at "+jq.hex8(SystemInterface._entry.getAddress()));
         
         // initialize the static fields for all the necessary types
+        starttime = System.currentTimeMillis();
         Iterator it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
@@ -219,7 +234,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             if (t.isClassType()) {
                 jq_Class k = (jq_Class)t;
                 jq.assert((k.getSuperclass() == null) || classset.contains(k.getSuperclass()),
-                          k.getSuperclass()+" is not in class set");
+                          k.getSuperclass()+" (superclass of "+k+") is not in class set!");
                 jq_StaticField[] sfs = k.getDeclaredStaticFields();
                 for (int j=0; j<sfs.length; ++j) {
                     jq_StaticField sf = sfs[j];
@@ -228,20 +243,29 @@ public abstract class Bootstrapper implements ObjectLayout {
                 }
             }
         }
+        long sfinittime = System.currentTimeMillis() - starttime;
+        System.out.println("SF init time: "+sfinittime);
+        
         // turn off jq.Bootstrapping flag in image
         jq_class.setStaticData(jq_class.getOrCreateStaticField("Bootstrapping","Z"), 0);
 
         // compile versions of all necessary methods.
+        starttime = System.currentTimeMillis();
         it = memberset.iterator();
         while (it.hasNext()) {
             jq_Member m = (jq_Member)it.next();
             if (m instanceof jq_Method) {
-                ((jq_Method)m).compile();
+                jq_Method m2 = ((jq_Method)m);
+                if (m2.getDeclaringClass() == Unsafe._class) continue;
+                m2.compile();
             }
         }
+        long compiletime = System.currentTimeMillis() - starttime;
+        System.out.println("Compile time: "+compiletime);
 
         // initialize and add the jq_Class/jq_Array/jq_Primitive objects for all
         // necessary types.
+        starttime = System.currentTimeMillis();
         it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
@@ -252,9 +276,19 @@ public abstract class Bootstrapper implements ObjectLayout {
             objmap.getOrAllocateObject(t);
         }
         
+        // initialize some classes that are used to write the bootimage and that
+        // include Utf8 references, because those Utf8 references will get added to our table
+        Object xxx = Assembler.x86.ExternalReference._heap_from;
+        
+        System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getAllTypes().size());
+        System.out.println("number of classes in image = "+jq.boot_types.size());
+        
         // add all reachable members.
         System.out.println("Finding all reachable objects...");
         objmap.find_reachable(0);
+        
+        long traversaltime = System.currentTimeMillis() - starttime;
+        System.out.println("Traversal time: "+traversaltime);
 
         // now that we have visited all reachable objects, jq.on_vm_startup is built
         int index = objmap.numOfEntries();
@@ -263,9 +297,13 @@ public abstract class Bootstrapper implements ObjectLayout {
         objmap.find_reachable(index);
         jq_class.setStaticData(_on_vm_startup, addr);
         objmap.addDataReloc(_on_vm_startup.getAddress(), addr);
-        
+
         // all done with traversal, no more objects can be added to the image.
         objmap.disableAllocations();
+        
+        System.out.println("number of objects = "+objmap.numOfEntries());
+        System.out.println("heap size = "+objmap.size());
+        System.out.println("code size = "+bca.size());
         
         // store entrypoint/trap handler addresses
         SystemInterface.entry_0 = rootm.getDefaultCompiledVersion().getEntrypoint();
@@ -280,7 +318,10 @@ public abstract class Bootstrapper implements ObjectLayout {
         
         // dump it!
         FileOutputStream fos = new FileOutputStream(imageName);
+        starttime = System.currentTimeMillis();
         objmap.dumpCOFF(fos);
+        long dumptime = System.currentTimeMillis() - starttime;
+        System.out.println("Dump time: "+dumptime);
         
         it = classset.iterator();
         while (it.hasNext()) {
@@ -295,6 +336,11 @@ public abstract class Bootstrapper implements ObjectLayout {
         }
         
         System.out.println(rootm.getDefaultCompiledVersion());
+
+        //objmap = null;
+        //System.gc(); System.gc();
+        //System.out.println("total memory = "+Runtime.getRuntime().totalMemory());
+        //System.out.println("free memory = "+Runtime.getRuntime().freeMemory());
     }
 
     public static void err(String s) {
