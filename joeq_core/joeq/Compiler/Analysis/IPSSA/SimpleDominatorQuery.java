@@ -191,7 +191,7 @@ public class SimpleDominatorQuery implements DominatorQuery {
 
 	private DominatorNode getNode(Quad q) {
 		BasicBlock bb = (BasicBlock)_quad2BBMap.get(q);
-		Assert._assert(bb != null);
+		Assert._assert(bb != null, "No matching basic block for " + q);
 		DominatorNode node = (DominatorNode)_bb2nodeMap.get(bb);
 		Assert._assert(node != null);
 
