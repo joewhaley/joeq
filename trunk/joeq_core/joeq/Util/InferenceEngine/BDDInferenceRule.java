@@ -601,6 +601,7 @@ public class BDDInferenceRule extends InferenceRule {
                 BDDDomain d1 = (BDDDomain) domains.get(i);
                 BDDDomain d2 = (BDDDomain) domains.get(p[i]);
                 int index = indices[i];
+                System.out.println("Varorder "+varOrder+" index "+index+" diff "+diff);
                 index += diff;
                 varOrder = varOrder.substring(0, index) + d2.getName() + varOrder.substring(index+d1.getName().length());
                 diff += d2.getName().length() - d1.getName().length();
