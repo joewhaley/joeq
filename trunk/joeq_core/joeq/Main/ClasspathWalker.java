@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -15,13 +16,17 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
 
+/**
+ * author: V.Benjamin Livshits
+ * $Id$
+ * */
 public class ClasspathWalker {
     private static final boolean TRACE = true;
-    
+       
     public static void main(String[] args){
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
         int classCount = 0;
-        for(Iterator iter = PrimordialClassLoader.loader.listPackages(); iter.hasNext();){
+        for(Iterator iter = listPackages(); iter.hasNext();){
             //System.out.println("\t" + iter.next());
             String packageName = (String) iter.next();
             HashSet loaded = new HashSet();
@@ -56,6 +61,26 @@ public class ClasspathWalker {
             }            
             System.gc();
         }
+    }
+    
+    static Iterator listPackages(){
+        Collection result = new LinkedList();
+        for(Iterator iter = PrimordialClassLoader.loader.listPackages(); iter.hasNext();){
+            String packageName = (String) iter.next();
+            if(packageName.equals(".")){
+                continue;
+            }
+            if(packageName.endsWith("javabdd.jar") || packageName.endsWith("jwutil-1.0.jar")){
+                continue;
+            }            
+            if(packageName.endsWith("joeq_core")){
+                continue;
+            }
+            
+            result.add(packageName);
+        }
+        
+        return result.iterator();
     }
     
     public static String canonicalizeClassName(String s) {
