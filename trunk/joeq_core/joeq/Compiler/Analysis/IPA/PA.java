@@ -3160,28 +3160,35 @@ public class PA {
             analyzeIE();
         }
         if(REFLECTION_STAT){
-            BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
-            
-            int pos = 1;
-            for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext(); pos++){
-                BDD i = (BDD)iter.next();
-                int i_i = i.scanVar(I).intValue();
-                ProgramLocation mc = (ProgramLocation)Imap.get(i_i);
+            PrintWriter w = null;
+            try {
+                w = new PrintWriter(new FileWriter("reflection.txt"));
+                BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
+                w.println("There are " + newInstanceCalls.satCount(Iset) + " calls to Class.newInstance");
                 
-                BDD callees = IE.relprod(i, Iset);
-                if(!callees.isZero()){
-                    System.out.println("[" + pos + "]\t" + mc.toStringLong() + ": " + 
-                        (callees.satCount(Mset)==1 ? "UNRESOLVED":""));
-                    for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
-                        BDD callee = (BDD)iter2.next();
-                        
-                        int m_i = callee.scanVar(M).intValue();
-                        jq_Method m = (jq_Method)Mmap.get(m_i);
-                        
-                        System.out.println("\t" + m.toString());
+                int pos = 1;
+                for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext(); pos++){
+                    BDD i = (BDD)iter.next();
+                    int i_i = i.scanVar(I).intValue();
+                    ProgramLocation mc = (ProgramLocation)Imap.get(i_i);
+                    
+                    BDD callees = IE.relprod(i, Iset);
+                    if(!callees.isZero()){
+                        w.println("[" + pos + "]\t" + mc.toStringLong() + ": " + 
+                            (callees.satCount(Mset)==1 ? "UNRESOLVED":""));
+                        for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
+                            BDD callee = (BDD)iter2.next();
+                            
+                            int m_i = callee.scanVar(M).intValue();
+                            jq_Method m = (jq_Method)Mmap.get(m_i);
+                            
+                            w.println("\t" + m.toString());
+                        }
+                        w.println();
                     }
-                    System.out.println();
                 }
+            }finally{
+                if(w != null) w.close();
             }
         }
         //initializeForNameMapEntries();
