@@ -9,7 +9,7 @@
 
 package Assembler.x86;
 
-import Allocator.CodeAllocator;
+import Allocator.DefaultCodeAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
@@ -30,7 +30,7 @@ public class DirectBindCall {
     public void patch() {
         jq_CompiledCode cc = target.getDefaultCompiledVersion();
         jq.assert(cc != null);
-        CodeAllocator.DEFAULT.patchRelativeOffset(source, cc.getEntrypoint());
+        DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
     }
     
     public int/*CodeAddress*/ getSource() { return source; }
