@@ -28,12 +28,14 @@ import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
 import Scheduler.jq_NativeThread;
 import Util.IdentityHashCodeWrapper;
+import Assembler.x86.Code2HeapReference;
 import Assembler.x86.Heap2HeapReference;
 import Assembler.x86.Heap2CodeReference;
 import Assembler.x86.ExternalReference;
 import Assembler.x86.DirectBindCall;
 import Assembler.x86.Reloc;
 import UTF.Utf8;
+import Linker.ELF.*;
 import jq;
 import java.util.List;
 import java.util.LinkedList;
@@ -717,7 +719,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         Iterator it = text_relocs.iterator();
         while (it.hasNext()) {
             Reloc r = (Reloc)it.next();
-            r.dump(out);
+            r.dumpCOFF(out);
         }
         out.flush();
         
@@ -740,7 +742,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         it = data_relocs.iterator();
         while (it.hasNext()) {
             Reloc r = (Reloc)it.next();
-            r.dump(out);
+            r.dumpCOFF(out);
         }
         
         // write line numbers
@@ -1069,7 +1071,107 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
             out.write(b);
         }
     }
+
     
+    public void writeELF(OutputStream out) throws IOException {
+        final int datasize = heapCurrent;
+        ELFFile f = new ELFFile(ELFFile.ELFDATA2LSB, ELFFile.ET_REL, ELFFile.EM_386, 0);
+        f.setLittleEndian();
+        Section.NullSection empty = new Section.NullSection();
+        Section.StrTabSection shstrtab = new Section.StrTabSection(".shstrtab", 0);
+        Section.StrTabSection strtab = new Section.StrTabSection(".strtab", 0);
+        Section.SymTabSection symtab = new Section.SymTabSection(".symtab", 0, 0, 0);
+        Section.ProgBitsSection text = new TextSection();
+        Section.ProgBitsSection data = new DataSection();
+        Section.RelSection textrel = new Section.RelSection(".textrel", 0, symtab, text);
+        Section.RelSection datarel = new Section.RelSection(".datarel", 0, symtab, data);
+        f.setSectionHeaderStringTable(shstrtab);
+        f.setSymbolStringTable(strtab);
+        f.addSection(empty);
+        f.addSection(shstrtab);
+        f.addSection(strtab);
+        f.addSection(symtab);
+        f.addSection(text);
+        f.addSection(data);
+        f.addSection(textrel);
+        f.addSection(datarel);
+
+        final List text_relocs = bca.getAllDataRelocs();
+        final List exts = new LinkedList();
+        final int numOfVTableRelocs = addVTableRelocs(data_relocs);
+        addSystemInterfaceRelocs(exts, data_relocs);
+
+        SymbolTableEntry textsyment = new SymbolTableEntry(".text", 0, 0, (byte)((SymbolTableEntry.STB_LOCAL << 4) | SymbolTableEntry.STT_SECTION), text);
+        SymbolTableEntry datasyment = new SymbolTableEntry(".data", 0, 0, (byte)((SymbolTableEntry.STB_LOCAL << 4) | SymbolTableEntry.STT_SECTION), data);
+        
+        Iterator it = exts.iterator();
+        while (it.hasNext()) {
+            ExternalReference r = (ExternalReference)it.next();
+            SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, (byte)((SymbolTableEntry.STB_WEAK << 4) | SymbolTableEntry.STT_FUNC), empty);
+            symtab.addSymbol(e);
+        }
+        
+        it = text_relocs.iterator();
+        while (it.hasNext()) {
+            Reloc r = (Reloc)it.next();
+            if (r instanceof Code2HeapReference) {
+                Code2HeapReference cr = (Code2HeapReference)r;
+                textrel.addReloc(new RelocEntry(cr.getFrom(), datasyment, RelocEntry.R_386_32));
+            } else {
+                jq.UNREACHABLE(r.toString());
+            }
+        }
+        
+        it = data_relocs.iterator();
+        while (it.hasNext()) {
+            Reloc r = (Reloc)it.next();
+            if (r instanceof Heap2HeapReference) {
+                Heap2HeapReference cr = (Heap2HeapReference)r;
+                datarel.addReloc(new RelocEntry(cr.getFrom(), datasyment, RelocEntry.R_386_32));
+            } else if (r instanceof Heap2CodeReference) {
+                Heap2CodeReference cr = (Heap2CodeReference)r;
+                datarel.addReloc(new RelocEntry(cr.getFrom(), textsyment, RelocEntry.R_386_32));
+            } else if (r instanceof ExternalReference) {
+                ExternalReference cr = (ExternalReference)r;
+                datarel.addReloc(new RelocEntry(cr.getAddress(), datasyment, RelocEntry.R_386_32));
+            } else {
+                jq.UNREACHABLE(r.toString());
+            }
+        }
+        
+        f.write(out);
+        
+        out.flush();
+    }
+
+    class TextSection extends Section.ProgBitsSection {
+        TextSection() {
+            super(".text", Section.SHF_ALLOC | Section.SHF_EXECINSTR | Section.SHF_WRITE);
+        }
+        public int getSize() { return bca.size(); }
+        public int getAddrAlign() { return 64; }
+        public void writeData(ELFFile file, OutputStream out) throws IOException {
+            bca.dump(out);
+        }
+    }
+
+    class DataSection extends Section.ProgBitsSection {
+        DataSection() {
+            super(".data", Section.SHF_ALLOC | Section.SHF_WRITE);
+        }
+        public int getSize() { return heapCurrent; }
+        public int getAddrAlign() { return 64; }
+        public void writeData(ELFFile file, OutputStream out) throws IOException {
+            try {
+                dumpHeap(out);
+            } catch (UnknownObjectException x) {
+                Object u = x.getObject();
+                HashSet visited = new HashSet();
+                findReferencePath(u, x, visited);
+                throw x;
+            }
+        }
+    }
 }
 
 class UnknownObjectException extends RuntimeException {
