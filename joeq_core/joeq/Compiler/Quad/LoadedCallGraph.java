@@ -104,7 +104,7 @@ public class LoadedCallGraph extends CallGraph {
                     throw new IOException();
                 String methodDesc = st.nextToken();
                 m = (jq_Method) k.getDeclaredMember(methodName, methodDesc);
-                Assert._assert(m != null);
+                Assert._assert(m != null, "Cannot find \""+methodName+"\" \""+methodDesc+"\" in "+k);
                 methods.add(m);
                 if (st.hasMoreTokens()) {
                     String arg = st.nextToken();
