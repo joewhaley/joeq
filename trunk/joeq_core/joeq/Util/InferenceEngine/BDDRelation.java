@@ -57,10 +57,12 @@ public class BDDRelation extends Relation {
                 for (Iterator j = doms.iterator(); j.hasNext(); ) {
                     BDDDomain dom = (BDDDomain) j.next();
                     if (dom.getName().equals(option)) {
-                        if (domains.contains(dom))
-                            throw new IllegalArgumentException("Cannot assign "+dom+" to field "+name+": "+dom+" is already assigned");
-                        d = dom;
-                        break;
+                        if (domains.contains(dom)) {
+                            System.out.println("Cannot assign "+dom+" to field "+name+": "+dom+" is already assigned");
+                        } else {
+                            d = dom;
+                            break;
+                        }
                     }
                 }
                 while (d == null) {
