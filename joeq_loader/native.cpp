@@ -34,11 +34,11 @@ extern "C" void __stdcall die(const int code)
 {
 	fflush(stdout);
 	fflush(stderr);
-	sleep(10);
 	exit(code);
 }
 
 #if defined(WIN32)
+// Windows time functions
 __int64 __stdcall filetimeToJavaTime(const FILETIME* fileTime)
 {
 	LARGE_INTEGER time;
@@ -61,14 +61,13 @@ extern "C" __int64 __stdcall currentTimeMillis(void)
 	return filetimeToJavaTime(&fileTime);
 }
 #else
-
+// Generic unix time functions.
 extern "C" __int64 __stdcall currentTimeMillis(void)
 {
 	struct timeb t;
 	ftime(&t);
 	return ((__int64)(t.time))*1000 + t.millitm;
 }
-
 #endif
 
 extern "C" void __stdcall mem_cpy(void* to, const void* from, const int size)
@@ -112,11 +111,13 @@ extern "C" int __stdcall console_available(void)
 	if (!GetNumberOfConsoleInputEvents(in, &count)) return -1;
 	else return (int)count;
 }
-#else
+#elif defined(linux)
 extern "C" int __stdcall console_available(void)
 {
 	return 0; // TODO
 }
+#else
+#error System type not supported.
 #endif
 extern "C" int __stdcall main_argc(void)
 {
@@ -171,7 +172,7 @@ extern "C" __int64 __stdcall fs_stat_size(const char* s)
 	if (res != 0) return 0;
 	return buf.st_size;
 }
-#else
+#elif defined(linux)
 extern "C" int __stdcall fs_getdcwd(const int i, char* buf, const int buflen)
 {
   // TODO.
@@ -210,6 +211,8 @@ extern "C" __int64 __stdcall fs_stat_size(const char* s)
   if (res != 0) return 0;
   return buf.st_size;
 }
+#else
+#error System type not supported.
 #endif
 extern "C" int __stdcall fs_remove(const char* s)
 {
@@ -284,7 +287,7 @@ extern "C" int __stdcall fs_getlogicaldrives(void)
 {
 	return GetLogicalDrives();
 }
-#else
+#elif defined(linux)
 extern "C" DIR * __stdcall fs_opendir(const char* s)
 {
 	return opendir(s);
@@ -307,6 +310,8 @@ extern "C" int __stdcall fs_getlogicaldrives(void)
   // TODO
   return 0;
 }
+#else
+#error System type not supported.
 #endif
 extern "C" int __stdcall fs_mkdir(const char* s)
 {
@@ -384,7 +389,7 @@ extern "C" HANDLE __stdcall get_current_thread_handle(void)
 }
 
 typedef struct _Thread {
-	CONTEXT registers;
+	CONTEXT* registers;
 	int thread_switch_enabled;
 } Thread;
 
@@ -462,7 +467,7 @@ extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* co
 		ret
 	}
 }
-#else
+#elif defined(linux)
 extern "C" int __stdcall suspend_thread(const int pid)
 {
   //printf("Suspending thread %d.\n", pid);
@@ -484,17 +489,26 @@ int thread_start_trampoline(void *t)
   //printf("Thread %d started, suspending self.\n", pid);
   void* arg = *((void**)t);
   int (*start)(void *) = (int (*)(void*)) ((void**)t)[1];
+  // write our pid in temp[0]
+  *((int*)t) = getpid();
+  // write '0' in temp[1], signaling parent that we have finished
+  // initialization.
   ((void**)t)[1] = 0;
+  // wait until parent receives notification and notifies us back.
   while (!((void**)t)[1]) sched_yield();
+  // free temp array
   free(t);
+
+#if 0
   int foo;
   sigset_t set; sigemptyset(&set); sigaddset(&set, SIGCONT); sigaddset(&set, SIGKILL);
   sigwait(&set, &foo);
   if (foo == SIGKILL) {
-    //printf("Thread %d killed.\n", pid);
+    printf("Thread %d killed while waiting.\n", pid);
     return 0;
   }
   //printf("Thread %d resumed (signal=%d)\n", pid, foo);
+#endif
   //printf("Thread %d calling function at 0x%08x, arg 0x%08x.\n", pid, start, arg);
   return start(arg);
 }
@@ -512,8 +526,20 @@ extern "C" int __stdcall create_thread(int (*start)(void *), void* arg)
   pthread_create(&pid, 0, (void* (*)(void *))thread_start_trampoline, temp);
 #endif
   //printf("Created thread %d.\n", pid);
+
+  // wait for child to start.
   while (temp[1]) sched_yield();
+
+  // child has started, suspend it.
+#if defined(USE_CLONE)
+  kill(pid, SIGSTOP);
+#else
+  pthread_kill(pid, SIGSTOP);
+#endif
+
+  // mark child to continue, once it is resumed.
   temp[1] = (void*)start;
+
   return pid;
 }
 
@@ -568,7 +594,7 @@ uphere:
     );
   void* descr = calloc(1, 1024);
   INIT_THREAD_SELF(descr, 1*1024, my_id);
-  //printf("Thread %d finished initialization, id=%d.\n", getpid(), my_id);
+  //printf("Thread %d finished initialization, pid=%d, id=%d.\n", pthread_self(), getpid(), my_id);
   return getpid();
 }
 extern "C" int __stdcall resume_thread(const int pid)
@@ -606,6 +632,16 @@ static inline int get_debug_reg( int pid, int num, DWORD *data )
 extern "C" void __stdcall get_thread_context(const int pid, CONTEXT* context)
 {
   //printf("Getting thread context for pid %d.\n", pid);
+  if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
+    printf("Attempt to attach to pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
+    return;
+  }
+  int status;
+  waitpid(pid, &status, WUNTRACED);
+  if (WIFSTOPPED(status)) {
+    //printf("Child is stopped, signal=%d.\n", WSTOPSIG(status));
+  }
+
   int flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
@@ -647,15 +683,32 @@ extern "C" void __stdcall get_thread_context(const int pid, CONTEXT* context)
     if (ptrace( PTRACE_GETFPREGS, pid, 0, &context->FloatSave ) == -1) goto error;
     context->FloatSave.Cr0NpxState = 0;  /* FIXME */
   }
-  return;
+  goto cleanup;
  error:
   // TODO: error condition
+  printf("Error occurred while getting context of thread %d: %s errno %d.\n", pid, strerror(errno), errno);
+  
+ cleanup:
+  if (ptrace(PTRACE_DETACH, pid, 0, SIGSTOP) == -1) {
+    printf("Attempt to detach from pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
+    return;
+  }
   return;
 }
 
 extern "C" void __stdcall set_thread_context(int pid, CONTEXT* context)
 {
-  //printf("Getting thread context for pid %d.\n", pid);
+  //printf("Setting thread context for pid %d, ip=0x%08x, sp=0x%08x\n", pid, context->Eip, context->Esp);
+  if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
+    printf("Attempt to attach to pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
+    return;
+  }
+  int status;
+  waitpid(pid, &status, WUNTRACED);
+  if (WIFSTOPPED(status)) {
+    //printf("Child is stopped, signal=%d.\n", WSTOPSIG(status));
+  }
+
   int flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
@@ -700,9 +753,16 @@ extern "C" void __stdcall set_thread_context(int pid, CONTEXT* context)
     /* correct structure (the same as fsave/frstor) */
     if (ptrace( PTRACE_SETFPREGS, pid, 0, &context->FloatSave ) == -1) goto error;
   }
-  return;
+  goto cleanup;
  error:
-  // TODO: error
+  // TODO: error condition
+  printf("Error occurred while setting context of thread %d: %s errno %d.\n", pid, strerror(errno), errno);
+  
+ cleanup:
+  if (ptrace(PTRACE_DETACH, pid, 0, SIGSTOP) == -1) {
+    printf("Attempt to detach from pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
+    return;
+  }
   return;
 }
 
@@ -716,7 +776,7 @@ extern "C" int __stdcall get_current_thread_handle(void)
 }
 
 typedef struct _Thread {
-	CONTEXT registers;
+	CONTEXT* registers;
 	int thread_switch_enabled;
 } Thread;
 
@@ -725,30 +785,71 @@ typedef struct _NativeThread {
 	Thread* currentThread;
 } NativeThread;
 
-//CRITICAL_SECTION semaphore_init;
-//CRITICAL_SECTION* p_semaphore_init;
+sem_t semaphore_init;
+sem_t *p_semaphore_init;
 
 void initSemaphoreLock(void)
 {
-  // TODO.
+    sem_init(&semaphore_init, 0, 1);
+    p_semaphore_init = &semaphore_init;
 }
 
 extern "C" int __stdcall init_semaphore(void)
 {
-  // TODO.
-  return 0;
+    sem_t* n_sem = (sem_t*)malloc(sizeof(sem_t));
+    sem_wait(p_semaphore_init);
+    sem_init(n_sem, 0, 0);
+    sem_post(p_semaphore_init);
+    printf("Initialized new semaphore %x.\n", (int)n_sem);
+    return (int)n_sem;
 }
 
+#if !defined(timersub)
+# define timersub(a, b, result)                                               \
+  do {                                                                        \
+    (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;                             \
+    (result)->tv_usec = (a)->tv_usec - (b)->tv_usec;                          \
+    if ((result)->tv_usec < 0) {                                              \
+      --(result)->tv_sec;                                                     \
+      (result)->tv_usec += 1000000;                                           \
+    }                                                                         \
+  } while (0)
+#endif
+
+#define WAIT_TIMEOUT 0x00000102
 extern "C" int __stdcall wait_for_single_object(int handle, int time)
 {
-  // TODO.
-  return 0;
+    //printf("Thread %d: Waiting on semaphore %x for %d ms.\n", pthread_self(), (int)handle, time);
+    if (sem_trywait((sem_t*)handle) == 0) return 0;
+    printf("Thread %d: Waiting on semaphore %x initially failed, looping.\n", pthread_self(), (int)handle);
+    fflush(stdout);
+    struct timeval tv1;
+    gettimeofday(&tv1, 0);
+    for (;;) {
+	struct timeval tv2;
+	long diff;
+	sched_yield();
+	if (sem_trywait((sem_t*)handle) == 0) {
+	  printf("Thread %d: Waiting on semaphore %x succeeded.\n", pthread_self(), (int)handle);
+	  fflush(stdout);
+	  return 0;
+	}
+	gettimeofday(&tv2, 0);
+	timersub(&tv2, &tv1, &tv2);
+	diff = tv2.tv_sec*1000000+tv2.tv_usec*1000;
+	printf("Thread %d: Waiting on semaphore %x failed again, time passed %d us.\n", pthread_self(), (int)handle, diff);
+	fflush(stdout);
+	if (diff > time*1000) return WAIT_TIMEOUT;
+    }
 }
 
 extern "C" int __stdcall release_semaphore(int semaphore, int a)
 {
-  // TODO.
-  return 0;
+    //printf("Thread %d: Releasing semaphore %x %d times.\n", pthread_self(), (int)semaphore, a);
+    int v = 0;
+    while (--a >= 0)
+	v = sem_post((sem_t*)semaphore);
+    return v;
 }
 
 extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
@@ -784,4 +885,6 @@ extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* co
 	        :"r"(jthread), "r"(context)
 		);
 }
+#else
+#error System type not supported.
 #endif

@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
 
 	// install ctrl-break handler
 	SetConsoleCtrlHandler(windows_break_handler, TRUE);
+#endif
 
 	initSemaphoreLock();
-#endif
 
 	printf("branching to entrypoint at location 0x%08x\n", entry);
 	fflush(stdout);

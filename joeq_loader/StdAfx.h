@@ -55,6 +55,9 @@
 #include <pthread.h>
 #include <signal.h>
 #include <sys/user.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <semaphore.h>
 #endif
 
 #include "native.h"
