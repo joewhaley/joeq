@@ -308,7 +308,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     void appendQuad(Quad q) {
         if (TRACE) out.println(q.toString());
         quad_bb.appendQuad(q);
-        quad2bci.put(q, new Integer(i_end-1));
+        quad2bci.put(q, new Integer(i_start));
     }
     
     /**
