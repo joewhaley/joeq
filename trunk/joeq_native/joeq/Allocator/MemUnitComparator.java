@@ -3,7 +3,7 @@
  *
  * Created on Nov 27, 2002, 12:50:52 AM
  *
- * @author laudney <bin_ren@myrealbox.com>
+ * @author laudney <laudney@acm.org>
  * @version 0.1
  */
 package Allocator;

@@ -3,7 +3,7 @@
  *
  * Created on Sep 25, 2002, 8:28:16 PM
  *
- * @author laudney <bin_ren@myrealbox.com>
+ * @author laudney <laudney@acm.org>
  * @version 0.1
  */
 package GC;

@@ -49,8 +49,6 @@ public class SimpleAllocator extends HeapAllocator {
      */
     private GCBits gcBits;
 
-    private FreeMemManager fmm = new FreeMemManager();
-
     /**
      * Perform initialization for this allocator.  This will be called before any other methods.
      * This allocates an initial block of memory from the OS and sets up relevant pointers.
@@ -139,12 +137,11 @@ public class SimpleAllocator extends HeapAllocator {
             // not enough space (rare path)
             Assert._assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
             heapCurrent = (HeapAddress) heapCurrent.offset(-size);
-            // consult FreeMemManager for free mem in previous blocks
-            addr = fmm.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
+            // consult FreeMemManager for free memory in previous blocks
+            addr = (HeapAddress)FreeMemManager.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
             if (addr != null) {
                 addr = (HeapAddress) addr.offset(ObjectLayout.OBJ_HEADER_SIZE);
-            } else { // allocate new block and register left free mem in FMM
-                //fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
+            } else {
                 allocateNewBlock();
                 addr = (HeapAddress) heapCurrent.offset(ObjectLayout.OBJ_HEADER_SIZE);
                 heapCurrent = (HeapAddress) heapCurrent.offset(size);
@@ -206,12 +203,11 @@ public class SimpleAllocator extends HeapAllocator {
                 return addr.asObject();
             } else {
                 Assert._assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
-                // consult FreeMemManager for free mem in previous blocks
-                addr = fmm.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
+                // consult FreeMemManager for free memory in previous blocks
+                addr = (HeapAddress)FreeMemManager.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
                 if (addr != null) {
                     addr = (HeapAddress) addr.offset(ObjectLayout.ARRAY_HEADER_SIZE);
-                } else { // allocate new block and register left free mem in FMM
-                    //fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
+                } else {
                     allocateNewBlock();
                     addr = (HeapAddress) heapCurrent.offset(ObjectLayout.ARRAY_HEADER_SIZE);
                     heapCurrent = (HeapAddress) heapCurrent.offset(size);
