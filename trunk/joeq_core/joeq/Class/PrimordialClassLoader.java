@@ -50,7 +50,8 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
          *  <code>null</code> if resource cannot be found. */
         abstract InputStream getResourceAsStream(String resourcename);
         /** Iterate over all classes in the given package. */
-        abstract Iterator listPackage(String packagename);
+        Iterator listPackage(String packagename) { return listPackage(packagename, false); }
+        abstract Iterator listPackage(String packagename, boolean recursive);
     }
     /** A .zip or .jar file in the CLASSPATH. */
     static class ZipFileElement extends ClasspathElement {
@@ -67,7 +68,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                 return null;
             } catch (IOException e) { return null; }
         }
-        Iterator listPackage(final String pathname) {
+        Iterator listPackage(final String pathname, final boolean recursive) {
             // look for directory name first
             final String filesep   = "/";
             /* not all .JAR files have entries for directories, unfortunately.
@@ -82,7 +83,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                     if (TRACE) out.println("Checking if zipentry "+name+" is in package "+pathname);
                     return (!zze.isDirectory()) && name.startsWith(pathname) &&
                             name.endsWith(".class") &&
-                            name.lastIndexOf(filesep)==(pathname.length()-1);
+                            (recursive || name.lastIndexOf(filesep)==(pathname.length()-1));
                 }
                 public Object map(Object o) {
                     return ((ZipEntry)o).getName();
@@ -112,7 +113,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                 return null; // if anything goes wrong, return null.
             }
         }
-        Iterator listPackage(final String pathn) {
+        Iterator listPackage(final String pathn, final boolean recursive) {
             final String filesep = System.getProperty("file.separator");
             final String pathname;
             if (filesep.charAt(0) != '/') pathname = pathn.replace('/', filesep.charAt(0));
@@ -120,13 +121,26 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             File f = new File(path, pathname);
             if (TRACE) out.println("Attempting to list "+pathname+" in path "+path);
             if (!f.exists() || !f.isDirectory()) return Default.nullIterator;
-            return new FilterIterator(new ArrayIterator(f.list()),
+	    Iterator result = new FilterIterator(new ArrayIterator(f.list()),
                 new FilterIterator.Filter() {
                     public boolean isElement(Object o) {
                         return ((String)o).endsWith(".class");
                     }
                     public Object map(Object o) { return pathn + ((String)o); }
                 });
+	    if (recursive) {
+		Iterator dirs = new FilterIterator(new ArrayIterator(f.list()),
+		    new FilterIterator.Filter() {
+			public boolean isElement(Object o) {
+			    return new File((String)map(o)).isDirectory();
+			}
+			public Object map(Object o) { return pathn + ((String)o) + filesep; }
+		});
+		while (dirs.hasNext()) {
+		    result = new AppendIterator(result, listPackage((String)dirs.next(), recursive));
+		}
+	    }
+	    return result;
         }
     }
 
@@ -181,10 +195,14 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
 
     public Iterator listPackage(final String pathname) {
+	return listPackage(pathname, false);
+    }
+
+    public Iterator listPackage(final String pathname, boolean recursive) {
         Iterator result = null;
         for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
             ClasspathElement cpe = (ClasspathElement)it.next();
-            Iterator lp = cpe.listPackage(pathname);
+            Iterator lp = cpe.listPackage(pathname, recursive);
             if (lp == Default.nullIterator) continue;
             result = result==null?lp:new AppendIterator(lp, result);
         }
