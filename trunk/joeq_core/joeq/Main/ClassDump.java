@@ -29,6 +29,7 @@ public abstract class ClassDump {
         
         jq.Bootstrapping = true;
         jq.DontCompile = true;
+        jq.boot_types = new java.util.HashSet();
 
         Unsafe.installRemapper(new Unsafe.Remapper() {
             public int addressOf(Object o) { return 0; }
@@ -39,7 +40,10 @@ public abstract class ClassDump {
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
                            System.getProperty("sun.boot.class.path");
-        PrimordialClassLoader.loader.addToClasspath(classpath);
+        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
+            String s = (String)it.next();
+            PrimordialClassLoader.loader.addToClasspath(s);
+        }
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classname);
         System.out.println("Loading "+c+"...");
         c.load();
@@ -47,11 +51,15 @@ public abstract class ClassDump {
         c.verify();
         System.out.println("Preparing "+c+"...");
         c.prepare();
+        System.out.println("Initializing static fields of "+c+"...");
+        c.sf_initialize();
         dumpClass(System.out, c);
         //jq_Class c2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("Ljava/lang/Exception;");
         //System.out.println(Run_Time.TypeCheck.isAssignable(c, c2));
         //System.out.println(Run_Time.TypeCheck.isAssignable(c2, c));
-        //compileClass(System.out, c);
+        Allocator.DefaultCodeAllocator.default_allocator = new BootstrapCodeAllocator();
+        Allocator.DefaultCodeAllocator.default_allocator.init();
+        compileClass(System.out, c);
     }
 
     public static void compileClass(PrintStream out, jq_Class t) {
@@ -59,6 +67,12 @@ public abstract class ClassDump {
         for(it = new ArrayIterator(t.getDeclaredStaticMethods());
             it.hasNext(); ) {
             jq_StaticMethod c = (jq_StaticMethod)it.next();
+            Compil3r.Reference.x86.x86ReferenceCompiler comp = new Compil3r.Reference.x86.x86ReferenceCompiler(c);
+            comp.compile();
+        }
+        for(it = new ArrayIterator(t.getDeclaredInstanceMethods());
+            it.hasNext(); ) {
+            jq_InstanceMethod c = (jq_InstanceMethod)it.next();
             Compil3r.Reference.x86.x86ReferenceCompiler comp = new Compil3r.Reference.x86.x86ReferenceCompiler(c);
             comp.compile();
         }
