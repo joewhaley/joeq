@@ -17,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.DecimalFormat;
 
 import joeq.Util.Collections.Pair;
 
@@ -432,7 +433,10 @@ public abstract class Solver {
     void saveResults() throws IOException {
         for (Iterator i = relationsToPrintSize.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
-            out.println("SIZE OF "+r+": "+r.size());
+            double size = r.size();
+            DecimalFormat myFormatter = new DecimalFormat("0.");
+            String output = myFormatter.format(size); 
+            out.println("SIZE OF "+r+": "+output);
         }
         for (Iterator i = relationsToDump.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
