@@ -81,10 +81,10 @@ public class CSPA {
     /** Various trace flags. */
     public static final boolean TRACE_ALL = false;
     
-    public static final boolean TRACE_MATCHING  = true || TRACE_ALL;
+    public static final boolean TRACE_MATCHING  = false || TRACE_ALL;
     public static final boolean TRACE_TYPES     = false || TRACE_ALL;
     public static final boolean TRACE_MAPS      = false || TRACE_ALL;
-    public static final boolean TRACE_SIZES     = true || TRACE_ALL;
+    public static final boolean TRACE_SIZES     = false || TRACE_ALL;
     public static final boolean TRACE_CALLGRAPH = false || TRACE_ALL;
     public static final boolean TRACE_EDGES     = false || TRACE_ALL;
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
