@@ -21,6 +21,17 @@ import Util.Assert;
  */
 public class HighResolutionTimer {
 
+    static {
+        try {
+            System.loadLibrary("timer");
+        } catch (Exception _) {}
+    }
+    public static native long ticks();
+    public static void main(String[] args) {
+        for (int i=0; i<10; ++i)
+            System.out.println("Ticks: "+ticks());
+    }
+
     private static long counter_frequency = 0L;
 
     public static final void init() {
