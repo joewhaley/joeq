@@ -1166,7 +1166,7 @@ public abstract class Interpreter {
             vm.putfield_Z(state.pop_A(), f, v);
         }
         protected Object INVOKEhelper(byte op, jq_Method f) {
-            f = resolve(f);
+            f = (jq_Method)resolve(f);
             jq_Class k = f.getDeclaringClass();
             k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
             if (op == INVOKE_SPECIAL) {

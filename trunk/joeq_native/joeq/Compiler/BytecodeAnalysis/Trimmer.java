@@ -454,7 +454,7 @@ public class Trimmer {
             GETFIELDhelper(f);
         }
         private void INVOKEhelper(byte op, jq_Method f) {
-            f = resolve(f);
+            f = (jq_Method)resolve(f);
             switch (op) {
             case INVOKE_STATIC:
                 if (f.getDeclaringClass() == Unsafe._class)

@@ -38,7 +38,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     //  Always available
     protected byte state;
     protected final jq_Class clazz;
-    protected final jq_NameAndDesc nd;
+    protected /*final*/ jq_NameAndDesc nd;
     
     // Available after loading
     protected char access_flags;
@@ -81,7 +81,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     }
 
     public final Member getJavaLangReflectMemberObject() {
-        jq.assert(!jq.Bootstrapping);
+        //jq.assert(!jq.Bootstrapping);
         return member_object;
     }
     
@@ -112,6 +112,10 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         state = STATE_LOADING2;
     }
 
+    public void unload() {
+        state = STATE_UNLOADED;
+    }
+    
     public final void dump(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
 	out.writeChar(access_flags);
 	out.writeChar(cpr.get(getName()));
@@ -139,6 +143,8 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     public final Utf8 getName() { return nd.getName(); }
     public final Utf8 getDesc() { return nd.getDesc(); }
     public abstract boolean needsDynamicLink(jq_Method method);
+    public final void setNameAndDesc(jq_NameAndDesc nd) { this.nd = nd; }
+    public abstract jq_Member resolve();
     
     // Available after loading
     public final byte[] getAttribute(Utf8 name) {

@@ -685,7 +685,21 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
 	public void addOther(Object o) {
 	    new_entries.put(o, null);
 	}
-
+        public void remove(Object o) {
+            new_entries.remove(o);
+        }
+        
+        public void resetIndices(Bytecodes.InstructionList il) {
+            final jq_ConstantPool.ConstantPoolRebuilder my_cpr = this;
+            Bytecodes.EmptyVisitor v = new Bytecodes.EmptyVisitor() {
+                public void visitCPInstruction(Bytecodes.CPInstruction i) {
+                    i.setIndex(my_cpr);
+                    jq.assert(i.getIndex() != 0);
+                }
+            };
+            il.accept(v);
+        }
+        
 	class RebuildCPVisitor extends Bytecodes.EmptyVisitor {
 	    public void visitCPInstruction(Bytecodes.CPInstruction i) {
 		Object o = i.getObject();

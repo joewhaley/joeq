@@ -35,7 +35,7 @@ public final class jq_ClassInitializer extends jq_StaticMethod {
         return_type = jq_Primitive.VOID;
     }
     
-    public final jq_Method resolve() {
+    public final jq_StaticMethod resolve1() {
         this.clazz.load();
         if (this.state >= STATE_LOADED) return this;
         throw new NoSuchMethodError(this.toString());

@@ -1310,7 +1310,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKEVIRTUAL_I_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_I.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
@@ -1319,7 +1319,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKESTATIC_I_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_I.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
@@ -1355,7 +1355,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKEVIRTUAL_L_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_L.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
@@ -1364,7 +1364,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKESTATIC_L_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_L.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
@@ -1400,7 +1400,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKEVIRTUAL_F_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_F.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
@@ -1409,7 +1409,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKESTATIC_F_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_F.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
@@ -1445,7 +1445,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKEVIRTUAL_D_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_D.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
@@ -1454,7 +1454,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKESTATIC_D_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_D.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
@@ -1490,7 +1490,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKEVIRTUAL_A_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_A.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
@@ -1499,7 +1499,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKESTATIC_A_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_A.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
@@ -1535,7 +1535,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKEVIRTUAL_V_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_V.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
@@ -1544,7 +1544,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKESTATIC_V_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_V.INSTANCE;
-                    try { f = resolve(f); } catch (Error e) { }
+                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:

@@ -55,7 +55,8 @@ public class jq_StaticMethod extends jq_Method {
     public final boolean isStatic() { return true; }
     public boolean isClassInitializer() { return false; }
 
-    public jq_Method resolve() {
+    public final jq_Member resolve() { return resolve1(); }
+    public jq_StaticMethod resolve1() {
         this.clazz.load();
         if (this.state >= STATE_LOADED) return this;
         // this reference may be to a superclass or superinterface.

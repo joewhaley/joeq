@@ -11,6 +11,15 @@ package ClassLib;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
+import Clazz.jq_Reference;
+import Clazz.jq_Member;
+import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_NameAndDesc;
+import Run_Time.SystemInterface;
+import UTF.Utf8;
 import jq;
 
 public abstract class ClassLibInterface {
@@ -132,4 +141,85 @@ public abstract class ClassLibInterface {
     public abstract java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) ;
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
+    
+    public static /*final*/ boolean TRACE = false;
+    
+    // utility functions
+    public static jq_NameAndDesc convertClassLibNameAndDesc(jq_Class k, jq_NameAndDesc t) {
+        Utf8 d = convertClassLibDesc(t.getDesc());
+        Utf8 n = t.getName();
+        if (k.getDesc().toString().endsWith("/java/lang/Object;")) {
+            // trim initial "_", if it exists.
+            String s = n.toString();
+            if (s.charAt(0) == '_') {
+                n = Utf8.get(s.substring(1));
+                if (TRACE) SystemInterface.debugmsg("special case for java.lang.Object: "+n+" "+d);
+                return new jq_NameAndDesc(n, d);
+            }
+        }
+        if (d == t.getDesc())
+            return t;
+        else
+            return new jq_NameAndDesc(n, d);
+    }
+    
+    public static Utf8 convertClassLibDesc(Utf8 desc) {
+        return Utf8.get(convertClassLibDesc(desc.toString()));
+    }
+    
+    public static String convertClassLibDesc(String desc) {
+        int i = desc.indexOf("ClassLib/");
+        if (i != -1) {
+            for (;;) {
+                int m = desc.indexOf(';', i+10);
+                if (m == -1) break;
+                int j = desc.indexOf('/', i+10);
+                if (j == -1 || j > m) break;
+                int k = desc.indexOf(';', j);
+                String t = desc.substring(j+1, k).replace('/','.');
+                try {
+                    Class.forName(t);
+                    desc = desc.substring(0, i) + desc.substring(j+1);
+                } catch (ClassNotFoundException x) {
+                }
+                i = desc.indexOf("ClassLib/", i+1);
+                if (i == -1) break;
+            }
+        }
+        return desc;
+    }
+    
+    public static jq_Member convertClassLibCPEntry(jq_Member t) {
+        jq_NameAndDesc u1 = convertClassLibNameAndDesc(t.getDeclaringClass(), t.getNameAndDesc());
+        Utf8 u2 = convertClassLibDesc(t.getDeclaringClass().getDesc());
+        if (u1 == t.getNameAndDesc() && u2 == t.getDeclaringClass().getDesc())
+            return t;
+        else {
+            jq_Class c;
+            if (u2 != t.getDeclaringClass().getDesc())
+                c = (jq_Class)ClassLib.ClassLibInterface.i.getOrCreateType(t.getDeclaringClass().getClassLoader(), u2);
+            else
+                c = t.getDeclaringClass();
+            if (t instanceof jq_InstanceField) {
+                return c.getOrCreateInstanceField(u1);
+            } else if (t instanceof jq_StaticField) {
+                return c.getOrCreateStaticField(u1);
+            } else if (t instanceof jq_InstanceMethod) {
+                return c.getOrCreateInstanceMethod(u1);
+            } else if (t instanceof jq_StaticMethod) {
+                return c.getOrCreateStaticMethod(u1);
+            } else {
+                jq.UNREACHABLE(); return null;
+            }
+        }
+    }
+    
+    public static jq_Reference convertClassLibCPEntry(jq_Reference t) {
+        Utf8 u = convertClassLibDesc(t.getDesc());
+        if (u == t.getDesc())
+            return t;
+        else
+            return (jq_Reference)ClassLib.ClassLibInterface.i.getOrCreateType(t.getClassLoader(), u);
+    }
+
 }

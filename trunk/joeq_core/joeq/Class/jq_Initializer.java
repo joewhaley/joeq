@@ -48,7 +48,7 @@ public final class jq_Initializer extends jq_InstanceMethod {
         return_type = jq_Primitive.VOID;
     }
 
-    public final jq_Method resolve() {
+    public final jq_InstanceMethod resolve1() {
         this.clazz.load();
         if (this.state >= STATE_LOADED) return this;
         throw new NoSuchMethodError(this.toString());
