@@ -6,6 +6,8 @@ package Compil3r.Analysis.IPA;
 import java.util.Set;
 
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPSSA.ContextSet;
+import Compil3r.Analysis.IPSSA.SSALocation;
 
 /**
  * This interface summarizes all the relevant results of the 
@@ -63,5 +65,9 @@ public interface PointerAnalysisResults {
      * Returns whether the given location may have aliases in any context.
      */
     boolean hasAliases(jq_Method method, SSALocation loc);
+    
+	PA getPAResults();
+
+    Set/*jq_Method*/ getCallTargets(ProgramLocation loc);
 }
 
