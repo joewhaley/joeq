@@ -40,6 +40,7 @@ import joeq.Assembler.x86.x86Constants;
 import joeq.Bootstrap.BootImage;
 import joeq.Bootstrap.BootstrapCodeAllocator;
 import joeq.Runtime.ObjectTraverser;
+import joeq.Scheduler.jq_x86RegisterState;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -111,6 +112,11 @@ import joeq.Compiler.Reference.x86.x86ReferenceLinker;
  */
 public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisitor {
 
+    static {
+        // we are using x86, so initialize the register state factory.
+        jq_x86RegisterState.initFactory();
+    }
+    
     public static class Factory implements CompilerInterface {
         public static final Factory INSTANCE = new Factory();
         public Factory() {}

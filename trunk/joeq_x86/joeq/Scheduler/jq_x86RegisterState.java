@@ -104,6 +104,10 @@ public class jq_x86RegisterState extends jq_RegisterState implements x86Constant
     }
     
     static {
+        initFactory();
+    }
+    
+    public static void initFactory() {
         // Set jq_x86RegisterState as the default type of register state,
         //  if there is no default yet.
         if (factory == null) {
