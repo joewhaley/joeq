@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -184,22 +185,27 @@ public class CSPAResults {
     /** Roots of the SCC graph. */
     Collection sccRoots;
 
-    /** Map from SCC to a BDD of the vars that it accesses. */
+    /** Map from SCC to a BDD of the vars that it accesses
+     *  (context-insensitive). */
     Map sccToVars;
 
-    /** Map from SCC to a BDD of the vars that it transitively accesses. */
+    /** Map from SCC to a BDD of the vars that it transitively accesses.
+     *  (context-insensitive). */
     Map sccToVarsTransitive;
     
+    /** Returns the points-to set for the given variable. */
     public TypedBDD getPointsToSet(int var) {
         BDD result = ci_pointsTo.restrict(V1o.ithVar(var));
         return new TypedBDD(result, H1o);
     }
 
+    /** Returns the pointed-to-by set for the given heap object. */
     public TypedBDD getPointedToBySet(int heap) {
         BDD result = ci_pointsTo.restrict(H1o.ithVar(heap));
         return new TypedBDD(result, V1o);
     }
     
+    /** Returns the locations that are aliased with the given location. */
     public TypedBDD getAliasedLocations(int var) {
         BDD a = V1o.ithVar(var);
         BDD heapObjs = ci_pointsTo.restrict(a);
@@ -209,6 +215,7 @@ public class CSPAResults {
         return result;
     }
     
+    /** Returns the set of objects pointed to by BOTH of the given variables. */
     public TypedBDD getAliased(int v1, int v2) {
         BDD a = V1o.ithVar(v1);
         BDD heapObjs1 = ci_pointsTo.restrict(a);
@@ -221,6 +228,7 @@ public class CSPAResults {
         return result;
     }
     
+    /** Returns all heap objects of the given (exact) type. */
     public TypedBDD getAllHeapOfType(jq_Reference type) {
         int j=0;
         BDD result = bdd.zero();
@@ -288,6 +296,7 @@ public class CSPAResults {
         return !result.isZero();
     }
 
+    /** Build a map from SCC to the set of local variables. */
     void buildSCCToVarBDD() {
         SCCTopSortedGraph sccgraph = pn.getSCCGraph();
         sccRoots = new LinkedList();
@@ -308,8 +317,8 @@ public class CSPAResults {
                 Object o = j.next();
                 if (!(o instanceof jq_Method)) continue;
                 jq_Method method = (jq_Method) o;
-                if (TRACE_ACC_LOC) System.out.println("Node "+method);
                 Collection method_nodes = methodToVariables.getValues(method);
+                if (TRACE_ACC_LOC) System.out.println("Node "+method+" "+method_nodes.size()+" nodes");
                 for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
                     Node n = (Node) k.next();
                     int x = getVariableIndex(n);
@@ -327,6 +336,7 @@ public class CSPAResults {
         }
     }
 
+    /** Build a map from SCC to the set of local variables. */
     void buildCallGraphRelation() {
         BDDPairing V1oToV2o = bdd.makePair(V1o, V2o);
         
@@ -345,45 +355,74 @@ public class CSPAResults {
         callGraphRelation = bdd.zero();
         for (Iterator i = sccs.iterator(); i.hasNext(); ) {
             SCComponent scc = (SCComponent) i.next();
-            if (TRACE_ACC_LOC) System.out.println("Visiting SCC"+scc.getId());
+            if (TRACE_CG_RELATION) System.out.println("Visiting SCC"+scc.getId());
             // build the set of local vars in domain V1o
             BDD localVars = bdd.zero();
+            boolean anyMethods = false;
             for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
                 Object o = j.next();
-                if (!(o instanceof jq_Method)) continue;
+                if (!(o instanceof jq_Method)) {
+                    ProgramLocation pl = (ProgramLocation) o;
+                    continue;
+                }
+                anyMethods = true;
                 jq_Method method = (jq_Method) o;
-                if (TRACE_ACC_LOC) System.out.println("Node "+method);
                 Collection method_nodes = methodToVariables.getValues(method);
+                if (TRACE_CG_RELATION) System.out.println("Node "+method+" "+method_nodes.size()+" nodes");
                 for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
                     Node n = (Node) k.next();
                     int x = getVariableIndex(n);
                     localVars.orWith(V1o.ithVar(x));
                 }
             }
+            if (!anyMethods) continue;
             sccToVars.put(scc, localVars.replace(V1oToV2o));
+            
             Range r1 = pn.getSCCRange(scc);
-            if (TRACE_ACC_LOC) System.out.println("Local Vars="+localVars.toStringWithDomains()+" Context Range="+r1);
+            if (TRACE_CG_RELATION) System.out.println("Local Vars="+localVars.toStringWithDomains()+" Context Range="+r1);
+            BDD b = V1c.varRange(r1.low.longValue(), r1.high.longValue());
+            localVars.andWith(b);
+            
+            BDD finalMap = bdd.zero();
             for (int j = 0; j < scc.nextLength(); ++j) {
-                SCComponent callee = scc.next(j);
-                Number npaths2 = pn.numberOfPathsToSCC(callee);
-                Collection edges = pn.getSCCEdges(scc, callee);
-                if (TRACE_ACC_LOC) System.out.println("SCC"+scc.getId()+" -> SCC"+callee.getId()+": "+edges.size()+" edges");
-                BDD contextVars_callee = (BDD) sccToVars.get(callee);
-                // build a map to translate callee path numbers into caller path numbers
-                BDD contextMap = contextVars_callee.id();
-                for (Iterator k = edges.iterator(); k.hasNext(); ) {
-                    Pair e = (Pair) k.next();
-                    Range r2 = pn.getEdge(e);
-                    if (TRACE_ACC_LOC) System.out.println("Edge="+e+" Caller range="+r1+" Callee range="+r2);
-                    BDD b2 = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high),
-                                                  V2c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
-                    contextMap.orWith(b2);
+                SCComponent call = scc.next(j);
+                if (TRACE_CG_RELATION) System.out.println("SCC"+scc.getId()+" -> SCC"+call.getId());
+                Collection m;
+                if (sccToVars.get(call) == null) {
+                    m = Arrays.asList(call.next());
+                } else {
+                    m = Collections.singleton(call);
+                    call = scc;
                 }
-                if (TRACE_ACC_LOC) System.out.println("Context map="+contextMap.toStringWithDomains());
-                localVars.andWith(contextMap);
+                for (Iterator n = m.iterator(); n.hasNext(); ) {
+                    SCComponent callee = (SCComponent) n.next();
+                    Collection edges = pn.getSCCEdges(call, callee);
+                    if (TRACE_CG_RELATION) System.out.println("SCC"+call.getId()+" -> SCC"+callee.getId()+": "+edges.size()+" edges");
+                    BDD contextVars_callee = (BDD) sccToVars.get(callee);
+                    Assert._assert(contextVars_callee != null);
+                    // build a map to translate callee path numbers into caller path numbers
+                    BDD contextMap = bdd.zero();
+                    for (Iterator k = edges.iterator(); k.hasNext(); ) {
+                        Pair e = (Pair) k.next();
+                        Range r2 = pn.getEdge(e);
+                        if (TRACE_CG_RELATION) {
+                            System.out.println("Caller vars="+((BDD)sccToVars.get(scc)).toStringWithDomains()+"\n"+
+                                               " contexts "+r1+"\n"+
+                                               " match callee vars "+contextVars_callee.toStringWithDomains()+"\n"+
+                                               " contexts "+r2+" Edge: "+e);
+                        }
+                        BDD b2 = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high),
+                                                      V2c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high));
+                        contextMap.orWith(b2);
+                    }
+                    contextMap.andWith(contextVars_callee.id());
+                    //if (TRACE_CG_RELATION) System.out.println("Context map="+contextMap.toStringWithDomains());
+                    finalMap.orWith(localVars.and(contextMap));
+                    contextMap.free();
+                }
             }
-            if (TRACE_ACC_LOC) System.out.println("Final map for SCC"+scc.getId()+": "+localVars.toStringWithDomains());
-            callGraphRelation.orWith(localVars);
+            //if (TRACE_CG_RELATION) System.out.println("Final map for SCC"+scc.getId()+": "+finalMap.toStringWithDomains());
+            callGraphRelation.orWith(finalMap);
         }
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds, "+callGraphRelation.nodeCount()+" nodes)");
@@ -393,12 +432,40 @@ public class CSPAResults {
         }
     }
     
-    public TypedBDD getAccessedLocations(jq_Method m) {
+    public TypedBDD getAccessedLocationsCI(jq_Method m) {
         if (sccToVarsTransitive == null) buildSCCToVarBDD();
         SCComponent scc = pn.getSCC(m);
         BDD b = (BDD) sccToVarsTransitive.get(scc);
         return new TypedBDD(b, V1o);
     }
+    
+    public TypedBDD getAccessedLocationsCS(jq_Method m) {
+        if (accessibleLocations != null) {
+            BDDPairing V2ToV1 = bdd.makePair();
+            V2ToV1.set(new BDDDomain[] {V2c, V2o}, new BDDDomain[] {V1c, V1o} );
+            
+            Collection method_nodes = methodToVariables.getValues(m);
+            Node n = (Node) method_nodes.iterator().next();
+            BDD b = V1o.ithVar(getVariableIndex(n));
+            b.andWith(accessibleLocations.id());
+            BDD c = b.exist(V1c.set());
+            b.free();
+            c.replaceWith(V2ToV1);
+            return new TypedBDD(c, V1c, V1o);
+        }
+        
+        // TODO!
+        SCCTopSortedGraph sccgraph = pn.getSCCGraph();
+        Navigator nav = sccgraph.getNavigator();
+        List sccs = Traversals.reversePostOrder(nav, sccRoots);
+        for (Iterator i = sccs.iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            if (TRACE_ACC_LOC) System.out.println("Visiting SCC"+scc.getId());
+        }
+        return null;
+    }
+    
+    
     
     void buildAccessibleLocations() {
         System.out.print("Building transitive call graph relation...");
@@ -497,9 +564,7 @@ public class CSPAResults {
             boolean only_exception = true;
             if (c.isEmpty()) {
             } else {
-                Node n = (Node) c.iterator().next();
-                int k = getVariableIndex(n);
-                TypedBDD res = findMod(new TypedBDD(V1o.ithVar(k), V1o));
+                TypedBDD res = findMod(m);
                 n_mods = (int) res.satCount();
                 
                 BDD f = res.bdd.exist(H1c.set().and(H1o.set()));
@@ -533,19 +598,68 @@ public class CSPAResults {
         return mod;
     }
     
-    public TypedBDD findMod(TypedBDD bdd1) {
+    public TypedBDD findMod(jq_Method method) {
+        if (method == null) {
+            return new TypedBDD(bdd.zero(), V1c, V1o, H1c, H1o, FD);
+        }
         BDD V1set = V1c.set(); V1set.andWith(V1o.set());
+        BDD H1FDset = H1c.set(); H1FDset.andWith(H1o.set()); H1FDset.andWith(FD.set());
         BDDPairing V2ToV1 = bdd.makePair();
         V2ToV1.set(new BDDDomain[] {V2c, V2o}, new BDDDomain[] {V1c, V1o});
         
-        BDD a = bdd1.getDomains();
-        a.andWith(V1c.set()); a.andWith(V1o.set());
-        BDD b = accessibleLocations.relprod(bdd1.bdd, a); // V2c x V2o
-        BDD d = stores.exist(V1set); // FD x V2c x V2o
-        d.andWith(b);
-        d.replaceWith(V2ToV1); // V1c x V1o x FD
-        BDD e = pointsTo.relprod(d, V1set); // H1c x H1o x FD
-        return new TypedBDD(e, H1c, H1o, FD);
+        SCComponent sc = pn.getSCC(method);
+        
+        if (accessibleLocations != null) {
+            BDD bdd1 = (BDD) sccToVars.get(sc);
+            //BDD a = bdd1.getDomains();
+            BDD a = bdd.one();
+            a.andWith(V1c.set()); a.andWith(V1o.set());
+            BDD b = accessibleLocations.relprod(bdd1, a); // V2c x V2o
+            BDD d = stores.exist(V1set); // FD x V2c x V2o
+            d.andWith(b);
+            d.replaceWith(V2ToV1); // V1c x V1o x FD
+            BDD e = pointsTo.relprod(d, V1set); // H1c x H1o x FD
+            return new TypedBDD(e, H1c, H1o, FD);
+        }
+        
+        BDD globalStores = stores.exist(V1set);
+        globalStores.replaceWith(V2ToV1);
+        globalStores.andWith(pointsTo.id());
+        
+        BDD relation = bdd.zero();
+        SCCTopSortedGraph sccgraph = pn.getSCCGraph();
+        Navigator nav = sccgraph.getNavigator();
+        List sccs = Traversals.reversePostOrder(nav, sc);
+        for (Iterator i = sccs.iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            BDD locations = (BDD) this.sccToVars.get(scc);
+            BDD localStores = locations.and(globalStores);
+            if (TRACE_MOD) {
+                System.out.println("Visiting "+scc);
+                System.out.println("Mods: "+new TypedBDD(localStores, V1c, V1o, H1c, H1o, FD));
+            }
+            relation.orWith(localStores);
+        }
+        
+        BDD newRelations = relation.id();
+        for (int i=0; ; ++i) {
+            if (TRACE_MOD) {
+                System.out.println("Iteration "+i+": "+newRelations.nodeCount()+" new");
+            }
+            BDD relation2 = newRelations.relprod(callGraphRelation, V1set);
+            newRelations.free();
+            relation2.replaceWith(V2ToV1);
+            relation2.applyWith(relation.id(), BDDFactory.diff);
+            boolean done = relation2.isZero();
+            if (done) {
+                relation2.free();
+                break;
+            }
+            newRelations = relation2;
+            relation.orWith(newRelations.id());
+        }
+        
+        return new TypedBDD(relation, V1c, V1o, H1c, H1o, FD);
     }
 
     public TypedBDD findRef(TypedBDD bdd1) {
@@ -887,6 +1001,8 @@ public class CSPAResults {
 
     public static boolean TRACE_ESCAPE = false;
     public static boolean TRACE_ACC_LOC = false;
+    public static boolean TRACE_CG_RELATION = false;
+    public static boolean TRACE_MOD = false;
 
     public Collection getTargetMethods(ProgramLocation callSite) {
         return cg.getTargetMethods(mapCall(callSite));
@@ -1112,6 +1228,8 @@ public class CSPAResults {
         buildContextInsensitive();
 
         initializeMethodMap();
+        
+        buildSCCToVarBDD();
         
         buildCallGraphRelation();
         //buildAccessibleLocations();
@@ -1899,8 +2017,17 @@ public class CSPAResults {
         if (s.equals("fieldPt")) {
             return new TypedBDD(fieldPt, H1c, H1o, FD, H2c, H2o );
         }
+        if (s.equals("stores")) {
+            return new TypedBDD(stores, V1c, V1o, FD, V2c, V2o );
+        }
+        if (s.equals("loads")) {
+            return new TypedBDD(loads, V1c, V1o, FD, V2c, V2o );
+        }
         if (s.equals("al")) {
             return new TypedBDD(accessibleLocations, V1c, V1o, V2c, V2o );
+        }
+        if (s.equals("cg")) {
+            return new TypedBDD(callGraphRelation, V1c, V1o, V2c, V2o );
         }
         if (s.startsWith("V1o(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
@@ -2105,12 +2232,18 @@ public class CSPAResults {
                     escapeAnalysis();
                     increaseCount = false;
                 } else if (command.equals("mod")) {
-                    if (accessibleLocations == null) buildAccessibleLocations();
-                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
-                    TypedBDD bdd = findMod(bdd1);
-                    results.add(bdd);
+                    int varNum = Integer.parseInt(st.nextToken());
+                    Node n = getVariableNode (varNum);
+                    if (n == null) {
+                        System.out.println("No method for node "+n);
+                        increaseCount = false;
+                    } else {
+                        jq_Method m = n.getDefiningMethod();
+                        TypedBDD bdd = findMod(m);
+                        results.add(bdd);
+                    }
                 } else if (command.equals("countmod")) {
-                    if (accessibleLocations == null) buildAccessibleLocations();
+                    //if (accessibleLocations == null) buildAccessibleLocations();
                     countMod();
                     increaseCount = false;
                 } else if (command.equals("ref")) {
