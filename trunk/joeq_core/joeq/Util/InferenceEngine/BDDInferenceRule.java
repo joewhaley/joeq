@@ -364,11 +364,10 @@ public class BDDInferenceRule extends InferenceRule {
                     if (solver.TRACE_FULL) {
                         solver.out.println("New for relation #"+i+": "+newRelationValues[i].toStringWithDomains());
                     }
-                    if (!newRelationValues[i].isZero()) {
-                        for (int j = 0; j < allRelationValues.length; ++j) {
-                            if (i == j) continue;
-                            needWholeRelation[j] = true;
-                        }
+                    Assert._assert(!newRelationValues[i].isZero());
+                    for (int j = 0; j < needWholeRelation.length; ++j) {
+                        if (i == j) continue;
+                        needWholeRelation[j] = true;
                     }
                 }
                 oldRelationValues[i].free();
@@ -387,12 +386,14 @@ public class BDDInferenceRule extends InferenceRule {
             if (solver.TRACE_FULL) solver.out.println("   current value: "+allRelationValues[i].toStringWithDomains());
             BDDPairing pairing = renames[i];
             if (cache_before_rename) {
-                if (pairing != null && newRelationValues[i] != null) {
-                    if (solver.TRACE)
-                        System.out.println("Diff for Relation "+r+" domains "+domainsOf(newRelationValues[i]));
-                    newRelationValues[i].replaceWith(pairing);
-                    if (solver.TRACE)
-                        System.out.println("Diff for Relation "+r+" domains now "+domainsOf(newRelationValues[i]));
+                if (pairing != null) {
+                    if (newRelationValues[i] != null) {
+                        if (solver.TRACE)
+                            System.out.println("Diff for Relation "+r+" domains "+domainsOf(newRelationValues[i]));
+                        newRelationValues[i].replaceWith(pairing);
+                        if (solver.TRACE)
+                            System.out.println("Diff for Relation "+r+" domains now "+domainsOf(newRelationValues[i]));
+                    }
                     if (needWholeRelation[i]) {
                         if (solver.TRACE)
                             System.out.println("Whole Relation "+r+" is necessary, renaming it...");
