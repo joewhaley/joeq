@@ -24,7 +24,8 @@ import Util.Collections.MultiMap;
 import Clazz.jq_Class;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
-import Compil3r.Quad.ProgramLocation.BCProgramLocation;
+import Compil3r.Analysis.IPA.*;
+import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 
 /**
  * A call graph that is loaded from a file.
