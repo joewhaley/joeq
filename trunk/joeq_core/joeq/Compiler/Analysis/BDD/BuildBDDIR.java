@@ -98,8 +98,10 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             src2 = makeDomain("src2", regBits);
         }
         constant = makeDomain("constant", constantBits);
-        fallthrough = makeDomain("fallthrough", quadBits);
-        target = makeDomain("target", quadBits);
+        if (!SSA) {
+            fallthrough = makeDomain("fallthrough", quadBits);
+            target = makeDomain("target", quadBits);
+        }
         member = makeDomain("member", memberBits);
         srcNum = makeDomain("srcNum", varargsBits);
         srcs = makeDomain("srcs", regBits);
@@ -170,16 +172,18 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             int opID = getOpID(q.getOperator());
             currentQuad.andWith(opc.ithVar(opID));
             handleQuad(q);
-            BDD succ = bdd.zero();
-            Iterator j = i.successors();
-            if (!j.hasNext()) {
-                succ.orWith(fallthrough.ithVar(0));
-            } else do {
-                Quad q2 = (Quad) j.next();
-                int quad2ID = getQuadID(q2);
-                succ.orWith(fallthrough.ithVar(quad2ID));
-            } while (j.hasNext());
-            currentQuad.andWith(succ);
+            if (!SSA) {
+                BDD succ = bdd.zero();
+                Iterator j = i.successors();
+                if (!j.hasNext()) {
+                    succ.orWith(fallthrough.ithVar(0));
+                } else do {
+                    Quad q2 = (Quad) j.next();
+                    int quad2ID = getQuadID(q2);
+                    succ.orWith(fallthrough.ithVar(quad2ID));
+                } while (j.hasNext());
+                currentQuad.andWith(succ);
+            }
             //printQuad(currentQuad);
             allQuads.orWith(currentQuad);
         }
@@ -241,7 +245,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     }
     
     void handleQuad(Quad q) {
-        int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, fallthroughID=0, targetID=0, memberID=0;
+        int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, targetID=0, memberID=0;
         List srcsID = null;
         quadID = getQuadID(q);
         opcID = getOpID(q.getOperator());
@@ -274,7 +278,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             else if (op instanceof ConstOperand) {
                 constantID = getConstantID(((ConstOperand) op).getWrapped());
             } else if (op instanceof TargetOperand) {
-                targetID = getQuadID(((TargetOperand) op).getTarget().getQuad(0));
+                if (!SSA)
+                    targetID = getQuadID(((TargetOperand) op).getTarget().getQuad(0));
             } else if (op instanceof FieldOperand) {
                 memberID = getMemberID(((FieldOperand) op).getField());
             } else if (op instanceof MethodOperand) {
@@ -291,8 +296,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             if (ZERO_FIELDS || src2ID != 0) currentQuad.andWith(src2.ithVar(src2ID));
         }
         if (ZERO_FIELDS || constantID != 0) currentQuad.andWith(constant.ithVar(((long)constantID) & 0xFFFFFFFFL));
-        //currentQuad.andWith(fallthrough.ithVar(fallthroughID));
-        if (ZERO_FIELDS || targetID != 0) currentQuad.andWith(target.ithVar(targetID));
+        if (!SSA) {
+            if (ZERO_FIELDS || targetID != 0) currentQuad.andWith(target.ithVar(targetID));
+        }
         if (ZERO_FIELDS || memberID != 0) currentQuad.andWith(member.ithVar(memberID));
         if (srcsID != null && !srcsID.isEmpty()) {
             BDD temp = bdd.zero();
@@ -343,20 +349,10 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     void dumpBDDConfig(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        dos.writeBytes("method "+(1L<<methodBits)+"\n");
-        dos.writeBytes("quad "+(1L<<quadBits)+"\n");
-        dos.writeBytes("opc "+(1L<<opBits)+"\n");
-        dos.writeBytes("dest "+(1L<<regBits)+"\n");
-        if (USE_SRC12) {
-            dos.writeBytes("src1 "+(1L<<regBits)+"\n");
-            dos.writeBytes("src2 "+(1L<<regBits)+"\n");
+        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+            BDDDomain d = bdd.getDomain(i);
+            dos.writeBytes(d.getName()+" "+d.size()+"\n");
         }
-        dos.writeBytes("constant "+(1L<<constantBits)+"\n");
-        dos.writeBytes("fallthrough "+(1L<<quadBits)+"\n");
-        dos.writeBytes("target "+(1L<<quadBits)+"\n");
-        dos.writeBytes("member "+(1L<<memberBits)+"\n");
-        dos.writeBytes("srcNum "+(1L<<varargsBits)+"\n");
-        dos.writeBytes("srcs "+(1L<<regBits)+"\n");
         dos.close();
     }
     
@@ -372,25 +368,32 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dos.close();
     }
     
+    void dumpRelation(DataOutputStream dos, String name, BDD relation) throws IOException {
+        int[] a = relation.support().scanSetDomains();
+        dos.writeBytes(name+" ( ");
+        for (int i = 0; i < a.length; ++i) {
+            if (i > 0) dos.writeBytes(", ");
+            BDDDomain d = bdd.getDomain(i);
+            dos.writeBytes(d.toString()+" : ");
+            if (d == quad || d == fallthrough || d == target) dos.writeBytes("quad ");
+            else if (d == method) dos.writeBytes("method ");
+            else if (d == opc) dos.writeBytes("op ");
+            else if (d == dest || d == srcs || d == src1 || d == src2) dos.writeBytes("reg ");
+            else if (d == constant) dos.writeBytes("constant ");
+            else if (d == member) dos.writeBytes("member ");
+            else if (d == srcNum) dos.writeBytes("varargs ");
+            else dos.writeBytes("??? ");
+        }
+        dos.writeBytes(")\n");
+    }
+    
     void dumpRelations(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        if (GLOBAL_QUAD_NUMBERS) {
-            if (USE_SRC12) {
-                dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
-            } else {
-                dos.writeBytes("cfg ( id : quad , op : op , dest : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
-            }
-        } else {
-            if (USE_SRC12) {
-                dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
-            } else {
-                dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
-            }
-        }
-        dos.writeBytes("m2q ( method : method , id : quad )\n");
-        dos.writeBytes("entries ( method : method , entry : quad )\n");
-        dos.writeBytes("nullconstant ( constant : constant )\n");
-        dos.writeBytes("nonnullconstant ( constant : constant )\n");
+        dumpRelation(dos, "cfg", allQuads);
+        dumpRelation(dos, "m2q", methodToQuad);
+        dumpRelation(dos, "entries", methodEntries);
+        dumpRelation(dos, "nullconstant", nullConstant);
+        dumpRelation(dos, "nonnullconstant", nonNullConstants);
         dos.close();
     }
     
