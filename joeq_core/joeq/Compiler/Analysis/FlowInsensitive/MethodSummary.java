@@ -1086,7 +1086,20 @@ public class MethodSummary {
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
                     this.mergeWith(h);
-                    Register r = rf.getOrCreateStack(0, PrimordialClassLoader.getJavaLangObject());
+                    Register r = null;
+                    if (h.getEntry().size() > 0) {
+                        Quad q = h.getEntry().getQuad(0);
+                        if (q.getOperator() instanceof Special.GET_EXCEPTION) {
+                            r = ((RegisterOperand) Special.getOp1(q)).getRegister();
+                        }
+                    }
+                    if (r == null) {
+                        // hmmm, the handler doesn't start with GET_EXCEPTION, 
+                        // so just assume it is the first stack register.
+                        // this hack doesn't work with SSA.
+                        Assert._assert(!SSA);
+                        r = rf.getOrCreateStack(0, PrimordialClassLoader.getJavaLangObject());
+                    }
                     this.start_states[h.getEntry().getID()].merge(r.getNumber(), n);
                     if (h.mustCatch(PrimordialClassLoader.getJavaLangThrowable()))
                         return;
