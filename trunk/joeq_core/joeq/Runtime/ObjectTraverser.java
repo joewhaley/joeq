@@ -46,6 +46,10 @@ public abstract class ObjectTraverser {
             Class c = Reflection.getJDKType(f.getDeclaringClass());
             String fieldName = f.getName().toString();
             f2 = lookupField(c, fieldName);
+            if (f2 == null) {
+                out.println("Cannot find static field "+f);
+                return null;
+            }
         }
         return getStaticFieldValue_reflection(f2);
     }
@@ -54,7 +58,7 @@ public abstract class ObjectTraverser {
         Field f2 = Reflection.getJDKField(c, fieldName);
         if (f2 == null) {
             jq_Class klass = (jq_Class)Reflection.getJQType(c);
-            for (Iterator i=ClassLibInterface.DEFAULT.getImplementationClassDescs(klass.getDesc()); i.hasNext(); ) {
+            for (Iterator i = ClassLibInterface.DEFAULT.getImplementationClassDescs(klass.getDesc()); i.hasNext(); ) {
                 UTF.Utf8 u = (UTF.Utf8)i.next();
                 if (TRACE) out.println("Checking mirror class "+u);
                 String s = u.toString();
@@ -95,7 +99,11 @@ public abstract class ObjectTraverser {
         if (f2 == null) {
             Class c = Reflection.getJDKType(f.getDeclaringClass());
             String fieldName = f.getName().toString();
-            f2 = Reflection.getJDKField(c, fieldName);
+            f2 = lookupField(c, fieldName);
+            if (f2 == null) {
+                out.println("Cannot find instance field "+f);
+                return null;
+            }
         }
         return getInstanceFieldValue_reflection(base, f2);
     }
