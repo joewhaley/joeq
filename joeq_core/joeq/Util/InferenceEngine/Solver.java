@@ -188,15 +188,15 @@ public abstract class Solver {
             if (option.equals("save")) {
                 relationsToDump.add(r);
             } else if (option.equals("savenot")) {
-            	relationsToDumpNegated.add(r);
+                relationsToDumpNegated.add(r);
             } else if (option.equals("savetuples")) {
-            	relationsToDumpTuples.add(r);
+                relationsToDumpTuples.add(r);
             } else if (option.equals("load")) {
                 relationsToLoad.add(r);
             } else if (option.equals("loadtuples")) {
                 relationsToLoadTuples.add(r);
             } else {
-            	throw new IllegalArgumentException("Unexpected option '"+option+"'");
+                throw new IllegalArgumentException("Unexpected option '"+option+"'");
             }
         }
         return r;

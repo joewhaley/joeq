@@ -73,7 +73,7 @@ public interface PointerAnalysisResults {
      */
     boolean hasAliases(jq_Method method, SSALocation loc);
     
-	PA getPAResults();
+    PA getPAResults();
 
     Set/*jq_Method*/ getCallTargets(QuadProgramLocation loc);
 

@@ -333,8 +333,8 @@ public class FindCollectionImplementations {
         if(FILTER_LOCAL) _classes = filter(_classes, root_classes);
         
         if(FILTER_LOCAL){
-    	    System.out.println("Considering classes: " + _classes);
-    	}
+            System.out.println("Considering classes: " + _classes);
+        }
 
         _collections    = new HashSet();
         _iterators      = new HashSet();
@@ -496,11 +496,11 @@ public class FindCollectionImplementations {
         
         System.out.println("Found " + 
                _collections.size() + " collections, " + 
-			   _sets.size() + " sets, " +
+               _sets.size() + " sets, " +
                _maps.size() + " maps, " +
                _maps.size() + " enumerations, " +
-			   _iterators.size() + " iterators "
-			   );
+               _iterators.size() + " iterators "
+               );
     }
     
     protected void run(boolean verbose){        

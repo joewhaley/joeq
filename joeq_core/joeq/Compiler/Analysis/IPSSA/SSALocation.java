@@ -20,7 +20,7 @@ import joeq.Compiler.Quad.RegisterFactory;
 public interface SSALocation {
 
     /**
-     * 	We need to have "abstract" temporary locations for IPSSA construction purposes 
+     *     We need to have "abstract" temporary locations for IPSSA construction purposes 
      * that do not necessarily correspond to anything tangible. 
      * */
     public static class Temporary implements SSALocation {
@@ -28,7 +28,7 @@ public interface SSALocation {
             // there's no underlying node
         }
 
-        // There's only one Temporary location -- use the FACTORY to retrieve it	
+        // There's only one Temporary location -- use the FACTORY to retrieve it    
         public static class FACTORY {
             private static Temporary INSTANCE = new Temporary();
             
@@ -37,40 +37,40 @@ public interface SSALocation {
             }
         }
 
-		public String toString(PA pa) {
-			return null;
-		}
-		
-		public String toString() {
-			return "temp";
-		}
+        public String toString(PA pa) {
+            return null;
+        }
+        
+        public String toString() {
+            return "temp";
+        }
     }
     
-	public static class Unique implements SSALocation {
-		private static long _count = 0;
-		private long _id;
-		
-		private Unique(long id) {
-			this._id = id;
-		}
+    public static class Unique implements SSALocation {
+        private static long _count = 0;
+        private long _id;
+        
+        private Unique(long id) {
+            this._id = id;
+        }
 
-		// There's only one Temporary location -- use the FACTORY to retrieve it	
-		public static class FACTORY {
-			public static Unique get() {
-				return new Unique(_count++);
-			}
-		}
+        // There's only one Temporary location -- use the FACTORY to retrieve it    
+        public static class FACTORY {
+            public static Unique get() {
+                return new Unique(_count++);
+            }
+        }
 
-		public String toString(PA pa) {
-			return null;
-		}
-		
-		public String toString() {
-			return "uniq" + _id;
-		}
-	}
+        public String toString(PA pa) {
+            return null;
+        }
+        
+        public String toString() {
+            return "uniq" + _id;
+        }
+    }
 
-	String toString(PA pa);
+    String toString(PA pa);
         
     /**
      * These locations represent local variables.

@@ -17,36 +17,36 @@ import joeq.Compiler.Quad.ControlFlowGraph;
  * @version $Id$
  * */
 public abstract class SSABindingVisitor {
-	public abstract void visit(SSABinding b);
+    public abstract void visit(SSABinding b);
     
     /**
      * Applies itself to all bindings in the CFG.
      * */
-	public void visitCFG(ControlFlowGraph cfg) {
-		jq_Method method = cfg.getMethod();
-				
-		for (SSAIterator.BindingIterator j=SSAProcInfo.retrieveQuery(method).getBindingIterator(method); j.hasNext(); ) {
-			SSABinding b = j.nextBinding();
-			b.accept(this);
-		}				
-	}
-	
-	public static class EmptySSABindingVisitor extends SSABindingVisitor {
-		public EmptySSABindingVisitor(){}
-		
-		public void visit(SSABinding b){
-			// do nothing
-		}
-	}
-	
-	public static class SSABindingPrinter extends SSABindingVisitor {
-		protected PrintStream _out;
-		SSABindingPrinter(PrintStream out){
-			this._out = out;
-		}
-		public void visit(SSABinding b){
-			_out.println(b.toString());
-		}
-	}
+    public void visitCFG(ControlFlowGraph cfg) {
+        jq_Method method = cfg.getMethod();
+                
+        for (SSAIterator.BindingIterator j=SSAProcInfo.retrieveQuery(method).getBindingIterator(method); j.hasNext(); ) {
+            SSABinding b = j.nextBinding();
+            b.accept(this);
+        }                
+    }
+    
+    public static class EmptySSABindingVisitor extends SSABindingVisitor {
+        public EmptySSABindingVisitor(){}
+        
+        public void visit(SSABinding b){
+            // do nothing
+        }
+    }
+    
+    public static class SSABindingPrinter extends SSABindingVisitor {
+        protected PrintStream _out;
+        SSABindingPrinter(PrintStream out){
+            this._out = out;
+        }
+        public void visit(SSABinding b){
+            _out.println(b.toString());
+        }
+    }
 }
 

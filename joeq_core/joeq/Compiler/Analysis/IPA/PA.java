@@ -664,7 +664,7 @@ public class PA {
         for (Iterator k = c.iterator(); k.hasNext(); ) {
             Node node2 = (Node) k.next();
             if (FILTER_NULL && isNullConstant(node2))
-		continue;
+                continue;
 
             int V2_i = Vmap.get(node2);
             BDD bdd1 = V2.ithVar(V2_i);

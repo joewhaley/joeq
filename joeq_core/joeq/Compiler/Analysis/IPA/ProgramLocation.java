@@ -61,7 +61,7 @@ public abstract class ProgramLocation implements Textualizable {
 
     /** Print a location as it would appear in an exception stacktrace. */
     public String toStringLong() {
-	return getContainingClass()+"."+getMethod().getName()+'('+getSourceFile()+':'+getLineNumber()+')';
+        return getContainingClass()+"."+getMethod().getName()+'('+getSourceFile()+':'+getLineNumber()+')';
     }
     
     public abstract int getID();

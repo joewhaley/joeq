@@ -26,6 +26,6 @@ public interface DominatorQuery {
     public void getIteratedDominanceFrontier(Quad q, Set/*<Quad>*/ set);
     /** Prints the dominator tree on Quads in dot format. */    
     public void printDot(PrintStream out);
-	public BasicBlock getBasicBlock(Quad quad); 
+    public BasicBlock getBasicBlock(Quad quad); 
 };
 

@@ -46,15 +46,15 @@ public class DotGraph implements ControlFlowGraphVisitor {
      * Adapt this method to create filenames the way you want them.
      */
     protected String createMethodName(jq_Method mth) {
-		String filename = dotFilePrefix + mth.toString();
-		filename = filename.replace('/', '_');
-		filename = filename.replace(' ', '_');
-		filename = filename.replace('<', '_');
-		filename = filename.replace('>', '_');
-		filename = filename.replace('(', '_');
-		filename = filename.replace(')', '_');
-		
-		return filename;
+        String filename = dotFilePrefix + mth.toString();
+        filename = filename.replace('/', '_');
+        filename = filename.replace(' ', '_');
+        filename = filename.replace('<', '_');
+        filename = filename.replace('>', '_');
+        filename = filename.replace('(', '_');
+        filename = filename.replace(')', '_');
+        
+        return filename;
     }
 
     /**
@@ -69,32 +69,35 @@ public class DotGraph implements ControlFlowGraphVisitor {
      */
     public static class dot {
         private static PrintWriter containedgraph = null;
-
-		/**
-		 * 	The first argument specifies what directory to use for output, the second is the file name.
-		 **/
+        /**
+         * The first argument specifies what directory to use for output, the
+         * second is the file name.
+         */
         public static void openGraph(String the_outputDir, String name) {
             try {
-            	if(the_outputDir != null) outputDir = the_outputDir;
+                if (the_outputDir != null)
+                    outputDir = the_outputDir;
                 String dirname = outputDir;
                 File d = new File(dirname);
                 if (!d.exists()) {
                     d.mkdir();
                 }
                 String dirsep = System.getProperty("file.separator");
-                containedgraph = new PrintWriter(new FileOutputStream(dirname + dirsep + name));
+                containedgraph = new PrintWriter(new FileOutputStream(dirname
+                        + dirsep + name));
                 containedgraph.println("digraph contained_in_graph {");
-                containedgraph.println("\tnode[shape=box,fontname = \"Arial\", fontsize=10];");
-                containedgraph.println("\tedge[fontname = \"Arial\", fontcolor=red, fontsize=8];");
-				containedgraph.println("\tlabel = \"" + name + "\";");
+                containedgraph
+                        .println("\tnode[shape=box,fontname = \"Arial\", fontsize=10];");
+                containedgraph
+                        .println("\tedge[fontname = \"Arial\", fontcolor=red, fontsize=8];");
+                containedgraph.println("\tlabel = \"" + name + "\";");
             } catch (IOException _) {
                 _.printStackTrace(System.err);
             }
         }
-        
-		public static void openGraph(String name) {
-			openGraph(null, name);		
-		}
+        public static void openGraph(String name) {
+            openGraph(null, name);
+        }
 
         public static String escape(String from) {
             from = from.replace('\t', ' ').trim();
@@ -190,110 +193,120 @@ public class DotGraph implements ControlFlowGraphVisitor {
     /**
      * Use the dot helper class to output this cfg as a Graph.
      */
-    public void visitCFG (ControlFlowGraph cfg) {
-	final HashMap fedge2PEIList = new HashMap();
+    public void visitCFG(ControlFlowGraph cfg) {
+        final HashMap fedge2PEIList = new HashMap();
         try {
             String filename = createMethodName(cfg.getMethod());
-	    dot.openGraph(filename);
+            dot.openGraph(filename);
             cfg.visitBasicBlocks(new BasicBlockVisitor() {
                 public void visitBasicBlock(BasicBlock bb) {
                     if (bb.isEntry()) {
                         if (bb.getNumberOfSuccessors() != 1)
-                            throw new Error("entry bb has != 1 successors " + bb.getNumberOfSuccessors());
-                        dot.addEntryEdge(bb.toString(), bb.getSuccessors().iterator().next().toString(), null);
-                    } else
-                    if (!bb.isExit()) {
+                            throw new Error("entry bb has != 1 successors "
+                                    + bb.getNumberOfSuccessors());
+                        dot.addEntryEdge(bb.toString(), bb.getSuccessors()
+                                .iterator().next().toString(), null);
+                    } else if (!bb.isExit()) {
                         ListIterator.Quad qit = bb.iterator();
-                        StringBuffer l = new StringBuffer(" " + bb.toString() + "\\l");
-                        HashMap/*<jq_Class,List.Quad>*/ exceptions2PEIList = new HashMap();
+                        StringBuffer l = new StringBuffer(" " + bb.toString()
+                                + "\\l");
+                        HashMap/* <jq_Class,List.Quad> */exceptions2PEIList = new HashMap();
                         while (qit.hasNext()) {
                             l.append(" ");
                             Quad quad = qit.nextQuad();
                             l.append(dot.escape(quad.toString()));
                             l.append("\\l");
-                            ListIterator.jq_Class exceptions = quad.getThrownExceptions().classIterator();
+                            ListIterator.jq_Class exceptions = quad
+                                    .getThrownExceptions().classIterator();
                             while (exceptions.hasNext()) {
-				jq_Class exc = exceptions.nextClass();
-				ArrayList peis = (ArrayList)exceptions2PEIList.get(exc);
-				if (peis == null)
-				    exceptions2PEIList.put(exc, peis = new ArrayList());
-				peis.add(quad);
+                                jq_Class exc = exceptions.nextClass();
+                                ArrayList peis = (ArrayList) exceptions2PEIList
+                                        .get(exc);
+                                if (peis == null)
+                                    exceptions2PEIList.put(exc,
+                                            peis = new ArrayList());
+                                peis.add(quad);
                             }
                         }
-                        dot.userDefined("\t" + bb.toString() + " [shape=box,label=\"" + l + "\"];\n");
-
-                        ListIterator.BasicBlock bit = bb.getSuccessors().basicBlockIterator();
+                        dot.userDefined("\t" + bb.toString()
+                                + " [shape=box,label=\"" + l + "\"];\n");
+                        ListIterator.BasicBlock bit = bb.getSuccessors()
+                                .basicBlockIterator();
                         while (bit.hasNext()) {
                             BasicBlock nextbb = bit.nextBasicBlock();
                             if (nextbb.isExit()) {
-                                dot.addLeavingEdge(bb.toString(), nextbb.toString(), null);
+                                dot.addLeavingEdge(bb.toString(), nextbb
+                                        .toString(), null);
                             } else {
                                 dot.addEdge(bb.toString(), nextbb.toString());
                             }
                         }
-
                         Iterator eit = exceptions2PEIList.entrySet().iterator();
                         while (eit.hasNext()) {
-                            Map.Entry e = (Map.Entry)eit.next();
-                            jq_Class exc = (jq_Class)e.getKey();
-                            List/*<Quad>*/ thisPeiList = (List)e.getValue();
+                            Map.Entry e = (Map.Entry) eit.next();
+                            jq_Class exc = (jq_Class) e.getKey();
+                            List/* <Quad> */thisPeiList = (List) e.getValue();
                             ListIterator.ExceptionHandler mayCatch;
-                            mayCatch = bb.getExceptionHandlers().mayCatch(exc).exceptionHandlerIterator();
+                            mayCatch = bb.getExceptionHandlers().mayCatch(exc)
+                                    .exceptionHandlerIterator();
                             while (mayCatch.hasNext()) {
-                                ExceptionHandler exceptionHandler = mayCatch.nextExceptionHandler();
+                                ExceptionHandler exceptionHandler = mayCatch
+                                        .nextExceptionHandler();
                                 BasicBlock nextbb = exceptionHandler.getEntry();
-				FactoredEdge fe = new FactoredEdge(bb, nextbb, exceptionHandler.getExceptionType());	
-				List factoredPeiList = (List)fedge2PEIList.get(fe);
-				if (factoredPeiList == null) {
-				    fedge2PEIList.put(fe, factoredPeiList = new ArrayList());
-				}
-				factoredPeiList.addAll(thisPeiList);
-                                // dot.addEdge(bb.toString(), nextbb.toString(), peis + exceptionHandler.getExceptionType().toString());
+                                FactoredEdge fe = new FactoredEdge(bb, nextbb,
+                                        exceptionHandler.getExceptionType());
+                                List factoredPeiList = (List) fedge2PEIList
+                                        .get(fe);
+                                if (factoredPeiList == null) {
+                                    fedge2PEIList.put(fe,
+                                            factoredPeiList = new ArrayList());
+                                }
+                                factoredPeiList.addAll(thisPeiList);
+                                // dot.addEdge(bb.toString(),
+                                // nextbb.toString(), peis +
+                                // exceptionHandler.getExceptionType().toString());
                             }
-                            // if (bb.getExceptionHandlers().mustCatch(exc) == null) { }
+                            // if (bb.getExceptionHandlers().mustCatch(exc) ==
+                            // null) { }
                         }
                     }
                 }
             });
         } finally {
-	    Iterator fedges = fedge2PEIList.entrySet().iterator();
-	    while (fedges.hasNext()) {
-		Map.Entry e = (Map.Entry)fedges.next();
-		FactoredEdge fe = (FactoredEdge)e.getKey();
-		List factoredPeiList = (List)e.getValue();
-
-		String peis = "[" + ((Quad)factoredPeiList.get(0)).getID();
-		for (int i = 1; i < factoredPeiList.size(); i++) {
-		    peis += ", " + ((Quad)factoredPeiList.get(i)).getID();
-		}
-		peis += "] ";
-		dot.addEdge(fe.from.toString(), fe.to.toString(), peis + fe.exception); 
-	    }
-
+            Iterator fedges = fedge2PEIList.entrySet().iterator();
+            while (fedges.hasNext()) {
+                Map.Entry e = (Map.Entry) fedges.next();
+                FactoredEdge fe = (FactoredEdge) e.getKey();
+                List factoredPeiList = (List) e.getValue();
+                String peis = "[" + ((Quad) factoredPeiList.get(0)).getID();
+                for (int i = 1; i < factoredPeiList.size(); i++) {
+                    peis += ", " + ((Quad) factoredPeiList.get(i)).getID();
+                }
+                peis += "] ";
+                dot.addEdge(fe.from.toString(), fe.to.toString(), peis
+                        + fe.exception);
+            }
             dot.closeGraph();
         }
     }
 
     class FactoredEdge {
-	BasicBlock from, to;
-	jq_Class exception;
-
-	FactoredEdge(BasicBlock from, BasicBlock to, jq_Class exception) {
-	    this.from = from;
-	    this.to = to;
-	    this.exception = exception;
-	}
-
-	public boolean equals(Object that) {
-	    return equals((FactoredEdge)that);
-	}
-
-	public int hashCode() {
-	    return from.hashCode() ^ to.hashCode();
-	}
-
-	public boolean equals(FactoredEdge that) {
-	    return this.from.equals(that.from) && this.to.equals(that.to) && this.exception.equals(that.exception);
-	}
+        BasicBlock from, to;
+        jq_Class exception;
+        FactoredEdge(BasicBlock from, BasicBlock to, jq_Class exception) {
+            this.from = from;
+            this.to = to;
+            this.exception = exception;
+        }
+        public boolean equals(Object that) {
+            return equals((FactoredEdge) that);
+        }
+        public int hashCode() {
+            return from.hashCode() ^ to.hashCode();
+        }
+        public boolean equals(FactoredEdge that) {
+            return this.from.equals(that.from) && this.to.equals(that.to)
+                    && this.exception.equals(that.exception);
+        }
     }
 }
