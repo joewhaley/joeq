@@ -24,4 +24,12 @@ public class Null {
     public String toString() {
         return "I am Null";
     }
+    
+    static void smethod(Object o, String s, Boolean b) { }
+    static void kmethod() { smethod(null, "one", Boolean.FALSE); }
+
+    public static void main2(String[] av) {
+        smethod(null, "one", Boolean.TRUE);
+        kmethod();
+    }
 }
