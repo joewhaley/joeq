@@ -2877,7 +2877,8 @@ public class PA {
             if (m.getBytecode() == null) {
                 jq_Type retType = m.getReturnType();
                 if (retType instanceof jq_Reference) {
-                    boolean b = classes.add(retType);
+                    boolean b = !classes.contains(retType);
+                    classes.get(retType);
                     if (b)
                         ++heaps;
                     if (ocg != null) {
@@ -2915,12 +2916,13 @@ public class PA {
                 fields.addAll(n.getNonEscapingEdgeFields());
                 if (n instanceof GlobalNode) continue;
                 jq_Reference r = (jq_Reference) n.getDeclaredType();
-                classes.add(r);
+                classes.get(r);
             }
             calls += ms.getCalls().size();
         }
         if (ADD_SUPERTYPES) {
-            Set newTypes = new HashSet(classes);
+            for (int i = 0; i < classes.size(); ++i) {
+            }
         }
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
