@@ -100,6 +100,9 @@ public class BasicReflectionImpl implements Reflection.Delegate {
             if (!c.getJDKName().startsWith("ClassLib") && !c.getJDKName().startsWith("L&"))
                 Debug.writeln("Note: "+c.getJDKName()+" was not found in host jdk");
             return null;
+        } catch (NoClassDefFoundError nce) {
+	    Debug.writeln("Note: "+c.getJDKName()+" could not be loaded in host jdk (tried Class.forName)");
+            return null;
         }
     }
     
