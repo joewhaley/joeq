@@ -370,20 +370,20 @@ public class FullyContextSensitiveBDD {
             sb.append(':');
             sb.append(Strings.lineSep);
             sb.append("Roots=");
-            sb.append(roots.toStringWithDomains(bdd, ts));
+            sb.append(roots.toStringWithDomains(ts));
             sb.append(Strings.lineSep);
             sb.append("Nodes=");
-            System.out.println("Nodes: "+nodes.toStringWithDomains(bdd));
-            sb.append(nodes.toStringWithDomains(bdd, ts));
+            System.out.println("Nodes: "+nodes.toStringWithDomains());
+            sb.append(nodes.toStringWithDomains(ts));
             sb.append(Strings.lineSep);
             sb.append("Loads=");
-            sb.append(loads.toStringWithDomains(bdd, ts));
+            sb.append(loads.toStringWithDomains(ts));
             sb.append(Strings.lineSep);
             sb.append("Stores=");
-            sb.append(stores.toStringWithDomains(bdd, ts));
+            sb.append(stores.toStringWithDomains(ts));
             sb.append(Strings.lineSep);
             sb.append("Edges=");
-            sb.append(edges.toStringWithDomains(bdd, ts));
+            sb.append(edges.toStringWithDomains(ts));
             sb.append(Strings.lineSep);
             return sb.toString();
         }
@@ -420,7 +420,7 @@ public class FullyContextSensitiveBDD {
                         int m = getVariableIndex((Node) k.next());
                         params[j].orWith(V3.ithVar(m));
                     }
-                    if (TRACE_CALLEE) System.out.println("Params["+j+"]="+params[j].toStringWithDomains(bdd, ts));
+                    if (TRACE_CALLEE) System.out.println("Params["+j+"]="+params[j].toStringWithDomains(ts));
                 }
                 
                 // find all targets of this call.
@@ -447,7 +447,7 @@ public class FullyContextSensitiveBDD {
                     BDD renumbering14 = null;
                     BDD renumbering34 = null;
                     if (!overlap.equals(bdd.zero())) {
-                        if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(bdd, ts));
+                        if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(ts));
                         long time = System.currentTimeMillis();
                         BDD callee_used = callee.nodes.id();
                         renumbering24 = bdd.zero();
@@ -485,9 +485,9 @@ public class FullyContextSensitiveBDD {
                     if (TRACE_TIMES || time > 400) System.out.println("Renumbering: "+(time/1000.));
                     
                     if (TRACE_CALLEE) { 
-                        System.out.println("New loads: "+callee_loads.toStringWithDomains(bdd, ts));
-                        System.out.println("New stores: "+callee_stores.toStringWithDomains(bdd, ts));
-                        System.out.println("New edges: "+callee_edges.toStringWithDomains(bdd, ts));
+                        System.out.println("New loads: "+callee_loads.toStringWithDomains(ts));
+                        System.out.println("New stores: "+callee_stores.toStringWithDomains(ts));
+                        System.out.println("New edges: "+callee_edges.toStringWithDomains(ts));
                     }
                     
                     // incorporate callee operations into caller.
@@ -505,7 +505,7 @@ public class FullyContextSensitiveBDD {
                         BDD paramEdge = renumber(tmp, renumbering14, V1.set(), V4toV1);
                         tmp.free();
                         paramEdge.andWith(params[k].id());
-                        if (TRACE_CALLEE) System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains(bdd, ts));
+                        if (TRACE_CALLEE) System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains(ts));
                         newEdges.orWith(paramEdge);
                     }
                     
@@ -523,7 +523,7 @@ public class FullyContextSensitiveBDD {
                             }
                             int rIndex = getVariableIndex(rvn);
                             retVal.andWith(V1.ithVar(rIndex));
-                            if (TRACE_CALLEE) System.out.println("Return value edges "+retVal.toStringWithDomains(bdd, ts));
+                            if (TRACE_CALLEE) System.out.println("Return value edges "+retVal.toStringWithDomains(ts));
                             newEdges.orWith(retVal);
                         }
                     }
@@ -540,7 +540,7 @@ public class FullyContextSensitiveBDD {
                             }
                             int rIndex = getVariableIndex(rvn);
                             retVal.andWith(V1.ithVar(rIndex));
-                            if (TRACE_CALLEE) System.out.println("Thrown exception edges "+retVal.toStringWithDomains(bdd, ts));
+                            if (TRACE_CALLEE) System.out.println("Thrown exception edges "+retVal.toStringWithDomains(ts));
                             newEdges.orWith(retVal);
                         }
                     }
@@ -748,7 +748,7 @@ public class FullyContextSensitiveBDD {
                     BDD newEdges24 = edges.replace(V1V3toV2V4);
                     boolean done = edges24.equals(newEdges24);
                     if (TRACE_MATCHING && !done) {
-                        System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
+                        System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(ts));
                     }
                     edges24.free();
                     edges24 = newEdges24;
@@ -785,7 +785,7 @@ public class FullyContextSensitiveBDD {
                 BDD newEdges24 = edges.replace(V1V3toV2V4);
                 boolean done = edges24.equals(newEdges24);
                 if (TRACE_MATCHING && !done) {
-                    System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
+                    System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(ts));
                 }
                 edges24.free();
                 edges24 = newEdges24;
@@ -828,7 +828,7 @@ public class FullyContextSensitiveBDD {
                     BDD newEdges24 = edges.replace(V1V3toV2V4);
                     boolean done = edges24.equals(newEdges24);
                     if (TRACE_MATCHING && !done) {
-                        System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
+                        System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(ts));
                     }
                     edges24.free();
                     edges24 = newEdges24;
@@ -853,7 +853,7 @@ public class FullyContextSensitiveBDD {
                 BDD newEdges24 = edges.replace(V1V3toV2V4);
                 boolean done = edges24.equals(newEdges24);
                 if (TRACE_MATCHING && !done) {
-                    System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
+                    System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(ts));
                 }
                 edges24.free();
                 edges24 = newEdges24;
@@ -891,7 +891,7 @@ public class FullyContextSensitiveBDD {
             
             if (!newLoads.isZero()) {
                 if (TRACE_MATCHING) {
-                    System.out.println("New loads: "+newLoads.toStringWithDomains(bdd, ts));
+                    System.out.println("New loads: "+newLoads.toStringWithDomains(ts));
                 }
                 
                 BDD tmpRel1 = newLoads.relprod(edges24, V2set);
@@ -903,7 +903,7 @@ public class FullyContextSensitiveBDD {
             }
             if (!newStores.isZero()) {
                 if (TRACE_MATCHING) {
-                    System.out.println("New stores: "+newStores.toStringWithDomains(bdd, ts));
+                    System.out.println("New stores: "+newStores.toStringWithDomains(ts));
                 }
                 
                 BDD tmpRel1 = newStores.relprod(edges24, V2set);
@@ -917,7 +917,7 @@ public class FullyContextSensitiveBDD {
             V2set.free(); V4set.free(); V2andFDset.free();
             
             if (TRACE_MATCHING && !newerEdges.isZero()) {
-                System.out.println("New edges from new loads/stores: "+newerEdges.toStringWithDomains(bdd, ts));
+                System.out.println("New edges from new loads/stores: "+newerEdges.toStringWithDomains(ts));
             }
             return newerEdges;
         }
@@ -948,7 +948,7 @@ public class FullyContextSensitiveBDD {
             // Repeat for transitive closure.
             for (;;) {
                 if (TRACE_MATCHING) {
-                    System.out.println("New edges: "+newEdges.toStringWithDomains(bdd));
+                    System.out.println("New edges: "+newEdges.toStringWithDomains());
                 }
                 
                 BDD newEdges12 = newEdges.replace(V3toV2);
@@ -997,7 +997,7 @@ public class FullyContextSensitiveBDD {
             addedEdges24.applyWith(oldEdges24, BDDFactory.diff);
             
             if (TRACE_MATCHING) {
-                System.out.println("Total new edges: "+addedEdges24.toStringWithDomains(bdd));
+                System.out.println("Total new edges: "+addedEdges24.toStringWithDomains());
             }
             
             BDD V4set = V4.set();
@@ -1033,7 +1033,7 @@ public class FullyContextSensitiveBDD {
             newerEdges.applyWith(edges.id(), BDDFactory.diff);
 
             if (TRACE_MATCHING) {
-                System.out.println("New edges from load/store matching: "+newerEdges.toStringWithDomains(bdd));
+                System.out.println("New edges from load/store matching: "+newerEdges.toStringWithDomains());
             }
             
             V2set.free();
@@ -1097,7 +1097,7 @@ public class FullyContextSensitiveBDD {
                     change = true;
                     
                     if (TRACE_MATCHING) {
-                        System.out.println("New edges due to transitive closure: "+newEdges13.toStringWithDomains(bdd));
+                        System.out.println("New edges due to transitive closure: "+newEdges13.toStringWithDomains());
                     }
                     
                     newEdges12 = newEdges13.replace(V3toV2);
@@ -1121,7 +1121,7 @@ public class FullyContextSensitiveBDD {
                 
                 // Add result to loads.
                 newLoadSet1.applyWith(loads.id(), BDDFactory.diff);
-                if (TRACE_MATCHING) System.out.println("New loads: "+newLoadSet1.toStringWithDomains(bdd));
+                if (TRACE_MATCHING) System.out.println("New loads: "+newLoadSet1.toStringWithDomains());
                 loads.orWith(newLoadSet1.id());
                 newLoads14.orWith(newLoadSet1);
                 
@@ -1136,7 +1136,7 @@ public class FullyContextSensitiveBDD {
                 
                 // Add result to stores.
                 newStoreSet1.applyWith(stores.id(), BDDFactory.diff);
-                if (TRACE_MATCHING) System.out.println("New stores: "+newStoreSet1.toStringWithDomains(bdd));
+                if (TRACE_MATCHING) System.out.println("New stores: "+newStoreSet1.toStringWithDomains());
                 stores.orWith(newStoreSet1.id());
                 newStores43.orWith(newStoreSet1);
                 
@@ -1166,7 +1166,7 @@ public class FullyContextSensitiveBDD {
                 change = true;
                 
                 if (TRACE_MATCHING) {
-                    System.out.println("New edges due to matching load/stores: "+newEdges13.toStringWithDomains(bdd));
+                    System.out.println("New edges due to matching load/stores: "+newEdges13.toStringWithDomains());
                 }
                 
                 // recalculate loop-carried dependencies
@@ -1187,7 +1187,7 @@ public class FullyContextSensitiveBDD {
                 allEdges24.orWith(newEdges24.id());
                 
                 if (TRACE_MATCHING) {
-                    System.out.println("Total new edges: "+newEdges24.toStringWithDomains(bdd));
+                    System.out.println("Total new edges: "+newEdges24.toStringWithDomains());
                 }
             }
             V2set.free();
@@ -1241,7 +1241,7 @@ public class FullyContextSensitiveBDD {
         
         void trim(BDD set) {
             if (TRACE_TRIMMING) {
-                System.out.println("Trimming edges outside of the set "+set.toStringWithDomains(bdd, ts));
+                System.out.println("Trimming edges outside of the set "+set.toStringWithDomains(ts));
                 System.out.println("Before: edges="+edges.nodeCount()+
                                           " loads="+loads.nodeCount()+
                                          " stores="+stores.nodeCount());
