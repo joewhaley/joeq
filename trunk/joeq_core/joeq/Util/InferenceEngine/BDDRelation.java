@@ -49,7 +49,7 @@ public class BDDRelation extends Relation {
             Collection doms = solver.getBDDDomains(fd);
             BDDDomain d = null;
             String option = (String) fieldOptions.get(i);
-            if (option.length() > 0) {
+            if (option != null && option.length() > 0) {
                 // use the given domain.
                 if (!option.startsWith(fd.name))
                     throw new IllegalArgumentException("Field "+name+" has domain "+fd+", but tried to assign "+option);
