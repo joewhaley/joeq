@@ -45,7 +45,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
 
     boolean TRACE = false;
     PrintStream out = System.out;
-    boolean MERGE_SITES = false;
+    boolean MERGE_SITES = !System.getProperty("os.merge", "no").equals("no");
     
     jq_Method currentMethod;
     Set/*jq_Class*/ roots = new HashSet();
@@ -84,6 +84,16 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
         set.addAll(succ.keySet());
         set.removeAll(succ.values());
         set.addAll(roots);
+        
+        for (;;) {
+            // some cycles may not be reachable.
+            HashSet set2 = new HashSet(succ.keySet());
+            set2.removeAll(Traversals.reversePostOrder(getNavigator(), set));
+            if (set2.isEmpty()) break;
+            Object o = set2.iterator().next();
+            if (TRACE) System.out.println("Breaking cycle: choosing "+o);
+            set.add(o);
+        }
         if (TRACE) System.out.println("Roots = "+roots);
         return set;
     }
