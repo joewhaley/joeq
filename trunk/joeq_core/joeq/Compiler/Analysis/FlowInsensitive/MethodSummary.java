@@ -31,6 +31,8 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Compil3r.Analysis.IPA.ProgramLocation;
+import Compil3r.Analysis.IPA.CSPA.HeapObject;
+import Compil3r.Analysis.IPA.CSPA.Variable;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.ControlFlowGraph;
@@ -975,7 +977,7 @@ public class MethodSummary {
         }
     }
     
-    public abstract static class Node implements Comparable {
+    public abstract static class Node implements Comparable, Variable {
         /** Map from fields to sets of predecessors on that field. 
          *  This only includes inside edges; outside edge predecessors are in FieldNode. */
         protected Map predecessors;
@@ -1738,7 +1740,7 @@ public class MethodSummary {
          * @param ms method summary that contains this node
          * @param out print writer to output to
          */
-        public abstract void write(MethodSummary ms, DataOutput out) throws IOException;
+        public abstract void write(DataOutput out) throws IOException;
         
     }
     
@@ -1747,7 +1749,7 @@ public class MethodSummary {
      *  It is tied to the quad that created it, so nodes of the same type but
      *  from different quads are not equal.
      */
-    public static final class ConcreteTypeNode extends Node {
+    public static final class ConcreteTypeNode extends Node implements HeapObject {
         final jq_Reference type;
         final ProgramLocation q;
         
@@ -1790,7 +1792,7 @@ public class MethodSummary {
             return "Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
         }
 
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("Concrete ");
             writeType(out, (jq_Reference) type);
             out.writeByte(' ');
@@ -1869,7 +1871,7 @@ public class MethodSummary {
     /** A ConcreteObjectNode refers to an object that we discovered through reflection.
      * It includes a reference to the actual object instance.
      */
-    public static final class ConcreteObjectNode extends Node {
+    public static final class ConcreteObjectNode extends Node implements HeapObject {
         final Object object;
         
         public static Collection getAll() {
@@ -2035,7 +2037,7 @@ public class MethodSummary {
             return super.removeEdge(m, n);
         }
 
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("ConcreteObject ");
             writeType(out, (jq_Reference) getDeclaredType());
         }
@@ -2047,7 +2049,7 @@ public class MethodSummary {
      *  Nodes with the same "type" are considered to be equal.
      *  This class includes a factory to get UnknownTypeNode's.
      */
-    public static final class UnknownTypeNode extends Node {
+    public static final class UnknownTypeNode extends Node implements HeapObject {
         public static final boolean ADD_DUMMY_EDGES = false;
         
         static final HashMap FACTORY = new HashMap();
@@ -2131,7 +2133,7 @@ public class MethodSummary {
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
 
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("Unknown ");
             writeType(out, (jq_Reference) getDeclaredType());
         }
@@ -2194,7 +2196,7 @@ public class MethodSummary {
             //System.out.println("Edges from global: "+getEdges());
         }
         
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("Global");
         }
         
@@ -2232,7 +2234,7 @@ public class MethodSummary {
             return "Return value of "+m;
         }
         
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("ReturnValue ");
             writeLocation(out, m);
         }
@@ -2284,7 +2286,7 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("ThrownException ");
             writeLocation(out, m);
         }
@@ -2317,7 +2319,7 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("Param ");
             writeMember(out, (jq_Method) m);
             out.writeBytes(" "+n);
@@ -2578,7 +2580,7 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void write(MethodSummary ms, DataOutput out) throws IOException {
+        public void write(DataOutput out) throws IOException {
             out.writeBytes("Field ");
             writeMember(out, (jq_Field) f);
             // TODO: predecessors 

@@ -48,7 +48,6 @@ import Compil3r.Quad.RootedCHACallGraph;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
@@ -246,6 +245,7 @@ public class CSPA {
         // Allocate CSPA object.
         CSPA dis = new CSPA(cg);
         dis.roots = roots;
+        dis.pn = pn;
         
         // Initialize BDD package.
         dis.initializeBDD(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
@@ -258,8 +258,6 @@ public class CSPA {
         dis.generateBDDSummaries();
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
-        
-        dis.pn = pn;
         
         System.out.print("Initializing relations and adding call graph edges...");
         time = System.currentTimeMillis();
@@ -304,27 +302,35 @@ public class CSPA {
         out.writeBytes(ordering+"\n");
     }
 
+    public static interface Variable {
+        void write(DataOutput out) throws IOException;
+    }
+    public static interface HeapObject {
+        void write(DataOutput out) throws IOException;
+    }
+
     private void dumpVarIndexMap(DataOutput out) throws IOException {
         int n = variableIndexMap.size();
         out.writeBytes(n+"\n");
         int j;
         for (j=0; j<=globalVarHighIndex; ++j) {
-            Node node = (Node) variableIndexMap.get(j);
-            node.write(null, out);
+            Variable node = getVariable(j); 
+            node.write(out);
             out.writeByte('\n');
         }
         for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
             BDDMethodSummary s = (BDDMethodSummary) i.next();
             Assert._assert(s.lowVarIndex == j);
             for ( ; j<=s.highVarIndex; ++j) {
-                Node node = (Node) variableIndexMap.get(j);
-                node.write(s.ms, out);
+                Variable node = getVariable(j);
+                node.write(out);
                 out.writeByte('\n');
             }
         }
         while (j < variableIndexMap.size()) {
-            UnknownTypeNode node = (UnknownTypeNode) variableIndexMap.get(j);
-            node.write(null, out);
+            // UnknownTypeNode
+            Variable node = getVariable(j);
+            node.write(out);
             out.writeByte('\n');
             ++j;
         }
@@ -335,23 +341,25 @@ public class CSPA {
         out.writeBytes(n+"\n");
         int j;
         for (j=0; j<=globalHeapHighIndex; ++j) {
-            ConcreteObjectNode node = (ConcreteObjectNode) heapobjIndexMap.get(j);
+            // ConcreteObjectNode
+            HeapObject node = getHeapObject(j);
             if (node == null) out.writeBytes("null");
-            else node.write(null, out);
+            else node.write(out);
             out.writeByte('\n');
         }
         for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
             BDDMethodSummary s = (BDDMethodSummary) i.next();
             Assert._assert(s.lowHeapIndex == j);
             for ( ; j<=s.highHeapIndex; ++j) {
-                Node node = (Node) heapobjIndexMap.get(j);
-                node.write(s.ms, out);
+                HeapObject node = getHeapObject(j);
+                node.write(out);
                 out.writeByte('\n');
             }
         }
         while (j < heapobjIndexMap.size()) {
-            UnknownTypeNode node = (UnknownTypeNode) heapobjIndexMap.get(j);
-            node.write(null, out);
+            // UnknownTypeNode
+            HeapObject node = getHeapObject(j);
+            node.write(out);
             out.writeByte('\n');
             ++j;
         }
@@ -433,9 +441,9 @@ public class CSPA {
             return H1c.ithVar(0);
     }
     
-    public void addGlobalObjectAllocation(Node dest, Node site) {
+    public void addGlobalObjectAllocation(Variable dest, HeapObject site) {
         int dest_i = getVariableIndex(dest);
-        int site_i = getHeapobjIndex(site);
+        int site_i = getHeapObjectIndex(site);
         BDD dest_bdd = V1o.ithVar(dest_i);
         addGlobalV1Context(dest_bdd);
         BDD site_bdd = H1o.ithVar(site_i);
@@ -444,14 +452,15 @@ public class CSPA {
         g_pointsTo.orWith(dest_bdd);
     }
     
-    public void addGlobalLoad(Set dests, Node base, jq_Field f) {
+    public void addGlobalLoad(Set dests, Variable base, jq_Field f) {
         int base_i = getVariableIndex(base);
         int f_i = getFieldIndex(f);
         BDD base_bdd = V1o.ithVar(base_i);
         addGlobalV1Context(base_bdd);
         BDD f_bdd = FD.ithVar(f_i);
         for (Iterator i=dests.iterator(); i.hasNext(); ) {
-            FieldNode dest = (FieldNode) i.next();
+            // FieldNode
+            Variable dest = (Variable) i.next();
             int dest_i = getVariableIndex(dest);
             BDD dest_bdd = V2o.ithVar(dest_i);
             addGlobalV2Context(dest_bdd);
@@ -462,14 +471,14 @@ public class CSPA {
         base_bdd.free(); f_bdd.free();
     }
     
-    public void addGlobalStore(Node base, jq_Field f, Set srcs) {
+    public void addGlobalStore(Variable base, jq_Field f, Set srcs) {
         int base_i = getVariableIndex(base);
         int f_i = getFieldIndex(f);
         BDD base_bdd = V2o.ithVar(base_i);
         addGlobalV2Context(base_bdd);
         BDD f_bdd = FD.ithVar(f_i);
         for (Iterator i=srcs.iterator(); i.hasNext(); ) {
-            Node src = (Node) i.next();
+            Variable src = (Variable) i.next();
             int src_i = getVariableIndex(src);
             BDD src_bdd = V1o.ithVar(src_i);
             addGlobalV1Context(src_bdd);
@@ -481,12 +490,12 @@ public class CSPA {
     }
     
     // v2 = v1;
-    public void addGlobalEdge(Node dest, Collection srcs) {
+    public void addGlobalEdge(Variable dest, Collection srcs) {
         int dest_i = getVariableIndex(dest);
         BDD dest_bdd = V2o.ithVar(dest_i);
         addGlobalV2Context(dest_bdd);
         for (Iterator i=srcs.iterator(); i.hasNext(); ) {
-            Node src = (Node) i.next();
+            Variable src = (Variable) i.next();
             int src_i = getVariableIndex(src);
             BDD src_bdd = V1o.ithVar(src_i);
             addGlobalV1Context(src_bdd);
@@ -523,11 +532,10 @@ public class CSPA {
                 addGlobalLoad(Collections.singleton(o), n, f);
             }
         }
-        if (n instanceof ConcreteTypeNode ||
-            n instanceof UnknownTypeNode ||
-            n instanceof ConcreteObjectNode) {
-            addGlobalObjectAllocation(n, n);
-            addAllocType(n, (jq_Reference) n.getDeclaredType());
+        if (n instanceof HeapObject) {
+            HeapObject ho = (HeapObject) n;
+            addGlobalObjectAllocation(n, ho);
+            addAllocType(ho, (jq_Reference) n.getDeclaredType());
         }
         if (n instanceof GlobalNode) {
             addGlobalEdge(GlobalNode.GLOBAL, Collections.singleton(n));
@@ -865,15 +873,15 @@ public class CSPA {
         System.arraycopy(varorder2, 0, varorder, 0, varorder.length);
     }
     
-    IndexMap/* Node->index */ variableIndexMap;
-    IndexMap/* Node->index */ heapobjIndexMap;
+    IndexMap/* Variable->index */ variableIndexMap;
+    IndexMap/* HeapObject->index */ heapobjIndexMap;
     IndexMap/* jq_Field->index */ fieldIndexMap;
     IndexMap/* jq_Reference->index */ typeIndexMap;
 
-    int getVariableIndex(Node dest) {
+    int getVariableIndex(Variable dest) {
         return variableIndexMap.get(dest);
     }
-    int getHeapobjIndex(Node site) {
+    int getHeapObjectIndex(HeapObject site) {
         return heapobjIndexMap.get(site);
     }
     int getFieldIndex(jq_Field f) {
@@ -882,11 +890,11 @@ public class CSPA {
     int getTypeIndex(jq_Reference f) {
         return typeIndexMap.get(f);
     }
-    Node getVariable(int index) {
-        return (Node) variableIndexMap.get(index);
+    Variable getVariable(int index) {
+        return (Variable) variableIndexMap.get(index);
     }
-    Node getHeapobj(int index) {
-        return (Node) heapobjIndexMap.get(index);
+    HeapObject getHeapObject(int index) {
+        return (HeapObject) heapobjIndexMap.get(index);
     }
     jq_Field getField(int index) {
         return (jq_Field) fieldIndexMap.get(index);
@@ -910,9 +918,9 @@ public class CSPA {
         }
     }
 
-    public void addAllocType(Node site, jq_Reference type) {
+    public void addAllocType(HeapObject site, jq_Reference type) {
         addClassType(type);
-        int site_i = getHeapobjIndex(site);
+        int site_i = getHeapObjectIndex(site);
         int type_i = getTypeIndex(type);
         BDD site_bdd = H1o.ithVar(site_i);
         BDD type_bdd = T2.ithVar(type_i);
@@ -921,7 +929,7 @@ public class CSPA {
         aC.orWith(type_bdd);
     }
 
-    public void addVarType(Node var, jq_Reference type) {
+    public void addVarType(Variable var, jq_Reference type) {
         addClassType(type);
         int var_i = getVariableIndex(var);
         int type_i = getTypeIndex(type);
@@ -1199,7 +1207,7 @@ public class CSPA {
         }
     }
 
-    public void dumpGlobalNodes() {
+    public void dumpGlobalSets() {
         System.out.print("g_pointsTo="+g_pointsTo.nodeCount());
         System.out.print(", g_edgeSet="+g_edgeSet.nodeCount());
         System.out.print(", g_loads="+g_loads.nodeCount());
@@ -1289,12 +1297,12 @@ public class CSPA {
         return result;
     }
     
-    public void addEdge(BDD context_map, Node dest, Set srcs) {
+    public void addEdge(BDD context_map, Variable dest, Set srcs) {
         //if (TRACE_EDGES) System.out.println(" Context map: "+context_map.toStringWithDomains());
         int dest_i = getVariableIndex(dest);
         BDD dest_bdd = V2o.ithVar(dest_i);
         for (Iterator i=srcs.iterator(); i.hasNext(); ) {
-            Node src = (Node) i.next();
+            Variable src = (Variable) i.next();
             int src_i = getVariableIndex(src);
             BDD src_bdd = V1o.ithVar(src_i);
             src_bdd.andWith(context_map.id());
@@ -1545,14 +1553,10 @@ public class CSPA {
                     addLoad(Collections.singleton(o), n, f);
                 }
             }
-            if (n instanceof ConcreteTypeNode) {
-                ConcreteTypeNode ctn = (ConcreteTypeNode) n;
-                addObjectAllocation(ctn, ctn);
-                addAllocType(ctn, (jq_Reference) ctn.getDeclaredType());
-            } else if (n instanceof UnknownTypeNode) {
-                UnknownTypeNode utn = (UnknownTypeNode) n;
-                addObjectAllocation(utn, utn);
-                addAllocType(utn, (jq_Reference) utn.getDeclaredType());
+            if (n instanceof HeapObject) {
+                HeapObject ho = (HeapObject) n;
+                addObjectAllocation(n, ho);
+                addAllocType(ho, (jq_Reference) n.getDeclaredType());
             }
             if (n instanceof ParamNode ||
                 ms.getReturned().contains(n) ||
@@ -1572,22 +1576,23 @@ public class CSPA {
             }
         }
         
-        public void addObjectAllocation(Node dest, Node site) {
+        public void addObjectAllocation(Variable dest, HeapObject site) {
             int dest_i = getVariableIndex(dest);
-            int site_i = getHeapobjIndex(site);
+            int site_i = getHeapObjectIndex(site);
             BDD dest_bdd = V1o.ithVar(dest_i);
             BDD site_bdd = H1o.ithVar(site_i);
             dest_bdd.andWith(site_bdd);
             m_pointsTo.orWith(dest_bdd);
         }
 
-        public void addLoad(Set dests, Node base, jq_Field f) {
+        public void addLoad(Set dests, Variable base, jq_Field f) {
             int base_i = getVariableIndex(base);
             int f_i = getFieldIndex(f);
             BDD base_bdd = V1o.ithVar(base_i);
             BDD f_bdd = FD.ithVar(f_i);
             for (Iterator i=dests.iterator(); i.hasNext(); ) {
-                FieldNode dest = (FieldNode) i.next();
+                // FieldNode
+                Variable dest = (Variable) i.next();
                 int dest_i = getVariableIndex(dest);
                 BDD dest_bdd = V2o.ithVar(dest_i);
                 dest_bdd.andWith(f_bdd.id());
@@ -1597,13 +1602,13 @@ public class CSPA {
             base_bdd.free(); f_bdd.free();
         }
     
-        public void addStore(Node base, jq_Field f, Set srcs) {
+        public void addStore(Variable base, jq_Field f, Set srcs) {
             int base_i = getVariableIndex(base);
             int f_i = getFieldIndex(f);
             BDD base_bdd = V2o.ithVar(base_i);
             BDD f_bdd = FD.ithVar(f_i);
             for (Iterator i=srcs.iterator(); i.hasNext(); ) {
-                Node src = (Node) i.next();
+                Variable src = (Variable) i.next();
                 int src_i = getVariableIndex(src);
                 BDD src_bdd = V1o.ithVar(src_i);
                 src_bdd.andWith(f_bdd.id());
@@ -1613,11 +1618,11 @@ public class CSPA {
             base_bdd.free(); f_bdd.free();
         }
         
-        public void addUpwardEscapeNode(Node n) {
+        public void addUpwardEscapeNode(Variable n) {
             int n_i = getVariableIndex(n);
         }
         
-        public void addDownwardEscapeNode(Node n) {
+        public void addDownwardEscapeNode(Variable n) {
             int n_i = getVariableIndex(n);
         }
         
@@ -1778,7 +1783,7 @@ public class CSPA {
                     }
                 }
                 if (bad) {
-                    int v_i = getVariableIndex(o);
+                    int v_i = getVariableIndex((Variable) o);
                     bms.vars.and(V1o.ithVar(v_i).not());
                 }
             }
@@ -1796,7 +1801,7 @@ public class CSPA {
                         trivial = q.getOperator() instanceof Operator.New;
                         System.out.println(cfg.getMethod()+": "+q+" trivially doesn't escape.");
                     } else {
-                        int h_i = getHeapobjIndex(ctn);
+                        int h_i = getHeapObjectIndex(ctn);
                         BDD h = H1o.ithVar(h_i);
                         if (TRACE_ESCAPE) {
                             System.out.println("Heap location: "+h.toStringWithDomains()+" = "+ctn);
