@@ -65,6 +65,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public final boolean TraceMethods;
     public final boolean TraceArguments;
     
+    public static final int DEFAULT_ALIGNMENT = 32;
+    
     public x86ReferenceCompiler(jq_Method method) {
         super(method);
         TRACE = ALWAYS_TRACE;
@@ -185,7 +187,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     
     public static final jq_CompiledCode generate_compile_stub(jq_Method method) {
         if (TRACE_STUBS) System.out.println("x86 Reference Compiler: generating compile stub for "+method);
-        x86Assembler asm = new x86Assembler(0, 24);
+        x86Assembler asm = new x86Assembler(0, 24, 0, DEFAULT_ALIGNMENT);
+        asm.setEntrypoint();
         List code_relocs = new LinkedList();
         List data_relocs = new LinkedList();
         if (TRACE_STUBS) {
@@ -207,7 +210,9 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         if (!jq.Bootstrapping) Unsafe.getThreadBlock().disableThreadSwitch();
         
         // initialize stuff
-        asm = new x86Assembler(bcs.length, bcs.length*8);
+        asm = new x86Assembler(bcs.length, bcs.length*8, 5, DEFAULT_ALIGNMENT);
+        asm.skip(5); // space for jump point
+        asm.setEntrypoint();
         jq_Type[] params = method.getParamTypes();
         n_paramwords = method.getParamWords();
         int n_localwords = method.getMaxLocals();

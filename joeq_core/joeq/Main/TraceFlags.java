@@ -124,6 +124,19 @@ public abstract class TraceFlags {
             Compil3r.Reference.x86.x86ReferenceCompiler.TraceBytecode_ClassNames.add(args[++i]);
             return i+1;
         }
+        if (args[i].equalsIgnoreCase("-ReplaceClass")) {
+            Clazz.jq_Class.REPLACE_CLASS       = true;
+            // collect a list of classes to replace
+            do {
+                Clazz.jq_Class.classToReplace.add(args[++i]);
+            //while not just before the main class or just before another option...
+            } while (i+1 != args.length-1 && !args[i+1].startsWith("-"));
+            return i+1;
+        }
+        if (args[i].equalsIgnoreCase("-TraceReplaceClass")) {
+            Clazz.jq_Class.TRACE_REPLACE_CLASS = true;
+            return i+1;
+        }
         if (args[i].equalsIgnoreCase("-Set")) {
             String fullName = args[++i];
             int b = fullName.lastIndexOf('.') + 1;

@@ -261,7 +261,7 @@ public abstract class jq_Method extends jq_Member {
         if (state >= STATE_SFINITIALIZED) return default_compiled_version;
         if (jq.DontCompile) {
             state = STATE_SFINITIALIZED;
-            return default_compiled_version = new jq_CompiledCode(this, 0, 0, null, null, null, null, null);
+            return default_compiled_version = new jq_CompiledCode(this, 0, 0, 0, null, null, null, null, null);
         }
         if (_compile.getState() < STATE_CLSINITIALIZED) _compile.compile();
         default_compiled_version = x86ReferenceCompiler.generate_compile_stub(this);

@@ -45,14 +45,19 @@ public abstract class CodeAllocator {
      */
     public abstract void init();
     
-    /** Allocate a code buffer of the given estimated size.
+    /** Allocate a code buffer of the given estimated size, such that the given
+     * offset will have the given alignment.
      * It is legal for code to exceed the estimated size, but the cost may be
      * high (i.e. it may require recopying of the buffer.)
      *
      * @param estimatedSize  estimated size, in bytes, of desired code buffer
+     * @param offset  desired offset to align to
+     * @param alignment  desired alignment, or 0 if don't care
      * @return  the new code buffer
      */
-    public abstract x86CodeBuffer getCodeBuffer(int estimatedSize);
+    public abstract x86CodeBuffer getCodeBuffer(int estimatedSize,
+                                                int offset,
+                                                int alignment);
     
     /** Patch the given code address to refer to the given heap address, in
      * absolute terms.  This is used to patch heap address references in the
@@ -89,6 +94,10 @@ public abstract class CodeAllocator {
          * @return  current address
          */
         public abstract int/*CodeAddress*/ getCurrentAddress();
+
+        /** Sets the current address as the entrypoint to this code buffer.
+         */
+        public abstract void setEntrypoint();
 
         /** Adds one byte to the end of this code buffer.  Offset/address
          * increase by 1.
@@ -146,6 +155,8 @@ public abstract class CodeAllocator {
          */
         public abstract void put4_endian(int k, int instr);
         
+        public abstract void skip(int nbytes);
+        
         /** Uses the code in this buffer, along with the arguments, to create
          * a jq_CompiledCode object.  Call this method after you are done
          * generating code, and actually want to use it.
@@ -177,7 +188,7 @@ public abstract class CodeAllocator {
                                         highAddress = 0;
     static {
         compiledMethods = new TreeMap();
-        jq_CompiledCode cc = new jq_CompiledCode(null, 0, 0, null, null,
+        jq_CompiledCode cc = new jq_CompiledCode(null, 0, 0, 0, null, null,
                                                  null, null, null);
         compiledMethods.put(cc, cc);
     }
@@ -189,8 +200,8 @@ public abstract class CodeAllocator {
      */
     public static void registerCode(jq_CompiledCode cc) {
         if (TRACE) System.out.println("Registering code: " + cc);
-        lowAddress = Math.min(cc.getEntrypoint(), lowAddress);
-        highAddress = Math.max(cc.getEntrypoint() + cc.getLength(),
+        lowAddress = Math.min(cc.getStart(), lowAddress);
+        highAddress = Math.max(cc.getStart() + cc.getLength(),
                                highAddress);
         compiledMethods.put(cc, cc);
     }
@@ -346,6 +357,7 @@ public abstract class CodeAllocator {
         codeAddressFields.add(Assembler.x86.Heap2CodeReference._to_codeloc);
         codeAddressFields.add(Assembler.x86.DirectBindCall._source);
         codeAddressFields.add(Clazz.jq_CompiledCode._entrypoint);
+        codeAddressFields.add(Clazz.jq_CompiledCode._start);
         codeAddressFields.add(InstructionPointer._ip);
         codeAddressFields.add(_lowAddress);
         codeAddressFields.add(_highAddress);

@@ -7,6 +7,7 @@
 
 package Clazz;
 
+import java.util.Arrays;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -34,6 +35,10 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
     public jq_ConstantPool(int size) {
         constant_pool = new Object[size];
         constant_pool_tags = new byte[size];
+    }
+
+    public String toString() {
+        return Arrays.asList(constant_pool).toString();
     }
 
     public void load(DataInput in) throws IOException, ClassFormatError {
@@ -713,5 +718,108 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 }
             }
         }
+    }
+    
+    /**
+     * As opposed to <code>ConstantPoolRebuilder<\code>, this class
+     * does not COMPLETELY rebuild the constant pool. It does instead add new entries
+     * to the constantpool given as arguments to its constructor
+     * @author Chrislain
+     */
+    public static class ConstantPoolAdder extends ConstantPoolRebuilder {
+        jq_ConstantPool cp;
+
+        public ConstantPoolAdder(jq_ConstantPool cp) {
+            this.cp = cp;
+        }
+
+        jq_ConstantPool finish() {
+            // use this cp adder to add entrys.
+            Adder adder = cp.getAdder();
+            int index = -1;
+
+            //int index = cp.length; // index where to start for adding
+            //jq.assert(index <= Character.MAX_VALUE);
+            //jq_ConstantPool newcp = new jq_ConstantPool(cp_size);
+            Set entrySet = new_entries.entrySet();
+            Iterator i = entrySet.iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                Object o = e.getKey();
+
+                //char index = ((Character)e.getValue()).charValue();
+                //++j; jq.assert(index == j, (int)index + "!=" + (int)j);
+                //System.out.println("CP Entry "+j+": "+o);
+                //newcp.constant_pool[j] = o;
+
+                if (o instanceof Utf8) {
+                    index = adder.add(o, CONSTANT_Utf8);
+                    //newcp.constant_pool_tags[j] = CONSTANT_Utf8;
+                } else if (o instanceof Integer) {
+                    index = adder.add(o, CONSTANT_Integer);
+                    //newcp.constant_pool_tags[j] = CONSTANT_Integer;
+                } else if (o instanceof Float) {
+                    index = adder.add(o, CONSTANT_Float);
+                    //newcp.constant_pool_tags[j] = CONSTANT_Float;
+                } else if (o instanceof Long) {
+                    index = adder.add(o, CONSTANT_Long);
+                    //newcp.constant_pool_tags[j] = CONSTANT_Long;
+                    //++j;
+                } else if (o instanceof Double) {
+                    index = adder.add(o, CONSTANT_Double);
+                    //newcp.constant_pool_tags[j] = CONSTANT_Double;
+                    //++j;
+                } else if (o instanceof jq_Type) {
+                    index = adder.add(o, CONSTANT_ResolvedClass);
+                    //newcp.constant_pool_tags[j] = CONSTANT_ResolvedClass;
+                } else if (o instanceof String) {
+                    index = adder.add(o, CONSTANT_String);
+                    //newcp.constant_pool_tags[j] = CONSTANT_String;
+                } else if (o instanceof jq_NameAndDesc) {
+                    index = adder.add(o, CONSTANT_NameAndType);
+                    //newcp.constant_pool_tags[j] = CONSTANT_NameAndType;
+                } else if (o instanceof jq_InstanceMethod) {
+                    index = adder.add(o, CONSTANT_ResolvedIMethodRef);
+                    //newcp.constant_pool_tags[j] = CONSTANT_ResolvedIMethodRef;
+                } else if (o instanceof jq_StaticMethod) {
+                    index = adder.add(o, CONSTANT_ResolvedSMethodRef);
+                    //newcp.constant_pool_tags[j] = CONSTANT_ResolvedSMethodRef;
+                } else if (o instanceof jq_InstanceField) {
+                    index = adder.add(o, CONSTANT_ResolvedIFieldRef);
+                    //newcp.constant_pool_tags[j] = CONSTANT_ResolvedIFieldRef;
+                } else if (o instanceof jq_StaticField) {
+                    index = adder.add(o, CONSTANT_ResolvedSFieldRef);
+                    //newcp.constant_pool_tags[j] = CONSTANT_ResolvedSFieldRef;
+                } else {
+                    jq.UNREACHABLE();
+                }
+
+                e.setValue(new Character((char) (index++)));
+            }
+
+            adder.finish();
+            return cp;
+        }
+
+        public char get(Object o) {
+            Character c = (Character) new_entries.get(o);
+            if (c == null) {
+                new_entries.put(o, null);
+                finish();
+                c = (Character) new_entries.get(o);
+            }
+            return c.charValue();
+        }
+
+        public void remove(Object o) {
+            jq.UNREACHABLE(
+                "No remove allowed in jq_ConstantPool.ConstantPoolAdder! ");
+        }
+
+        public void dump(DataOutput out) throws IOException {
+            jq.UNREACHABLE(
+                "TODO: implement Dump in jq_ConstantPool.ConstantPoolAdder! ");
+        }
+
     }
 }

@@ -49,8 +49,28 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         all_data_relocs = new LinkedList();
     }
     
-    public x86CodeBuffer getCodeBuffer(int estimated_size) {
-        return new Bootstrapx86CodeBuffer(estimated_size);
+    /** Allocate a code buffer of the given estimated size, such that the given
+     * offset will have the given alignment.
+     * In this allocator, the memory is allocated in chunks, so exceeding the
+     * estimated size doesn't cost extra.
+     *
+     * @param estimatedSize  estimated size, in bytes, of desired code buffer
+     * @param offset  desired offset to align to
+     * @param alignment  desired alignment, or 0 if don't care
+     * @return  the new code buffer
+     */
+    public x86CodeBuffer getCodeBuffer(int estimatedSize,
+                                       int offset,
+                                       int alignment) {
+        // align pointer first
+        int entrypoint = size() + offset;
+        if (alignment > 1) {
+        	entrypoint += alignment-1;
+	        entrypoint &= ~(alignment-1);
+        }
+        System.out.println("Start: "+jq.hex(entrypoint-offset));
+        idx += (entrypoint-offset) - size();
+        return new Bootstrapx86CodeBuffer(entrypoint-offset, estimatedSize);
     }
     
     public int size() { return bundle_size*bundle_idx+idx+1; }
@@ -109,27 +129,31 @@ public class BootstrapCodeAllocator extends CodeAllocator {
     public class Bootstrapx86CodeBuffer extends CodeAllocator.x86CodeBuffer {
 
         private int startIndex;
+        private int entryIndex;
         
-        Bootstrapx86CodeBuffer(int est_size) {
-            startIndex = size();
-            ensureCapacity(size()+est_size);
+        Bootstrapx86CodeBuffer(int startIndex, int estSize) {
+            this.startIndex = startIndex;
+            ensureCapacity(startIndex+estSize);
         }
         
         public int getStartIndex() { return startIndex; }
+        public int getEntryIndex() { return entryIndex; }
         
         public int getCurrentOffset() { return size()-startIndex; }
         public int getCurrentAddress() { return size(); }
+        
+        public void setEntrypoint() { entryIndex = size(); }
 
         public void checkSize() {
-            if (idx == bundle_size-1) {
-                if (bundle_idx != bundles.size()-1) {
+            if (idx >= bundle_size-1) {
+                if (bundle_idx < bundles.size()-1) {
                     if (TRACE) System.out.println("getting next bundle idx "+(bundle_idx+1));
                     current_bundle = (byte[])bundles.get(++bundle_idx);
-                    idx=-1;
+                    idx -= bundle_size;
                 } else {
                     if (TRACE) System.out.println("allocing new bundle idx "+(bundle_idx+1));
                     bundles.addElement(current_bundle = new byte[bundle_size]);
-                    ++bundle_idx; idx=-1;
+                    ++bundle_idx; idx -= bundle_size;
                 }
             }
         }
@@ -177,15 +201,22 @@ public class BootstrapCodeAllocator extends CodeAllocator {
             poke4(k, instr);
         }
 
+        public void skip(int nbytes) {
+        	jq.Assert(nbytes < bundle_size);
+        	idx += nbytes;
+        	//checkSize();
+        }
+
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex, jq_BytecodeMap bcm,
                                                  ExceptionDeliverer exd, List code_relocs, List data_relocs) {
             int total = getCurrentOffset();
             int start = getStartIndex();
+            int entry = getEntryIndex();
             if (code_relocs != null)
                 all_code_relocs.addAll(code_relocs);
             if (data_relocs != null)
                 all_data_relocs.addAll(data_relocs);
-            jq_CompiledCode cc = new jq_CompiledCode(m, start, total, ex, bcm, exd, code_relocs, data_relocs);
+            jq_CompiledCode cc = new jq_CompiledCode(m, start, total, entry, ex, bcm, exd, code_relocs, data_relocs);
             CodeAllocator.registerCode(cc);
             return cc;
         }

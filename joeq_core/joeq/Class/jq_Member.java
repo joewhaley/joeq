@@ -44,7 +44,8 @@ public abstract class jq_Member implements jq_ClassFileConstants {
 
     //  Always available
     protected byte state;
-    protected final jq_Class clazz;  // pointer to the jq_Class object it's a member of
+    // pointer to the jq_Class object it's a member of
+    protected /*final*/ jq_Class clazz; // made not final for class replacement
     protected /*final*/ jq_NameAndDesc nd;
 
     // Available after loading
@@ -173,6 +174,10 @@ public abstract class jq_Member implements jq_ClassFileConstants {
 
     public abstract boolean needsDynamicLink(jq_Method method);
 
+    public final void setDeclaringClass(jq_Class k) {
+        this.clazz = k;
+    }
+    
     public final void setNameAndDesc(jq_NameAndDesc nd) {
         this.nd = nd;
     }

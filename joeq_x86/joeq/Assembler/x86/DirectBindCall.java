@@ -34,6 +34,10 @@ public class DirectBindCall {
         DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
     }
     
+    public void patchTo(jq_CompiledCode cc) {
+        DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
+    }
+    
     public int/*CodeAddress*/ getSource() { return source; }
     public jq_Method getTarget() { return target; }
 

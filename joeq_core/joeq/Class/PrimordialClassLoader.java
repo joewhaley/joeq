@@ -418,6 +418,34 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         return t;
     }
     
+    /*
+     * @param cName a string, not a descriptor.
+     * @author Chrislain
+     */
+    public final void replaceClass(String cName)
+    {
+        Utf8 oldDesc = Utf8.get("L"+cName.replace('.', '/')+";") ;
+        jq_Type old = ClassLibInterface.i.getOrCreateType(this, oldDesc);
+        jq.Assert(old != null);
+        jq.Assert(oldDesc.isDescriptor(jq_ClassFileConstants.TC_CLASS));
+
+        // now load 'new' with a fake name
+        Utf8 newDesc = Utf8.get("LREPLACE"+cName.replace('.', '/')+";") ;
+        jq_Class new_c = jq_Class.newClass(this, newDesc);
+        bs_desc2type.put(newDesc, new_c);
+
+        // take inputstream on OLD class, but load in NEW class.
+        try {
+            DataInputStream in = getClassFileStream(oldDesc);
+            if (in == null) throw new NoClassDefFoundError(((jq_Class)old).className(oldDesc));
+            new_c.load(in); // will generate the replacement
+            in.close();
+        } catch (IOException x) {
+            x.printStackTrace(); // for debugging
+            throw new ClassFormatError(x.toString());
+        }
+    }
+    
     public void unloadBSType(jq_Type t) {
         bs_desc2type.remove(t.getDesc());
     }

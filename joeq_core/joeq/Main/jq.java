@@ -426,6 +426,15 @@ public abstract class jq {
         jq_NativeThread nt = tb.getNativeThread();
         jq_NativeThread.initNativeThreads(nt, NumOfNativeThreads);
         
+        // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
+        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg("\nSTARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
+
+        for (Iterator it = Clazz.jq_Class.classToReplace.iterator() ; it.hasNext() ; ) {
+            String newCName = (String)it.next();
+            PrimordialClassLoader.loader.replaceClass(newCName);
+        }
+        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg("\nDONE with Classes Replacement!");
+        
         String className = args[i];
         jq_Class main_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+className.replace('.', '/')+";");
         main_class.load();
