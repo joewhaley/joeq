@@ -173,7 +173,9 @@ public class AndersenPointerAnalysis {
             return ((SSAMethod)method).getSummary();
         }
         
-        return MethodSummary.getSummary(CodeCache.getCode((jq_Method)method));
+        MethodSummary s = MethodSummary.getSummary(CodeCache.getCode((jq_Method)method));
+        s.mergeGlobal();
+        return s;
     }
 
     private static MethodSummary getMethodSummary(AndersenMethod method, CallSite cs) {
@@ -183,7 +185,9 @@ public class AndersenPointerAnalysis {
             return ((SSAMethod)method).getSummary();
         }
         
-        return MethodSummary.getSummary(CodeCache.getCode((jq_Method)method), cs);
+        MethodSummary s = MethodSummary.getSummary(CodeCache.getCode((jq_Method)method), cs);
+        s.mergeGlobal();
+        return s;
     }
     
     /**
@@ -197,6 +201,7 @@ public class AndersenPointerAnalysis {
     public boolean addToRootSet(ControlFlowGraph cfg) {
         if (TRACE) out.println("Adding "+cfg.getMethod()+" to root set.");
         MethodSummary s = MethodSummary.getSummary(cfg);
+        s.mergeGlobal();
         return this.rootSet.add(s);
     }
     
@@ -401,18 +406,15 @@ public class AndersenPointerAnalysis {
         jq.Assert(si.isLoaded());
         GlobalNode.GLOBAL.addEdge(si, bis_n, null);
         
-        ControlFlowGraph fd_init_cfg = CodeCache.getCode(fd_init);
-        MethodSummary fd_init_summary = MethodSummary.getSummary(fd_init_cfg);
+        MethodSummary fd_init_summary = getMethodSummary(fd_init);
         OutsideNode on = fd_init_summary.getParamNode(0);
         addInclusionEdge(on, fd_n1, null);
-        ControlFlowGraph fis_init_cfg = CodeCache.getCode(fis_init);
-        MethodSummary fis_init_summary = MethodSummary.getSummary(fis_init_cfg);
+        MethodSummary fis_init_summary = getMethodSummary(fis_init);
         on = fis_init_summary.getParamNode(0);
         addInclusionEdge(on, fis_n, null);
         on = fis_init_summary.getParamNode(1);
         addInclusionEdge(on, fd_n1, null);
-        ControlFlowGraph bis_init_cfg = CodeCache.getCode(bis_init);
-        MethodSummary bis_init_summary = MethodSummary.getSummary(bis_init_cfg);
+        MethodSummary bis_init_summary = getMethodSummary(bis_init);
         on = bis_init_summary.getParamNode(0);
         addInclusionEdge(on, bis_n, null);
         on = bis_init_summary.getParamNode(1);
@@ -469,24 +471,21 @@ public class AndersenPointerAnalysis {
         on = fd_init_summary.getParamNode(0);
         addInclusionEdge(on, fd_n2, null);
         addInclusionEdge(on, fd_n3, null);
-        ControlFlowGraph fos_init_cfg = CodeCache.getCode(fos_init);
-        MethodSummary fos_init_summary = MethodSummary.getSummary(fos_init_cfg);
+        MethodSummary fos_init_summary = getMethodSummary(fos_init);
         on = fos_init_summary.getParamNode(0);
         addInclusionEdge(on, fos_n1, null);
         addInclusionEdge(on, fos_n2, null);
         on = fos_init_summary.getParamNode(1);
         addInclusionEdge(on, fd_n2, null);
         addInclusionEdge(on, fd_n3, null);
-        ControlFlowGraph bos_init_cfg = CodeCache.getCode(bos_init);
-        MethodSummary bos_init_summary = MethodSummary.getSummary(bos_init_cfg);
+        MethodSummary bos_init_summary = getMethodSummary(bos_init);
         on = bos_init_summary.getParamNode(0);
         addInclusionEdge(on, bos_n1, null);
         addInclusionEdge(on, bos_n2, null);
         on = bos_init_summary.getParamNode(1);
         addInclusionEdge(on, fos_n1, null);
         addInclusionEdge(on, fos_n2, null);
-        ControlFlowGraph ps_init_cfg = CodeCache.getCode(ps_init);
-        MethodSummary ps_init_summary = MethodSummary.getSummary(ps_init_cfg);
+        MethodSummary ps_init_summary = getMethodSummary(ps_init);
         on = ps_init_summary.getParamNode(0);
         addInclusionEdge(on, ps_n1, null);
         addInclusionEdge(on, ps_n2, null);
@@ -500,15 +499,13 @@ public class AndersenPointerAnalysis {
         jq.Assert(Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());
         ProgramLocation mc_nte = new ProgramLocation.QuadProgramLocation(Scheduler.jq_NativeThread._nativeThreadEntry, null);
         nt_n1.recordPassedParameter(mc_nte, 0);
-        ControlFlowGraph nte_cfg = CodeCache.getCode(Scheduler.jq_NativeThread._nativeThreadEntry);
-        MethodSummary nte_summary = MethodSummary.getSummary(nte_cfg);
+        MethodSummary nte_summary = getMethodSummary(Scheduler.jq_NativeThread._nativeThreadEntry);
         on = nte_summary.getParamNode(0);
         addInclusionEdge(on, nt_n1, null);
         jq.Assert(Scheduler.jq_NativeThread._threadSwitch.isLoaded());
         ProgramLocation mc_ts = new ProgramLocation.QuadProgramLocation(Scheduler.jq_NativeThread._threadSwitch, null);
         nt_n1.recordPassedParameter(mc_ts, 0);
-        ControlFlowGraph ts_cfg = CodeCache.getCode(Scheduler.jq_NativeThread._threadSwitch);
-        MethodSummary ts_summary = MethodSummary.getSummary(ts_cfg);
+        MethodSummary ts_summary = getMethodSummary(Scheduler.jq_NativeThread._threadSwitch);
         on = ts_summary.getParamNode(0);
         addInclusionEdge(on, nt_n1, null);
         
@@ -879,6 +876,7 @@ public class AndersenPointerAnalysis {
      * re-enable it if you need it for Java analysis only
     void visitMethod(ControlFlowGraph cfg) {
         MethodSummary ms = MethodSummary.getSummary(cfg);
+        ms.mergeGlobal();
         this.visitMethod(ms);
     }
      */
