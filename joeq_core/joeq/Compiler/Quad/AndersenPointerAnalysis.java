@@ -279,7 +279,7 @@ public class AndersenPointerAnalysis {
                     t.prepare();
                 }
                 s = PrimordialClassLoader.loader.getAllTypes();
-                if (false && s.size() == size)
+                if (false || s.size() == size)
                     break;
             }
             System.out.println("Number of RTA classes: "+s.size());
