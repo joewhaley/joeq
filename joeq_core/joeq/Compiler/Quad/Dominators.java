@@ -122,12 +122,12 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         ArrayList list = new ArrayList();
         list.add(new ArrayList());
         for (int depth = 1; ; ++depth) {
-            System.out.println("depth: "+depth);
+            //System.out.println("depth: "+depth);
             ArrayList list2 = new ArrayList();
             boolean found = false;
             for (int i=0; i<dominators.length; ++i) {
                 if (dominators[i].numberOfOnes() == depth) {
-                    System.out.println("bb"+i+" matches: "+dominators[i]);
+                    //System.out.println("bb"+i+" matches: "+dominators[i]);
                     found = true;
                     temp.copyBits(dominators[i]);
                     temp.clear(i);
