@@ -39,6 +39,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
     boolean TRACE = false;
     boolean TRACE_RELATIONS = false;
+    static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     PrintStream out = System.out;
     
     PA pa;
@@ -226,26 +227,27 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             BDD I_bdd = pa.I.ithVar(I_i);
             jq_Method target = mc.getTargetMethod();
 
-            jq_Method replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
-            if(replacement != null) {
-				System.out.println("Replacing a call to " + m + 
-				    				" with a call to "+ replacement);					
-				
-				target = replacement;
+            jq_Method replacement = null;
+            if(USE_BOGUS_SUMMARIES) {
+	            PA.getBogusSummaryProvider().getReplacementMethod(target);
+	            if(replacement != null) {
+					System.out.println("Replacing a call to " + m + 
+					    				" with a call to "+ replacement);					
+					
+					target = replacement;
+	            }
             }
             if (target.isStatic())
                 pa.addClassInitializer(target.getDeclaringClass());
 
             
             Set thisptr;
-            int padding = 0;
             if(replacement != null) {                
                 thisptr = Collections.singleton(GlobalNode.GLOBAL);
                 pa.addToActual(I_bdd, 0, thisptr);
                 //pa.addToActual(I_bdd, 1, ms.getNodesThatCall(mc, 0));
                 
                 offset = 0;
-                padding = 1;
             } else {
 	            if (target.isStatic()) {
 	                thisptr = Collections.singleton(GlobalNode.GLOBAL);
@@ -275,14 +277,14 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             int k = offset;
             for ( ; k < params.length; ++k) {
                 if (!params[k].isReferenceType() && k+1-offset < pa.MAX_PARAMS) {
-                    pa.addEmptyActual(I_bdd, k+1-offset+padding);
+                    pa.addEmptyActual(I_bdd, k+1-offset);
                     continue;
                 }
                 Set s = ms.getNodesThatCall(mc, k);
-                pa.addToActual(I_bdd, k+1-offset+padding, s);
+                pa.addToActual(I_bdd, k+1-offset, s);
             }
             for ( ; k+1-offset < pa.MAX_PARAMS; ++k) {
-                pa.addEmptyActual(I_bdd, k+1-offset+padding);
+                pa.addEmptyActual(I_bdd, k+1-offset);
             }
             Node node = ms.getRVN(mc);
             if (node != null) {
