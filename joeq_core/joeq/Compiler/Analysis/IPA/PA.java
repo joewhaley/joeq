@@ -87,26 +87,28 @@ public class PA {
     IndexMap/*jq_Method*/ Nmap;
     IndexMap/*jq_Method*/ Mmap;
     
-    BDD A;      // V1xV2, arguments and return values
-    BDD vP;     // V1xH1, variable points-to
-    BDD S;      // (V1xF)xV2, stores
-    BDD L;      // (V1xF)xV2, loads
-    BDD vT;     // V1xT1, variable type
-    BDD hT;     // H1xT2, heap type
-    BDD aT;     // T1xT2, assignable types
-    BDD cha;    // T2xNxM, class hierarchy information
-    BDD actual; // IxZxV2, actual parameters
-    BDD formal; // MxZxV1, formal parameters
-    BDD Iret;   // IxV1, invocation return value
-    BDD Mret;   // MxV2, method return value
-    BDD Ithr;   // IxV1, invocation thrown value
-    BDD Mthr;   // MxV2, method thrown value
-    BDD mI;     // MxIxN, method invocations
-    BDD mV;     // MxV, method variables
+    BDD A;      // V1xV2, arguments and return values   (+context)
+    BDD vP;     // V1xH1, variable points-to            (+context)
+    BDD S;      // (V1xF)xV2, stores                    (+context)
+    BDD L;      // (V1xF)xV2, loads                     (+context)
+    BDD vT;     // V1xT1, variable type                 (no context)
+    BDD hT;     // H1xT2, heap type                     (no context)
+    BDD aT;     // T1xT2, assignable types              (no context)
+    BDD cha;    // T2xNxM, class hierarchy information  (no context)
+    BDD actual; // IxZxV2, actual parameters            (+context)
+    BDD formal; // MxZxV1, formal parameters            (+context)
+    BDD Iret;   // IxV1, invocation return value        (+context)
+    BDD Mret;   // MxV2, method return value            (+context)
+    BDD Ithr;   // IxV1, invocation thrown value        (+context)
+    BDD Mthr;   // MxV2, method thrown value            (+context)
+    BDD mI;     // MxIxN, method invocations            (+context)
+    BDD mV;     // MxV, method variables                (+context)
     
-    BDD hP;     // H1xFxH2, heap points-to
-    BDD IE;     // IxM, invocation edges
-    BDD filter; // V1xH1, type filter
+    BDD hP;     // H1xFxH2, heap points-to              (+context)
+    BDD IE;     // IxM, invocation edges                (+context)
+    BDD filter; // V1xH1, type filter                   (+context)
+    
+    BDD visited; // M, visited methods
     
     String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2c_H2_T2_H1c_H1");
     //String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
@@ -118,7 +120,6 @@ public class PA {
     
     Set visitedMethods = new HashSet();
     Set roots = new HashSet();
-    BDD visited; // M, visited methods
     
     BDDDomain makeDomain(String name, int bits) {
         BDDDomain d = bdd.extDomain(new long[] { 1L << bits })[0];
@@ -412,8 +413,7 @@ public class PA {
         
         int M_i = Mmap.get(m);
         BDD M_bdd = M.ithVar(M_i);
-        if (TRACE_RELATIONS) out.println("Adding to visited: (M:"+M_i+")");
-        visited.orWith(M_bdd.id());
+        addToVisited(M_bdd);
         
         if (m.getBytecode() == null) {
             // todo: parameters passed into native methods.
@@ -421,13 +421,10 @@ public class PA {
             jq_Type retType = m.getReturnType();
             if (retType instanceof jq_Reference) {
                 Node node = UnknownTypeNode.get((jq_Reference) retType);
-                int V_i = Vmap.get(node);
-                BDD V2_bdd = V2.ithVar(V_i);
-                if (TRACE_RELATIONS) out.println("Adding to Mret: (M:"+M_i+",V2:"+V_i+")");
-                Mret.orWith(M_bdd.and(V2_bdd));
-                
+                addToMret(M_bdd, node);
                 visitNode(node);
             }
+            M_bdd.free();
             return;
         }
         
@@ -443,11 +440,7 @@ public class PA {
             Node node = ms.getParamNode(i);
             if (node == null) continue;
             int Z_i = i + offset;
-            BDD Z_bdd = Z.ithVar(Z_i);
-            int V_i = Vmap.get(node);
-            BDD V_bdd = V1.ithVar(V_i);
-            if (TRACE_RELATIONS) out.println("Adding to formal: (M:"+M_i+",Z:"+Z_i+",V1:"+V_i+")");
-            formal.orWith(M_bdd.and(Z_bdd).and(V_bdd));
+            addToFormal(M_bdd, Z_i, node);
         }
         
         // build up 'mI', 'actual', 'Iret', 'Ithr'
@@ -458,27 +451,16 @@ public class PA {
             BDD I_bdd = I.ithVar(I_i);
             jq_Method target = mc.getTargetMethod();
             if (mc.isSingleTarget()) {
-                int M2_i = Mmap.get(target);
-                BDD M2_bdd = M.ithVar(M2_i);
-                if (TRACE_RELATIONS) out.println("Adding to IE: (I:"+I_i+",M:"+M2_i+")");
-                IE.orWith(I_bdd.and(M2_bdd));
+                addToIE(I_bdd, target);
             } else {
-                int N_i = Nmap.get(target);
-                BDD N_bdd = N.ithVar(N_i);
-                if (TRACE_RELATIONS) out.println("Adding to mI: (M:"+M_i+",I:"+I_i+",N:"+N_i+")");
-                mI.orWith(M_bdd.and(I_bdd).and(N_bdd));
+                addToMI(M_bdd, I_bdd, target);
             }
             
             if (target.isStatic())
                 addClassInitializer(target.getDeclaringClass());
             
             if (target.isStatic()) {
-                int Z_i = 0;
-                BDD Z_bdd = Z.ithVar(Z_i);
-                int V_i = Vmap.get(GlobalNode.GLOBAL);
-                BDD V_bdd = V2.ithVar(V_i);
-                if (TRACE_RELATIONS) out.println("Adding to actual: (I:"+I_i+",Z:"+Z_i+",V2:"+V_i+")");
-                actual.orWith(I_bdd.and(Z_bdd).and(V_bdd));
+                addToActual(I_bdd, 0, Collections.singleton(GlobalNode.GLOBAL));
                 offset = 1;
             } else {
                 offset = 0;
@@ -486,76 +468,45 @@ public class PA {
             jq_Type[] params = mc.getParamTypes();
             for (int k = 0; k<params.length; ++k) {
                 if (!params[k].isReferenceType()) continue;
-                int Z_i = k + offset;
-                BDD Z_bdd = Z.ithVar(Z_i);
                 Set s = ms.getNodesThatCall(mc, k);
-                BDD V_bdd = bdd.zero();
-                for (Iterator j = s.iterator(); j.hasNext(); ) {
-                    int V_i = Vmap.get(j.next());
-                    if (TRACE_RELATIONS) out.println("Adding to actual: (I:"+I_i+",Z:"+Z_i+",V2:"+V_i+")");
-                    V_bdd.orWith(V2.ithVar(V_i));
-                }
-                actual.orWith(I_bdd.and(Z_bdd).and(V_bdd));
+                addToActual(I_bdd, k+offset, s);
             }
             Node node = ms.getRVN(mc);
             if (node != null) {
-                int V_i = Vmap.get(node);
-                BDD V_bdd = V1.ithVar(V_i);
-                if (TRACE_RELATIONS) out.println("Adding to Iret: (I:"+I_i+",V1:"+V_i+")");
-                Iret.orWith(I_bdd.and(V_bdd));
+                addToIret(I_bdd, node);
             }
             node = ms.getTEN(mc);
             if (node != null) {
-                int V_i = Vmap.get(node);
-                BDD V_bdd = V1.ithVar(V_i);
-                if (TRACE_RELATIONS) out.println("Adding to Iret: (I:"+I_i+",V1:"+V_i+")");
-                Ithr.orWith(I_bdd.and(V_bdd));
+                addToIthr(I_bdd, node);
             }
+            I_bdd.free();
         }
         // build up 'mV', 'vP', 'S', 'L', 'Mret', 'Mthr'
         for (Iterator i = ms.nodeIterator(); i.hasNext(); ) {
             Node node = (Node) i.next();
+            
+            if (node instanceof ConcreteTypeNode ||
+                node instanceof ConcreteObjectNode) {
+                jq_Reference type = node.getDeclaredType();
+                if (type == null) {
+                    if (TRACE) out.println("Skipping null constant.");
+                    continue;
+                }
+            }
+            
             int V_i = Vmap.get(node);
             BDD V_bdd = V1.ithVar(V_i);
-            if (TRACE_RELATIONS) out.println("Adding to mV: (M:"+M_i+",V1:"+V_i+")");
-            mV.orWith(M_bdd.and(V_bdd));
+            addToMV(M_bdd, V_bdd);
             
             if (ms.getReturned().contains(node)) {
-                BDD V2_bdd = V2.ithVar(V_i);
-                if (TRACE_RELATIONS) out.println("Adding to Mret: (M:"+M_i+",V2:"+V_i+")");
-                Mret.orWith(M_bdd.and(V2_bdd));
+                addToMret(M_bdd, V_i);
             }
             
             if (ms.getThrown().contains(node)) {
-                BDD V2_bdd = V2.ithVar(V_i);
-                if (TRACE_RELATIONS) out.println("Adding to Mthr: (M:"+M_i+",V2:"+V_i+")");
-                Mthr.orWith(M_bdd.and(V2_bdd));
+                addToMthr(M_bdd, V_i);
             }
             
             visitNode(node);
-        }
-    }
-    
-    public void addClassInitializer(jq_Class c) {
-        if (!ADD_CLINIT) return;
-        jq_Method m = c.getClassInitializer();
-        if (m != null) {
-            visitMethod(m);
-            roots.add(m);
-        }
-    }
-    
-    jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
-    public void addThreadRun(BDD H_bdd, jq_Class c) {
-        if (!ADD_THREADS) return;
-        jq_Method m = c.getVirtualMethod(run_method);
-        if (m != null && m.getBytecode() != null) {
-            visitMethod(m);
-            roots.add(m);
-            Node p = MethodSummary.getSummary(CodeCache.getCode(m)).getParamNode(0);
-            int V1_i = Vmap.get(p);
-            BDD V1_bdd = V1.ithVar(V1_i);
-            vP.orWith(V1_bdd.and(H_bdd));
         }
     }
     
@@ -578,55 +529,70 @@ public class PA {
             node instanceof ConcreteObjectNode ||
             node instanceof UnknownTypeNode ||
             node instanceof GlobalNode) {
-            int H_i = Hmap.get(node);
-            BDD H_bdd = H1.ithVar(H_i);
-            if (TRACE_RELATIONS) out.println("Adding to vP: (V1:"+V_i+",H1:"+H_i+")");
-            vP.orWith(V_bdd.and(H_bdd));
+            addToVP(V_bdd, node);
         }
         
         if (node instanceof GlobalNode) {
             int V2_i = Vmap.get(GlobalNode.GLOBAL);
-            BDD V2_bdd = V2.ithVar(V2_i);
-            A.orWith(V_bdd.and(V2_bdd));
-            
-            BDD V1_bdd = V1.ithVar(V2_i);
-            V2_bdd = V2.ithVar(V_i);
-            A.orWith(V1_bdd.and(V2_bdd));
+            addToA(V_bdd, V2_i);
+            addToA(V2_i, V_i);
         }
         
         for (Iterator j = node.getAllEdges().iterator(); j.hasNext(); ) {
             Map.Entry e = (Map.Entry) j.next();
             jq_Field f = (jq_Field) e.getKey();
-            int F_i = Fmap.get(f);
-            BDD F_bdd = F.ithVar(F_i);
             Collection c;
             if (e.getValue() instanceof Collection)
                 c = (Collection) e.getValue();
             else
                 c = Collections.singleton(e.getValue());
-            for (Iterator k = c.iterator(); k.hasNext(); ) {
-                Node node2 = (Node) k.next();
-                int V2_i = Vmap.get(node2);
-                BDD V2_bdd = V2.ithVar(V2_i);
-                if (TRACE_RELATIONS) out.println("Adding to S: (V1:"+V_i+",F:"+F_i+",V2:"+V2_i+")");
-                S.orWith(V_bdd.and(F_bdd).and(V2_bdd));
-            }
+            addToS(V_bdd, f, c);
         }
         
-        for (Iterator j = node.getAccessPathEdgeFields().iterator(); j.hasNext(); ) {
-            jq_Field f = (jq_Field) j.next();
-            int F_i = Fmap.get(f);
-            BDD F_bdd = F.ithVar(F_i);
-            for (Iterator k = node.getAccessPathEdges(f).iterator(); k.hasNext(); ) {
-                Node node2 = (Node) k.next();
-                int V2_i = Vmap.get(node2);
-                BDD V2_bdd = V2.ithVar(V2_i);
-                if (TRACE_RELATIONS) out.println("Adding to L: (V1:"+V_i+",F:"+F_i+",V2:"+V2_i+")");
-                L.orWith(V_bdd.and(F_bdd).and(V2_bdd));
-            }
+        for (Iterator j = node.getAccessPathEdges().iterator(); j.hasNext(); ) {
+            Map.Entry e = (Map.Entry) j.next();
+            jq_Field f = (jq_Field) e.getKey();
+            Collection c;
+            if (e.getValue() instanceof Collection)
+                c = (Collection) e.getValue();
+            else
+                c = Collections.singleton(e.getValue());
+            addToL(V_bdd, f, c);
             if (node instanceof GlobalNode)
                 addClassInitializer(f.getDeclaringClass());
         }
+    }
+    
+    void addToVT(int V_i, jq_Reference type) {
+        BDD bdd1 = V1.ithVar(V_i);
+        int T_i = Tmap.get(type);
+        bdd1.andWith(T1.ithVar(T_i));
+        if (TRACE_RELATIONS) out.println("Adding to vT: (V1:"+V_i+",T1:"+T_i+")");
+        vT.orWith(bdd1);
+    }
+    
+    void addToHT(int H_i, jq_Reference type) {
+        BDD bdd1 = H1.ithVar(H_i);
+        int T_i = Tmap.get(type);
+        bdd1.andWith(T2.ithVar(T_i));
+        if (TRACE_RELATIONS) out.println("Adding to hT: (H1:"+H_i+",T2:"+T_i+")");
+        hT.orWith(bdd1);
+    }
+    
+    void addToAT(BDD T1_bdd, int T2_i) {
+        BDD bdd1 = T2.ithVar(T2_i);
+        bdd1.andWith(T1_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to aT: (T1:"+T1_bdd.scanVar(T1)+",T2:"+T2_i+")");
+        aT.orWith(bdd1);
+    }
+    
+    void addToCHA(BDD T_bdd, int N_i, jq_Method m) {
+        BDD bdd1 = N.ithVar(N_i);
+        int M_i = Mmap.get(m);
+        bdd1.andWith(M.ithVar(M_i));
+        bdd1.andWith(T_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to cha: (T:"+T_bdd.scanVar(T2)+",N:"+N_i+",M:"+M_i+")");
+        cha.orWith(bdd1);
     }
     
     int last_V = 0;
@@ -638,25 +604,17 @@ public class PA {
         // build up 'vT'
         for (int V_i = last_V; V_i < Vmap.size(); ++V_i) {
             Node n = (Node) Vmap.get(V_i);
-            BDD V_bdd = V1.ithVar(V_i);
             jq_Reference type = n.getDeclaredType();
             if (type != null) type.prepare();
-            int T_i = Tmap.get(type);
-            BDD T_bdd = T1.ithVar(T_i);
-            if (TRACE_RELATIONS) out.println("Adding to vT: (V1:"+V_i+",T1:"+T_i+")");
-            vT.orWith(V_bdd.and(T_bdd));
+            addToVT(V_i, type);
         }
         
         // build up 'hT', and identify clinit and thread run methods.
         for (int H_i = last_H; H_i < Hmap.size(); ++H_i) {
             Node n = (Node) Hmap.get(H_i);
-            BDD H_bdd = H1.ithVar(H_i);
             jq_Reference type = n.getDeclaredType();
             if (type != null) type.prepare();
-            int T_i = Tmap.get(type);
-            BDD T_bdd = T2.ithVar(T_i);
-            if (TRACE_RELATIONS) out.println("Adding to hT: (H1:"+H_i+",T2:"+T_i+")");
-            hT.orWith(H_bdd.and(T_bdd));
+            addToHT(H_i, type);
             
             if (type != null) {
                 if (n instanceof ConcreteTypeNode && type instanceof jq_Class)
@@ -664,7 +622,7 @@ public class PA {
                 if (ADD_THREADS &&
                     (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
                      type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;")))) {
-                    addThreadRun(H_bdd, (jq_Class) type);
+                    addThreadRun(H_i, (jq_Class) type);
                 }
             }
         }
@@ -677,11 +635,10 @@ public class PA {
             for (int T2_i = start; T2_i < Tmap.size(); ++T2_i) {
                 jq_Reference t2 = (jq_Reference) Tmap.get(T2_i);
                 if (t2 == null || (t1 != null && t2.isSubtypeOf(t1))) {
-                    if (TRACE_RELATIONS) out.println("Adding to aT: (T1:"+T1_i+",T2:"+T2_i+")");
-                    BDD T2_bdd = T2.ithVar(T2_i);
-                    aT.orWith(T1_bdd.and(T2_bdd));
+                    addToAT(T1_bdd, T2_i);
                 }
             }
+            T1_bdd.free();
         }
         
         // make type filter
@@ -709,17 +666,35 @@ public class PA {
                     m = t.getVirtualMethod(n.getNameAndDesc());
                 }
                 if (m == null) continue;
-                BDD N_bdd = N.ithVar(N_i);
-                int M_i = Mmap.get(m);
-                BDD M_bdd = M.ithVar(M_i);
-                if (TRACE_RELATIONS) out.println("Adding to cha: (T:"+T_i+",N:"+N_i+",M:"+M_i+")");
-                cha.orWith(T_bdd.and(N_bdd).and(M_bdd));
+                addToCHA(T_bdd, N_i, m);
             }
+            T_bdd.free();
         }
         last_V = Vmap.size();
         last_H = Hmap.size();
         last_T = Tmap.size();
         last_N = Nmap.size();
+    }
+    
+    public void addClassInitializer(jq_Class c) {
+        if (!ADD_CLINIT) return;
+        jq_Method m = c.getClassInitializer();
+        if (m != null) {
+            visitMethod(m);
+            roots.add(m);
+        }
+    }
+    
+    jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
+    public void addThreadRun(int H_i, jq_Class c) {
+        if (!ADD_THREADS) return;
+        jq_Method m = c.getVirtualMethod(run_method);
+        if (m != null && m.getBytecode() != null) {
+            visitMethod(m);
+            roots.add(m);
+            Node p = MethodSummary.getSummary(CodeCache.getCode(m)).getParamNode(0);
+            addToVP(p, H_i);
+        }
     }
     
     public void solvePointsTo() {
@@ -1144,14 +1119,14 @@ public class PA {
     public class ToString extends BDD.BDDToString {
         public String elementName(int i, long j) {
             switch (i) {
-                case 0: 
+                case 0: // fallthrough
                 case 1: return Vmap.get((int)j).toString();
                 case 2: return Imap.get((int)j).toString();
-                case 3: 
+                case 3: // fallthrough
                 case 4: return Hmap.get((int)j).toString();
                 case 5: return Long.toString(j);
                 case 6: return ""+Fmap.get((int)j);
-                case 7: 
+                case 7: // fallthrough
                 case 8: return ""+Tmap.get((int)j);
                 case 9: return Nmap.get((int)j).toString();
                 case 10: return Mmap.get((int)j).toString();
@@ -1198,6 +1173,8 @@ public class PA {
         out.writeBytes("T="+T_BITS+"\n");
         out.writeBytes("N="+N_BITS+"\n");
         out.writeBytes("M="+M_BITS+"\n");
+        out.writeBytes("VC="+VC_BITS+"\n");
+        out.writeBytes("HC="+HC_BITS+"\n");
         out.writeBytes("Order="+varorder+"\n");
         out.writeBytes("Reverse="+reverseLocal+"\n");
     }
