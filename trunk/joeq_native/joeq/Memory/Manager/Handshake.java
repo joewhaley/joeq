@@ -127,8 +127,6 @@ public class Handshake {
      * It currently does not do a "notify" on waiting mutator threads,
      * since they are in VM_Processor thread queues, waiting
      * for the collector thread to re-enable thread switching.
-     *
-     * @see VM_CollectorThread
      */
     synchronized void notifyCompletion() {
         completionFlag = true;
