@@ -4,6 +4,7 @@
 package Compil3r.Quad;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import Bootstrap.PrimordialClassLoader;
@@ -211,6 +212,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         if (TRACE) out.println("Visiting "+bc_bb);
         this.quad_bb = quad_bbs[bc_bb.id];
+        for (Iterator i = this.quad_bb.iterator(); i.hasNext(); ) {
+            Object old = this.quad2bci.remove(i.next());
+            Assert._assert(old != null);
+        }
         this.quad_bb.removeAllQuads();
         this.bc_bb = bc_bb;
         this.uncond_branch = false;
