@@ -6,6 +6,7 @@
  */
 
 package Compil3r.Quad;
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Run_Time.TypeCheck;
 import Util.Templates.List;
@@ -40,7 +41,10 @@ public class ExceptionHandler {
      * @param numOfHandledBlocks  estimated number of handled basic blocks.
      * @param entry  exception handler entry point. */
     public ExceptionHandler(jq_Class ex_type, int numOfHandledBlocks, BasicBlock entry) {
-        this.exception_type = ex_type;
+        if (ex_type == null)
+            this.exception_type = PrimordialClassLoader.getJavaLangThrowable();
+        else
+            this.exception_type = ex_type;
         this.handled_blocks = new java.util.ArrayList(numOfHandledBlocks);
         this.entry = entry;
     }
