@@ -60,7 +60,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
         public boolean implementsInterface(jq_Class k) { jq.UNREACHABLE(); return false; }
         public jq_InstanceMethod getVirtualMethod(jq_NameAndDesc nd) { jq.UNREACHABLE(); return null; }
         public String getName() { jq.UNREACHABLE(); return null; }
-        public String shortName() { jq.UNREACHABLE(); return null; }
+        public String shortName() { return "NULL_TYPE"; }
         public boolean isClassType() { jq.UNREACHABLE(); return false; }
         public boolean isArrayType() { jq.UNREACHABLE(); return false; }
         public boolean isFinal() { jq.UNREACHABLE(); return false; }
