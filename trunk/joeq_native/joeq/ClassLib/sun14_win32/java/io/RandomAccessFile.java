@@ -5,7 +5,9 @@ package ClassLib.sun14_win32.java.io;
 
 import Run_Time.SystemInterface;
 
-/*
+/**
+ * RandomAccessFile
+ *
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -20,7 +22,6 @@ public class RandomAccessFile {
 
     public void open(java.lang.String name, int mode)
     throws java.io.FileNotFoundException {
-        byte[] filename = SystemInterface.toCString(name);
         int flags = SystemInterface._O_BINARY;
         if ((mode & O_RDONLY) != 0) flags |= SystemInterface._O_RDONLY;
         if ((mode & O_RDWR) != 0) flags |= SystemInterface._O_RDWR | SystemInterface._O_CREAT;
@@ -32,7 +33,7 @@ public class RandomAccessFile {
             // todo: require that every update to the file's content be written
             //       synchronously to the underlying storage device.
         }
-        int fdnum = SystemInterface.file_open(filename, flags, 0);
+        int fdnum = SystemInterface.file_open(name, flags, 0);
         if (fdnum == -1) throw new java.io.FileNotFoundException(name);
         this.fd.fd = fdnum;
     }

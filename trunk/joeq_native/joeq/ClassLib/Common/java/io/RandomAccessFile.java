@@ -20,10 +20,9 @@ public abstract class RandomAccessFile {
     // question: should this be private?
     public void open(java.lang.String name, boolean writeable)
     throws java.io.FileNotFoundException {
-        byte[] filename = SystemInterface.toCString(name);
         int flags = writeable?(SystemInterface._O_RDWR | SystemInterface._O_CREAT | SystemInterface._O_BINARY)
                              :(SystemInterface._O_RDONLY | SystemInterface._O_BINARY);
-        int fdnum = SystemInterface.file_open(filename, flags, 0);
+        int fdnum = SystemInterface.file_open(name, flags, 0);
         if (fdnum == -1) throw new java.io.FileNotFoundException(name);
         this.fd.fd = fdnum;
     }

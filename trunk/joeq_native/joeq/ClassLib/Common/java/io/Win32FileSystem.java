@@ -103,7 +103,7 @@ public abstract class Win32FileSystem {
                 System.arraycopy(s, 0, s2, 0, s.length);
                 s = s2;
             }
-            s[i] = SystemInterface.fromCString(ptr);
+            s[i] = SystemInterface.fromCString(ptr.offset(SystemInterface.readdir_name_offset));
             if (s[i].equals(".") || s[i].equals("..")) --i;
         }
         SystemInterface.fs_closedir(dir);

@@ -38,9 +38,9 @@ import Util.Assert;
 import Util.Convert;
 import Util.Strings;
 
-// friend jq_ClassLoader;
-
 /**
+ * jq_Class
+ *
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
