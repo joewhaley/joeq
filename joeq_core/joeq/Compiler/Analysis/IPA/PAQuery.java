@@ -100,10 +100,10 @@ public class PAQuery {
         }
         
         void printMethodInfo(jq_Method m, MethodSummary ms) {
-            System.out.print("Processing method " + m + ":\t[" + ms.getNumOfParams() + "] ");
+            System.out.println("Processing method " + m + ":\t[" + ms.getNumOfParams() + "]");
             for(int i = 0; i < ms.getNumOfParams(); i++) {
                 ParamNode paramNode = ms.getParamNode(i);
-                System.out.print("\t\t"+i+"\t");
+                System.out.print("\t\t");
                 System.out.println(paramNode == null ? "<null>" : paramNode.toString_long());
             }
             System.out.print("\n");
