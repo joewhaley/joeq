@@ -395,7 +395,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
             ClasspathElement cpe = (ClasspathElement) it.next();
             InputStream is = cpe.getResourceAsStream(name);
-            if (is!=null) {
+            if (is != null) {
                 return is; // return stream if found.
             }
         }
