@@ -744,6 +744,7 @@ public class CSPAResults implements PointerAnalysisResults {
         BDDPairing H3toH1 = bdd.makePair();
         H3toH1.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H1c, H1o } );
         BDD H1set = H1c.set().and(H1o.set());
+        BDD H1H2set = H1set.and(H2c.set().and(H2o.set()));
         BDD H1andFDset = H1set.and(FD.set());
         
         BDD fieldPt2 = fieldPt.replace(H2toH3);
@@ -763,7 +764,7 @@ public class CSPAResults implements PointerAnalysisResults {
         int num = 0;
         while (!iter.isZero()) {
             ++num;
-            BDD sol = iter.satOne();
+            BDD sol = iter.satOneSet(H1H2set, bdd.zero());
             BDD sol_h2 = sol.exist(H1set);
             sol.free();
             BDD sol3 = iter.restrict(sol_h2);
@@ -888,7 +889,7 @@ public class CSPAResults implements PointerAnalysisResults {
         BDD iter;
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOne();
+            BDD s = iter.satOneSet(H1o.set(), bdd.zero());
             int[] val = s.scanAllVar();
             int target_i = val[H1o.getIndex()];
             s.andWith(H1o.ithVar(target_i));
@@ -912,7 +913,7 @@ public class CSPAResults implements PointerAnalysisResults {
         
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOne();
+            BDD s = iter.satOneSet(H1o.set(), bdd.zero());
             int[] val = s.scanAllVar();
             int target_i = val[H1o.getIndex()];
             s.andWith(H1o.ithVar(target_i));
@@ -927,7 +928,7 @@ public class CSPAResults implements PointerAnalysisResults {
             }
             BDD pt = ci_fieldPt.restrict(H1o.ithVar(target_i));
             while (!pt.isZero()) {
-                BDD s2 = pt.satOne();
+                BDD s2 = pt.satOneSet(H2o.set().and(FD.set()), bdd.zero());
                 int[] val2 = s2.scanAllVar();
                 int target2_i = val2[H2o.getIndex()];
                 s2.andWith(H2o.ithVar(target2_i));
@@ -979,7 +980,7 @@ public class CSPAResults implements PointerAnalysisResults {
                 continue;
             BDD pt = ci_fieldPt.restrict(H1o.ithVar(j));
             while (!pt.isZero()) {
-                BDD s = pt.satOne();
+                BDD s = pt.satOneSet(H2o.set().and(FD.set()), bdd.zero());
                 int[] val = s.scanAllVar();
                 int target_i = val[H2o.getIndex()];
                 HeapObject target = (HeapObject) getHeapNode(target_i);
@@ -1270,15 +1271,15 @@ public class CSPAResults implements PointerAnalysisResults {
         for (int i=0; i<domainBits.length; ++i) {
             Assert._assert(bdd_domains[i].varNum() == domainBits[i], "Domain "+i+" bits "+bdd_domains[i].varNum());
         }
-        V1o = bdd_domains[0];
-        V1c = bdd_domains[1];
-        V2o = bdd_domains[2];
-        V2c = bdd_domains[3];
-        FD = bdd_domains[4];
-        H1o = bdd_domains[5];
-        H1c = bdd_domains[6];
-        H2o = bdd_domains[7];
-        H2c = bdd_domains[8];
+        V1o = bdd_domains[0]; V1o.setName("V1o");
+        V1c = bdd_domains[1]; V1c.setName("V1c");
+        V2o = bdd_domains[2]; V2o.setName("V2o");
+        V2c = bdd_domains[3]; V2c.setName("V2c");
+        FD = bdd_domains[4];  FD.setName("FD");
+        H1o = bdd_domains[5]; H1o.setName("H1o");
+        H1c = bdd_domains[6]; H1c.setName("H1c");
+        H2o = bdd_domains[7]; H2o.setName("H2o");
+        H2c = bdd_domains[8]; H2c.setName("H2c");
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
         String ordering = System.getProperty("bddordering", "FD_V2oxV1o_V2cxV1c_H2c_H2o_H1c_H1o");
@@ -1424,20 +1425,7 @@ public class CSPAResults implements PointerAnalysisResults {
     }
 
     public static String domainName(BDDDomain d) {
-        switch (d.getIndex()) {
-            case 0: return "V1o";
-            case 1: return "V1c";
-            case 2: return "V2o";
-            case 3: return "V2c";
-            case 4: return "FD";
-            case 5: return "H1o";
-            case 6: return "H1c";
-            case 7: return "H2o";
-            case 8: return "H2c";
-            case 9: return "H3o";
-            case 10: return "H3c";
-            default: return "???";
-        }
+        return d.getName();
     }
 
     public String elementToString(BDDDomain d, int i) {
