@@ -2285,10 +2285,11 @@ public class PA {
                     if (DUMP_SSA) dumpSSA();
                 } catch (IOException x) {}
             }
-            if (SKIP_SOLVE) return;
-            time = System.currentTimeMillis();
-            assumeKnownCallGraph();
-            System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
+            if (!SKIP_SOLVE) {
+                time = System.currentTimeMillis();
+                assumeKnownCallGraph();
+                System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
+            }
         }
 
         printSizes();
@@ -2296,8 +2297,7 @@ public class PA {
         System.out.println("Writing call graph...");
         time = System.currentTimeMillis();
         dumpCallGraph();
-        System.out.println("Time spent writing: "
-                + (System.currentTimeMillis() - time) / 1000.);
+        System.out.println("Time spent writing: " + (System.currentTimeMillis() - time) / 1000.);
 
         if (DUMP_RESULTS) {
             System.out.println("Writing results...");
@@ -3011,6 +3011,8 @@ public class PA {
             }
         else
             pn = null;
+        Map initialCounts = null; //new ThreadRootMap(thread_runs);
+        BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         if (updateBits) {
             V_BITS = BigInteger.valueOf(vars+256).bitLength();
             I_BITS = BigInteger.valueOf(calls).bitLength();
@@ -3021,8 +3023,6 @@ public class PA {
             M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
             if (CONTEXT_SENSITIVE) {
                 System.out.println("Thread runs="+thread_runs);
-                Map initialCounts = null; //new ThreadRootMap(thread_runs);
-                BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
                 VC_BITS = paths.bitLength();
                 if (VC_BITS > MAX_VC_BITS)
                     System.out.println("Trimming var context bits from "+VC_BITS);
