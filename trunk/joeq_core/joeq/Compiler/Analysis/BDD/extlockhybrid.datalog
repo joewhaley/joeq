@@ -1,0 +1,86 @@
+### Domains
+
+.include "fielddomains.pa"
+
+.bddvarorder N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1
+
+### Relations
+
+vP (vc:VC0, v:V0, h:H0) input
+cA (vcdest:VC0, dest:V0, vcsrc:VC1, source:V1) input
+vT (var:V0, type:T0) input
+hT (heap:H0, type:T1) input
+aT (type:T0, type:T1) input
+formal (method:M0, num:Z0, formalparam:V0) input
+IE (ccaller:VC1, invoke:I0, ccallee:VC0, target:M0) input
+
+### Rules
+
+roots (method:M0) input
+#mI0 (method:M0, invoke:I0)
+#IEnum (invoke:I0, target:M0, ccaller:VC1, ccallee:VC0) output
+#mI0(m,i) :- mI(m,i,_).
+#IEnum(i,m,vc2,vc1) :- roots(m), mI0(m,i), IE0(i,m). number
+
+mI (method:M0, invoke:I0, name:N0) input
+mC (method:M0, context:VC0) input
+mSync (method:M0) input
+
+# context-insensitive analysis
+locksCi (method:M0, type:T0)
+unlockedCi (method:M0, type:T0)
+callsCi (callee:M0, caller:M1)
+alwaysLockedCi (method:M0, type:T0)
+externalLockTypeCi (method:M0, type:T0) output outputtuples
+
+locksCi(m,t) :- mSync(m), formal(m,0,v), vP(_,v,h), hT(h,t).
+unlockedCi(m,_) :- roots(m).
+callsCi(caller,callee) :- IE(_,invoke,_,callee), mI(caller,invoke,_).
+unlockedCi(callee,t) :- unlockedCi(caller,t), callsCi(caller,callee), !locksCi(callee,t).
+alwaysLockedCi(m,t) :- !unlockedCi(m,t), mC(m,_).
+externalLockTypeCi(m,t) :- alwaysLockedCi(m,t), formal(m,0,v), vT(v,this), !aT(this,t).
+
+relevantType (type:T0)
+relevantType(t) :- externalLockTypeCi(_,t).
+
+relevantMethod (method:M0)
+relevantMethod(m) :- externalLockTypeCi(m,_).
+relevantMethod(caller) :- relevantMethod(callee), callsCi(caller,callee).
+
+# context-sensitive
+locked (method:M0, context:VC0, heap:H0)
+lockedType (method:M0, context:VC, type:T1) output
+lockedType0 (method:M0, context:VC, type:T1)
+unlockedType (method:M0, context:VC, type:T1)
+#sometimesUnlocked (method:M0, heap:H0)
+sometimesUnlockedType (method:M0, type:T1)
+#alwaysLocked (method:M0, heap:H0) output outputtuples
+alwaysLockedType (method:M0, type:T0)
+externalLockType (method:M0, type:T0) output outputtuples
+
+#lockedTypeAnyContext (method:M0, type:T0) output outputtuples
+
+locked(m,c,h) :- mSync(m), formal(m, 0, v), vP(c, v, h).
+lockedType0(m,c,t) :- locked(m,c,h), hT(h,t), relevantType(t), relevantMethod(m).
+lockedType(m,c,t) :- lockedType0(m,c,t).
+lockedType(calleem,calleec,t) :- mI(callerm, invoke, _), \
+                                 IE(callerc, invoke, calleec, calleem), \
+                                 relevantMethod(calleem), \
+                                 lockedType(callerm,callerc,t). split
+
+unlockedType(m,c,t) :- !lockedType(m,c,t), relevantType(t), relevantMethod(m).
+unlockedType(calleem,calleec,t) :- mI(callerm, invoke, _), \
+                                   IE(callerc, invoke, calleec, calleem), \
+                                   relevantMethod(calleem), \
+                                   !lockedType0(calleem,calleec,t), \
+                                   unlockedType(callerm,callerc,t). split
+
+sometimesUnlockedType(m,t) :- unlockedType(m,c,t), mC(m,c).
+alwaysLockedType(m,t) :- !sometimesUnlockedType(m,t), mC(m,_), relevantType(t), \
+                         relevantMethod(m).
+externalLockType(m,t) :- alwaysLockedType(m,t), \
+                         formal(m,0,v), \
+                         vT(v,this), \
+                         !aT(this,t).
+
+
