@@ -1098,7 +1098,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Return operator;
         if (method.getReturnType().isAddressType()) {
         	operator = Return.RETURN_P.INSTANCE;
-            jq.Assert(t.isAddressType() || t == jq_Reference.jq_NullType.NULL_TYPE, t.toString());
+            jq.Assert(t.isAddressType() ||
+                      t == jq_Reference.jq_NullType.NULL_TYPE ||
+                      t.isSubtypeOf(Address._class), t.toString());
         } else {
             operator = t.isAddressType()?(Return)Return.RETURN_P.INSTANCE:Return.RETURN_A.INSTANCE;
         }
@@ -1783,7 +1785,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitINSTANCEOF(jq_Type f) {
         super.visitINSTANCEOF(f);
-        jq.Assert(!f.isAddressType());
+        jq.Assert(!f.isAddressType(), method.toString());
         Operand op = current_state.pop_A();
         RegisterOperand res = getStackRegister(jq_Primitive.BOOLEAN);
         Quad q = InstanceOf.create(quad_cfg.getNewQuadID(), InstanceOf.INSTANCEOF.INSTANCE, res, op, new TypeOperand(f));
@@ -1883,7 +1885,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         setGuard(rop, guard);
         
         jq_Type type = rop.getType();
-        jq.Assert(!type.isAddressType());
+        if (type.isAddressType()) {
+            // occurs when we compile Address.<init>, etc.
+            return false;
+        }
         int number = getLocalNumber(rop.getRegister(), type);
         if (rf.isLocal(rop, number, type)) {
             Operand op2 = current_state.getLocal_A(number);
@@ -2441,7 +2446,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
             if (op instanceof AConstOperand) {
                 op = new PConstOperand(null);
             }
-            jq.Assert(getTypeOf(op).isAddressType());
+            jq.Assert(getTypeOf(op).isAddressType() ||
+                      getTypeOf(op).isSubtypeOf(Address._class));
             return op;
         }
         void popDummy() { Operand op = pop(); jq.Assert(op == DummyOperand.DUMMY); }
@@ -2453,7 +2459,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     op = new PConstOperand(null);
                 }
                 jq_Type t2 = getTypeOf(op);
-                jq.Assert(t2 == jq_Reference.jq_NullType.NULL_TYPE || t2.isAddressType());
+                jq.Assert(t2 == jq_Reference.jq_NullType.NULL_TYPE ||
+                          t2.isAddressType() ||
+                          t2.isSubtypeOf(Address._class));
             }
             //jq.Assert(TypeCheck.isAssignable_noload(getTypeOf(op), t) != TypeCheck.NO);
             return op;

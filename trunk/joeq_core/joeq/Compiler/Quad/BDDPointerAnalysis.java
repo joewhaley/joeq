@@ -2,6 +2,8 @@
 package Compil3r.Quad;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,7 +113,7 @@ public class BDDPointerAnalysis {
     public BDDPointerAnalysis() {
         this(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
     }
-        
+    
     public BDDPointerAnalysis(int nodeCount, int cacheSize) {
         bdd = BuDDyFactory.init(nodeCount, cacheSize);
         
@@ -287,15 +289,23 @@ public class BDDPointerAnalysis {
         dis.reset();
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
+        Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
         
-        if (INCREMENTAL_ITERATION) dis.goIncremental(c);
-        else dis.goNonincremental(c);
+        CallGraph cg = INCREMENTAL_ITERATION ?
+                       dis.goIncremental(c) :
+                       dis.goNonincremental(c);
         
+        Collection[] depths = cg.findDepths(roots);
+        for (int i=0; i<depths.length; ++i) {
+            System.out.println(">>>>> Depth "+i+": size "+depths[i].size());
+        }
+
         if (DUMP)
             dis.dumpResults();
+            
     }
     
-    public void goNonincremental(jq_Class c) {
+    public CallGraph goNonincremental(jq_Class c) {
         long time = System.currentTimeMillis();
         
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
@@ -358,9 +368,12 @@ public class BDDPointerAnalysis {
         time = System.currentTimeMillis() - time;
 
         System.out.println("Total time: "+time/1000.+" seconds.");
+        
+        CallGraph cg = new BDDCallGraph();
+        return cg;
     }
     
-    public void goIncremental(jq_Class c) {
+    public CallGraph goIncremental(jq_Class c) {
         long time = System.currentTimeMillis();
         
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
@@ -412,7 +425,7 @@ public class BDDPointerAnalysis {
             time3 = System.currentTimeMillis() - time3;
             System.out.println("Handle virtual calls:\t"+time3/1000.+" seconds.");
 
-            if (true) {
+            if (FORCE_GC) {
                 time3 = System.currentTimeMillis();
                 System.gc();
                 time3 = System.currentTimeMillis() - time3;
@@ -428,6 +441,9 @@ public class BDDPointerAnalysis {
         time = System.currentTimeMillis() - time;
 
         System.out.println("Total time: "+time/1000.+" seconds.");
+        
+        CallGraph cg = new BDDCallGraph();
+        return cg;
     }
 
     boolean change;
@@ -710,15 +726,11 @@ public class BDDPointerAnalysis {
         for (int index=0; h.hasNext(); ++index) {
             CallSite cs = (CallSite) h.next();
             MethodSummary caller = cs.caller;
-            if (TRACE_VIRTUAL) {
-                System.out.println("Caller: "+caller.getMethod());
-            }
             ProgramLocation mc = cs.m;
-            if (TRACE_VIRTUAL) {
-                System.out.println("Call: "+mc);
-            }
             BDD receiverVars = (BDD) i.next();
             if (TRACE_VIRTUAL) {
+                System.out.println("Caller: "+caller.getMethod());
+                System.out.println("Call: "+mc);
                 printSet(" receiverVars", receiverVars, "V1");
             }
             BDD pt = (index < last_vcalls) ? newPointsTo : pointsTo;
@@ -1383,4 +1395,23 @@ public class BDDPointerAnalysis {
         
     }
 
+    public class BDDCallGraph extends CallGraph {
+
+        /**
+         * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
+         */
+        public Collection getTargetMethods(Object context, ProgramLocation callSite) {
+            jq_Method method = (jq_Method) callSite.getTargetMethod();
+            if (callSite.isSingleTarget())
+                return Collections.singleton(method);
+            for (Iterator i=callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                CallSite cs = (CallSite) e.getKey();
+                if (callSite.equals(cs.m))
+                    return (Collection) e.getValue();
+            }
+            return Collections.EMPTY_SET;
+        }
+        
+    }
 }
