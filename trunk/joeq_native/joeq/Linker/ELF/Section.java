@@ -529,6 +529,7 @@ public abstract class Section implements ELFConstants {
                 } else {
                     try {
                         byte[] b = s.getBytes(DEFAULT_ENCODING);
+                        jq.Assert(b.length == s.length(), s);
                         System.arraycopy(b, 0, table, index, b.length);
                     } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
                 }
@@ -540,6 +541,7 @@ public abstract class Section implements ELFConstants {
             Integer i = (Integer)string_map.get(s);
             if (i == null)
                 return 0;
+            jq.Assert(getString(i.intValue()).equals(s), s);
             return i.intValue();
         }
         public String getString(int i) {
