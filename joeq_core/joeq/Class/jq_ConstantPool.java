@@ -21,6 +21,7 @@ import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Main.jq;
+import Run_Time.SystemInterface;
 import UTF.Utf8;
 
 /*
@@ -28,6 +29,8 @@ import UTF.Utf8;
  * @version $Id$
  */
 public class jq_ConstantPool implements jq_ClassFileConstants {
+
+	public static /*final*/ boolean TRACE = false;
 
     private Object[] constant_pool;
     private byte[] constant_pool_tags;
@@ -165,6 +168,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     jq_Member mem = clazz.getDeclaredMember(nd);
                     if (mem == null) {
                         // this constant pool entry refers to a member that doesn't exist in the named class.
+                        if (TRACE) SystemInterface.debugmsg("No such member: "+clazz+"."+nd+", referenced by cp idx "+(int)i);
                         if (false) {
                             // throw resolution exception early
                             String s = ("No such member: "+clazz+"."+nd+", referenced by cp idx "+(int)i);
@@ -179,15 +183,21 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     } else {
                         constant_pool[i] = mem;
                         if (desc.isDescriptor(TC_PARAM)) {
-                            if (mem.isStatic())
+                            if (mem.isStatic()) {
                                 constant_pool_tags[i] = CONSTANT_ResolvedSMethodRef;
-                            else
+		                        if (TRACE) SystemInterface.debugmsg("Resolved static method "+mem+", cp idx "+(int)i);
+                            } else {
                                 constant_pool_tags[i] = CONSTANT_ResolvedIMethodRef;
+		                        if (TRACE) SystemInterface.debugmsg("Resolved instance method "+mem+", cp idx "+(int)i);
+                            }
                         } else {
-                            if (mem.isStatic())
+                            if (mem.isStatic()) {
                                 constant_pool_tags[i] = CONSTANT_ResolvedSFieldRef;
-                            else
+		                        if (TRACE) SystemInterface.debugmsg("Resolved static field "+mem+", cp idx "+(int)i);
+                            } else {
                                 constant_pool_tags[i] = CONSTANT_ResolvedIFieldRef;
+		                        if (TRACE) SystemInterface.debugmsg("Resolved instance field "+mem+", cp idx "+(int)i);
+                            }
                         }
                     }
                 } else {
@@ -213,6 +223,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
         constant_pool[i] = PrimordialClassLoader.getOrCreateType(cl, classname);
         constant_pool_tags[i] = CONSTANT_ResolvedClass;
+        if (TRACE) SystemInterface.debugmsg("Resolved class "+constant_pool[i]+", cp idx "+(int)i);
     }
 
     public final void set(char index, Object o) {
