@@ -19,24 +19,24 @@ import Run_Time.ExceptionDeliverer;
 
 public class Delegates implements jq_ClassFileConstants {
     static class Field implements jq_Field.Delegate {
-	public final boolean isCodeAddressType(jq_Field f) {
-	    return f.getType() == CodeAddress._class ||
-		f.getType() == BootstrapCodeAddress._class;
-	}
-	public final boolean isHeapAddressType(jq_Field f) {
-	    return f.getType() == HeapAddress._class ||
-		f.getType() == BootstrapHeapAddress._class;
-	}
-	public final boolean isStackAddressType(jq_Field f) {
-	    return f.getType() == StackAddress._class;
-	}
+        public final boolean isCodeAddressType(jq_Field f) {
+            return f.getType() == CodeAddress._class ||
+                f.getType() == BootstrapCodeAddress._class;
+        }
+        public final boolean isHeapAddressType(jq_Field f) {
+            return f.getType() == HeapAddress._class ||
+                f.getType() == BootstrapHeapAddress._class;
+        }
+        public final boolean isStackAddressType(jq_Field f) {
+            return f.getType() == StackAddress._class;
+        }
     }
     static class Method implements jq_Method.Delegate {
-	public final jq_CompiledCode compile_stub (jq_Method m) {
-	    return x86ReferenceCompiler.generate_compile_stub(m);
-	}
-	public final jq_CompiledCode compile (jq_Method m) {
-	    jq_CompiledCode default_compiled_version;
+        public final jq_CompiledCode compile_stub (jq_Method m) {
+            return x86ReferenceCompiler.generate_compile_stub(m);
+        }
+        public final jq_CompiledCode compile (jq_Method m) {
+            jq_CompiledCode default_compiled_version;
             //System.out.println("Compiling: "+m);
             if (m.isNative() && m.getBytecode() == null) {
                 System.out.println("Unimplemented native method! "+m);
@@ -67,8 +67,8 @@ public class Delegates implements jq_ClassFileConstants {
                 if (jq.RunningNative)
                     default_compiled_version.patchDirectBindCalls();
             }
-	    return default_compiled_version;
-	}
+            return default_compiled_version;
+        }
     }
     public static Compil3rInterface default_compiler;
     static {
@@ -79,6 +79,7 @@ public class Delegates implements jq_ClassFileConstants {
         try {
             Class c = Class.forName(name);
             default_compiler = (Compil3rInterface) c.newInstance();
+            System.out.println("Default compiler set to "+name);
         } catch (Exception x) {
             System.err.println("Error occurred while instantiating compiler "+name);
             x.printStackTrace();
@@ -88,13 +89,13 @@ public class Delegates implements jq_ClassFileConstants {
     }
     
     static class CompiledCode implements jq_CompiledCode.Delegate {
-	public void patchDirectBindCalls (Iterator i) {
-	    while (i.hasNext()) {
-		DirectBindCall r = (DirectBindCall) i.next();
-		r.patch();
-	    }
-	}
-	public void patchDirectBindCalls (Iterator i, jq_Method method, jq_CompiledCode cc) {
+        public void patchDirectBindCalls (Iterator i) {
+            while (i.hasNext()) {
+                DirectBindCall r = (DirectBindCall) i.next();
+                r.patch();
+            }
+        }
+        public void patchDirectBindCalls (Iterator i, jq_Method method, jq_CompiledCode cc) {
             while (i.hasNext()) {
                 DirectBindCall r = (DirectBindCall) i.next();
                 if (r.getTarget() == method) {
@@ -102,27 +103,27 @@ public class Delegates implements jq_ClassFileConstants {
                     r.patchTo(cc);
                 }
             }
-	}
-	public Iterator getCompiledMethods() {
-	    return CodeAllocator.getCompiledMethods();
-	}
-	public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, jq_TryCatch tc, CodeAddress entry, StackAddress fp) {
-	    ((ExceptionDeliverer)ed).deliverToStackFrame(t, x, tc, entry, fp);
-	}
-	public final Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp) {
-	    return ((ExceptionDeliverer)ed).getThisPointer(t, ip, fp);
-	}
+        }
+        public Iterator getCompiledMethods() {
+            return CodeAllocator.getCompiledMethods();
+        }
+        public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, jq_TryCatch tc, CodeAddress entry, StackAddress fp) {
+            ((ExceptionDeliverer)ed).deliverToStackFrame(t, x, tc, entry, fp);
+        }
+        public final Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp) {
+            return ((ExceptionDeliverer)ed).getThisPointer(t, ip, fp);
+        }
     }
     
     static class Klass implements jq_Class.Delegate {
-	public final Object newInstance(jq_Class c, int instance_size, Object vtable) {
-	    c.cls_initialize();
-	    return DefaultHeapAllocator.allocateObject(instance_size, vtable);
-	}
+        public final Object newInstance(jq_Class c, int instance_size, Object vtable) {
+            c.cls_initialize();
+            return DefaultHeapAllocator.allocateObject(instance_size, vtable);
+        }
     }
     static class Array implements jq_Array.Delegate {
-	public final Object newInstance(jq_Array a, int length, Object vtable) {
-	    return DefaultHeapAllocator.allocateArray(length, a.getInstanceSize(length), vtable);
-	}
+        public final Object newInstance(jq_Array a, int length, Object vtable) {
+            return DefaultHeapAllocator.allocateArray(length, a.getInstanceSize(length), vtable);
+        }
     }
 }

@@ -70,7 +70,7 @@ public class InterfaceImpl implements Interface {
             nullStaticFields.add(StackAddress._FACTORY);
             nullStaticFields.add(BootImage._DEFAULT);
             nullStaticFields.add(Reflection._obj_trav);
-	    Reflection.registerNullStaticFields(nullStaticFields);
+            Reflection.registerNullStaticFields(nullStaticFields);
             nullStaticFields.add(Allocator.DefaultCodeAllocator._default_allocator);
             jq_Class k = PrimordialClassLoader.getJavaLangSystem();
             nullStaticFields.add(k.getOrCreateStaticField("in", "Ljava/io/InputStream;"));
@@ -84,6 +84,8 @@ public class InterfaceImpl implements Interface {
                                                           "Ljava/util/Vector;"));
             nullStaticFields.add(k.getOrCreateStaticField("nativeLibraryContext",
                                                           "Ljava/util/Stack;"));
+            k = PrimordialClassLoader.getJavaLangRefFinalizer();
+            // todo: static fields in "java.lang.ref.Finalizer" need help.
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
             nullStaticFields.add(k.getOrCreateStaticField("on_vm_startup",
                                                           "Ljava/util/List;"));

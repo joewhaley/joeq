@@ -37,6 +37,10 @@ public final class jq_InstanceField extends jq_Field {
         return new jq_InstanceField(clazz, nd);
     }
     
+    public final int getWidth() {
+        return type.getReferenceSize();
+    }
+    
     public final void load(jq_InstanceField that) {
         this.access_flags = that.access_flags;
         this.attributes = (Map)((HashMap)that.attributes).clone();

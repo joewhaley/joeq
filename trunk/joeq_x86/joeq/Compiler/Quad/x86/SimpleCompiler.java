@@ -105,9 +105,17 @@ import Compil3r.Reference.x86.x86ReferenceLinker;
  * @author John Whaley
  * @version $Id$
  */
-public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlockVisitor, QuadVisitor {
+public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisitor {
 
-    public static /*final*/ boolean ALWAYS_TRACE = true;
+    public static class Factory implements Compil3rInterface {
+        public static final Factory INSTANCE = new Factory();
+        public Factory() {}
+        public jq_CompiledCode compile(jq_Method m) {
+            return new SimpleCompiler(m).compile();
+        }
+    }
+    
+    public static /*final*/ boolean ALWAYS_TRACE = false;
     public static /*final*/ boolean TRACE_STUBS = false;
 
     public static final Set TraceMethod_MethodNames = new HashSet();
@@ -131,11 +139,6 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
     public SimpleCompiler(ControlFlowGraph cfg) { this.init(cfg); }
     public SimpleCompiler(jq_Method m) { this.init(m); }
     
-    public final jq_CompiledCode compile(jq_Method m) {
-        this.init(m);
-        return this.compile();
-    }
-        
     public void init(jq_Method m) {
         init(CodeCache.getCode(m));
     }
@@ -291,7 +294,7 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
         int current = 4;
         RegisterFactory rf = cfg.getRegisterFactory();
         for (Iterator i=rf.iterator(); i.hasNext(); current += 4) {
-            registerLocations.put(i.next(), new Integer(current));
+            registerLocations.put(i.next(), new Integer(-current));
         }
         Assert._assert((current >> 2) - 1 == getStackFrameWords());
     }
@@ -332,7 +335,7 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
             // emit prolog
             asm.emitShort_Reg(x86.PUSH_r, EBP);         // push old FP
             asm.emit2_Reg_Reg(x86.MOV_r_r32, EBP, ESP); // set new FP
-            asm.emit2_Reg_Mem(x86.LEA, ESP, n_localwords<<2, ESP);
+            asm.emit2_Reg_Mem(x86.LEA, ESP, -n_localwords<<2, ESP);
             
             // stack frame after prolog:
             // b0:     | caller's saved FP  |
@@ -401,7 +404,10 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
                 for (Iterator j=ex.exceptionHandlerIterator(); j.hasNext(); ) {
                     ExceptionHandler e = (ExceptionHandler) j.next();
                     int handler = asm.getBranchTarget(e.getEntry());
-                    Quad x = (Quad) e.getEntry().iterator().next();
+                    Iterator k = e.getEntry().iterator();
+                    Assert._assert(k.hasNext());
+                    Quad x = (Quad) k.next();
+                    Assert._assert(x.getOperator() instanceof Special.GET_EXCEPTION);
                     RegisterOperand rop = (RegisterOperand) Special.getOp1(x);
                     jq_TryCatch tc = new jq_TryCatch(start, end, handler, e.getExceptionType(), getStackOffset(rop));
                     tcs.add(tc);
@@ -417,6 +423,7 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
                                                          x86QuadExceptionDeliverer.INSTANCE,
                                                          n_localwords*4,
                                                          code_relocs, data_relocs);
+            CodeCache.free(cfg);
             // temporary kludge: no switching a thread during compilation.
             if (jq.RunningNative)
                 Unsafe.getThreadBlock().enableThreadSwitch();
@@ -442,6 +449,8 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
             q.accept(this);
             Assert._assert(handled, q.toString());
         }
+        if (bb.getFallthroughSuccessor() != null)
+            branchHelper(BytecodeVisitor.CMP_UNCOND, bb.getFallthroughSuccessor());
         // record end of basic block (for exception handler ranges)
         asm.recordBranchTarget(new Integer(bb.getID()));
     }
@@ -1264,9 +1273,6 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
         
         jq_Type t = ((Invoke)obj.getOperator()).getReturnType();
         if (t.getReferenceSize() > 0) {
-            asm.emitShort_Reg(x86.POP_r, EAX);
-            if (t.getReferenceSize() == 8)
-                asm.emitShort_Reg(x86.POP_r, EDX);
             storeOperand(Invoke.getDest(obj), EAX);
         }
         this.handled = true;
@@ -1865,6 +1871,14 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
             // do nothing.
         } else if (op instanceof Unary.ADDRESS_2INT) {
             // do nothing.
+        } else if (op instanceof Unary.ISNULL_P) {
+            asm.emitShort_Reg_Imm(x86.MOV_r_i32, ECX, 0);
+            asm.emitARITH_Reg_Imm(x86.CMP_r_i32, EAX, 0);
+            asm.emitCJUMP_Short(x86.JNE, (byte)0);
+            int cloc = asm.getCurrentOffset();
+            asm.emitShort_Reg(x86.INC_r32, ECX);
+            asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
+            asm.emit2_Reg_Reg(x86.MOV_r_r32, EAX, ECX);
         }
         else {
             Assert.UNREACHABLE(obj.toString());
@@ -1986,6 +2000,7 @@ public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlo
         asm.emitARITH_Reg_Reg(x86.XOR_r_r32, EDX, EDX);
         loadOperand(ZeroCheck.getSrc(obj), EBX);
         asm.emit2_Reg(x86.IDIV_r32, EBX);
+        this.handled = true;
     }
     boolean handled;
     /**

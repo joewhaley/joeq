@@ -41,7 +41,14 @@ public final class jq_StaticField extends jq_Field {
     static jq_StaticField newStaticField(jq_Class clazz, jq_NameAndDesc nd) {
         return new jq_StaticField(clazz, nd);
     }
-
+    
+    public final int getWidth() {
+        if (type == jq_Primitive.LONG || type == jq_Primitive.DOUBLE)
+            return 8;
+        else
+            return 4;
+    }
+    
     public final void load(jq_StaticField that) {
         this.access_flags = that.access_flags;
         this.attributes = (Map)((HashMap)that.attributes).clone();

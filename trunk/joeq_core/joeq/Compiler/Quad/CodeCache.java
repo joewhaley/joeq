@@ -27,6 +27,10 @@ public class CodeCache {
 
     public static ControlFlowGraph getCode(jq_Method m) { return cache._get(m); }
     public static java.util.Map getBCMap(jq_Method m) { return cache._getmap(m); }
+    public static void free(ControlFlowGraph cfg) {
+        if (getCode(cfg.getMethod()) == cfg)
+            cache._delete(cfg.getMethod());
+    }
 
     public static boolean TRACE = false;
     public static boolean AlwaysMap = false;
@@ -38,9 +42,9 @@ public class CodeCache {
             BytecodeToQuad b2q = new BytecodeToQuad(m);
             cfg = b2q.convert();
             map.put(m, cfg);
-	    if (AlwaysMap) {
-		bcmap.put(m, b2q.getQuadToBytecodeMap());
-	    }
+            if (AlwaysMap) {
+                bcmap.put(m, b2q.getQuadToBytecodeMap());
+            }
             for (java.util.Iterator i = passes.iterator(); i.hasNext(); ) {
                 ControlFlowGraphVisitor v = (ControlFlowGraphVisitor)i.next();
                 v.visitCFG(cfg);
@@ -56,10 +60,14 @@ public class CodeCache {
             BytecodeToQuad b2q = new BytecodeToQuad(m);
             ControlFlowGraph cfg = b2q.convert();
             map.put(m, cfg);
-	    result = b2q.getQuadToBytecodeMap();
-	    bcmap.put(m, result);
-	}
+            result = b2q.getQuadToBytecodeMap();
+            bcmap.put(m, result);
+        }
         return result;
     }
     
+    protected void _delete(jq_Method m) {
+        map.remove(m);
+        bcmap.remove(m);
+    }
 }
