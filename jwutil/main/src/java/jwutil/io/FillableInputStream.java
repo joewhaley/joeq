@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UTFDataFormatException;
-import java.io.Writer;
 import jwutil.strings.Utf8;
 
 /**
@@ -24,11 +23,6 @@ public class FillableInputStream extends InputStream implements DataOutput {
         return os;
     }
     
-    public Writer getWriter() {
-        FISWriter os = new FISWriter();
-        return os;
-    }
-
     public class FISOutputStream extends OutputStream {
 
         /* (non-Javadoc)
@@ -43,31 +37,6 @@ public class FillableInputStream extends InputStream implements DataOutput {
          */
         public void write(byte b[], int off, int len) throws IOException {
             FillableInputStream.this.write(b, off, len);
-        }
-        
-    }
-    
-    public class FISWriter extends Writer {
-
-        /* (non-Javadoc)
-         * @see java.io.Writer#write(char[], int, int)
-         */
-        public void write(char[] cbuf, int off, int len) throws IOException {
-            for (int i = 0; i < len; ++i) {
-                FillableInputStream.this.write((byte) cbuf[off+i]);
-            }
-        }
-
-        /* (non-Javadoc)
-         * @see java.io.Writer#flush()
-         */
-        public void flush() throws IOException {
-        }
-
-        /* (non-Javadoc)
-         * @see java.io.Writer#close()
-         */
-        public void close() throws IOException {
         }
         
     }
@@ -108,6 +77,7 @@ public class FillableInputStream extends InputStream implements DataOutput {
         System.arraycopy(buffer, start, b, off, a);
         start += a;
         if (start == buffer.length) start = 0;
+        notify();
         return a;
     }
     
@@ -158,7 +128,7 @@ public class FillableInputStream extends InputStream implements DataOutput {
         while (len > 0) {
             int upTo, a;
             for (;;) {
-                upTo = start < end ? (start > 0 ? buffer.length : buffer.length - 1) : start - 1;
+                upTo = start <= end ? (start > 0 ? buffer.length : buffer.length - 1) : start - 1;
                 a = upTo - end;
                 if (a > 0) break;
                 try {
