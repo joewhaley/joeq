@@ -97,7 +97,7 @@ public abstract class Reflection {
     // Map between our jq_Member objects and JDK Member objects
     public static final jq_Field getJQMember(Field f) {
         if (!jq.Bootstrapping) return ClassLibInterface.i.getJQField(f);
-        jq_Class c = (jq_Class)getJQType(f.getDeclaringClass()); c.load();
+        jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);

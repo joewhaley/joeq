@@ -84,7 +84,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (jq_Member)members.get(new jq_NameAndDesc(Utf8.get(name), Utf8.get(desc)));
     }
     private void addDeclaredMember(jq_NameAndDesc nd, jq_Member m) {
-        members.put(nd, m);
+        Object b = members.put(nd, m);
+        if (TRACE) {
+            SystemInterface.debugmsg("Added member to "+this+": "+m+" (old value "+b+")");
+            //new InternalError().printStackTrace();
+        }
     }
     public void accept(jq_TypeVisitor tv) {
         tv.visitClass(this);
@@ -995,21 +999,23 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     this.const_pool = new_cp;
                     getSourceFile(); // check for bug.
                     if (TRACE) SystemInterface.debugmsg("Finished rebuilding constant pool.");
-                }
-                
-                // make sure that all member references from other classes point to actual members.
-                Iterator it = members.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry e = (Map.Entry)it.next();
-                    jq_Member m = (jq_Member)e.getValue();
-                    if (m.getState() < STATE_LOADED) {
-                        // may be a reference to a member of a superclass or superinterface.
-                        // this can happen when using old class files.
-                        it.remove();
-                        Set s = PrimordialClassLoader.loader.getClassesThatReference(m);
-                        System.err.println("Warning: classes "+s+" refer to member "+m+", which does not exist. This may indicate stale class files.");
-                        //throw new ClassFormatError("no such member "+m+", referenced by "+s);
+                } else {
+                    
+                    // make sure that all member references from other classes point to actual members.
+                    Iterator it = members.entrySet().iterator();
+                    while (it.hasNext()) {
+                        Map.Entry e = (Map.Entry)it.next();
+                        jq_Member m = (jq_Member)e.getValue();
+                        if (m.getState() < STATE_LOADED) {
+                            // may be a reference to a member of a superclass or superinterface.
+                            // this can happen when using old class files.
+                            it.remove();
+                            Set s = PrimordialClassLoader.loader.getClassesThatReference(m);
+                            System.err.println("Warning: classes "+s+" refer to member "+m+", which does not exist. This may indicate stale class files.");
+                            //throw new ClassFormatError("no such member "+m+", referenced by "+s);
+                        }
                     }
+                    
                 }
 
                 // all done!
