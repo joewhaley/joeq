@@ -13,16 +13,19 @@ import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.BasicBlockVisitor;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
+import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.Dominators;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.Dominators.DominatorNode;
 import Util.SyntheticGraphs.Graph;
+import Compil3r.Analysis.IPA.ProgramLocation;
+import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 
 /**
  * @author Vladimir Livshits
  *  */
-public interface DominatorQuery {
+interface DominatorQuery {
 	/** The result is null for the top node of the CFG. */
 	public Quad getImmediateDominator(Quad q);
 	/** Checks if the node is the top node of the CFG. */
@@ -30,7 +33,9 @@ public interface DominatorQuery {
 	/** Fills set with the dominance frontier of q */
 	public void getDominanceFrontier(Quad q, Set/*<Quad>*/ set);
 	/** Fills set with the iterated dominance frontier of q */
-	public void getIteratedDominanceFrontier(Quad q, Set/*<Quad>*/ set); 
+	public void getIteratedDominanceFrontier(Quad q, Set/*<Quad>*/ set);
+	/** Prints the dominator tree on Quads in dot format. */	
+	public void printDot(PrintStream out); 
 };
 
 /**
@@ -38,7 +43,7 @@ public interface DominatorQuery {
  * Needs to be optimized for future use.
  * @see DominatorQuery
  * */
-class SimpleDominatorQuery implements DominatorQuery {
+public class SimpleDominatorQuery implements DominatorQuery {
 	private jq_Method _m;	
 	private ControlFlowGraph _cfg;
 
@@ -192,13 +197,18 @@ class SimpleDominatorQuery implements DominatorQuery {
 		} while (change);
 	}
 		
+	/**
+	 * Prints the dominator tree on Quads in dot format.
+	 * */
 	public void printDot(PrintStream out){
-		Graph g = new Graph(_m.toString());
+		Graph g = new Graph(_m.toString(), new Graph.Direction(Graph.Direction.LR));
 		for(Iterator iter = new QuadIterator(_cfg); iter.hasNext();){
 			Quad q = (Quad)iter.next();
 			
 			// these IDs should be unique, I hope
-			g.addNode(q.getID(), q.toString_short());
+			ProgramLocation loc = new QuadProgramLocation(_m, q);
+			String src_loc = loc.getSourceFile().toString() + ":" + loc.getLineNumber();
+			g.addNode(q.getID(), q.toString_short() + "\\l" + src_loc);
 			Quad dom = getImmediateDominator(q);
 			if(dom != null){
 				g.addNode(dom.getID(), dom.toString_short());
@@ -208,6 +218,27 @@ class SimpleDominatorQuery implements DominatorQuery {
 		
 		// graph creation is complete
 		g.printDot(out);
+	}
+	
+	public static class TestSimpleDominatorQuery implements ControlFlowGraphVisitor {
+		public TestSimpleDominatorQuery(){
+			CodeCache.AlwaysMap = true;
+		}
+		
+		public void visitCFG(ControlFlowGraph cfg) {
+			SimpleDominatorQuery q = new SimpleDominatorQuery(cfg.getMethod());
+			q.printDot(System.out);	
+		}
+		
+		public static void Main(String argv[]){
+			for(int i = 0; i < argv.length; i++){
+				String arg = argv[i];
+				
+				if(arg == "-v"){
+					// TOOD
+				}
+			}
+		}
 	}
 };
 
