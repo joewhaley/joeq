@@ -24,6 +24,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     public final boolean isClsInitialized() { return state >= STATE_CLSINITIALIZED; }
     
     public final boolean isPrimitiveType() { return false; }
+    public final boolean isIntLike() { return false; }
     
     public final ClassLoader getClassLoader() { return class_loader; }
     public final int getReferenceSize() { return 4; }
@@ -50,6 +51,27 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     protected int/*byte*/ state; // use an 'int' so we can do cas4 on it
     protected Object vtable;
 
+    public static class jq_NullType extends jq_Reference {
+        private jq_NullType() { super(Utf8.get("L&NULL;"), PrimordialClassLoader.loader); }
+        public String getJDKName() { jq.UNREACHABLE(); return null; }
+        public String getJDKDesc() { jq.UNREACHABLE(); return null; }
+        public jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }
+        public jq_Class getInterface(Utf8 desc) { jq.UNREACHABLE(); return null; }
+        public boolean implementsInterface(jq_Class k) { jq.UNREACHABLE(); return false; }
+        public jq_InstanceMethod getVirtualMethod(jq_NameAndDesc nd) { jq.UNREACHABLE(); return null; }
+        public String getName() { jq.UNREACHABLE(); return null; }
+        public boolean isClassType() { jq.UNREACHABLE(); return false; }
+        public boolean isArrayType() { jq.UNREACHABLE(); return false; }
+        public boolean isFinal() { jq.UNREACHABLE(); return false; }
+        public void load() { jq.UNREACHABLE(); }
+        public void verify() { jq.UNREACHABLE(); }
+        public void prepare() { jq.UNREACHABLE(); }
+        public void sf_initialize() { jq.UNREACHABLE(); }
+        public void cls_initialize() { jq.UNREACHABLE(); }
+        public String toString() { return "NULL_TYPE"; }
+        public static final jq_NullType NULL_TYPE = new jq_NullType();
+    }
+    
     public static final jq_Class _class;
     public static final jq_InstanceField _vtable;
     public static /*final*/ jq_InstanceField _state; // set after PrimordialClassLoader finishes initialization
