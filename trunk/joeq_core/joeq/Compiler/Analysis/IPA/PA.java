@@ -486,6 +486,7 @@ public class PA {
         Tmap = makeMap("Types", T_BITS);
         Nmap = makeMap("Names", N_BITS);
         Mmap = makeMap("Methods", M_BITS);
+        Mmap.get(new Dummy());
         if (ADD_THREADS) {
             PrimordialClassLoader.getJavaLangThread().prepare();
             PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;").prepare();
@@ -1194,7 +1195,7 @@ public class PA {
         if (m != null && m.getBytecode() != null) {
             visitMethod(m);
             rootMethods.add(m);
-            Node p = MethodSummary.getSummary(CodeCache.getCode(m)).getParamNode(0);
+            Node p = MethodSummary.getSummary(m).getParamNode(0);
             Node h = (Node) Hmap.get(H_i);
             BDD context = null;
             if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
@@ -2099,9 +2100,20 @@ public class PA {
         }
         
         // Now we know domain sizes, so initialize the BDD package.
-        initializeBDD(bddfactory);
+        initializeBDD(bddfactory);        
         initializeMaps();
         this.rootMethods.addAll(rootMethods);
+        
+        if (DUMP_SSA) {
+            Object dummy = new Object();
+            bddIRBuilder = new BuildBDDIR(bdd, M, Mmap, dummy);
+            varorder += "_" + bddIRBuilder.getVarOrderDesc();
+            System.out.println("Using variable ordering " + varorder);
+            int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
+            bdd.setVarOrder(ordering);
+        } else {
+            bddIRBuilder = null;
+        }
         
         // Use the existing call graph to calculate IE filter
         if (cg != null) {
@@ -2829,7 +2841,7 @@ public class PA {
                 continue;
             }
             bcodes += m.getBytecode().length;
-            MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
+            MethodSummary ms = MethodSummary.getSummary(m);
             for (Iterator j = ms.nodeIterator(); j.hasNext(); ) {
                 Node n = (Node) j.next();
                 ++vars;
@@ -3570,7 +3582,7 @@ public class PA {
 //            System.out.println("method " + m + " has "
 //                    + cfg.getRegisterFactory().numberOfLocalRegisters()
 //                    + " registers");
-            MethodSummary ms = MethodSummary.getSummary(cfg);
+            MethodSummary ms = MethodSummary.getSummary(m);
             for (Iterator j = cfg.getRegisterFactory().iterator(); j.hasNext();) {
                 Register r = (Register) j.next();
                 if (r == null) {
