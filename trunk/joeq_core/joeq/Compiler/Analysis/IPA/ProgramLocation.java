@@ -84,9 +84,8 @@ public abstract class ProgramLocation implements Textualizable {
     public abstract byte getInvocationType();
 
     public String getEmacsName() {
-        if (true) {
-            Utf8 source = getSourceFile();
-            if (source == null) return "";
+        Utf8 source = getSourceFile();
+        if (source != null) {
             return source+":"+getLineNumber();
         } else {
             String className = getContainingClass().getJDKName();
