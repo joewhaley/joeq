@@ -87,7 +87,6 @@ public class Constructor extends AccessibleObject {
     // ONLY TO BE CALLED BY jq_Member CONSTRUCTOR!!!
     public static java.lang.reflect.Constructor createNewConstructor(jq_Initializer jq_init) {
         Object o = new Constructor(jq_init);
-        Run_Time.SystemInterface.debugmsg("Created "+jq_init);
         return (java.lang.reflect.Constructor)o;
     }
     
