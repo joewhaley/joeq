@@ -44,11 +44,12 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
      * optional -- it is only necessary if you use methods that require a root
      * set, like getReachableMethods().
      * 
-     * @param roots
+     * @param roots collection of root methods
      */
-    public abstract void setRoots(Collection/*<ProgramLocation>*/ roots);
+    public abstract void setRoots(Collection/*<jq_Method>*/ roots);
     
-    public abstract Collection/*<ProgramLocation>*/ getRoots();
+    /** Returns the collection of root methods for this call graph. */
+    public abstract Collection/*<jq_Method>*/ getRoots();
     
     /**
      * Returns the collection of all methods in the call graph.
@@ -237,12 +238,28 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     }
     
     /**
+     * Returns the set of call sites that can call the given method.
+     * 
+     * @param callee
+     * @return set of callers
+     */
+    public Collection/*ProgramLocation*/ getCallers(jq_Method callee) {
+        LinkedList result = new LinkedList();
+        for (Iterator i = getAllCallSites().iterator(); i.hasNext(); ) {
+            ProgramLocation p = (ProgramLocation) i.next();
+            if (getTargetMethods(p).contains(callee))
+                result.add(p);
+        }
+        return result;
+    }
+    
+    /**
      * Returns the set of methods that can call the given method.
      * 
      * @param callee
      * @return set of caller methods
      */
-    public Collection/*jq_Method*/ getCallers(jq_Method callee) {
+    public Collection/*jq_Method*/ getCallerMethods(jq_Method callee) {
         LinkedList result = new LinkedList();
         for (Iterator i = getAllCallSites().iterator(); i.hasNext(); ) {
             ProgramLocation p = (ProgramLocation) i.next();
@@ -269,6 +286,9 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         return worklist.getVisitedSet();
     }
     
+    /**
+     * Returns a string representation of this call graph.
+     */
     public String toString() {
         TreeSet ts = new TreeSet(
             new Comparator() {
@@ -299,9 +319,8 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         return sb.toString();
     }
     
-    
-    
-    public Map calculateBackEdges() {
+    /** Calculate a multimap between methods and their callers. */
+    public Map calculateCallerRelation() {
         Collection roots = getRoots();
         Map backEdges = new HashMap();
         LinkedList worklist = new LinkedList();
@@ -312,15 +331,19 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
         while (!worklist.isEmpty()) {
             jq_Method caller = (jq_Method) worklist.removeFirst();
-            Collection callees = this.getCallees(caller);
-            for (Iterator i=callees.iterator(); i.hasNext(); ) {
-                jq_Method callee = (jq_Method) i.next();
-                Set s = (Set) backEdges.get(callee);
-                if (s == null) {
-                    backEdges.put(callee, s = new HashSet());
-                    worklist.add(callee);
+            Collection callsites = this.getCallSites(caller);
+            for (Iterator i=callsites.iterator(); i.hasNext(); ) {
+                ProgramLocation cs = (ProgramLocation) i.next();
+                Collection callees = this.getTargetMethods(cs);
+                for (Iterator j=callees.iterator(); j.hasNext(); ) {
+                    jq_Method callee = (jq_Method) i.next();
+                    Set s = (Set) backEdges.get(callee);
+                    if (s == null) {
+                        backEdges.put(callee, s = new HashSet());
+                        worklist.add(callee);
+                    }
+                    s.add(cs);
                 }
-                s.add(caller);
             }
         }
         return backEdges;
@@ -328,6 +351,8 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     
     /**
      * Returns the call graph edge relation in the form of an invertible multi-map.
+     * The edge relation contains both the relations between methods and their call
+     * sites and between call sites and their target methods.
      * 
      * @param roots
      * @return set of caller methods
@@ -336,9 +361,15 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         InvertibleMultiMap edges = new GenericInvertibleMultiMap();
         for (Iterator i = this.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method caller = (jq_Method) i.next();
-            Collection callees = edges.getValues(caller);
-            Collection callees2 = this.getCallees(caller);
-            callees.addAll(callees2);
+            Collection callsites = edges.getValues(caller);
+            Collection callsites2 = this.getCallSites(caller);
+            callsites.addAll(callsites2);
+            for (Iterator j = callsites2.iterator(); j.hasNext(); ) {
+                ProgramLocation cs = (ProgramLocation) j.next();
+                Collection callees = edges.getValues(cs);
+                Collection callees2 = this.getTargetMethods(cs);
+                callees.addAll(callees2);
+            }
         }
         return edges;
     }
@@ -375,7 +406,15 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     }
     
     public Navigator getNavigator() {
-        return new CallGraphNavigator();
+        return getMethodNavigator();
+    }
+    
+    public Navigator getMethodNavigator() {
+        return new CallGraphMethodNavigator();
+    }
+    
+    public Navigator getCallSiteNavigator() {
+        return new CallGraphCSNavigator();
     }
     
     public MultiMap getCallSiteMap() {
@@ -479,11 +518,11 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     public static class CallGraphMap extends UnmodifiableMultiMap {
         
         private final MultiMap methodToCallSite;
-        private final MultiMap callSiteToMethod;
+        private final MultiMap callSiteToTarget;
         
-        public CallGraphMap(MultiMap methodToCallSite, MultiMap callSiteToMethod) {
+        public CallGraphMap(MultiMap methodToCallSite, MultiMap callSiteToTarget) {
             this.methodToCallSite = methodToCallSite;
-            this.callSiteToMethod = callSiteToMethod;
+            this.callSiteToTarget = callSiteToTarget;
         }
         
         /* (non-Javadoc)
@@ -501,10 +540,10 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
             Iterator i = c1.iterator();
             if (!i.hasNext()) return c1;
             Object o = i.next();
-            if (!i.hasNext()) return callSiteToMethod.getValues(o);
+            if (!i.hasNext()) return callSiteToTarget.getValues(o);
             Collection result = new LinkedHashSet();
             for (;;) {
-                result.addAll(callSiteToMethod.getValues(o));
+                result.addAll(callSiteToTarget.getValues(o));
                 if (!i.hasNext()) break;
                 o = i.next();
             }
@@ -519,7 +558,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         
     }
     
-    public class CallGraphNavigator implements Navigator {
+    public class CallGraphMethodNavigator implements Navigator {
 
         /**
          * @see Util.Graphs.Navigator#next(java.lang.Object)
@@ -535,8 +574,32 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
          */
         public Collection prev(Object node) {
             jq_Method callee = (jq_Method) node;
-            Collection s = getCallers(callee);
+            Collection s = getCallerMethods(callee);
             return s;
+        }
+        
+    }
+    
+    public class CallGraphCSNavigator implements Navigator {
+
+        /**
+         * @see Util.Graphs.Navigator#next(java.lang.Object)
+         */
+        public Collection next(Object node) {
+            if (node instanceof jq_Method)
+                return getCallSites((jq_Method) node);
+            else
+                return getTargetMethods((ProgramLocation) node);
+        }
+
+        /**
+         * @see Util.Graphs.Navigator#prev(java.lang.Object)
+         */
+        public Collection prev(Object node) {
+            if (node instanceof jq_Method)
+                return getCallers((jq_Method) node);
+            else
+                return Collections.singleton(((ProgramLocation) node).getMethod());
         }
         
     }
@@ -562,6 +625,66 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     public Collection getValues(Object key) {
         ProgramLocation p = (ProgramLocation) key;
         return getTargetMethods(p);
+    }
+
+    public static CallGraph makeCallGraph(Collection rootMethods, Map callsToTargets) {
+        
+        final Collection roots = rootMethods;
+        final Map callSiteToTargets = callsToTargets;
+        
+        return new CallGraph() {
+
+            /**
+             * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
+             */
+            public Collection getTargetMethods(Object context, ProgramLocation callSite) {
+                jq_Method method = (jq_Method) callSite.getTargetMethod();
+                if (callSite.isSingleTarget()) {
+                    return Collections.singleton(method);
+                }
+                Collection targets = (Collection) callSiteToTargets.get(callSite);
+                if (targets != null) {
+                    return targets;
+                } else {
+                    return Collections.EMPTY_SET;
+                } 
+            }
+
+            /* (non-Javadoc)
+             * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+             */
+            public void setRoots(Collection newRoots) {
+                Assert._assert(roots.equals(newRoots));
+            }
+
+            /* (non-Javadoc)
+             * @see Compil3r.Quad.CallGraph#getRoots()
+             */
+            public Collection getRoots() {
+                return roots;
+            }
+        
+            /* (non-Javadoc)
+             * @see Compil3r.Quad.CallGraph#getAllCallSites()
+             */
+            public Collection getAllCallSites() {
+                return callSiteToTargets.keySet();
+            }
+
+            /* (non-Javadoc)
+             * @see Compil3r.Quad.CallGraph#getAllMethods()
+             */
+            public Collection getAllMethods() {
+                LinkedHashSet s = new LinkedHashSet();
+                s.addAll(roots);
+                for (Iterator i = callSiteToTargets.values().iterator(); i.hasNext(); ) {
+                    Collection c = (Collection) i.next();
+                    s.addAll(c);
+                }
+                return s;
+            }
+            
+        };
     }
 
 }
