@@ -104,8 +104,8 @@ automatically appear in the configurations section:<br/>
 You may run into trouble where Eclipse says that the file joeq.exe is not binary.
 In that case, make sure that the .cdtproject file contains:<br/>
 <code>
-&lt;extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/&gt;<br/>
-&lt;extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/&gt;<br/>
+&amp;lt;extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/&amp;gt;<br/>
+&amp;lt;extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/&amp;gt;<br/>
 <\code>
 The ELF line is so that Eclipse can parse Linux binaries; the PE line is for Windows binaries.
 </p>
