@@ -22,10 +22,11 @@ public class PAQuery {
         protected void parseParams(String[] args) {}
         
         void visitMethod(jq_Method m){            
-            if(getBuilder().skipMethod(m)) return;
+            //if(getBuilder().skipMethod(m)) return;
             
             MethodSummary ms = MethodSummary.getSummary(m);
             if(ms == null) return;
+            if(ms.getNumOfParams() < 2) return;
             System.out.println("Processing method " + m + ":\t" + ms.getNumOfParams());
             
             PAResults paResults = getBuilder().getPAResults();
@@ -75,8 +76,10 @@ public class PAQuery {
                 int pointsToSize = (int)pointsTo.satCount(r.H1.set().and(r.Zset));
                 int projSize     = (int)t.satCount( r.H1.set() ); 
                 if(projSize < pointsToSize) {                
-                    System.out.println("Potential aliasing in context #" + i + ": " + "pointsTo: \n" + 
-                        pointsToSize + ": " + paResults.toString(pointsTo, -1));
+                    ProgramLocation loc = new ProgramLocation.BCProgramLocation(m, 0);
+                    System.out.println("\tPotential aliasing in context #" + i + " calling " + m.toString() + " at " + 
+                    loc.getSourceFile() + ":" + loc.getLineNumber());
+                    /*": " + "pointsTo: \n" + pointsToSize + ": " + paResults.toString(pointsTo, -1)*/
                                                
                     //System.out.println("context #" + i + ": " + 
                     //    projSize + ": " + t.toStringWithDomains() + "\n");
