@@ -16,6 +16,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPA.PA;
 import Compil3r.Analysis.IPA.PAResults;
 import Compil3r.Analysis.IPA.PointerAnalysisResults;
 import Compil3r.Analysis.IPA.ProgramLocation;
@@ -71,6 +72,10 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
         }
 	}
     
+    public PA getPAResults() {
+        return _ptr.getPAResults();
+    }
+    
     /*
     protected void finalize() {
         if(RUN_APPS) {
@@ -90,7 +95,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		jq_Method method = cfg.getMethod();
 	
 		SSABuilder builder = new SSABuilder(method, _ptr, _verbosity);
-		_builderMap.put(method, builder);		// TODO: do we really need to hash them?
+		_builderMap.put(method, builder);		
 		builder.run(); 
 	}
 	
@@ -157,7 +162,6 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 					result += markIteratedDominanceFrontier(loc, quad);					
 				}
 			}else{
-				// TODO: if(quad != _firstQuad)
 				SSADefinition tmpForValue = makeTemporary(value, quad, context);
 				result++;
 				SSADefinition lastDef = _q.getLastDefinitionFor(loc, quad, true);
@@ -176,7 +180,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		 * */
 		private int initializeLocation(SSALocation loc) {			
 			if(_q.getDefinitionFor(loc, _q.getFirstQuad()) == null){
-				if(loc instanceof LocalLocation){
+				if(loc instanceof SSALocation.LocalLocation){
 					// no previous value to speak of for the locals
 					return addBinding(_q.getFirstQuad(), loc, null, null);
 				}else{
@@ -213,7 +217,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 					result += addBinding(dom, loc, gamma, null);
 					if(_verbosity > 3) System.err.println("Created a gamma function for " + loc + " at " + dom);
 				}else{
-					// TODO: fill the gamma?
+					// the gamma is already there, do nothing
 				}
 			}
 			
@@ -400,7 +404,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			private void markDestinations(Quad quad) {				
 				Register reg = getOnlyDefinedRegister(quad); 
 				Assert._assert(reg != null);
-				LocalLocation loc = LocalLocation.FACTORY.createLocalLocation(reg);
+				SSALocation.LocalLocation loc = SSALocation.LocalLocation.FACTORY.createLocalLocation(reg);
 
 				addBinding(quad, loc, null, null);
 			}
@@ -506,11 +510,9 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 //			}
 //
 //			private void processStore(Quad quad) {
-//				// TODO Auto-generated method stub				
 //			}
 //
 //			private void processLoad(Quad quad) {
-//				// TODO Auto-generated method stub				
 //			}			
 //		}
 	
@@ -583,30 +585,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				// TODO: make up a location for return?
 			}			
 			public void visitInvoke(Quad quad) {
-				processCall(quad);
-                QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
-                Set/*jq_Method*/ targets = _ptr.getCallTargets(pl);
-                if(targets.size() == 0) {
-                    // TODO: warn?
-                    return;
-                }
-                for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
-                    SSABinding b  = (SSABinding)iter.next();
-                    Assert._assert(b.getValue() instanceof SSAValue.ActualOut);
-                    
-                    SSAValue.ActualOut value = (ActualOut)b.getValue();                    
-                
-                    System.out.print(targets.size() + " targets of " + quad + ": "); 
-                    for(Iterator targetIter = targets.iterator(); targetIter.hasNext();) {
-                        jq_Method method = (jq_Method)targetIter.next();
-                        //System.out.print(method.toString() + " ");
-                        SSADefinition def = SSADefinition.Helper.create_ssa_definition(
-                            SSALocation.Unique.FACTORY.get(), quad, _method);   // TODO: this is BS
-                        value.add(def, method);
-                    }
-                    //System.out.print("\n");                        
-                }               
-                
+				processCall(quad);                               
 			}
 			/**************************** End of handlers ****************************/ 
 			
@@ -686,24 +665,36 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                 Assert._assert(_q.getBindingCount(quad) == 1, "Have " + _q.getBindingCount(quad) + " bindings at " + quad);
                 SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
                 Assert._assert(b.getValue() == null);
-                Assert._assert(b.getDestination().getLocation() instanceof LocalLocation);
-                LocalLocation loc = (LocalLocation) b.getDestination().getLocation();
+                Assert._assert(b.getDestination().getLocation() instanceof SSALocation.LocalLocation);
+                SSALocation.LocalLocation loc = (SSALocation.LocalLocation) b.getDestination().getLocation();
                 Assert._assert(loc.getRegister() == getOnlyDefinedRegister(quad));
                 b.setValue(value);
 			}
             
             private void processCall(Quad quad) {
                 Assert._assert(isCall(quad));
-                // TODO: add processing
-                for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
-                    SSABinding b = (SSABinding)iter.next();
-                    SSAValue value = b.getValue();
-                    
-                    if(value instanceof SSAValue.ActualOut) {
-                        // deal with the rho's
-                        
-                    }
+                QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
+                Set/*jq_Method*/ targets = _ptr.getCallTargets(pl);
+                if(targets.size() == 0) {
+                    System.err.println("No targets of call " + quad);
+                    return;
                 }
+                for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
+                    SSABinding b  = (SSABinding)iter.next();
+                    Assert._assert(b.getValue() instanceof SSAValue.ActualOut);
+                    
+                    SSAValue.ActualOut value = (ActualOut)b.getValue();                    
+                
+                    System.out.print(targets.size() + " targets of " + quad + ": "); 
+                    for(Iterator targetIter = targets.iterator(); targetIter.hasNext();) {
+                        jq_Method method = (jq_Method)targetIter.next();
+                        //System.out.print(method.toString() + " ");
+                        SSADefinition def = SSADefinition.Helper.create_ssa_definition(
+                            SSALocation.Unique.FACTORY.get(), quad, _method);   // TODO: this is BS
+                        value.add(def, method);
+                    }
+                    //System.out.print("\n");                        
+                }               
             }
 			
 			private SSAValue.Normal markUses(Quad quad) {
@@ -711,7 +702,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				ListIterator.RegisterOperand iter = quad.getUsedRegisters().registerOperandIterator();
 				while(iter.hasNext()) {
 					Register reg = iter.nextRegisterOperand().getRegister();
-					SSALocation loc = LocalLocation.FACTORY.createLocalLocation(reg);
+					SSALocation loc = SSALocation.LocalLocation.FACTORY.createLocalLocation(reg);
 					initializeLocation(loc);
 					SSADefinition  def =_q.getLastDefinitionFor(loc, quad, true);
 					Assert._assert(def != null);
@@ -739,7 +730,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			(quad.getOperator() instanceof Operator.Putstatic);
 	}
 	boolean isCall(Quad quad) {
-		return (quad.getOperator() instanceof Operator.Invoke);	// TODO: anything else?
+		return (quad.getOperator() instanceof Operator.Invoke);
 	}
 	private static String repeat(String string, int n) {
 		StringBuffer result = new StringBuffer();
@@ -814,6 +805,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                 BufferedReader r = new BufferedReader(new InputStreamReader(fi));
                 String line = r.readLine();
                 while(line != null){
+                    if(line.charAt(0) == '#') continue;
                     Application app = Application.create(line);
                     if(app != null){
                         addApplication(app);
@@ -826,18 +818,20 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                 System.err.println("Couldn't read file " + filename);
                 return;
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
-            }           
+                return;
+            } 
         }       
     }
     
     public abstract static class Application implements Runnable {
         private String _name;
+        protected IPSSABuilder _builder;
 
-        public Application(String name, String[] args){
+        public Application(IPSSABuilder builder, String name, String[] args){
             parseParams(args);
             _name = name;
+            _builder = builder;
         }
         public static Application create(String line) {
             StringTokenizer tokenizer = new StringTokenizer(line, " ");
@@ -860,13 +854,15 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                     app = (Application)c.newInstance();
                 } catch (InstantiationException e1) {
                     e1.printStackTrace();
+                    return null;
                 } catch (IllegalAccessException e1) {
                     e1.printStackTrace();
+                    return null;
                 }
             } catch (ClassNotFoundException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
-            }            
+                return null;
+            }
             
             if(app == null) {
                 System.err.println("Can't create an instance of " + className);
