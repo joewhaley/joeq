@@ -72,6 +72,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
         nullInstanceFields.add(jq_class.getOrCreateInstanceField("methodAccessor", "Lsun/reflect/MethodAccessor;"));
         jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
         nullInstanceFields.add(jq_class.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
+	// for some reason, thread local gets created during bootstrapping. (SoftReference)
+	// for now, just kill all thread locals.
+	jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
+	nullInstanceFields.add(jq_class.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
         return nullInstanceFields;
     }
     
@@ -79,9 +83,8 @@ public final class Interface extends ClassLib.ClassLibInterface {
         jq_NativeThread.USE_INTERRUPTER_THREAD = true;
         
 	// access the ISO-8859-1 character encoding, as it is used during bootstrapping
-        try {
-            "".getBytes("ISO-8859-1");
-        } catch (java.io.UnsupportedEncodingException x) { }
+	Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
+
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
