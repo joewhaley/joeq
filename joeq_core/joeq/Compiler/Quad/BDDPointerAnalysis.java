@@ -130,14 +130,11 @@ public class BDDPointerAnalysis {
     BDD H1andT3set;
 
     public BDDPointerAnalysis() {
-        this(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
+        this("buddy", DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
     }
     
-    public BDDPointerAnalysis(int nodeCount, int cacheSize) {
-        bdd = org.sf.javabdd.BDDFactory.init(nodeCount, cacheSize);
-        //bdd = org.sf.javabdd.TestBDDFactory.init(nodeCount, cacheSize);
-        //bdd = org.sf.javabdd.BuDDyFactory.init(nodeCount, cacheSize);
-        //bdd = org.sf.javabdd.CUDDFactory.init(nodeCount, cacheSize);
+    public BDDPointerAnalysis(String bddpackage, int nodeCount, int cacheSize) {
+        bdd = org.sf.javabdd.BDDFactory.init(bddpackage, nodeCount, cacheSize);
         
         bdd.setCacheRatio(8);
         bdd.setMaxIncrease(Math.min(2500000, nodeCount / 4));
