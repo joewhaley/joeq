@@ -164,6 +164,7 @@ public abstract class Solver {
         relationsToDumpTuples = new LinkedList();
         relationsToDumpNegatedTuples = new LinkedList();
         equivalenceRelations = new HashMap();
+        notequivalenceRelations = new HashMap();
         for (;;) {
             String s = in.readLine();
             if (s == null) break;
