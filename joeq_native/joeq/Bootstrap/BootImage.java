@@ -1248,10 +1248,10 @@ public class BootImage implements ObjectLayout, ELFConstants {
             e = new SymbolTableEntry("ctrl_break_handler", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
             symtab.addSymbol(e);
 
-            e = new SymbolTableEntry("joeq_code_startaddress", 0, 0, STB_GLOBAL, STT_FUNC, text);
+            e = new SymbolTableEntry("joeq_code_startaddress", 0, 0, STB_GLOBAL, STT_OBJECT, text);
             symtab.addSymbol(e);
 
-            e = new SymbolTableEntry("joeq_data_startaddress", 0, 0, STB_GLOBAL, STT_FUNC, data);
+            e = new SymbolTableEntry("joeq_data_startaddress", 0, 0, STB_GLOBAL, STT_OBJECT, data);
             symtab.addSymbol(e);
         }
 
