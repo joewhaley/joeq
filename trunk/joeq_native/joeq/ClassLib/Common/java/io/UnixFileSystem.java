@@ -58,9 +58,12 @@ public abstract class UnixFileSystem {
         return res != 0;
     }
 
+    public String canonicalize(String s) throws java.io.IOException {
+	// TODO.
+	return s;
+    }
+
     /*
-    public native String canonicalize(String s)
-        throws IOException;
     public native int getBooleanAttributes0(File file);
     public native boolean checkAccess(File file, boolean flag);
     public native boolean createFileExclusively(String s)
