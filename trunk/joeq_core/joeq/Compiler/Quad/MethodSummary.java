@@ -550,7 +550,7 @@ public class MethodSummary {
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
-            jq.Assert(m == Allocator.HeapAllocator._multinewarray || params.length == plo.length());
+            jq.Assert(m == Run_Time.Arrays._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
                 if (!params[i].isReferenceType() || params[i].isAddressType()) continue;
                 Register r = plo.get(i).getRegister();

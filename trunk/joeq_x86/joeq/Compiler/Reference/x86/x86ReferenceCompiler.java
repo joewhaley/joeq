@@ -2569,7 +2569,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         }
         asm.emitPUSH_i(dim);
         emitPushAddressOf(f);
-        emitCallRelative(HeapAllocator._multinewarray);
+        emitCallRelative(Run_Time.Arrays._multinewarray);
         // pop dim args, because the callee doesn't do it.
         asm.emit2_Reg_Mem(x86.LEA, ESP, dim<<2, ESP);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
