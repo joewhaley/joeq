@@ -1077,6 +1077,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                             il = null;
                         } else {
                             // extract instructions of method.
+                            if (TRACE) Debug.writeln("Extracting instructions of "+this_m);
                             il = new Bytecodes.InstructionList(this_m);
 
                             // update constant pool references in the instructions, and add them to our constant pool.
@@ -1106,6 +1107,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                             il = null;
                         } else {
                             // extract instructions of method.
+                            if (TRACE) Debug.writeln("Extracting instructions of "+this_m);
                             il = new Bytecodes.InstructionList(this_m);
 
                             // update constant pool references in the instructions, and add them to our constant pool.
@@ -1256,6 +1258,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (new_bc == null) {
                     Assert.UNREACHABLE("Method with empty bytecode !?");
                 } else {
+                    if (TRACE) Debug.writeln("Extracting instructions of "+new_m);
                     il = new Bytecodes.InstructionList(new_m);
 
                     // update constant pool references in instructions, and add them to our constant pool.
@@ -1342,6 +1345,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     Assert.UNREACHABLE("Method with empty bytecode !?");
                 } else {
                     // extract new instructions.
+                    if (TRACE) Debug.writeln("Extracting instructions of "+new_m);
                     il = new Bytecodes.InstructionList(new_m);
 
                     // update constant pool references in the instructions, and add them to our constant pool.
@@ -1653,6 +1657,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             }
             
             // extract instructions of method.
+            if (TRACE) Debug.writeln("Extracting instructions of "+that_m);
             Bytecodes.InstructionList il = new Bytecodes.InstructionList(that_m);
             
             // update constant pool references in the instructions, and add them to our constant pool.
@@ -1692,6 +1697,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             }
             
             // extract instruction list.
+            if (TRACE) Debug.writeln("Extracting instructions of "+this_m);
             Bytecodes.InstructionList il = new Bytecodes.InstructionList(this_m);
             
             // add constant pool references from instruction list.
@@ -1740,6 +1746,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 cpr.addCode(rebuilt_clinit);
                 
                 // extract instructions of method.
+                if (TRACE) Debug.writeln("Extracting instructions of "+that_m);
                 il = new Bytecodes.InstructionList(that_m);
                 
                 newStaticMethods.put(clinit, rebuilt_clinit);
@@ -1762,6 +1769,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     continue;
                 }
                 // extract instructions of method.
+                if (TRACE) Debug.writeln("Extracting instructions of "+that_m);
                 il = new Bytecodes.InstructionList(that_m);
                 
                 if (false) { //(this_m != null) {
@@ -1799,6 +1807,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             }
             
             // extract instruction list.
+            if (TRACE) Debug.writeln("Extracting instructions of "+this_m);
             Bytecodes.InstructionList il = new Bytecodes.InstructionList(this_m);
             
             // add constant pool references from instruction list.

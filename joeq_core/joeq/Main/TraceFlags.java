@@ -62,6 +62,10 @@ public abstract class TraceFlags {
             makeTrue("joeq.Class.jq_Array","TRACE");
             return i+1;
         }
+        if (args[i].equalsIgnoreCase("-TraceConstantPool")) {
+            makeTrue("joeq.Class.jq_ConstantPool","TRACE");
+            return i+1;
+        }
         if (args[i].equalsIgnoreCase("-TraceExceptions")) {
             makeTrue("joeq.Class.jq_CompiledCode","TRACE");
             makeTrue("joeq.Compiler.Reference.x86.x86ReferenceExceptionDeliverer","TRACE");

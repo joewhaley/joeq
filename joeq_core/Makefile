@@ -70,28 +70,28 @@ bootstrap:	joeq/Main/Bootstrapper.class
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx480M joeq.Main.Bootstrapper
 
 bootstrap-sun142-linux:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -ms320M -mx320M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_linux/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms320M -mx320M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/sun142_linux/classlist.txt
 
 bootstrap-sun14-linux:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun14_linux/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/sun14_linux/classlist.txt
 
 bootstrap-sun13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -ms200M -mx200M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -ms200M -mx200M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/sun13_linux/classlist.txt
 
 bootstrap-ibm13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/ibm13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/ibm13_linux/classlist.txt
 
 bootstrap-sun142-win32:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -ms200M -mx200M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms200M -mx200M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/sun142_win32/classlist.txt
 
 bootstrap-sun14-win32:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -ms180M -mx180M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun14_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms180M -mx180M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/sun14_win32/classlist.txt
 
 bootstrap-sun13-win32:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms120M -mx120M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun13_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms120M -mx120M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/sun13_win32/classlist.txt
 
 bootstrap-ibm13-win32:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -Xbootclasspath/a:$(JDK14SUPPORT_LIB)\;C:\\Program\ Files\\IBM\\Java13\\jre\\lib\\ext\\IBMJCEProvider.jar -ms150M -mx150M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/ibm13_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -Xbootclasspath/a:$(JDK14SUPPORT_LIB)\;C:\\Program\ Files\\IBM\\Java13\\jre\\lib\\ext\\IBMJCEProvider.jar -ms150M -mx150M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/ibm13_win32/classlist.txt
 
 ### RULES FOR BUILDING JAVADOC
 #
