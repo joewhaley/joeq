@@ -139,6 +139,7 @@ public class PA {
     boolean INCLUDE_UNKNOWN_TYPES = !System.getProperty("pa.unknowntypes", "yes").equals("no");
     boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
     boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
+    boolean ADD_ROOT_PLACEHOLDERS = !System.getProperty("pa.addrootplaceholders", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -811,6 +812,20 @@ public class PA {
         return result;
     }
     
+    public void addPlaceholdersForParams(jq_Method m) {
+        if (m.getBytecode() == null) return;
+        MethodSummary ms = MethodSummary.getSummary(m);
+        int opn = 1;
+        for (int i = 0; i < ms.getNumOfParams(); ++i) {
+            Node pn = ms.getParamNode(i);
+            if (pn == null) continue;
+            ConcreteTypeNode h = ConcreteTypeNode.get(pn.getDeclaredType(), null, new Integer(++opn));
+            int H_i = Hmap.get(h);
+            addToVP(pn, H_i);
+            System.out.println("Placeholder object for "+pn+": "+h);
+        }
+    }
+    
     public void visitMethod(jq_Method m) {
         if (alreadyVisited(m)) return;
         if (VerifyAssertions && cg != null)
@@ -1025,7 +1040,7 @@ public class PA {
                 type.prepare();
                 if (n instanceof ConcreteTypeNode && type instanceof jq_Class) {
                     addClassInitializer((jq_Class) type);
-                    addFinalizer((jq_Class) type);
+                    addFinalizer((jq_Class) type, n);
                 }
                 if (ADD_THREADS && type != jq_NullType.NULL_TYPE &&
                     (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
@@ -1197,12 +1212,15 @@ public class PA {
     }
     
     jq_NameAndDesc finalizer_method = new jq_NameAndDesc("finalize", "()V");
-    public void addFinalizer(jq_Class c) {
+    public void addFinalizer(jq_Class c, Node h) {
         if (!ADD_FINALIZERS) return;
         jq_Method m = c.getVirtualMethod(finalizer_method);
-        if (m != null) {
+        if (m != null && m.getBytecode() != null) {
             visitMethod(m);
             rootMethods.add(m);
+            Node p = MethodSummary.getSummary(m).getParamNode(0);
+            int H_i = Hmap.get(h);
+            addToVP(p, H_i);
         }
     }
     
@@ -2195,6 +2213,12 @@ public class PA {
         // Calculate the relations for the root methods.
         for (Iterator i = rootMethods.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
+            
+            // Add placeholder objects for each of the parameters of root methods.
+            if (ADD_ROOT_PLACEHOLDERS) {
+                addPlaceholdersForParams(m);
+            }
+
             visitMethod(m);
         }
         
