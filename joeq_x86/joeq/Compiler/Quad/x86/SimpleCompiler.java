@@ -1863,9 +1863,9 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         } else if (op instanceof Unary.INT_2BYTE) {
             asm.emit3_Reg_Reg(x86.MOVSX_r_r8, EAX, AL);
         } else if (op instanceof Unary.INT_2SHORT) {
-            asm.emit3_Reg_Reg(x86.MOVZX_r_r16, EAX, AX);
-        } else if (op instanceof Unary.INT_2CHAR) {
             asm.emit3_Reg_Reg(x86.MOVSX_r_r16, EAX, AX);
+        } else if (op instanceof Unary.INT_2CHAR) {
+            asm.emit3_Reg_Reg(x86.MOVZX_r_r16, EAX, AX);
         } else if (op instanceof Unary.FLOAT_2INTBITS) {
             // do nothing.
         } else if (op instanceof Unary.INTBITS_2FLOAT) {
