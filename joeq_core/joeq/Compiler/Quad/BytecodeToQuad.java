@@ -1558,6 +1558,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Monitor oper = op==MONITOR_ENTER ? (Monitor)Monitor.MONITORENTER.INSTANCE : (Monitor)Monitor.MONITOREXIT.INSTANCE;
         Quad q = Monitor.create(quad_cfg.getNewQuadID(), oper, op0);
         appendQuad(q);
+	mergeStateWithAllExHandlers(false);
     }
     public void visitMULTINEWARRAY(jq_Type f, char dim) {
         super.visitMULTINEWARRAY(f, dim);

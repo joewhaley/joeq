@@ -48,6 +48,13 @@ public class ExceptionHandler {
         this.handled_blocks = new java.util.ArrayList(numOfHandledBlocks);
         this.entry = entry;
     }
+    ExceptionHandler(jq_Class ex_type) {
+        if (ex_type == null)
+            this.exception_type = PrimordialClassLoader.getJavaLangThrowable();
+        else
+            this.exception_type = ex_type;
+        this.handled_blocks = new java.util.ArrayList();
+    }
 
     /** Returns the type of exception that this exception handler catches.
      * @return  the type of exception that this exception handler catches. */
@@ -58,6 +65,7 @@ public class ExceptionHandler {
     /** Returns the entry point for this exception handler.
      * @return  the entry point for this exception handler. */
     public BasicBlock getEntry() { return entry; }
+    public void setEntry(BasicBlock entry) {this.entry = entry; }
 
     public boolean mustCatch(jq_Class exType) {
         exType.load(); exType.verify(); exType.prepare();

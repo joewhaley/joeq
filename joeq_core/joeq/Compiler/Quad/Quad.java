@@ -53,6 +53,14 @@ public class Quad {
     public void setOp2(Operand op) { operand2 = op; }
     public void setOp3(Operand op) { operand3 = op; }
     public void setOp4(Operand op) { operand4 = op; }
+
+    public Quad copy(int id_number) {
+	Operand op1 = (operand1!=null)?operand1.copy():null;
+	Operand op2 = (operand2!=null)?operand2.copy():null;
+	Operand op3 = (operand3!=null)?operand3.copy():null;
+	Operand op4 = (operand4!=null)?operand4.copy():null;
+	return new Quad(id_number, operator, op1, op2, op3, op4);
+    }
     
     /** Return the operator for this quad. */
     public Operator getOperator() { return operator; }

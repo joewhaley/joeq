@@ -210,16 +210,41 @@ public class BasicBlock {
 	successors.add(b);
     }
     
+    public boolean removePredecessor(BasicBlock bb) {
+	jq.assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+        return predecessors.remove(bb);
+    }
     public void removePredecessor(int i) {
 	jq.assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         predecessors.remove(i);
+    }
+    public boolean removeSuccessor(BasicBlock bb) {
+	jq.assert(successors != null, "Cannot remove successor from exit basic block");
+        return successors.remove(bb);
     }
     public void removeSuccessor(int i) {
 	jq.assert(successors != null, "Cannot remove successor from exit basic block");
         successors.remove(i);
     }
+    public void removeAllPredecessors() {
+	jq.assert(predecessors != null, "Cannot remove predecessors from entry basic block");
+        predecessors.clear();
+    }
+    public void removeAllSuccessors() {
+	jq.assert(successors != null, "Cannot remove successors from exit basic block");
+        successors.clear();
+    }
         
-    
+    public int getNumberOfSuccessors() {
+	if (successors == null) return 0;
+	return successors.size();
+    }
+
+    public int getNumberOfPredecessors() {
+	if (predecessors == null) return 0;
+	return predecessors.size();
+    }
+
     /** Returns the fallthrough successor to this basic block, if it exists.
      * If there is none, returns null.
      * @return  the fallthrough successor, or null if there is none. */
@@ -265,6 +290,9 @@ public class BasicBlock {
         else
             return this.exception_handler_list = new ExceptionHandlerList(eh.getHandler(), this.exception_handler_list);
     }
+    void setExceptionHandlerList(ExceptionHandlerList ehl) {
+	this.exception_handler_list = ehl;
+    }
     
     /** Returns an iterator of the exception handlers that guard this basic block.
      * @see ExceptionHandlerIterator
@@ -272,6 +300,25 @@ public class BasicBlock {
     public ExceptionHandlerList getExceptionHandlers() {
         if (exception_handler_list == null) return ExceptionHandlerList.getEmptyList();
         return exception_handler_list;
+    }
+
+    /** Appends the list of exception handlers to the current list of
+     * exception handlers. Doesn't append if it is already there.
+     */
+    public void appendExceptionHandlerList(ExceptionHandlerList list) {
+	if (list == null || list.size() == 0) return;
+	ExceptionHandlerList p = this.exception_handler_list;
+	if (p == null) {
+	    this.exception_handler_list = list; return;
+	}
+	for (;;) {
+	    if (p == list) return;
+	    ExceptionHandlerList q = p.getParent();
+	    if (q == null) {
+		p.setParent(list); return;
+	    }
+	    p = q;
+	}
     }
     
     /** Returns the unique id number for this basic block.
