@@ -48,7 +48,9 @@ public final class Interface extends ClassLib.Common.Interface {
             nullStaticFields.add(k.getOrCreateStaticField("theUnsafe", "Lsun/misc/Unsafe;"));
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/reflect/UnsafeFieldAccessorImpl;");
             nullStaticFields.add(k.getOrCreateStaticField("unsafe", "Lsun/misc/Unsafe;"));
-            
+            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/nio/charset/Charset;");
+            nullStaticFields.add(k.getOrCreateStaticField("cache", "[Ljava/lang/Object;"));
+
             k = PrimordialClassLoader.getJavaLangClass();
             nullInstanceFields.add(k.getOrCreateInstanceField("declaredFields", "Ljava/lang/ref/SoftReference;"));
             nullInstanceFields.add(k.getOrCreateInstanceField("publicFields", "Ljava/lang/ref/SoftReference;"));
@@ -76,6 +78,22 @@ public final class Interface extends ClassLib.Common.Interface {
             
             // access the ISO-8859-1 character encoding, as it is used during bootstrapping
             PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
+        }
+        
+        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
+            jq_Class c = f.getDeclaringClass();
+            if (c == PrimordialClassLoader.loader.getBSType("Lsun/nio/cs/AbstractCharsetProvider;")) {
+                String fieldName = f.getName().toString();
+                if (fieldName.equals("cache")) {
+                    Object o2 = mappedObjects.get(o);
+                    if (o2 != null)
+                        return o2;
+		    o2 = new java.util.TreeMap(java.lang.String.CASE_INSENSITIVE_ORDER);
+                    mappedObjects.put(o, o2);
+                    return o2;
+                }
+            }
+            return super.mapInstanceField(o, f);
         }
     }
     

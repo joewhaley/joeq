@@ -270,7 +270,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
     public void find_reachable(int i) {
         for (; i<entries.size(); ++i) {
             if ((i % UPDATE_PERIOD) == 0) {
-                out.print("Completed: "+i+"/"+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"\r");
+                out.print("Scanning: "+i+"/"+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"\r");
             }
             Entry e = (Entry)entries.get(i);
             Object o = e.getObject();
@@ -322,7 +322,6 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 }
             }
         }
-        out.println("Completed: "+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
     }
 
     public int size() { return heapCurrent-startAddress; }
@@ -708,7 +707,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     name = "_"+name.substring(0, ind)+"@"+name.substring(ind+1);
                 else
                     name = name.substring(0, ind);
-                System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
+                if (TRACE) System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
                 ExternalReference r = new ExternalReference(f.getAddress(), name);
                 r.setSymbolIndex(++total);
                 extref.add(r);
@@ -729,7 +728,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 String name = f.getName().toString();
                 int ind = name.lastIndexOf('_');
                 name = name.substring(0, ind);
-                System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
+                if (TRACE) System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
                 ExternalReference r = new ExternalReference(f.getAddress(), name);
                 r.setSymbolIndex(++total);
                 extref.add(r);
@@ -848,13 +847,13 @@ public class BootImage implements ObjectLayout, ELFConstants {
         it = data_relocs.iterator();
         while (it.hasNext()) {
             if ((j % UPDATE_PERIOD) == 0) {
-                this.out.print("Completed: "+j+"/"+ndatareloc+" relocations\r");
+                this.out.print("Written: "+j+"/"+ndatareloc+" relocations\r");
             }
             Reloc r = (Reloc)it.next();
             r.dumpCOFF(out);
             ++j;
         }
-        this.out.println("Completed: "+ndatareloc+" relocations                    \n");
+        this.out.println("Written: "+ndatareloc+" relocations                    \n");
         jq.Assert(j == ndatareloc);
         
         // write line numbers
@@ -974,7 +973,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         int j=0;
         while (i.hasNext()) {
         if ((j % UPDATE_PERIOD) == 0) {
-        System.out.print("Completed: "+j+"/"+entries.size()+" objects, "+currentAddr+"/"+heapCurrent+" bytes\r");
+        System.out.print("Written: "+j+"/"+entries.size()+" objects, "+currentAddr+"/"+heapCurrent+" bytes\r");
         }
             Entry e = (Entry)i.next();
             Object o = e.getObject();
@@ -1125,7 +1124,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         while (currentAddr < heapCurrent) {
             out.writeByte((byte)0); ++currentAddr;
         }
-        System.out.println("Completed: "+j+" objects, "+heapCurrent+" bytes                    ");
+        System.out.println("Written: "+j+" objects, "+heapCurrent+" bytes                    ");
     }
     
     public static void write_bytes(ExtendedDataOutput out, String s, int len)

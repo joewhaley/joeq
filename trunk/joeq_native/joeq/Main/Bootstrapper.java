@@ -330,7 +330,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             }
         }
         loadtime += System.currentTimeMillis() - starttime;
-        System.out.println("Load time: "+loadtime);
+        System.out.println("Load time: "+loadtime/1000f+"s");
         
         // initialize the set of boot types
         jq.boot_types = classset;
@@ -399,7 +399,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             }
         }
         long sfinittime = System.currentTimeMillis() - starttime;
-        System.out.println("SF init time: "+sfinittime);
+        System.out.println("SF init time: "+sfinittime/1000f+"s");
         
         // turn off jq.Bootstrapping flag in image
         jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
@@ -418,7 +418,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             }
         }
         long compiletime = System.currentTimeMillis() - starttime;
-        System.out.println("Compile time: "+compiletime);
+        System.out.println("Compile time: "+compiletime/1000f+"s");
 
         // initialize and add the jq_Class/jq_Array/jq_Primitive objects for all
         // necessary types.
@@ -460,7 +460,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         objmap.find_reachable(0);
         
         long traversaltime = System.currentTimeMillis() - starttime;
-        System.out.println("Traversal time: "+traversaltime);
+        System.out.println("Scan time: "+traversaltime/1000f+"s");
 
         // now that we have visited all reachable objects, jq.on_vm_startup is built
         int index = objmap.numOfEntries();
@@ -474,9 +474,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         // all done with traversal, no more objects can be added to the image.
         objmap.disableAllocations();
         
-        System.out.println("number of objects = "+objmap.numOfEntries());
-        System.out.println("heap size = "+objmap.size());
-        System.out.println("code size = "+bca.size());
+        out.println("Scanned: "+objmap.numOfEntries()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
+        System.out.println("Image heap size = "+objmap.size());
+        System.out.println("Image code size = "+bca.size());
         
         // update code min/max addresses
         // don't use initStaticField because it (re-)adds relocs
@@ -494,7 +494,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             objmap.dumpELF((ExtendedDataOutput) dbfos, rootm);
         dbfos.close();
         long dumptime = System.currentTimeMillis() - starttime;
-        System.out.println("Dump time: "+dumptime);
+        System.out.println("Dump time: "+dumptime/1000f+"s");
         
         if (false) {
             it = classset.iterator();

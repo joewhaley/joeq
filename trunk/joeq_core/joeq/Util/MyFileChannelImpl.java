@@ -77,19 +77,19 @@ public class MyFileChannelImpl
      */
     public int read(ByteBuffer b) throws IOException {
         if (fis != null) {
-	    if (b instanceof MyHeapByteBuffer) {
-		if (!b.hasRemaining()) return 0;
-		byte[] ba = ((MyHeapByteBuffer) b).getBackingArray();
-		int offset = ((MyHeapByteBuffer) b).getOffset();
-		int position = b.position();
-		int limit = b.limit();
-		jq.Assert(position < limit);
-		int r = fis.read(ba, offset+position, limit-position);
-		if (r == -1) return -1;
-		b.position(position + r);
+            if (b instanceof MyHeapByteBuffer) {
+                if (!b.hasRemaining()) return 0;
+                byte[] ba = ((MyHeapByteBuffer) b).getBackingArray();
+                int offset = ((MyHeapByteBuffer) b).getOffset();
+                int position = b.position();
+                int limit = b.limit();
+                jq.Assert(position < limit);
+                int r = fis.read(ba, offset+position, limit-position);
+                if (r == -1) return -1;
+                b.position(position + r);
                 currentPosition += r;
-		return r;
-	    }
+                return r;
+            }
             int n = 0;
             for (;;) {
                 if (!b.hasRemaining()) return n;
@@ -131,19 +131,19 @@ public class MyFileChannelImpl
      */
     public int write(ByteBuffer b) throws IOException {
         if (fos != null) {
-	    if (b instanceof MyHeapByteBuffer) {
-		if (!b.hasRemaining()) return 0;
-		byte[] ba = ((MyHeapByteBuffer) b).getBackingArray();
-		int offset = ((MyHeapByteBuffer) b).getOffset();
-		int position = b.position();
-		int limit = b.limit();
-		int size = limit - position;
-		jq.Assert(size > 0);
-		fos.write(ba, offset+position, size);
-		b.position(limit);
+            if (b instanceof MyHeapByteBuffer) {
+                if (!b.hasRemaining()) return 0;
+                byte[] ba = ((MyHeapByteBuffer) b).getBackingArray();
+                int offset = ((MyHeapByteBuffer) b).getOffset();
+                int position = b.position();
+                int limit = b.limit();
+                int size = limit - position;
+                jq.Assert(size > 0);
+                fos.write(ba, offset+position, size);
+                b.position(limit);
                 currentPosition += size;
-		return size;
-	    }
+                return size;
+            }
             int n = 0;
             while (b.hasRemaining()) {
                 byte r = b.get();

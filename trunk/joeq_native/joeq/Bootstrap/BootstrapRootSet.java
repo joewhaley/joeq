@@ -279,6 +279,13 @@ public class BootstrapRootSet {
         // dunno why this doesn't show up
         addNecessaryType(Assembler.x86.Heap2HeapReference._class);
         
+        // JDK1.4: an instance of this class is created via reflection during VM initialization.
+        try {
+            c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
+            i_m = c.getOrCreateInstanceMethod("<init>", "()V");
+            addNecessaryMethod(i_m);
+        } catch (java.lang.NoClassDefFoundError x) { }
+        
         // tracing in the compiler uses these
         //c = jq._class; c.load(); c.verify(); c.prepare();
         //addToWorklist(jq._hex8);
