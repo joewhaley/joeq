@@ -21,6 +21,7 @@ public class ControlFlowGraph {
     
     private final BasicBlock[] basic_blocks;
     private final BasicBlock[] handler_entries;
+    private java.util.Map/*<BasicBlock, JSRInfo>*/ jsr_info;
     
     /** Creates new ControlFlowGraph */
     private ControlFlowGraph(int n_bb, int n_handlers) {
@@ -32,6 +33,16 @@ public class ControlFlowGraph {
     public BasicBlock getExit() { return basic_blocks[1]; }
     public int getNumberOfBasicBlocks() { return basic_blocks.length; }
     public BasicBlock getBasicBlock(int index) { return basic_blocks[index]; }
+
+    public void addJSRInfo(BasicBlock entry, BasicBlock exit, boolean[] locals) {
+        if (jsr_info == null) jsr_info = new java.util.HashMap();
+        JSRInfo nfo = new JSRInfo(entry, exit, locals);
+        jsr_info.put(entry, nfo);
+        jsr_info.put(exit, nfo);
+    }
+    public JSRInfo getJSRInfo(BasicBlock b) {
+        return (JSRInfo)jsr_info.get(b);
+    }
     
     public BasicBlock getBasicBlockByBytecodeIndex(int index) {
         // binary search

@@ -19,6 +19,8 @@ public class BasicBlock {
     BasicBlock[] predecessors;
     BasicBlock[] successors;
     ExceptionHandlerSet exception_handler_set;
+
+    boolean isSubroutineRet;
     
     int startingStackDepth;
     
@@ -33,7 +35,9 @@ public class BasicBlock {
     public int getNumberOfSuccessors() { return successors.length; }
     public BasicBlock getPredecessor(int i) { return predecessors[i]; }
     public BasicBlock getSuccessor(int i) { return successors[i]; }
+    public boolean isSubroutineRet() { return isSubroutineRet; }
     void setSubroutineRet(ControlFlowGraph cfg, BasicBlock jsub_bb) {
+        isSubroutineRet = true;
         jq.assert(this.successors.length == 0);
         this.successors = new BasicBlock[jsub_bb.predecessors.length];
         for (int i=0; i<this.successors.length; ++i) {
