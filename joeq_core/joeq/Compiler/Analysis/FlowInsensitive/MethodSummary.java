@@ -517,7 +517,7 @@ public class MethodSummary {
                         heapStore(base_r, src_r, null);
                     } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
-                        Object key = type;
+                        Object key = ((AConstOperand)val).getValue();
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                         if (n == null)
                             quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -543,7 +543,7 @@ public class MethodSummary {
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)src).getType();
-                    Object key = type;
+                    Object key = ((AConstOperand)src).getValue();
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                     if (n == null)
                         quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -566,7 +566,7 @@ public class MethodSummary {
                 setRegister(dest_r, getRegister(src_r));
             } else if (src instanceof AConstOperand) {
                 jq_Reference type = ((AConstOperand)src).getType();
-                Object key = type;
+                Object key = ((AConstOperand)src).getValue();
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                 if (n == null)
                     quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -675,7 +675,7 @@ public class MethodSummary {
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)src).getType();
-                    Object key = type;
+                    Object key = ((AConstOperand)src).getValue();
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                     if (n == null)
                         quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -692,8 +692,8 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Register dest_r = New.getDest(obj).getRegister();
             jq_Reference type = (jq_Reference)New.getType(obj).getType();
-            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
             Object key = obj;
+            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
             if (n == null)
                 quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
             setRegister(dest_r, n);
@@ -703,8 +703,8 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Register dest_r = NewArray.getDest(obj).getRegister();
             jq_Reference type = (jq_Reference)NewArray.getType(obj).getType();
-            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
             Object key = obj;
+            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
             if (n == null)
                 quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
             setRegister(dest_r, n);
@@ -727,7 +727,7 @@ public class MethodSummary {
                         heapStore(base_r, src_r, f);
                     } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
-                        Object key = type;
+                        Object key = ((AConstOperand)val).getValue();
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                         if (n == null)
                             quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -757,7 +757,7 @@ public class MethodSummary {
                     heapStore(my_global, src_r, f);
                 } else if (val instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)val).getType();
-                    Object key = type;
+                    Object key = ((AConstOperand)val).getValue();
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                     if (n == null)
                         quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -790,7 +790,7 @@ public class MethodSummary {
                 addToSet(r, getRegister(src_r));
             } else if (src instanceof AConstOperand) {
                 jq_Reference type = ((AConstOperand)src).getType();
-                Object key = type;
+                Object key = ((AConstOperand)src).getValue();
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                 if (n == null)
                     quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -849,7 +849,7 @@ public class MethodSummary {
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)src).getType();
-                    Object key = type;
+                    Object key = ((AConstOperand)src).getValue();
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                     if (n == null)
                         quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
@@ -1835,7 +1835,11 @@ public class MethodSummary {
         }
         if (s.equals("Field")) {
             jq_Field m = (jq_Field) jq_Member.read(st);
-            return new FieldNode(m);
+            int k = Integer.parseInt(st.nextToken());
+            Set locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+            while (--k >= 0)
+                locs.add(ProgramLocation.read(st));
+            return new FieldNode(m, locs);
         }
         if (s.equals("null")) {
             return null;
@@ -2407,6 +2411,10 @@ public class MethodSummary {
             this.locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             this.locs.add(q);
         }
+        private FieldNode(jq_Field f, Set s) {
+            this.f = f;
+            this.locs = s;
+        }
         private FieldNode(jq_Field f) {
             this.f = f;
             this.locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
@@ -2518,7 +2526,9 @@ public class MethodSummary {
         public jq_Field getField() { return f; }
         
         public jq_Method getDefiningMethod() {
-            return ((ProgramLocation) locs.iterator().next()).getMethod();
+            Iterator i = locs.iterator();
+            if (!i.hasNext()) return null;
+            return ((ProgramLocation) i.next()).getMethod();
         }
         
         public Set getLocations() { return locs; }
@@ -2583,6 +2593,12 @@ public class MethodSummary {
         public void write(DataOutput out) throws IOException {
             out.writeBytes("Field ");
             writeMember(out, (jq_Field) f);
+            out.writeBytes(" "+locs.size());
+            for (Iterator i=locs.iterator(); i.hasNext(); ) {
+                ProgramLocation pl = (ProgramLocation) i.next();
+                out.write(' ');
+                pl.write(out);
+            }
             // TODO: predecessors 
         }
     }
@@ -3591,15 +3607,7 @@ outer:
             java.util.Map.Entry e = (java.util.Map.Entry)i.next();
             ProgramLocation mc = (ProgramLocation) e.getKey();
             Object o = e.getValue();
-            if (o instanceof Set) {
-                Set s2 = NodeSet.FACTORY.makeSet();
-                for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
-                    Object o2 = m.get(j.next());
-                    Assert._assert(o2 != null);
-                    s2.add(o2);
-                }
-                o = s2;
-            } else if (o != null) {
+            if (o != null) {
                 o = m.get(o);
                 Assert._assert(o != null, e.toString());
             }
@@ -3610,15 +3618,7 @@ outer:
             java.util.Map.Entry e = (java.util.Map.Entry)i.next();
             ProgramLocation mc = (ProgramLocation) e.getKey();
             Object o = e.getValue();
-            if (o instanceof Set) {
-                Set s2 = NodeSet.FACTORY.makeSet();
-                for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
-                    Object o2 = m.get(j.next());
-                    Assert._assert(o2 != null);
-                    s2.add(o2);
-                }
-                o = s2;
-            } else if (o != null) {
+            if (o != null) {
                 o = m.get(o);
                 Assert._assert(o != null, e.toString());
             }
@@ -3776,15 +3776,7 @@ outer:
             Object rvn2 = e.getValue();
             if (TRACE_INST) out.println("Adding rvn for callee call: "+rvn2);
             Object o2 = caller.callToRVN.get(mc2);
-            if (o2 != null) {
-                Set set = NodeSet.FACTORY.makeSet();
-                if (o2 instanceof Set) set.addAll((Set) o2);
-                else set.add(o2);
-                if (rvn2 instanceof Set) set.addAll((Set) rvn2);
-                else set.add(rvn2);
-                rvn2 = set;
-                if (TRACE_INST) out.println("New rvn set: "+rvn2);
-            }
+            Assert._assert(o2 == null);
             caller.callToRVN.put(mc2, rvn2);
         }
         for (Iterator i=callee.callToTEN.entrySet().iterator(); i.hasNext(); ) {
@@ -3797,15 +3789,7 @@ outer:
             Object ten2 = e.getValue();
             if (TRACE_INST) out.println("Adding ten for callee call: "+ten2);
             Object o2 = caller.callToTEN.get(mc2);
-            if (o2 != null) {
-                Set set = NodeSet.FACTORY.makeSet();
-                if (o2 instanceof Set) set.addAll((Set) o2);
-                else set.add(o2);
-                if (ten2 instanceof Set) set.addAll((Set) ten2);
-                else set.add(ten2);
-                ten2 = set;
-                if (TRACE_INST) out.println("New ten set: "+ten2);
-            }
+            Assert._assert(o2 == null);
             caller.callToTEN.put(mc2, ten2);
         }
         
@@ -3836,60 +3820,46 @@ outer:
             }
         }
         
-        Set rvn;
-        Object rv = caller.callToRVN.get(mc);
-        if (rv instanceof Set) rvn = (Set) rv;
-        else if (rv == null) rvn = Collections.EMPTY_SET;
-        else rvn = Collections.singleton(rv);
-        if (!rvn.isEmpty()) {
+        ReturnValueNode rvn = caller.getRVN(mc);
+        if (rvn != null) {
             if (TRACE_INST) out.println("Replacing return value "+rvn+" by "+callee.returned);
-            for (Iterator j=rvn.iterator(); j.hasNext(); ) {
-                ReturnValueNode rvnn = (ReturnValueNode) j.next();
-                rvnn.replaceBy(callee.returned, removeCall);
-                if (caller.returned.contains(rvnn)) {
-                    if (TRACE_INST) out.println(rvnn+" is returned, updating returned set");
-                    if (removeCall) caller.returned.remove(rvnn);
-                    caller.returned.addAll(callee.returned);
-                }
-                if (caller.thrown.contains(rvnn)) {
-                    if (TRACE_INST) out.println(rvnn+" is thrown, updating thrown set");
-                    if (removeCall) caller.thrown.remove(rvnn);
-                    caller.thrown.addAll(callee.returned);
-                }
-                if (removeCall) {
-                    if (TRACE_INST) out.println("Removing old return value node "+rvnn+" from nodes list");
-                    caller.nodes.remove(rvnn);
-                }
-                if (VERIFY_ASSERTIONS && removeCall) caller.verifyNoReferences(rvnn);
+            rvn.replaceBy(callee.returned, removeCall);
+            if (caller.returned.contains(rvn)) {
+                if (TRACE_INST) out.println(rvn+" is returned, updating returned set");
+                if (removeCall) caller.returned.remove(rvn);
+                caller.returned.addAll(callee.returned);
             }
+            if (caller.thrown.contains(rvn)) {
+                if (TRACE_INST) out.println(rvn+" is thrown, updating thrown set");
+                if (removeCall) caller.thrown.remove(rvn);
+                caller.thrown.addAll(callee.returned);
+            }
+            if (removeCall) {
+                if (TRACE_INST) out.println("Removing old return value node "+rvn+" from nodes list");
+                caller.nodes.remove(rvn);
+            }
+            if (VERIFY_ASSERTIONS && removeCall) caller.verifyNoReferences(rvn);
         }
         
-        Set ten;
-        Object te = caller.callToTEN.get(mc);
-        if (te instanceof Set) ten = (Set) te;
-        else if (te == null) ten = Collections.EMPTY_SET;
-        else ten = Collections.singleton(te);
-        if (!ten.isEmpty()) {
+        ThrownExceptionNode ten = caller.getTEN(mc);
+        if (ten != null) {
             if (TRACE_INST) out.println("Replacing thrown exception "+ten+" by "+callee.thrown);
-            for (Iterator j=ten.iterator(); j.hasNext(); ) {
-                ThrownExceptionNode tenn = (ThrownExceptionNode) j.next();
-                tenn.replaceBy(callee.thrown, removeCall);
-                if (caller.returned.contains(tenn)) {
-                    if (TRACE_INST) out.println(tenn+" is returned, updating caller returned set");
-                    if (removeCall) caller.returned.remove(tenn);
-                    caller.returned.addAll(callee.thrown);
-                }
-                if (caller.thrown.contains(tenn)) {
-                    if (TRACE_INST) out.println(tenn+" is thrown, updating caller thrown set");
-                    if (removeCall) caller.thrown.remove(tenn);
-                    caller.thrown.addAll(callee.thrown);
-                }
-                if (removeCall) {
-                    if (TRACE_INST) out.println("Removing old thrown exception node "+tenn+" from nodes list");
-                    caller.nodes.remove(tenn);
-                }
-                if (VERIFY_ASSERTIONS && removeCall) caller.verifyNoReferences(tenn);
+            ten.replaceBy(callee.thrown, removeCall);
+            if (caller.returned.contains(ten)) {
+                if (TRACE_INST) out.println(ten+" is returned, updating caller returned set");
+                if (removeCall) caller.returned.remove(ten);
+                caller.returned.addAll(callee.thrown);
             }
+            if (caller.thrown.contains(ten)) {
+                if (TRACE_INST) out.println(ten+" is thrown, updating caller thrown set");
+                if (removeCall) caller.thrown.remove(ten);
+                caller.thrown.addAll(callee.thrown);
+            }
+            if (removeCall) {
+                if (TRACE_INST) out.println("Removing old thrown exception node "+ten+" from nodes list");
+                caller.nodes.remove(ten);
+            }
+            if (VERIFY_ASSERTIONS && removeCall) caller.verifyNoReferences(ten);
         }
         
         if (TRACE_INST) out.println("Adding all callee nodes: "+callee.nodes);
@@ -4170,14 +4140,7 @@ outer:
                 Assert.UNREACHABLE(e.toString());
             }
             Object o = e.getValue();
-            if (o instanceof Set) {
-                for (Iterator j=((Set) o).iterator(); j.hasNext(); ) {
-                    Object o2 = j.next();
-                    if (!nodes.containsKey(o2)) {
-                        Assert.UNREACHABLE(this.toString()+" ::: "+e.toString()+" ::: "+o2);
-                    }
-                }
-            } else if (o != null) {
+            if (o != null) {
                 if (!nodes.containsKey(o)) {
                     Assert.UNREACHABLE(e.toString());
                 }
@@ -4310,12 +4273,12 @@ outer:
                 }
             }
             if (n instanceof ReturnValueNode) {
-                if (!multiset_contains(callToRVN, n)) {
+                if (!callToRVN.containsValue(n)) {
                     Assert.UNREACHABLE(n.toString_long());
                 }
             }
             if (n instanceof ThrownExceptionNode) {
-                if (!multiset_contains(callToTEN, n)) {
+                if (!callToTEN.containsValue(n)) {
                     System.out.println(callToTEN);
                     Assert.UNREACHABLE(this.toString()+" ::: "+n.toString_long());
                 }
