@@ -12,6 +12,7 @@ import java.util.Map;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
 import jwutil.util.Assert;
 import net.sf.javabdd.BDD;
@@ -19,9 +20,9 @@ import net.sf.javabdd.BDD;
 public abstract class SubtypeHelper {
     protected PA pa;
     protected static boolean TRACE = true;
-    protected static final String OFFLINE = "offline";
-    protected static final String ONLINE = "online";
-    protected static final String KNOWN = "known";
+    protected static final String OFFLINE    = "offline";
+    protected static final String ONLINE     = "online";
+    protected static final String KNOWN      = "known";
 
     public SubtypeHelper(PA pa){
         this.pa = pa;
@@ -33,16 +34,20 @@ public abstract class SubtypeHelper {
         String desc = "L" + s + ";";
         return desc;
     }
-
     
     public abstract Collection getSubtypes(jq_Class clazz);
     
     public static class KnownClassesSubtypeHelper extends SubtypeHelper {
+        static final String kind = KNOWN;
         public KnownClassesSubtypeHelper(PA pa) {
             super(pa);
+            
+            if(TRACE) System.out.println("Instantiating a subtype helper of type " + kind);
         }
         
         public Collection getSubtypes(jq_Class t) {
+            if(TRACE) System.out.println("Requesting subtypes of class " + t);
+            
             Collection result = new LinkedList();
             int T1_i = pa.Tmap.get(t);
             BDD subtypes = pa.aT.relprod(pa.T1.ithVar(T1_i), pa.T1set);          // T2
@@ -63,12 +68,16 @@ public abstract class SubtypeHelper {
     
     public static class OnlineSubtypeHelper extends SubtypeHelper {    
         private Map/*<jq_Class, Collection<jq_Class>>*/ type2subtypeCache = new HashMap();
+        static final String kind = ONLINE;
 
         public OnlineSubtypeHelper(PA pa) {
             super(pa);
+            
+            if(TRACE) System.out.println("Instantiating a subtype helper of type " + kind);
         }
 
         public Collection getSubtypes(jq_Class clazz) {
+            if(TRACE) System.out.println("Requesting subtypes of class " + clazz);
             Collection result = (Collection) type2subtypeCache.get(clazz);
             if(result != null) {
                 return result;
@@ -111,11 +120,14 @@ public abstract class SubtypeHelper {
     }
     
     public static class OfflineSubtypeHelper extends SubtypeHelper {
-        static final String subtypeFileName = "subclasses.txt";
+        static final String subtypeFileName = "reversed_subclasses.txt";
         Map classes2subclasses = new HashMap(); 
         private boolean initialized = false;
+        final static String kind = OFFLINE;
         public OfflineSubtypeHelper(PA pa) {
-            super(pa);            
+            super(pa);
+            
+            if(TRACE) System.out.println("Instantiating a subtype helper of type " + kind);            
         }
         
         void initializeSubclasses() throws IOException {
@@ -125,8 +137,8 @@ public abstract class SubtypeHelper {
             String className = null;
             Collection subclassList = null;
             while ((s = r.readLine()) != null) {
-                if(s.startsWith("CLASS ")){
-                    className = s.substring("CLASS ".length() + 1, s.length());
+                if(s.startsWith("CLASS ")){                    
+                    className = s.substring("CLASS ".length(), s.indexOf(" ", "CLASS ".length() + 1));
                     subclassList = new LinkedList();
                     classes2subclasses.put(className, subclassList);
                 }else{
@@ -144,6 +156,7 @@ public abstract class SubtypeHelper {
          * @see joeq.Compiler.Analysis.IPA.SubtypeHelper#getSubtypes(joeq.Class.jq_Class)
          */
         public Collection getSubtypes(jq_Class clazz) {
+            if(TRACE) System.out.println("Requesting subtypes of class " + clazz);
             String className = clazz.getName();
             try {
                 initializeSubclasses();         // lazily initialize the subclasses
@@ -152,7 +165,20 @@ public abstract class SubtypeHelper {
                 return null;
             }
             
-            return (Collection) this.classes2subclasses.get(className);
+            Collection subtypeNames = (Collection) classes2subclasses.get(className);
+            if(subtypeNames == null){
+                System.err.println("No match for class \"" + className + "\" in " + subtypeFileName);
+                return null;
+            }
+            Collection result = new LinkedList();
+            for(Iterator iter = subtypeNames.iterator(); iter.hasNext();){
+                String subtypeName = (String) iter.next();
+                jq_Class subtypeClass = (jq_Class) jq_Class.parseType(subtypeName);
+                result.add(subtypeClass);
+            }
+            Assert._assert(result.size() == subtypeNames.size());
+            
+            return result;
         }
     }
 
@@ -170,5 +196,4 @@ public abstract class SubtypeHelper {
         Assert._assert(false, "Unknown kind: " + kind);
         return null;
     }
-
 }
