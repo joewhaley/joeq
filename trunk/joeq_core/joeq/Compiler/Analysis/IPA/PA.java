@@ -69,6 +69,7 @@ import joeq.Main.HostedVM;
 import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
+import jwutil.collections.Relation;
 import jwutil.graphs.GlobalPathNumbering;
 import jwutil.graphs.Navigator;
 import jwutil.graphs.PathNumbering;
@@ -1255,16 +1256,18 @@ public class PA {
                     m = fakeCloneIfNeeded(t);                                   // for t.clone()
                     addToCHA(T_bdd, Nmap.get(javaLangObject_fakeclone), m);     // for super.clone()
                 }
-                if(USE_BOGUS_SUMMARIES) {
+                if (m == null) continue;
+                
+                if(USE_BOGUS_SUMMARIES && m != null) {
 	                jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
 	                if(replacement != null) {
-						System.out.println("Replacing a summary of " + m + 
-						    				" with one for "+ replacement);
+						System.out.println("Replacing a call to " + m + 
+						    				" with a call to "+ replacement);
+						
 						addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
 						return;
 	                }
-                }
-                if (m == null) continue;
+                }                
                 addToCHA(T_bdd, N_i, m);
             }
             T_bdd.free();
