@@ -86,6 +86,7 @@ public class GenRelations {
         boolean CS = false;
         boolean FLY = false;
         boolean SSA = false;
+        boolean PARTIAL = false;
         int i;
         for (i = 0; i < args.length; ++i) {
             if (args[i].equalsIgnoreCase("addpass")) {
@@ -125,6 +126,7 @@ public class GenRelations {
             } else if (args[i].equals("-cs")) CS = true;
             else if (args[i].equals("-fly")) FLY = true;
             else if (args[i].equals("-ssa")) SSA = true;
+            else if (args[i].equals("-partial")) PARTIAL = true;
             else break;
         }
         if (i > 0) {
@@ -140,6 +142,11 @@ public class GenRelations {
         if (SSA) {
             System.setProperty("ssa", "yes");
             System.setProperty("pa.dumpssa", "yes");
+        }
+        if (PARTIAL) {
+            System.setProperty("pa.publicplaceholders", "5");
+            System.setProperty("pa.autodiscover", "no");
+            System.setProperty("pa.addinstancemethods", "yes");
         }
         String dumppath = System.getProperty("pa.dumppath");
         if (dumppath != null) {
@@ -164,9 +171,10 @@ public class GenRelations {
         System.out.println("Usage: java " + GenRelations.class.getName()
             + " <options> @<classlist>");
         System.out.println("Valid options:");
-        System.out.println(" -cs     context-sensitive");
-        System.out.println(" -fly    on-the-fly call graph");
-        System.out.println(" -ssa    also dump SSA representation");
+        System.out.println(" -cs       context-sensitive");
+        System.out.println(" -fly      on-the-fly call graph");
+        System.out.println(" -ssa      also dump SSA representation");
+        System.out.println(" -partial  partial program analysis");
         System.out.println("Other system properties:");
         System.out.println(" -Dpa.dumppath      where to save the relations");
         System.out.println(" -Dpa.icallgraph    location to load initial call graph, blank to force callgraph regeneration");

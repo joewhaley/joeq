@@ -4,7 +4,6 @@
 package joeq.Compiler.Analysis.IPA;
 
 import java.io.PrintStream;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,6 +58,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     
     public PAMethodSummary(PA pa, jq_Method m) {
         this.pa = pa;
+        this.TRACE = pa.TRACE;
+        this.TRACE_RELATIONS = pa.TRACE_RELATIONS;
         this.m = m;
         vP = pa.bdd.zero();
         L = pa.bdd.zero();
