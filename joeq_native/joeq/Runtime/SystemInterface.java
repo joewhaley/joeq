@@ -22,40 +22,40 @@ public abstract class SystemInterface {
 
     // NOTE: the order of the static fields here must match the bootstrap loader.
     
-    public static int/*Address*/ entry;
-    public static int/*Address*/ trap_handler;
-    public static int/*Address*/ debugmsg;
-    public static int/*Address*/ syscalloc;
-    public static int/*Address*/ die;
-    public static int/*Address*/ currentTimeMillis;
-    public static int/*Address*/ memcpy;
-    public static int/*Address*/ file_open;
-    public static int/*Address*/ file_readbytes;
-    public static int/*Address*/ file_writebyte;
-    public static int/*Address*/ file_writebytes;
-    public static int/*Address*/ file_sync;
-    public static int/*Address*/ file_seek;
-    public static int/*Address*/ file_close;
-    public static int/*Address*/ console_available;
-    public static int/*Address*/ main_argc;
-    public static int/*Address*/ main_argv_length;
-    public static int/*Address*/ main_argv;
-    public static int/*Address*/ fs_getdcwd;
-    public static int/*Address*/ fs_fullpath;
-    public static int/*Address*/ fs_gettruename;
-    public static int/*Address*/ fs_getfileattributes;
-    public static int/*Address*/ fs_access;
-    public static int/*Address*/ fs_getfiletime;
-    public static int/*Address*/ fs_stat_size;
-    public static int/*Address*/ fs_remove;
-    public static int/*Address*/ fs_opendir;
-    public static int/*Address*/ fs_readdir;
-    public static int/*Address*/ fs_closedir;
-    public static int/*Address*/ fs_mkdir;
-    public static int/*Address*/ fs_rename;
-    public static int/*Address*/ fs_chmod;
-    public static int/*Address*/ fs_setfiletime;
-    public static int/*Address*/ fs_getlogicaldrives;
+    public static int/*CodeAddress*/ entry_0;
+    public static int/*CodeAddress*/ trap_handler_8;
+    public static int/*CodeAddress*/ debugmsg_4;
+    public static int/*CodeAddress*/ syscalloc_4;
+    public static int/*CodeAddress*/ die_0;
+    public static int/*CodeAddress*/ currentTimeMillis_0;
+    public static int/*CodeAddress*/ mem_cpy_12;
+    public static int/*CodeAddress*/ file_open_12;
+    public static int/*CodeAddress*/ file_readbytes_12;
+    public static int/*CodeAddress*/ file_writebyte_8;
+    public static int/*CodeAddress*/ file_writebytes_12;
+    public static int/*CodeAddress*/ file_sync_4;
+    public static int/*CodeAddress*/ file_seek_16;
+    public static int/*CodeAddress*/ file_close_4;
+    public static int/*CodeAddress*/ console_available_0;
+    public static int/*CodeAddress*/ main_argc_0;
+    public static int/*CodeAddress*/ main_argv_length_4;
+    public static int/*CodeAddress*/ main_argv_8;
+    public static int/*CodeAddress*/ fs_getdcwd_12;
+    public static int/*CodeAddress*/ fs_fullpath_12;
+    public static int/*CodeAddress*/ fs_gettruename_4;
+    public static int/*CodeAddress*/ fs_getfileattributes_4;
+    public static int/*CodeAddress*/ fs_access_8;
+    public static int/*CodeAddress*/ fs_getfiletime_4;
+    public static int/*CodeAddress*/ fs_stat_size_4;
+    public static int/*CodeAddress*/ fs_remove_4;
+    public static int/*CodeAddress*/ fs_opendir_4;
+    public static int/*CodeAddress*/ fs_readdir_4;
+    public static int/*CodeAddress*/ fs_closedir_4;
+    public static int/*CodeAddress*/ fs_mkdir_4;
+    public static int/*CodeAddress*/ fs_rename_8;
+    public static int/*CodeAddress*/ fs_chmod_8;
+    public static int/*CodeAddress*/ fs_setfiletime_12;
+    public static int/*CodeAddress*/ fs_getlogicaldrives_0;
 
     public static final jq_Class _class;
     public static final jq_StaticField _entry;
@@ -63,9 +63,9 @@ public abstract class SystemInterface {
     public static final jq_StaticField _debugmsg;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/SystemInterface;");
-        _entry = _class.getOrCreateStaticField("entry", "I");
-        _trap_handler = _class.getOrCreateStaticField("trap_handler", "I");
-        _debugmsg = _class.getOrCreateStaticField("debugmsg", "I");
+        _entry = _class.getOrCreateStaticField("entry_0", "I");
+        _trap_handler = _class.getOrCreateStaticField("trap_handler_8", "I");
+        _debugmsg = _class.getOrCreateStaticField("debugmsg_4", "I");
     }
 
     public static void debugmsg(String msg) {
@@ -77,20 +77,20 @@ public abstract class SystemInterface {
     
     public static void debugmsg(byte[] msg) {
         Unsafe.pushArg(Unsafe.addressOf(msg));
-        try { Unsafe.invoke(debugmsg); } catch (Throwable t) {}
+        try { Unsafe.invoke(debugmsg_4); } catch (Throwable t) {}
     }
     
     public static int syscalloc(int size) {
         Unsafe.pushArg(size);
         try {
-            long r = Unsafe.invoke(syscalloc);
+            long r = Unsafe.invoke(syscalloc_4);
             return (int)r;
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     
     public static void die() {
-        try { Unsafe.invoke(die); } catch (Throwable t) { jq.UNREACHABLE(); }
+        try { Unsafe.invoke(die_0); } catch (Throwable t) { throw new InternalError(); }
     }
     
     public static byte[] toCString(String s) {
@@ -104,7 +104,7 @@ public abstract class SystemInterface {
         int len;
         for (len=0; (byte)Unsafe.peek(p+len)!=(byte)0; ++len) ;
         byte[] b = new byte[len];
-        memcpy(Unsafe.addressOf(b), p, len);
+        mem_cpy(Unsafe.addressOf(b), p, len);
         return new String(b);
     }
     
@@ -112,16 +112,16 @@ public abstract class SystemInterface {
         //if (jq.Bootstrapping)
         //    return System.currentTimeMillis();
         //else
-            try { return Unsafe.invoke(currentTimeMillis); } catch (Throwable t) { jq.UNREACHABLE(); }
+            try { return Unsafe.invoke(currentTimeMillis_0); } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
 
-    public static void memcpy(int to, int from, int size) {
+    public static void mem_cpy(int to, int from, int size) {
         Unsafe.pushArg(size);
         Unsafe.pushArg(from);
         Unsafe.pushArg(to);
         try {
-            Unsafe.invoke(memcpy);
+            Unsafe.invoke(mem_cpy_12);
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
 
@@ -140,7 +140,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(mode);
         Unsafe.pushArg(Unsafe.addressOf(filename));
         try {
-            return (int)Unsafe.invoke(file_open);
+            return (int)Unsafe.invoke(file_open_12);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -149,7 +149,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(startAddress);
         Unsafe.pushArg(fd);
         try {
-            return (int)Unsafe.invoke(file_readbytes);
+            return (int)Unsafe.invoke(file_readbytes_12);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -157,7 +157,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(b);
         Unsafe.pushArg(fd);
         try {
-            return (int)Unsafe.invoke(file_writebyte);
+            return (int)Unsafe.invoke(file_writebyte_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -166,14 +166,14 @@ public abstract class SystemInterface {
         Unsafe.pushArg(startAddress);
         Unsafe.pushArg(fd);
         try {
-            return (int)Unsafe.invoke(file_writebytes);
+            return (int)Unsafe.invoke(file_writebytes_12);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int file_sync(int fd) {
         Unsafe.pushArg(fd);
         try {
-            return (int)Unsafe.invoke(file_sync);
+            return (int)Unsafe.invoke(file_sync_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -186,21 +186,21 @@ public abstract class SystemInterface {
         Unsafe.pushArg((int)offset);       // lo
         Unsafe.pushArg(fd);
         try {
-            return Unsafe.invoke(file_seek);
+            return Unsafe.invoke(file_seek_16);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int file_close(int fd) {
         Unsafe.pushArg(fd);
         try {
-            return (int)Unsafe.invoke(file_close);
+            return (int)Unsafe.invoke(file_close_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     
     public static int console_available() {
         try {
-            long r = Unsafe.invoke(console_available);
+            long r = Unsafe.invoke(console_available_0);
             return (int)r;
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
@@ -208,14 +208,14 @@ public abstract class SystemInterface {
     
     public static int main_argc() {
         try {
-            return (int)Unsafe.invoke(main_argc);
+            return (int)Unsafe.invoke(main_argc_0);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int main_argv_length(int i) {
         Unsafe.pushArg(i);
         try {
-            return (int)Unsafe.invoke(main_argv_length);
+            return (int)Unsafe.invoke(main_argv_length_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -223,7 +223,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(Unsafe.addressOf(b));
         Unsafe.pushArg(i);
         try {
-            Unsafe.invoke(main_argv);
+            Unsafe.invoke(main_argv_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     
@@ -232,7 +232,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(Unsafe.addressOf(b));
         Unsafe.pushArg(i);
         try {
-            return (int)Unsafe.invoke(fs_getdcwd);
+            return (int)Unsafe.invoke(fs_getdcwd_12);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -241,14 +241,14 @@ public abstract class SystemInterface {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         Unsafe.pushArg(Unsafe.addressOf(b));
         try {
-            return (int)Unsafe.invoke(fs_fullpath);
+            return (int)Unsafe.invoke(fs_fullpath_12);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int fs_gettruename(String s) {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_gettruename);
+            return (int)Unsafe.invoke(fs_gettruename_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -262,7 +262,7 @@ public abstract class SystemInterface {
     public static int fs_getfileattributes(String s) {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_getfileattributes);
+            return (int)Unsafe.invoke(fs_getfileattributes_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -270,56 +270,56 @@ public abstract class SystemInterface {
         Unsafe.pushArg(mode);
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_access);
+            return (int)Unsafe.invoke(fs_access_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static long fs_getfiletime(String s) {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return Unsafe.invoke(fs_getfiletime);
+            return Unsafe.invoke(fs_getfiletime_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0L;
     }
     public static long fs_stat_size(String s) {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return Unsafe.invoke(fs_stat_size);
+            return Unsafe.invoke(fs_stat_size_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0L;
     }
     public static int fs_remove(String s) {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_remove);
+            return (int)Unsafe.invoke(fs_remove_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int fs_opendir(String s) {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_opendir);
+            return (int)Unsafe.invoke(fs_opendir_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int fs_readdir(int p) {
         Unsafe.pushArg(p);
         try {
-            return (int)Unsafe.invoke(fs_readdir);
+            return (int)Unsafe.invoke(fs_readdir_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int fs_closedir(int p) {
         Unsafe.pushArg(p);
         try {
-            return (int)Unsafe.invoke(fs_closedir);
+            return (int)Unsafe.invoke(fs_closedir_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int fs_mkdir(String s) {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_mkdir);
+            return (int)Unsafe.invoke(fs_mkdir_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -327,7 +327,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(Unsafe.addressOf(toCString(s1)));
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_rename);
+            return (int)Unsafe.invoke(fs_rename_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -338,7 +338,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(mode);
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_chmod);
+            return (int)Unsafe.invoke(fs_chmod_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
@@ -347,13 +347,13 @@ public abstract class SystemInterface {
         Unsafe.pushArg((int)time);       // lo
         Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
         try {
-            return (int)Unsafe.invoke(fs_setfiletime);
+            return (int)Unsafe.invoke(fs_setfiletime_12);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
     public static int fs_getlogicaldrives() {
         try {
-            return (int)Unsafe.invoke(fs_getlogicaldrives);
+            return (int)Unsafe.invoke(fs_getlogicaldrives_0);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
