@@ -216,6 +216,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     void dumpFieldDomains(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        dos.writeBytes("method "+(1L<<methodBits)+"\n");
         dos.writeBytes("quad "+(1L<<quadBits)+"\n");
         dos.writeBytes("op "+(1L<<opBits)+"\n");
         dos.writeBytes("reg "+(1L<<regBits)+"\n");
@@ -226,7 +227,12 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     void dumpRelations(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )\n");
+        if (GLOBAL_QUAD_NUMBERS) {
+            dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )\n");
+        } else {
+            dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )\n");
+        }
+        dos.writeBytes("m2q ( method : method , id : quad )\n");
         dos.close();
     }
     
