@@ -39,6 +39,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         String addToClassList = null;
         boolean TrimAllTypes = false;
 	boolean DUMP_COFF = false;
+        boolean USE_BYTECODE_TRIMMER = false;
 
 	// set bootstrapping flag first - lots of code depends on this flag.
         jq.Bootstrapping = true;
@@ -142,7 +143,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             err("root method not found: "+rootMethodClassName+"."+rootMethodName);
         
         Set classset = new HashSet();
-        Set memberset;
+        Set methodset;
         
         starttime = System.currentTimeMillis();
         if (addToClassList != null) {
@@ -179,7 +180,7 @@ public abstract class Bootstrapper implements ObjectLayout {
                     classset.add(t);
                 }
             }
-            memberset = new HashSet();
+            methodset = new HashSet();
             Iterator i = classset.iterator();
             while (i.hasNext()) {
                 jq_Type t = (jq_Type)i.next();
@@ -187,15 +188,15 @@ public abstract class Bootstrapper implements ObjectLayout {
                     jq_Class cl = (jq_Class)t;
                     jq_Method[] ms = cl.getDeclaredStaticMethods();
                     for (int k=0; k<ms.length; ++k) {
-                        memberset.add(ms[k]);
+                        methodset.add(ms[k]);
                     }
                     ms = cl.getDeclaredInstanceMethods();
                     for (int k=0; k<ms.length; ++k) {
-                        memberset.add(ms[k]);
+                        methodset.add(ms[k]);
                     }
                     ms = cl.getVirtualMethods();
                     for (int k=0; k<ms.length; ++k) {
-                        memberset.add(ms[k]);
+                        methodset.add(ms[k]);
                     }
                 }
             }
@@ -203,44 +204,54 @@ public abstract class Bootstrapper implements ObjectLayout {
             // traverse the code and data starting at the root set to find all necessary
             // classes and members.
             
-            Trimmer trim = new Trimmer(rootm, obj_trav, !TrimAllTypes, classset);
-            trim.go();
+            if (USE_BYTECODE_TRIMMER) {
+                Trimmer trim = new Trimmer(rootm, classset);
+                trim.go();
 
-            System.out.println("Number of instantiated types: "+trim.getInstantiatedTypes().size());
-            //System.out.println("Instantiated types: "+trim.getInstantiatedTypes());
+                BootstrapRootSet rs = trim.getRootSet();
+                System.out.println("Number of instantiated types: "+rs.getInstantiatedTypes().size());
+                //System.out.println("Instantiated types: "+rs.getInstantiatedTypes());
 
-            System.out.println("Number of necessary members: "+trim.getNecessaryMembers().size());
-            //System.out.println("Necessary members: "+trim.getNecessaryMembers());
+                System.out.println("Number of necessary methods: "+rs.getNecessaryMethods().size());
+                //System.out.println("Necessary methods: "+rs.getNecessaryMethods());
 
-            // find all used classes.
-            classset = trim.getNecessaryTypes();
+                System.out.println("Number of necessary fields: "+rs.getNecessaryFields().size());
+                //System.out.println("Necessary fields: "+rs.getNecessaryFields());
+                
+                // find all used classes.
+                classset = rs.getNecessaryTypes();
 
-            System.out.println("Number of necessary classes: "+classset.size());
-            //System.out.println("Necessary classes: "+classset);
+                System.out.println("Number of necessary classes: "+classset.size());
+                //System.out.println("Necessary classes: "+classset);
 
-            if (TrimAllTypes) {
-                // Trim all the types.
-                Iterator it = classset.iterator();
-                while (it.hasNext()) {
-                    jq_Type t = (jq_Type)it.next();
-                    System.out.println("Trimming type: "+t.getName());
-                    jq.assert(t.isPrepared());
-                    if (t.isClassType()) {
-                        ((jq_Class)t).trim(trim);
+                if (TrimAllTypes) {
+                    // Trim all the types.
+                    Iterator it = classset.iterator();
+                    while (it.hasNext()) {
+                        jq_Type t = (jq_Type)it.next();
+                        System.out.println("Trimming type: "+t.getName());
+                        jq.assert(t.isPrepared());
+                        if (t.isClassType()) {
+                            ((jq_Class)t).trim(rs);
+                        }
                     }
-                }
-                System.out.println("Number of instance fields kept: "+jq_Class.NumOfIFieldsKept);
-                System.out.println("Number of static fields kept: "+jq_Class.NumOfSFieldsKept);
-                System.out.println("Number of instance methods kept: "+jq_Class.NumOfIMethodsKept);
-                System.out.println("Number of static methods kept: "+jq_Class.NumOfSMethodsKept);
+                    System.out.println("Number of instance fields kept: "+jq_Class.NumOfIFieldsKept);
+                    System.out.println("Number of static fields kept: "+jq_Class.NumOfSFieldsKept);
+                    System.out.println("Number of instance methods kept: "+jq_Class.NumOfIMethodsKept);
+                    System.out.println("Number of static methods kept: "+jq_Class.NumOfSMethodsKept);
 
-                System.out.println("Number of instance fields eliminated: "+jq_Class.NumOfIFieldsEliminated);
-                System.out.println("Number of static fields eliminated: "+jq_Class.NumOfSFieldsEliminated);
-                System.out.println("Number of instance methods eliminated: "+jq_Class.NumOfIMethodsEliminated);
-                System.out.println("Number of static methods eliminated: "+jq_Class.NumOfSMethodsEliminated);
+                    System.out.println("Number of instance fields eliminated: "+jq_Class.NumOfIFieldsEliminated);
+                    System.out.println("Number of static fields eliminated: "+jq_Class.NumOfSFieldsEliminated);
+                    System.out.println("Number of instance methods eliminated: "+jq_Class.NumOfIMethodsEliminated);
+                    System.out.println("Number of static methods eliminated: "+jq_Class.NumOfSMethodsEliminated);
+                }
+
+                methodset = rs.getNecessaryMethods();
+            } else {
+                Compil3r.Quad.AndersenPointerAnalysis.INSTANCE.addToRootSet(Compil3r.Quad.CodeCache.getCode(rootm));
+                BootstrapRootSet rs = null;
+                methodset = rs.getNecessaryMethods();
             }
-            
-            memberset = trim.getNecessaryMembers();
         }
         loadtime += System.currentTimeMillis() - starttime;
         System.out.println("Load time: "+loadtime);
@@ -319,7 +330,7 @@ public abstract class Bootstrapper implements ObjectLayout {
 
         // compile versions of all necessary methods.
         starttime = System.currentTimeMillis();
-        it = memberset.iterator();
+        it = methodset.iterator();
         while (it.hasNext()) {
             jq_Member m = (jq_Member)it.next();
             if (m instanceof jq_Method) {
