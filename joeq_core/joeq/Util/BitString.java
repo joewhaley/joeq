@@ -78,10 +78,10 @@ public final class BitString implements Cloneable, java.io.Serializable {
     public static final byte popcount(long b) {
         long t, x;
         x = b;
-        x = x - ((x >> 1) & 0x55555555);
-        t = ((x >> 2) & 0x33333333);
-        x = (x & 0x33333333) + t;
-        x = (x + (x >> 4)) & 0x0F0F0F0F;
+        x = x - ((x >> 1) & 0x5555555555555555L);
+        t = ((x >> 2) & 0x3333333333333333L);
+        x = (x & 0x3333333333333333L) + t;
+        x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FL;
         x = x + (x >> 8);
         x = x + (x >> 16);
         x = x + (x >> 32);
@@ -578,10 +578,16 @@ public final class BitString implements Cloneable, java.io.Serializable {
                 t = bits[++j];
                 k += 1 << BITS_PER_UNIT;
             }
+            int t2 = (t ^ (-t));
+            int index = 31 - popcount(t2);
+            t &= t2;
+            return k + index;
+            /*
             int t2 = ~(t | (-t));
             int index = popcount(t2);
             t &= ~(t2 + 1);
             return k + index;
+             */
         }
         
     }
@@ -634,6 +640,6 @@ public final class BitString implements Cloneable, java.io.Serializable {
             return k + index;
         }
         
-	public boolean TRACE = false;
+	public static final boolean TRACE = false;
     }
 }

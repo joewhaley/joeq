@@ -46,1961 +46,423 @@ import jq;
  */
 public class SparsePointerAnalysis {
 
-    public static java.io.PrintStream out = System.out;
-    public static final boolean TRACE_INTRA = false;
-    public static final boolean TRACE_INTER = true;
-
     /** Creates new SparsePointerAnalysis */
     public SparsePointerAnalysis() {
     }
 
-    /** Visitor class to build an intramethod summary. */
-    public static final class BuildMethodSummary extends QuadVisitor.EmptyVisitor {
+    public static abstract class NodesQuery {
+        protected HashSet/*Node*/ constants;
+    }
+    
+    public static final class ConstantNodesQuery extends NodesQuery {
+        public ConstantNodesQuery(HashSet r) { this.constants = r; }
+    }
+    
+    public static abstract class ComposedNodesQuery extends NodesQuery {
+        protected LinkedList/*NodesQuery*/ subqueries;
         
-        /** The method that we are building a summary for. */
-        protected final jq_Method method;
-        /** The number of locals and number of registers. */
-        protected final int nLocals, nRegisters;
-        /** The parameter nodes. */
-        protected final ParamNode[] param_nodes;
-        /** The global node. */
-        protected final GlobalNode my_global;
-        /** The start states of the iteration. */
-        protected final State[] start_states;
-        /** The set of returned and thrown nodes. */
-        protected final HashSet returned, thrown;
-        /** The set of nodes that were ever passed as a parameter. */
-        protected final HashSet passedAsParameter;
-        /** The current basic block. */
-        protected BasicBlock bb;
-        /** The current state. */
-        protected State s;
-        /** Change bit for worklist iteration. */
-        protected boolean change;
-        
-        /** Returns the summary. Call this after iteration has completed. */
-        public AnalysisSummary getSummary() {
-            AnalysisSummary s = new AnalysisSummary(param_nodes, my_global, returned, thrown, passedAsParameter);
-            // merge global nodes.
-            if (my_global.accessPathEdges != null) {
-                for (Iterator i=my_global.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof FieldNode)
-                        GlobalNode.GLOBAL.addAccessPathEdge(f, (FieldNode)o);
-                    else
-                        GlobalNode.GLOBAL.addAccessPathEdges(f, (HashSet)o);
-                }
-            }
-            return s;
-        }
-        
-        /** Set the given local in the current state to point to the given node. */
-        protected void setLocal(int i, Node n) { s.registers[i] = n; }
-        /** Set the given register in the current state to point to the given node. */
-        protected void setRegister(Register r, Node n) {
-            int i = r.getNumber();
-            if (r.isTemp()) i += nLocals;
-            s.registers[i] = n;
-        }
-        /** Set the given register in the current state to point to the given node or set of nodes. */
-        protected void setRegister(Register r, Object n) {
-            int i = r.getNumber();
-            if (r.isTemp()) i += nLocals;
-            if (n instanceof HashSet) n = ((HashSet)n).clone();
-            else jq.assert(n instanceof Node);
-            s.registers[i] = n;
-        }
-        /** Get the node or set of nodes in the given register in the current state. */
-        protected Object getRegister(Register r) {
-            int i = r.getNumber();
-            if (r.isTemp()) i += nLocals;
-            return s.registers[i];
-        }
-
-        /** Build a summary for the given method. */
-        public BuildMethodSummary(ControlFlowGraph cfg) {
-            RegisterFactory rf = cfg.getRegisterFactory();
-            this.nLocals = rf.getLocalSize(PrimordialClassLoader.getJavaLangObject());
-            this.nRegisters = this.nLocals + rf.getStackSize(PrimordialClassLoader.getJavaLangObject());
-            this.method = cfg.getMethod();
-            this.start_states = new State[cfg.getNumberOfBasicBlocks()];
-            this.passedAsParameter = new HashSet();
-            this.s = this.start_states[0] = new State(this.nRegisters);
-            jq_Type[] params = this.method.getParamTypes();
-            this.param_nodes = new ParamNode[params.length];
-            for (int i=0, j=0; i<params.length; ++i, ++j) {
-                if (params[i].isReferenceType()) {
-                    setLocal(i, param_nodes[i] = new ParamNode(method, j, (jq_Reference)params[i]));
-                } else if (params[i].getReferenceSize() == 8) ++j;
-            }
-            this.my_global = new GlobalNode();
-            this.returned = new HashSet(); this.thrown = new HashSet();
-            
-            if (TRACE_INTRA) out.println("Building summary for "+this.method);
-            
-            // iterate until convergence.
-            List.BasicBlock rpo_list = cfg.reversePostOrder(cfg.entry());
-            for (;;) {
-                ListIterator.BasicBlock rpo = rpo_list.basicBlockIterator();
-                this.change = false;
-                while (rpo.hasNext()) {
-                    this.bb = rpo.nextBasicBlock();
-                    this.s = start_states[bb.getID()];
-                    if (this.s == null) {
-                        continue;
-                    }
-                    this.s = this.s.copy();
-                    /*
-                    if (this.bb.isExceptionHandlerEntry()) {
-                        java.util.Iterator i = cfg.getExceptionHandlersMatchingEntry(this.bb);
-                        jq.assert(i.hasNext());
-                        ExceptionHandler eh = (ExceptionHandler)i.next();
-                        CaughtExceptionNode n = new CaughtExceptionNode(eh);
-                        if (i.hasNext()) {
-                            HashSet set = new HashSet(); set.add(n);
-                            while (i.hasNext()) {
-                                eh = (ExceptionHandler)i.next();
-                                n = new CaughtExceptionNode(eh);
-                                set.add(n);
-                            }
-                            s.merge(nLocals, set);
-                        } else {
-                            s.merge(nLocals, n);
-                        }
-                    }
-                     */
-                    if (TRACE_INTRA) {
-                        out.println("State at beginning of "+this.bb+":");
-                        this.s.dump(out);
-                    }
-                    this.bb.visitQuads(this);
-                    ListIterator.BasicBlock succs = this.bb.getSuccessors().basicBlockIterator();
-                    while (succs.hasNext()) {
-                        BasicBlock succ = succs.nextBasicBlock();
-                        mergeWith(succ);
-                    }
-                }
-                if (!this.change) break;
-            }
-        }
-
-        /** Merge the current state into the start state for the given basic block.
-         *  If that start state is uninitialized, it is initialized with a copy of
-         *  the current state.  This updates the change flag if anything is changed. */
-        protected void mergeWith(BasicBlock succ) {
-            if (this.start_states[succ.getID()] == null) {
-                if (TRACE_INTRA) out.println(succ+" not yet visited.");
-                this.start_states[succ.getID()] = this.s.copy();
-                this.change = true;
-            } else {
-                if (TRACE_INTRA) out.println("merging out set of "+bb+" "+jq.hex8(this.s.hashCode())+" into in set of "+succ+" "+jq.hex8(this.start_states[succ.getID()].hashCode()));
-                if (this.start_states[succ.getID()].merge(this.s)) {
-                    if (TRACE_INTRA) out.println(succ+" in set changed");
-                    this.change = true;
-                }
-            }
-        }
-        
-        public static final boolean INSIDE_EDGES = false;
-        
-        /** Abstractly perform a heap load operation on the given base and field
-         *  with the given field node, putting the result in the given set. */
-        protected void heapLoad(HashSet result, Node base, jq_Field f, FieldNode fn) {
-            base.addAccessPathEdge(f, fn);
-            if (INSIDE_EDGES)
-                base.getEdges(f, result);
-        }
-        /** Abstractly perform a heap load operation corresponding to quad 'obj'
-         *  with the given destination register, bases and field.  The destination
-         *  register in the current state is changed to the result. */
-        protected void heapLoad(Quad obj, Register dest_r, HashSet base_s, jq_Field f) {
-            FieldNode fn = new FieldNode(f, obj);
-            HashSet result = new HashSet();
-            for (Iterator i=base_s.iterator(); i.hasNext(); ) {
-                heapLoad(result, (Node)i.next(), f, fn);
-            }
-            if (result.isEmpty()) {
-                setRegister(dest_r, fn);
-            } else {
-                result.add(fn);
-                setRegister(dest_r, result);
-            }
-        }
-        /** Abstractly perform a heap load operation corresponding to quad 'obj'
-         *  with the given destination register, base and field.  The destination
-         *  register in the current state is changed to the result. */
-        protected void heapLoad(Quad obj, Register dest_r, Node base_n, jq_Field f) {
-            FieldNode fn = new FieldNode(f, obj);
-            HashSet result = new HashSet();
-            heapLoad(result, base_n, f, fn);
-            if (result.isEmpty()) {
-                setRegister(dest_r, fn);
-            } else {
-                result.add(fn);
-                setRegister(dest_r, result);
-            }
-        }
-        /** Abstractly perform a heap load operation corresponding to quad 'obj'
-         *  with the given destination register, base register and field.  The
-         *  destination register in the current state is changed to the result. */
-        protected void heapLoad(Quad obj, Register dest_r, Register base_r, jq_Field f) {
-            Object o = getRegister(base_r);
-            if (o instanceof HashSet) {
-                heapLoad(obj, dest_r, (HashSet)o, f);
-            } else {
-                heapLoad(obj, dest_r, (Node)o, f);
-            }
-        }
-        
-        /** Abstractly perform a heap store operation of the given source node on
-         *  the given base node and field. */
-        protected void heapStore(Node base, Node src, jq_Field f) {
-            base.addEdge(f, src);
-        }
-        /** Abstractly perform a heap store operation of the given source nodes on
-         *  the given base node and field. */
-        protected void heapStore(Node base, HashSet src, jq_Field f) {
-            base.addEdges(f, (HashSet)src.clone());
-        }
-        /** Abstractly perform a heap store operation of the given source node on
-         *  the nodes in the given register in the current state and the given field. */
-        protected void heapStore(Register base_r, Node src_n, jq_Field f) {
-            Object base = getRegister(base_r);
-            if (base instanceof HashSet) {
-                for (Iterator i = ((HashSet)base).iterator(); i.hasNext(); ) {
-                    heapStore((Node)i.next(), src_n, f);
-                }
-            } else {
-                heapStore((Node)base, src_n, f);
-            }
-        }
-        /** Abstractly perform a heap store operation of the nodes in the given register
-         *  on the given base node and field. */
-        protected void heapStore(Node base, Register src_r, jq_Field f) {
-            Object src = getRegister(src_r);
-            if (src instanceof Node) {
-                heapStore(base, (Node)src, f);
-            } else {
-                heapStore(base, (HashSet)src, f);
-            }
-        }
-        /** Abstractly perform a heap store operation of the nodes in the given register
-         *  on the nodes in the given register in the current state and the given field. */
-        protected void heapStore(Register base_r, Register src_r, jq_Field f) {
-            Object base = getRegister(base_r);
-            Object src = getRegister(src_r);
-            if (src instanceof Node) {
-                heapStore(base_r, (Node)src, f);
-                return;
-            }
-            HashSet src_h = (HashSet)src;
-            if (base instanceof HashSet) {
-                for (Iterator i = ((HashSet)base).iterator(); i.hasNext(); ) {
-                    heapStore((Node)i.next(), src_h, f);
-                }
-            } else {
-                heapStore((Node)base, src_h, f);
-            }
-        }
-
-        /** Record that the nodes in the given register were passed to the given
-         *  method call as the given parameter. */
-        void passParameter(Register r, MethodCall m, int p) {
-            Object v = getRegister(r);
-            if (TRACE_INTRA) out.println("Passing "+r+" to "+m+" param "+p+": "+v);
-            if (v instanceof HashSet) {
-                for (Iterator i = ((HashSet)v).iterator(); i.hasNext(); ) {
-                    Node n = (Node)i.next();
-                    n.recordPassedParameter(m, p);
-                    passedAsParameter.add(n);
-                }
-            } else {
-                Node n = (Node)v;
-                n.recordPassedParameter(m, p);
-                passedAsParameter.add(n);
-            }
-        }
-        
-        /** Visit an array load instruction. */
-        public void visitALoad(Quad obj) {
-            if (obj.getOperator() instanceof Operator.ALoad.ALOAD_A) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register r = ALoad.getDest(obj).getRegister();
-                Operand o = ALoad.getBase(obj);
-                if (o instanceof RegisterOperand) {
-                    Register b = ((RegisterOperand)o).getRegister();
-                    heapLoad(obj, r, b, null);
-                } else {
-                    // base is not a register?!
-                }
-            }
-        }
-        /** Visit an array store instruction. */
-        public void visitAStore(Quad obj) {
-            if (obj.getOperator() instanceof Operator.AStore.ASTORE_A) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Operand base = AStore.getBase(obj);
-                Operand val = AStore.getValue(obj);
-                if (base instanceof RegisterOperand) {
-                    Register base_r = ((RegisterOperand)base).getRegister();
-                    if (val instanceof RegisterOperand) {
-                        Register src_r = ((RegisterOperand)val).getRegister();
-                        heapStore(base_r, src_r, null);
-                    } else {
-                        jq.assert(val instanceof AConstOperand);
-                        jq_Reference type = ((AConstOperand)val).getType();
-                        ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-                        heapStore(base_r, n, null);
-                    }
-                } else {
-                    // base is not a register?!
-                }
-            }
-        }
-        /** Visit a type cast check instruction. */
-        public void visitCheckCast(Quad obj) {
-            if (TRACE_INTRA) out.println("Visiting: "+obj);
-            Register dest_r = CheckCast.getDest(obj).getRegister();
-            Operand src = CheckCast.getSrc(obj);
-            // TODO: treat it like a move for now.
-            if (src instanceof RegisterOperand) {
-                Register src_r = ((RegisterOperand)src).getRegister();
-                setRegister(dest_r, getRegister(src_r));
-            } else {
-                jq.assert(src instanceof AConstOperand);
-                jq_Reference type = ((AConstOperand)src).getType();
-                ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-                setRegister(dest_r, n);
-            }
-        }
-        /** Visit a get instance field instruction. */
-        public void visitGetfield(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Getfield.GETFIELD_A) ||
-               (obj.getOperator() instanceof Operator.Getfield.GETFIELD_A_DYNLINK)) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register r = Getfield.getDest(obj).getRegister();
-                Operand o = Getfield.getBase(obj);
-                jq_Field f = Getfield.getField(obj).getField();
-                if (o instanceof RegisterOperand) {
-                    Register b = ((RegisterOperand)o).getRegister();
-                    heapLoad(obj, r, b, f);
-                } else {
-                    // base is not a register?!
-                }
-            }
-        }
-        /** Visit a get static field instruction. */
-        public void visitGetstatic(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Getstatic.GETSTATIC_A) ||
-               (obj.getOperator() instanceof Operator.Getstatic.GETSTATIC_A_DYNLINK)) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register r = Getstatic.getDest(obj).getRegister();
-                jq_Field f = Getstatic.getField(obj).getField();
-                heapLoad(obj, r, my_global, f);
-            }
-        }
-        /** Visit a type instance of instruction. */
-        public void visitInstanceOf(Quad obj) {
-            // skip for now.
-        }
-        /** Visit an invoke instruction. */
-        public void visitInvoke(Quad obj) {
-            if (TRACE_INTRA) out.println("Visiting: "+obj);
-            jq_Method m = Invoke.getMethod(obj).getMethod();
-            MethodCall mc = new MethodCall(m, obj);
-            jq_Type[] params = m.getParamTypes();
-            ParamListOperand plo = Invoke.getParamList(obj);
-            jq.assert(m == Allocator.HeapAllocator._multinewarray || params.length == plo.length());
-            for (int i=0; i<params.length; ++i) {
-                if (!params[i].isReferenceType()) continue;
-                Register r = plo.get(i).getRegister();
-                passParameter(r, mc, i);
-            }
-            if (m.getReturnType().isReferenceType()) {
-                RegisterOperand dest = Invoke.getDest(obj);
-                if (dest != null) {
-                    Register dest_r = dest.getRegister();
-                    ReturnValueNode n = new ReturnValueNode(mc);
-                    setRegister(dest_r, n);
-                }
-            }
-        }
-        /** Visit a register move instruction. */
-        public void visitMove(Quad obj) {
-            if (obj.getOperator() instanceof Operator.Move.MOVE_A) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register dest_r = Move.getDest(obj).getRegister();
-                Operand src = Move.getSrc(obj);
-                if (src instanceof RegisterOperand) {
-                    Register src_r = ((RegisterOperand)src).getRegister();
-                    setRegister(dest_r, getRegister(src_r));
-                } else {
-                    jq.assert(src instanceof AConstOperand);
-                    jq_Reference type = ((AConstOperand)src).getType();
-                    ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-                    setRegister(dest_r, n);
-                }
-            }
-        }
-        /** Visit an object allocation instruction. */
-        public void visitNew(Quad obj) {
-            if (TRACE_INTRA) out.println("Visiting: "+obj);
-            Register dest_r = New.getDest(obj).getRegister();
-            jq_Reference type = (jq_Reference)New.getType(obj).getType();
-            ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-            setRegister(dest_r, n);
-        }
-        /** Visit an array allocation instruction. */
-        public void visitNewArray(Quad obj) {
-            if (TRACE_INTRA) out.println("Visiting: "+obj);
-            Register dest_r = NewArray.getDest(obj).getRegister();
-            jq_Reference type = (jq_Reference)NewArray.getType(obj).getType();
-            ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-            setRegister(dest_r, n);
-        }
-        /** Visit a put instance field instruction. */
-        public void visitPutfield(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Putfield.PUTFIELD_A) ||
-               (obj.getOperator() instanceof Operator.Putfield.PUTFIELD_A_DYNLINK)) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Operand base = Putfield.getBase(obj);
-                Operand val = Putfield.getSrc(obj);
-                jq_Field f = Putfield.getField(obj).getField();
-                if (base instanceof RegisterOperand) {
-                    Register base_r = ((RegisterOperand)base).getRegister();
-                    if (val instanceof RegisterOperand) {
-                        Register src_r = ((RegisterOperand)val).getRegister();
-                        heapStore(base_r, src_r, f);
-                    } else {
-                        jq.assert(val instanceof AConstOperand);
-                        jq_Reference type = ((AConstOperand)val).getType();
-                        ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-                        heapStore(base_r, n, f);
-                    }
-                } else {
-                    // base is not a register?!
-                }
-            }
-        }
-        /** Visit a put static field instruction. */
-        public void visitPutstatic(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Putstatic.PUTSTATIC_A) ||
-               (obj.getOperator() instanceof Operator.Putstatic.PUTSTATIC_A_DYNLINK)) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Operand val = Putstatic.getSrc(obj);
-                jq_Field f = Putstatic.getField(obj).getField();
-                if (val instanceof RegisterOperand) {
-                    Register src_r = ((RegisterOperand)val).getRegister();
-                    heapStore(my_global, src_r, f);
-                } else {
-                    jq.assert(val instanceof AConstOperand);
-                    jq_Reference type = ((AConstOperand)val).getType();
-                    ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-                    heapStore(my_global, n, f);
-                }
-            }
-        }
-        
-        static void addToSet(HashSet s, Object o) {
-            if (o instanceof HashSet) s.addAll((HashSet)o);
-            else s.add(o);
-        }
-        
-        public void visitReturn(Quad obj) {
-            Operand src = Return.getSrc(obj);
-            HashSet r;
-            if (obj.getOperator() == Return.RETURN_A.INSTANCE) r = returned;
-            else if (obj.getOperator() == Return.THROW_A.INSTANCE) r = thrown;
-            else return;
-            if (TRACE_INTRA) out.println("Visiting: "+obj);
-            if (src instanceof RegisterOperand) {
-                Register src_r = ((RegisterOperand)src).getRegister();
-                addToSet(r, getRegister(src_r));
-            } else {
-                jq.assert(src instanceof AConstOperand);
-                jq_Reference type = ((AConstOperand)src).getType();
-                ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
-                r.add(n);
-            }
-        }
-            
-        public void visitSpecial(Quad obj) {
-            if (obj.getOperator() == Special.GET_THREAD_BLOCK.INSTANCE) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
-                ConcreteTypeNode n = new ConcreteTypeNode(Scheduler.jq_Thread._class, obj);
-                setRegister(dest_r, n);
-            } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
-                UnknownTypeNode n = new UnknownTypeNode(Clazz.jq_Reference._class, obj);
-                setRegister(dest_r, n);
-            }
-        }
-        public void visitUnary(Quad obj) {
-            if (obj.getOperator() == Unary.INT_2OBJECT.INSTANCE) {
-                if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register dest_r = Unary.getDest(obj).getRegister();
-                UnknownTypeNode n = new UnknownTypeNode(PrimordialClassLoader.getJavaLangObject(), obj);
-                setRegister(dest_r, n);
-            }
-        }
-        public void visitExceptionThrower(Quad obj) {
-            // special case for invocation.
-            if (obj.getOperator() instanceof Invoke) {
-                jq_Method m = Invoke.getMethod(obj).getMethod();
-                MethodCall mc = new MethodCall(m, obj);
-                ThrownExceptionNode n = new ThrownExceptionNode(mc);
-                ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
-                while (eh.hasNext()) {
-                    ExceptionHandler h = eh.nextExceptionHandler();
-                    this.mergeWith(h.getEntry());
-                    this.start_states[h.getEntry().getID()].merge(nLocals, n);
-                    if (h.mustCatch(Bootstrap.PrimordialClassLoader.getJavaLangThrowable()))
-                        return;
-                }
-                this.thrown.add(n);
-                return;
-            }
-            ListIterator.jq_Class xs = obj.getThrownExceptions().classIterator();
-            while (xs.hasNext()) {
-                jq_Class x = xs.nextClass();
-                UnknownTypeNode n = new UnknownTypeNode(x, obj);
-                ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
-                boolean caught = false;
-                while (eh.hasNext()) {
-                    ExceptionHandler h = eh.nextExceptionHandler();
-                    if (h.mayCatch(x)) {
-                        this.mergeWith(h.getEntry());
-                        this.start_states[h.getEntry().getID()].merge(nLocals, n);
-                    }
-                    if (h.mustCatch(x)) {
-                        caught = true;
-                        break;
-                    }
-                }
-                if (!caught) this.thrown.add(n);
-            }
+        public void addResult(ComposedNodesQuery cnq) {
+            this.constants.addAll(cnq.constants);
+            this.subqueries.addAll(cnq.subqueries);
         }
         
     }
     
-    /** Represents a particular method call. */
-    public static class MethodCall {
-        final jq_Method m; final Quad q;
-        public MethodCall(jq_Method m, Quad q) {
-            this.m = m; this.q = q;
-        }
-        public int hashCode() { return (q==null)?-1:q.hashCode(); }
-        public boolean equals(MethodCall that) { return this.q == that.q; }
-        public boolean equals(Object o) { if (o instanceof MethodCall) return equals((MethodCall)o); return false; }
-        public String toString() { return "quad "+((q==null)?-1:q.getID())+" "+m.getName()+"()"; }
+    public static abstract class DependentNodesQuery extends ComposedNodesQuery {
+        // maps from a query to the queries that consume the result.
+        protected HashMap/*<Query, HashSet<Query>>*/ queryToConsumers;
     }
     
-    /** Represents a particular parameter passed to a particular method call. */
-    public static class PassedParameter {
-        final MethodCall m; final int paramNum;
-        public PassedParameter(MethodCall m, int paramNum) {
-            this.m = m; this.paramNum = paramNum;
-        }
-        public int hashCode() { return m.hashCode() ^ paramNum; }
-        public boolean equals(PassedParameter that) { return this.m.equals(that.m) && this.paramNum == that.paramNum; }
-        public boolean equals(Object o) { if (o instanceof PassedParameter) return equals((PassedParameter)o); return false; }
-        public String toString() { return "Param "+paramNum+" for "+m; }
+    public static class NonVirtualCallTargetsQuery extends CallTargetsQuery {
+        private jq_Method target;
+        NonVirtualCallTargetsQuery(jq_Method m) { this.target = m; }
     }
     
-    public abstract static class Node implements Cloneable {
-        /** Map from fields to sets of predecessors on that field. 
-         *  This only includes inside edges; outside edge predecessors are in FieldNode. */
-        HashMap predecessors;
-        /** Set of passed parameters for this node. */
-        HashSet passedParameters;
-        /** Map from fields to sets of inside edges from this node on that field. */
-        HashMap addedEdges;
-        /** Map from fields to sets of outside edges from this node on that field. */
-        HashMap accessPathEdges;
-        
-        protected Node() {}
-        protected Node(Node n) {
-            this.predecessors = n.predecessors;
-            this.passedParameters = n.passedParameters;
-            this.addedEdges = n.addedEdges;
-            this.accessPathEdges = n.accessPathEdges;
+    public static class VirtualCallTargetsQuery extends CallTargetsQuery {
+        HashSet receiverNodes;
+        VirtualCallTargetsQuery(HashSet nodes) { this.receiverNodes = nodes; }
+    }
+    
+    public static abstract class CallTargetsQuery {
+        public CallTargetsQuery create(AnalysisSummary s, Quad q) {
+            jq_Method target = Invoke.getMethod(q).getMethod();
+            if (!((Invoke)q.getOperator()).isVirtual()) {
+                return new NonVirtualCallTargetsQuery(target);
+            }
+            // find the set of nodes for the 'this' pointer.
+            MethodCall mc = new MethodCall(target, q);
+            PassedParameter pp = new PassedParameter(mc, 0);
+            HashSet nodes = new HashSet();
+            s.getNodes(pp, nodes);
+            return new VirtualCallTargetsQuery(s, nodes);
         }
         
-        /** Replace this node by the given set of nodes.  All inside and outside
-         *  edges to and from this node are replaced by sets of edges to and from
-         *  the nodes in the set.  The passed parameter set of this node is also
-         *  added to every node in the given set. */
-        public void replaceBy(HashSet set) {
-            if (this.predecessors != null) {
-                for (Iterator i=this.predecessors.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        Node that = (Node)o;
-                        if (that == this) {
-                            // add self-cycles on f to all nodes in set.
-                            for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                Node k = (Node)j.next();
-                                k.addEdge(f, k);
-                            }
-                            i.remove();
-                            continue;
-                        }
-                        that.removeEdge(f, this);
-                        for (Iterator j=set.iterator(); j.hasNext(); ) {
-                            that.addEdge(f, (Node)j.next());
-                        }
-                    } else {
-                        for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
-                            Node that = (Node)k.next();
-                            if (that == this) {
-                                // add self-cycles on f to all mapped nodes.
-                                for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                    Node k2 = (Node)j.next();
-                                    k2.addEdge(f, k2);
-                                }
-                                k.remove();
-                                continue;
-                            }
-                            that.removeEdge(f, this);
-                            for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                that.addEdge(f, (Node)j.next());
-                            }
-                        }
-                    }
-                }
-            }
-            if (this.addedEdges != null) {
-                for (Iterator i=this.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        Node that = (Node)o;
-                        jq.assert(that != this); // cyclic edges handled above.
-                        this.removeEdge(f, that);
-                        for (Iterator j=set.iterator(); j.hasNext(); ) {
-                            that.addEdge(f, (Node)j.next());
-                        }
-                    } else {
-                        for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
-                            Node that = (Node)k.next();
-                            jq.assert(that != this); // cyclic edges handled above.
-                            this.removeEdge(f, that);
-                            for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                that.addEdge(f, (Node)j.next());
-                            }
-                        }
-                    }
-                }
-            }
-            if (this.accessPathEdges != null) {
-                for (Iterator i=this.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        Node that = (Node)o;
-                        jq.assert(that != this); // cyclic edges handled above.
-                        this.removeEdge(f, that);
-                        for (Iterator j=set.iterator(); j.hasNext(); ) {
-                            that.addAccessPathEdge(f, (FieldNode)j.next());
-                        }
-                    } else {
-                        for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
-                            Node that = (Node)k.next();
-                            jq.assert(that != this); // cyclic edges handled above.
-                            this.removeEdge(f, that);
-                            for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                that.addAccessPathEdge(f, (FieldNode)j.next());
-                            }
-                        }
-                    }
-                }
-            }
-            if (this.passedParameters != null) {
-                for (Iterator i=this.passedParameters.iterator(); i.hasNext(); ) {
-                    PassedParameter pp = (PassedParameter)i.next();
-                    for (Iterator j=set.iterator(); j.hasNext(); ) {
-                        ((Node)j.next()).recordPassedParameter(pp);
-                    }
-                }
-            }
+        private CallTargetsQuery(Quad q) {
+        }
+        public void doIt() {
+            // find the set of types for those nodes.
+            NodesTypesQuery ntq = new NodesTypesQuery(summary, nodes);
+            spawnQuery(ntq);
         }
         
-        /** Helper function to update map m given an update map um. */
-        static void updateMap(HashMap um, Iterator i, HashMap m) {
-            while (i.hasNext()) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                jq_Field f = (jq_Field)e.getKey();
-                Object o = e.getValue();
-                if (o instanceof Node) {
-                    m.put(f, um.get(o));
+        public void receiveResult(TypesQueryResult types, Node n) {
+            jq_Method target = Invoke.getMethod(q).getMethod();
+            for (Iterator i = type_result.iterator(); i.hasNext(); ) {
+                jq_Reference r = (jq_Reference)i.next();
+                r.load(); r.verify(); r.prepare();
+                jq_Method resolved_target = r.getVirtualMethod(target.getNameAndDesc());
+                if (resolved_target != null) {
+                    if (resolved_target.getBytecode() != null) {
+                        if (result.add(resolved_target)) change = true;
+                    }
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                        m.put(f, um.get(j.next()));
-                    }
+                    if (TRACE_INTER) out.println("Invalid call! "+r+" on target "+target);
                 }
             }
         }
+    }
+    
+    public static class SimplifyNodesQuery extends ComposedNodesQuery {
         
-        /** Update all predecessor and successor nodes with the given update map.
-         *  Also clones the passed parameter set.
-         */
-        public void update(HashMap um) {
-            HashMap m = this.predecessors;
-            if (m != null) {
-                this.predecessors = new HashMap();
-                updateMap(um, m.entrySet().iterator(), this.predecessors);
-            }
-            m = this.addedEdges;
-            if (m != null) {
-                this.addedEdges = new HashMap();
-                updateMap(um, m.entrySet().iterator(), this.addedEdges);
-            }
-            m = this.accessPathEdges;
-            if (m != null) {
-                this.accessPathEdges = new HashMap();
-                updateMap(um, m.entrySet().iterator(), this.accessPathEdges);
-            }
-            if (this.passedParameters != null) {
-                this.passedParameters = (HashSet)this.passedParameters.clone();
-            }
+        /** The summary that contains the set of nodes in question. */
+        private AnalysisSummary summary;
+        /** The set of nodes in question. */
+        private HashSet setOfNodes;
+        
+        public SimplifyNodesQuery create(AnalysisSummary s, HashSet s_nodes) {
+            return new SimplifyNodesQuery(s, s_nodes);
         }
         
-        /** Return the declared type of this node. */
-        public abstract jq_Reference getDeclaredType();
-        
-        /** Return true if this node equals another node.
-         *  Two nodes are equal if they have all the same edges and equivalent passed
-         *  parameter sets.
-         */
-        public boolean equals(Node that) {
-            if (this.predecessors != that.predecessors) {
-                if ((this.predecessors == null) || (that.predecessors == null)) return false;
-                if (!this.predecessors.equals(that.predecessors)) return false;
-            }
-            if (this.passedParameters != that.passedParameters) {
-                if ((this.passedParameters == null) || (that.passedParameters == null)) return false;
-                if (!this.passedParameters.equals(that.passedParameters)) return false;
-            }
-            if (this.addedEdges != that.addedEdges) {
-                if ((this.addedEdges == null) || (that.addedEdges == null)) return false;
-                if (!this.addedEdges.equals(that.addedEdges)) return false;
-            }
-            if (this.accessPathEdges != that.accessPathEdges) {
-                if ((this.accessPathEdges == null) || (that.accessPathEdges == null)) return false;
-                if (!this.accessPathEdges.equals(that.accessPathEdges)) return false;
-            }
-            return true;
-        }
-        public boolean equals(Object o) {
-            if (o instanceof Node) return equals((Node)o);
-            return false;
-        }
-        /** Return a shallow copy of this node. */
-        public Object clone() { return this.copy(); }
-        
-        /** Return a shallow copy of this node. */
-        public abstract Node copy();
-
-        /** Remove the given predecessor node on the given field from the predecessor set.
-         *  Returns true if that predecessor existed, false otherwise. */
-        public boolean removePredecessor(jq_Field m, Node n) {
-            if (predecessors == null) return false;
-            Object o = predecessors.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
-            else if (o == n) { predecessors.remove(m); return true; }
-            else return false;
-        }
-        /** Add the given predecessor node on the given field to the predecessor set.
-         *  Returns true if that predecessor didn't already exist, false otherwise. */
-        public boolean addPredecessor(jq_Field m, Node n) {
-            if (predecessors == null) predecessors = new HashMap();
-            Object o = predecessors.get(m);
-            if (o == null) {
-                predecessors.put(m, n);
-                return true;
-            }
-            if (o instanceof HashSet) return ((HashSet)o).add(n);
-            if (o == n) return false;
-            HashSet s = new HashSet(); s.add(o); s.add(n);
-            predecessors.put(m, s);
-            return true;
+        public SimplifyNodesQuery createReturned(AnalysisSummary callee, boolean which) {
+            HashSet s_nodes = which?callee.returned:callee.thrown;
+            return new SimplifyNodesQuery(callee, s_nodes);
         }
         
-        /** Record the given passed parameter in the set for this node.
-         *  Returns true if that passed parameter didn't already exist, false otherwise. */
-        public boolean recordPassedParameter(PassedParameter cm) {
-            if (passedParameters == null) passedParameters = new HashSet();
-            return passedParameters.add(cm);
+        private SimplifyNodesQuery(AnalysisSummary s, HashSet s_nodes) {
+            this.summary = s;
+            this.setOfNodes = s_nodes;
         }
-        /** Record the passed parameter of the given method call and argument number in
-         *  the set for this node.
-         *  Returns true if that passed parameter didn't already exist, false otherwise. */
-        public boolean recordPassedParameter(MethodCall m, int paramNum) {
-            if (passedParameters == null) passedParameters = new HashSet();
-            PassedParameter cm = new PassedParameter(m, paramNum);
-            return passedParameters.add(cm);
-        }
-        /** Remove the given successor node on the given field from the inside edge set.
-         *  Also removes the predecessor link from the successor node to this node.
-         *  Returns true if that edge existed, false otherwise. */
-        public boolean removeEdge(jq_Field m, Node n) {
-            if (addedEdges == null) return false;
-            n.removePredecessor(m, this);
-            Object o = addedEdges.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
-            else if (o == n) { addedEdges.remove(m); return true; }
-            else return false;
-        }
-        /** Add the given successor node on the given field to the inside edge set.
-         *  Also adds a predecessor link from the successor node to this node.
-         *  Returns true if that edge didn't already exist, false otherwise. */
-        public boolean addEdge(jq_Field m, Node n) {
-            n.addPredecessor(m, this);
-            if (addedEdges == null) addedEdges = new HashMap();
-            Object o = addedEdges.get(m);
-            if (o == null) {
-                addedEdges.put(m, n);
-                return true;
-            }
-            if (o instanceof HashSet) return ((HashSet)o).add(n);
-            if (o == n) return false;
-            HashSet s = new HashSet(); s.add(o); s.add(n);
-            addedEdges.put(m, s);
-            return true;
-        }
-        /** Add the given set of successor nodes on the given field to the inside edge set.
-         *  The given set is consumed.
-         *  Also adds predecessor links from the successor nodes to this node.
-         *  Returns true if the inside edge set changed, false otherwise. */
-        public boolean addEdges(jq_Field m, HashSet s) {
-            for (Iterator i=s.iterator(); i.hasNext(); ) {
+        
+        public void simplify() {
+            constants = new HashSet();
+            for (Iterator i=this.setOfNodes.iterator(); i.hasNext(); ) {
                 Node n = (Node)i.next();
-                n.addPredecessor(m, this);
-            }
-            if (addedEdges == null) addedEdges = new HashMap();
-            Object o = addedEdges.get(m);
-            if (o == null) {
-                addedEdges.put(m, s);
-                return true;
-            }
-            if (o instanceof HashSet) return ((HashSet)o).addAll(s);
-            addedEdges.put(m, s); return s.add(o); 
-        }
-        /** Add the given successor node on the given field to the inside edge set
-         *  of all of the given set of nodes.
-         *  Also adds predecessor links from the successor node to the given nodes.
-         *  Returns true if anything was changed, false otherwise. */
-        public static boolean addEdges(HashSet s, jq_Field f, Node n) {
-            boolean b = false;
-            for (Iterator i=s.iterator(); i.hasNext(); ) {
-                Node a = (Node)i.next();
-                if (a.addEdge(f, n)) b = true;
-            }
-            return b;
-        }
-        
-        /** Remove the given successor node on the given field from the outside edge set.
-         *  Also removes the predecessor link from the successor node to this node.
-         *  Returns true if that edge existed, false otherwise. */
-        public boolean removeAccessPathEdge(jq_Field m, FieldNode n) {
-            if (accessPathEdges == null) return false;
-            if (n.field_predecessors != null) n.field_predecessors.remove(this);
-            Object o = accessPathEdges.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
-            else if (o == n) { accessPathEdges.remove(m); return true; }
-            else return false;
-        }
-        /** Add the given successor node on the given field to the outside edge set.
-         *  Also adds a predecessor link from the successor node to this node.
-         *  Returns true if that edge didn't already exist, false otherwise. */
-        public boolean addAccessPathEdge(jq_Field m, FieldNode n) {
-            if (n.field_predecessors == null) n.field_predecessors = new HashSet();
-            n.field_predecessors.add(this);
-            if (accessPathEdges == null) accessPathEdges = new HashMap();
-            Object o = accessPathEdges.get(m);
-            if (o == null) {
-                accessPathEdges.put(m, n);
-                return true;
-            }
-            if (o instanceof HashSet) return ((HashSet)o).add(n);
-            if (o == n) return false;
-            HashSet s = new HashSet(); s.add(o); s.add(n);
-            accessPathEdges.put(m, s);
-            return true;
-        }
-        /** Add the given set of successor nodes on the given field to the outside edge set.
-         *  The given set is consumed.
-         *  Also adds predecessor links from the successor nodes to this node.
-         *  Returns true if the inside edge set changed, false otherwise. */
-        public boolean addAccessPathEdges(jq_Field m, HashSet s) {
-            for (Iterator i=s.iterator(); i.hasNext(); ) {
-                FieldNode n = (FieldNode)i.next();
-                if (n.field_predecessors == null) n.field_predecessors = new HashSet();
-                n.field_predecessors.add(this);
-            }
-            if (accessPathEdges == null) accessPathEdges = new HashMap();
-            Object o = accessPathEdges.get(m);
-            if (o == null) {
-                accessPathEdges.put(m, s);
-                return true;
-            }
-            if (o instanceof HashSet) return ((HashSet)o).addAll(s);
-            accessPathEdges.put(m, s); return s.add(o); 
-        }
-        
-        /** Add the nodes that are targets of inside edges on the given field
-         *  to the given result set. */
-        public void getEdges(jq_Field m, HashSet result) {
-            if (addedEdges == null) return;
-            Object o = addedEdges.get(m);
-            if (o == null) return;
-            if (o instanceof HashSet) {
-                result.addAll((HashSet)o);
-            } else {
-                result.add(o);
-            }
-        }
-
-        /** Add the nodes that are targets of outside edges on the given field
-         *  to the given result set. */
-        void getAccessPathEdges(jq_Field m, HashSet result) {
-            if (accessPathEdges == null) return;
-            Object o = accessPathEdges.get(m);
-            if (o == null) return;
-            if (o instanceof HashSet) {
-                result.addAll((HashSet)o);
-            } else {
-                result.add(o);
-            }
-        }
-        
-        /** Return a string representation of the node in short form. */
-        public abstract String toString_short();
-        public String toString() { return toString_short(); }
-        /** Return a string representation of the node in long form.
-         *  Includes inside and outside edges and passed parameters. */
-        public String toString_long() {
-            StringBuffer sb = new StringBuffer();
-            if (addedEdges != null) {
-                sb.append(" writes: ");
-                for (Iterator i=addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    sb.append(f);
-                    sb.append("={");
-                    if (o instanceof Node)
-                        sb.append(((Node)o).toString_short());
-                    else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                           sb.append(((Node)j.next()).toString_short());
-                           if (j.hasNext()) sb.append(", ");
-                        }
-                    sb.append("}");
+                if (n instanceof ParamNode) {
+                    ParamNodesQuery pnq = ParamNodesQuery.create(summary, ((ParamNode)n).n);
+                    subqueries.add(pnq);
+                } else if (n instanceof FieldNode) {
+                    FieldNodesQuery fnq = FieldNodesQuery.create(summary, (FieldNode)n);
+                    fnq.simplify();
+                    this.addResult(fnq);
+                } else if (n instanceof ReturnedNode) {
+                    MethodCall that_mc = ((ReturnedNode)n).getMethodCall();
+                    CallTargetsQuery ctq = CallTargetsQuery.create(summary, that_mc.q);
+                    ctq.simplify();
+                    ReturnValueNodesQuery rvnq = ReturnValueNodesQuery.create(summary, ctq);
+                    rvnq.simplify();
+                    if (rvnq.isSimple()) {
+                        this.addResult(rvnq);
+                    } else {
+                        subqueries.add(rvnq);
                     }
-                }
-            }
-            if (accessPathEdges != null) {
-                sb.append(" reads: ");
-                sb.append(accessPathEdges);
-            }
-            if (passedParameters != null) {
-                sb.append(" called: ");
-                sb.append(passedParameters);
-            }
-            return sb.toString();
-        }
-    }
-    
-    /** A ConcreteTypeNode refers to an object with a concrete type.
-     *  This is the result of a 'new' operation or a constant object.
-     *  It is tied to the quad that created it, so nodes of the same type but
-     *  from different quads are not equal.
-     */
-    public static final class ConcreteTypeNode extends Node {
-        final jq_Reference type; final Quad q;
-        
-        public ConcreteTypeNode(jq_Reference type, Quad q) { this.type = type; this.q = q; }
-        private ConcreteTypeNode(ConcreteTypeNode that) {
-            super(that); this.type = that.type; this.q = that.q;
-        }
-        
-        public jq_Reference getDeclaredType() { return type; }
-        
-        public boolean equals(ConcreteTypeNode that) { return this.q == that.q; }
-        public boolean equals(Object o) {
-            if (o instanceof ConcreteTypeNode) return equals((ConcreteTypeNode)o);
-            else return false;
-        }
-        public int hashCode() { return q.hashCode(); }
-        
-        public Node copy() { return new ConcreteTypeNode(this); }
-        
-        public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return "Concrete: "+type+" q: "+q.getID(); }
-    }
-    
-    /** A UnknownTypeNode refers to an object with an unknown type.  All that is
-     *  known is that the object is the same or a subtype of some given type.
-     *  Nodes with the same "type" are considered to be equal.
-     *  This class includes a factory to get UnknownTypeNode's.
-     */
-    public static final class UnknownTypeNode extends Node {
-        static final HashMap FACTORY = new HashMap();
-        public static UnknownTypeNode get(jq_Reference type) {
-            UnknownTypeNode n = (UnknownTypeNode)FACTORY.get(type);
-            if (n == null) FACTORY.put(type, n = new UnknownTypeNode(type));
-            return n;
-        }
-        
-        final jq_Reference type;
-        
-        UnknownTypeNode(jq_Reference type, Quad q) { this.type = type; }
-        UnknownTypeNode(jq_Reference type) { this.type = type; }
-        private UnknownTypeNode(UnknownTypeNode that) { super(that); this.type = that.type; }
-        
-        public jq_Reference getDeclaredType() { return type; }
-        
-        public boolean equals(UnknownTypeNode that) { return this.type == that.type; }
-        public boolean equals(Object o) {
-            if (o instanceof UnknownTypeNode) return equals((UnknownTypeNode)o);
-            else return false;
-        }
-        public int hashCode() { return type.hashCode(); }
-        
-        public Node copy() { return new UnknownTypeNode(this); }
-        
-        public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return "Unknown: "+type; }
-    }
-    
-    /** An outside node is some node that can be mapped to other nodes.
-     *  This is just a marker for some of the other node classes below.
-     */
-    public abstract static class OutsideNode extends Node {
-        OutsideNode() {}
-        OutsideNode(Node n) { super(n); }
-        
-        public abstract jq_Reference getDeclaredType();
-        
-    }
-    
-    /** A GlobalNode stores references to the static variables.
-     *  It has no predecessors, and there is a global copy stored in GLOBAL.
-     */
-    public static final class GlobalNode extends OutsideNode {
-        public GlobalNode() {}
-        public jq_Reference getDeclaredType() { jq.UNREACHABLE(); return null; }
-        public Node copy() { return this; }
-        public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return "global"; }
-        public static final GlobalNode GLOBAL = new GlobalNode();
-    }
-    
-    /** A ReturnValueNode represents the return value of a method call.
-     */
-    public static final class ReturnValueNode extends OutsideNode {
-        final MethodCall m;
-        public ReturnValueNode(MethodCall m) { this.m = m; }
-        private ReturnValueNode(ReturnValueNode that) {
-            super(that); this.m = that.m;
-        }
-        public boolean equals(ReturnValueNode that) { return this.m.equals(that.m); }
-        public boolean equals(Object o) {
-            if (o instanceof ReturnValueNode) return equals((ReturnValueNode)o);
-            else return false;
-        }
-        public int hashCode() { return m.hashCode(); }
-        
-        public jq_Reference getDeclaredType() { return (jq_Reference)m.m.getReturnType(); }
-        
-        public Node copy() { return new ReturnValueNode(this); }
-        
-        public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return "Return value of "+m; }
-    }
-    
-    /*
-    public static final class CaughtExceptionNode extends OutsideNode {
-        ExceptionHandler eh;
-        CaughtExceptionNode(ExceptionHandler eh) { this.eh = eh; }
-        CaughtExceptionNode(CaughtExceptionNode that) {
-            super(that); this.eh = that.eh;
-        }
-        public boolean equals(CaughtExceptionNode that) { return this.eh.equals(that.eh); }
-        public boolean equals(Object o) {
-            if (o instanceof CaughtExceptionNode) return equals((CaughtExceptionNode)o);
-            else return false;
-        }
-        public int hashCode() { return eh.hashCode(); }
-        
-        public jq_Reference getDeclaredType() { return (jq_Reference)eh.getExceptionType(); }
-        
-        Node copy() { return new CaughtExceptionNode(this); }
-        
-        public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return "Caught exception: "+eh; }
-    }
-     */
-    
-    /** A ThrownExceptionNode represents the thrown exception of a method call.
-     */
-    public static final class ThrownExceptionNode extends OutsideNode {
-        final MethodCall m;
-        public ThrownExceptionNode(MethodCall m) { this.m = m; }
-        private ThrownExceptionNode(ThrownExceptionNode that) {
-            super(that); this.m = that.m;
-        }
-        public boolean equals(ThrownExceptionNode that) { return this.m.equals(that.m); }
-        public boolean equals(Object o) {
-            if (o instanceof ThrownExceptionNode) return equals((ThrownExceptionNode)o);
-            else return false;
-        }
-        public int hashCode() { return m.hashCode(); }
-        
-        public jq_Reference getDeclaredType() { return Bootstrap.PrimordialClassLoader.getJavaLangObject(); }
-        
-        public Node copy() { return new ThrownExceptionNode(this); }
-        
-        public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return "Thrown exception of "+m; }
-    }
-    
-    /** A ParamNode represents an incoming parameter.
-     */
-    public static final class ParamNode extends OutsideNode {
-        final jq_Method m; final int n; final jq_Reference declaredType;
-        
-        public ParamNode(jq_Method m, int n, jq_Reference declaredType) { this.m = m; this.n = n; this.declaredType = declaredType; }
-        private ParamNode(ParamNode that) {
-            super(that); this.m = that.m; this.n = that.n; this.declaredType = that.declaredType;
-        }
-
-        public boolean equals(ParamNode that) { return this.n == that.n && this.m == that.m; }
-        public boolean equals(Object o) {
-            if (o instanceof ParamNode) return equals((ParamNode)o);
-            else return false;
-        }
-        public int hashCode() { return m.hashCode() ^ n; }
-        
-        public jq_Reference getDeclaredType() { return declaredType; }
-        
-        public Node copy() { return new ParamNode(this); }
-        
-        public String toString_long() { return this.toString_short()+super.toString_long(); }
-        public String toString_short() { return "Param#"+n+" method "+m.getName(); }
-    }
-    
-    /** A FieldNode represents the result of a 'load' instruction.
-     *  There are outside edge links from the nodes that can be the base object
-     *  of the load to this node.
-     *  Two nodes are equal if the fields match and they are from the same quad.
-     */
-    public static final class FieldNode extends OutsideNode {
-        final jq_Field f; final HashSet quads;
-        HashSet field_predecessors;
-        
-        public FieldNode(jq_Field f, Quad q) { this.f = f; this.quads = new HashSet(); this.quads.add(q); }
-        public FieldNode(jq_Field f) { this.f = f; this.quads = new HashSet(); }
-        private FieldNode(FieldNode that) {
-            super(that); this.f = that.f; this.quads = that.quads; this.field_predecessors = that.field_predecessors;
-        }
-
-        /** Returns a new FieldNode that is the unification of the given set of FieldNodes.
-         *  In essence, all of the given nodes are replaced by a new, returned node.
-         *  The given field nodes must be on the given field.
-         */
-        public static FieldNode unify(jq_Field f, HashSet s) {
-            FieldNode dis = new FieldNode(f);
-            // go through once to add all quads, so that the hash code will be stable.
-            for (Iterator i=s.iterator(); i.hasNext(); ) {
-                FieldNode dat = (FieldNode)i.next();
-                jq.assert(f == dat.f);
-                dis.quads.addAll(dat.quads);
-            }
-            // once again to do the replacement.
-            for (Iterator i=s.iterator(); i.hasNext(); ) {
-                FieldNode dat = (FieldNode)i.next();
-                HashSet s2 = new HashSet(); s2.add(dis);
-                dat.replaceBy(s2);
-            }
-            return dis;
-        }
-        
-        public void replaceBy(HashSet set) {
-            if (this.field_predecessors != null) {
-                for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
-                    Node that = (Node)i.next();
-                    if (that == this) {
-                        // add self-cycles on f to all nodes in set.
-                        for (Iterator j=set.iterator(); j.hasNext(); ) {
-                            FieldNode k = (FieldNode)j.next();
-                            k.addAccessPathEdge(f, k);
-                        }
-                        i.remove();
-                        continue;
-                    }
-                    that.removeAccessPathEdge(f, this);
-                    for (Iterator j=set.iterator(); j.hasNext(); ) {
-                        that.addAccessPathEdge(f, (FieldNode)j.next());
-                    }
-                }
-            }
-            super.replaceBy(set);
-        }
-        
-        public void update(HashMap um) {
-            super.update(um);
-            HashSet m = this.field_predecessors;
-            if (m != null) {
-                this.field_predecessors = new HashSet();
-                for (Iterator j=m.iterator(); j.hasNext(); ) {
-                    this.field_predecessors.add(um.get(j.next()));
-                }
-            }
-        }
-        
-        public boolean equals(FieldNode that) { return this.f == that.f && this.quads.equals(that.quads); }
-        public boolean equals(Object o) {
-            if (o instanceof FieldNode) return equals((FieldNode)o);
-            else return false;
-        }
-        public int hashCode() { return f.hashCode() ^ quads.hashCode(); }
-        
-        public String fieldName() {
-            if (f != null) return f.getName().toString();
-            return getDeclaredType()+"[]";
-        }
-        
-        public jq_Reference getDeclaredType() {
-            if (f != null) {
-                return (jq_Reference)f.getType();
-            }
-            RegisterOperand r = ALoad.getDest((Quad)quads.iterator().next());
-            return (jq_Reference)r.getType();
-        }
-        
-        public Node copy() { return new FieldNode(this); }
-        
-        public String toString_long() { return this.toString_short()+super.toString_long(); }
-        public String toString_short() {
-            StringBuffer sb = new StringBuffer();
-            sb.append("FieldLoad ");
-            sb.append(fieldName());
-            Iterator i=quads.iterator();
-            if (i.hasNext()) {
-                if (!i.hasNext()) {
-                    sb.append(" quad ");
-                    sb.append(((Quad)i.next()).getID());
                 } else {
-                    sb.append(" quads {");
-                    while (i.hasNext()) {
-                        sb.append(',');
-                        sb.append(((Quad)i.next()).getID());
-                    }
-                    sb.append('}');
+                    jq.assert(!(n instanceof OutsideNode));
+                    constants.add(n);
                 }
             }
-            return sb.toString();
+        }
+        
+        public void receiveCallTargets(CallTargetsQuery ctqa) {
+            HashSet set = new HashSet();
+            ctqa.getTerminals(set);
+            for (Iterator i=set.iterator(); i.hasNext(); ) {
+                jq_Method target = (jq_Method)i.next();
+                ControlFlowGraph cfg = CodeCache.getCode(target);
+                AnalysisSummary s_callee = getSummary(cfg);
+                boolean r = false, t = false;
+                HashSet s = queryToNode.get(ctqa);
+                MethodCall that_mc = null;
+                for (Iterator i=s.iterator(); i.hasNext(); ) {
+                    Object o = i.next();
+                    jq.assert(that_mc == null || that_mc == ((ReturnedNode)o).getMethodCall());
+                    that_mc = ((ReturnedNode)o).getMethodCall();
+                    if (n instanceof ReturnValueNode) r = true;
+                    else if (n instanceof ThrownExceptionNode) t = true;
+                    else jq.UNREACHABLE();
+                }
+                if (r) {
+                    ReturnValueNodesQuery rvnq = new ReturnValueNodesQuery(s_callee, true, null);
+                    spawnOrLookupQuery(rvnq);
+                    HashSet s = null;
+                    if (queryToNode == null) queryToNode = new HashMap();
+                    else s = (HashSet)queryToNode.get(rvnq);
+                    if (s == null) queryToNode.put(rvnq, s = new HashSet());
+                    s.add(that_mc);
+                }
+                if (t) {
+                    ReturnValueNodesQuery rvnq = new ReturnValueNodesQuery(s_callee, false, null);
+                    spawnOrLookupQuery(rvnq);
+                    HashSet s = null;
+                    if (queryToNode == null) queryToNode = new HashMap();
+                    else s = (HashSet)queryToNode.get(rvnq);
+                    if (s == null) queryToNode.put(rvnq, s = new HashSet());
+                    s.add(that_mc);
+                }
+            }
+        }
+        
+        public void receiveNodes(NodeQuery fnq) {
+            Object o = queryToNode.get(fnq);
+            if (o == null) {
+                qa = new WrappedQueryResult(fnq, qa);
+            } else {
+                HashSet s = (HashSet)o;
+                for (Iterator i=s.iterator(); i.hasNext(); ) {
+                    MethodCall that_mc = (MethodCall)i.next();
+                    Context c = new Context(callee, that_mc);
+                    QueryResult qa2 = rvnq.applyContext(c);
+                    qa = new WrappedQueryResult(qa2, qa);
+                }
+            } else {
+                jq.UNREACHABLE();
+            }
+        }
+        
+        protected NodesQuery _applyContext(Context c, NodesQuery qa2) {
+            NodesQuery qa = this.qa;
+            while (qa != null) {
+                qa2 = qa._applyContext(c, qa2);
+                qa = qa.next;
+            }
+            for (Iterator i=spawnedQueries.iterator(); i.hasNext(); ) {
+                
+            }
+            return qa2;
+            
+            return new ConstantNodesQuery(result, qa2);
+        }
+        protected void _getTerminals(HashSet r) {
+            r.addAll(result);
+        }
+        
+    }
+    
+    
+    
+    /** NodeQuery objects form a linked list. */
+    public static abstract class NodesQuery {
+        protected NodesQuery next;
+        protected NodesQuery(NodesQuery n) { this.next = n; }
+        
+        /** Combines all of the terminals into a single set, returning a new
+         *  list of NodesQuery objects sans those terminals. */
+        public final void getTerminals(HashSet result) {
+            NodesQuery qa = this;
+            while (qa != null) {
+                qa._getTerminals(result);
+                qa = qa.next;
+            }
+        }
+        
+        /** Returns a new list of NodesQuery objects that correspond to applying
+         *  the given context to this list. */
+        public NodesQuery applyContext(Context c) {
+            NodesQuery qa = this;
+            NodesQuery qa2 = null;
+            while (qa != null) {
+                qa2 = qa._applyContext(c, qa2);
+                qa = qa.next;
+            }
+            return qa2;
+        }
+        protected abstract NodesQuery _applyContext(Context c, NodesQuery qa2);
+        protected abstract void _getTerminals(HashSet result);
+    }
+    
+    
+    public static abstract class NodesQueryResult {
+        protected NodesQueryResult next;
+
+        protected NodesQueryResult(NodesQueryResult n) { this.next = n; }
+        
+        public final NodesQueryResult getResult(Context c) {
+            NodesQueryResult qa = this;
+            NodesQueryResult qa2 = null;
+            while (qa != null) {
+                qa2 = qa._getResult(c, qa2);
+                qa = qa.next;
+            }
+            return qa2;
+        }
+        protected abstract NodesQueryResult _getResult(Context c, NodesQueryResult qa2);
+        
+    }
+    
+    public static class WrappedNodesQueryResult extends NodesQueryResult {
+        private final NodesQueryResult nqa;
+        public ConstantNodesQueryResult(NodesQueryResult a, NodesQueryResult nq) {
+            super(nq);
+            this.nqa = a;
+        }
+        protected NodesQueryResult _getResult(Context c, NodesQueryResult qa2) {
+            return nqa.getResult(c, qa2);
         }
     }
     
-    /** Records the state of the intramethod analysis at some point in the method. */
-    public static final class State implements Cloneable {
-        final Object[] registers;
-        /** Return a new state with the given number of registers. */
-        public State(int nRegisters) {
-            this.registers = new Object[nRegisters];
+    public static class ParamNodesQueryResult extends QueryResult {
+        private final int paramNum;
+        public ParamNodesQueryResult(int n, QueryResult nq) {
+            super(nq);
+            this.paramNum = n;
         }
-        public Object clone() { return this.copy(); }
-        /** Return a shallow copy of this state.
-         *  Sets of nodes are copied, but the individual nodes are not. */
-        public State copy() {
-            State that = new State(this.registers.length);
-            for (int i=0; i<this.registers.length; ++i) {
-                Object a = this.registers[i];
-                if (a instanceof Node)
-                    //that.registers[i] = ((Node)a).copy();
-                    that.registers[i] = a;
-                else if (a instanceof HashSet)
-                    that.registers[i] = ((HashSet)a).clone();
-            }
-            return that;
+        protected NodesQueryResult _getResult(Context c, NodesQueryResult qa2) {
+            result.addAll(c.getParamNodes(this.paramNum));
         }
-        /** Merge two states.  Mutates this state, the other is unchanged. */
-        public boolean merge(State that) {
-            boolean change = false;
-            for (int i=0; i<this.registers.length; ++i) {
-                if (merge(i, that.registers[i])) change = true;
-            }
-            return change;
+    }
+    
+    public static class CallTargetsQuery extends Query {
+        final AnalysisSummary summary;
+        final Quad q;
+        public CallTargetsQuery(AnalysisSummary s, Quad quad) {
+            this.summary = s; this.q = quad;
         }
-        /** Merge the given node or set of nodes into the given register. */
-        public boolean merge(int i, Object b) {
-            if (b == null) return false;
-            Object a = this.registers[i];
-            if (b.equals(a)) return false;
-            HashSet q;
-            if (!(a instanceof HashSet)) {
-                this.registers[i] = q = new HashSet();
-                q.add(a);
-            } else {
-                q = (HashSet)a;
+        public void doIt() {
+            jq_Method target = Invoke.getMethod(q).getMethod();
+            if (!((Invoke)q.getOperator()).isVirtual()) {
+                boolean b = result.add(target);
+                if (TRACE_INTER) out.println("q"+id+": Simple, non-virtual call: "+target);
+                return b;
             }
-            if (b instanceof HashSet) {
-                if (q.addAll((HashSet)b)) {
-                    if (TRACE_INTRA) out.println("change in register "+i+" from adding set");
-                    return true;
-                }
-            } else {
-                if (q.add(b)) {
-                    if (TRACE_INTRA) out.println("change in register "+i+" from adding "+b);
-                    return true;
+            // find the set of nodes for the 'this' pointer.
+            MethodCall mc = new MethodCall(target, q);
+            PassedParameter pp = new PassedParameter(mc, 0);
+            HashSet nodes = new HashSet();
+            if (TRACE_INTER) out.println("q"+id+": Getting nodes for "+pp);
+            c.getNodes(pp, nodes);
+            // find the set of types for those nodes.
+            NodesTypesQuery ntq = new NodesTypesQuery(summary, nodes);
+            spawnQuery(ntq);
+        }
+        
+        public void receiveResult(TypesQueryResult types, Node n) {
+            jq_Method target = Invoke.getMethod(q).getMethod();
+            for (Iterator i = type_result.iterator(); i.hasNext(); ) {
+                jq_Reference r = (jq_Reference)i.next();
+                r.load(); r.verify(); r.prepare();
+                jq_Method resolved_target = r.getVirtualMethod(target.getNameAndDesc());
+                if (resolved_target != null) {
+                    if (resolved_target.getBytecode() != null) {
+                        if (result.add(resolved_target)) change = true;
+                    }
+                } else {
+                    if (TRACE_INTER) out.println("Invalid call! "+r+" on target "+target);
                 }
             }
+        }
+    }
+    
+    public static abstract class CallTargetsQueryResult {
+    }
+    
+    public static class ConstantCallTargetsQueryResult extends CallTargetsQueryResult {
+        private final HashSet result;
+        public ConstantNodesQueryResult(HashSet s, NodesQueryResult nq) {
+            super(nq);
+            this.result = s;
+        }
+        protected NodesQueryResult _getResult(Context c, NodesQueryResult qa2) {
+            return new ConstantCallTargetsQueryResult(result, qa2);
+        }
+    }
+    
+    // Solves constraints using a worklist algorithm.
+    public static class ConstraintSolver {
+        HashMap all_constraints;
+        HashSet open_constraints;
+        LinkedList worklist;
+
+        ConstraintSolver() {
+            this.all_constraints = new HashMap();
+            this.open_constraints = new HashSet();
+            this.worklist = new LinkedList();
+        }
+        
+        void solveConstraint(Constraint q) {
+            this.all_constraints.clear(); Constraint.current_id = 0;
+            if (TRACE_INTER) out.println(" ... Starting constraint solver ...");
+            worklist.add(q); open_constraints.add(q);
+            performLoop();
+        }
+        
+        void performLoop() {
+            while (!worklist.isEmpty()) {
+                Object o = worklist.removeFirst();
+                open_constraints.remove(o);
+                if (o instanceof Query) {
+                    Query q = (Query)o;
+                    if (TRACE_INTER) out.println("-=> Performing query "+q.toString_full());
+                    boolean b = q.performQuery();
+                    if (b) {
+                        if (TRACE_INTER) out.println("-=> Updating successors of "+q);
+                        q.updateSuccessors();
+                    }
+                    continue;
+                }
+                if (o instanceof Constraint) {
+                    Constraint d = (Constraint)o;
+                    if (TRACE_INTER) out.println("-=> Updating constraint "+d);
+                    boolean b = d.from.propagateResult(d.to);
+                    if (b) {
+                        if (TRACE_INTER) out.println("-=> Updating successors of "+d.to);
+                        d.to.updateSuccessors();
+                    }
+                    continue;
+                }
+            }
+            jq.assert(open_queries.isEmpty());
+        }
+        
+        Query addQuery(DependentQuery dq, Query q) {
+            Query q2 = (Query)all_queries.get(q);
+            if (q2 == null) {
+                q2 = q;
+                if (TRACE_INTER) out.println("-=> New query "+q2.id+": "+q2.toString_full());
+                all_queries.put(q2, q2);
+                open_queries.add(q2); worklist.add(q2);
+            } else {
+                if (TRACE_INTER) out.println("-=> Reusing query "+q2.id);
+            }
+            Constraint d = new Constraint(q2, dq);
+            if (open_queries.contains(d)) {
+                if (TRACE_INTER) out.println("-=> Constraint "+d+" already open");
+                return q2;
+            }
+            open_queries.add(d); worklist.add(d);
+            return q2;
+        }
+        
+        public static final QuerySolver GLOBAL = new QuerySolver();
+    }
+
+    // Records a directed constraint.  When the result of the 'from' query changes, the
+    // 'to' query must be recalculated.
+    public static class Constraint {
+        Query from;
+        DependentQuery to;
+        
+        Dependence(Query from, DependentQuery to) {
+            this.from = from; this.to = to;
+        }
+        
+        public boolean equals(Constraint that) {
+            return this.from == that.from && this.to == that.to;
+        }
+        public boolean equals(Object o) {
+            if (o instanceof Constraint) return equals((Constraint)o);
             return false;
         }
-        /** Dump a textual representation of the state to the given print stream. */
-        public void dump(java.io.PrintStream out) {
-            for (int i=0; i<registers.length; ++i) {
-                if (registers[i] == null) continue;
-                out.print(i+": "+registers[i]+" ");
-            }
-            out.println();
-        }
+        public int hashCode() { return from.hashCode() ^ to.hashCode(); }
+        public String toString() { return "q"+from.id+"->q"+to.id; }
     }
     
-    /** Encodes an access path.
-     *  An access path is an NFA, where transitions are field names.
-     *  Each node in the NFA is represented by an AccessPath object.
-     *  We try to share AccessPath objects as much as possible.
-     */
-    public static class AccessPath {
-        /** All incoming transitions have this field. */
-        jq_Field _field;
-        /** The incoming transitions are associated with this AccessPath object. */
-        Node _n;
-        /** Whether this is a valid end state. */
-        boolean _last;
-        
-        /** The set of (wrapped) successor AccessPath objects. */
-        HashSet succ;
-
-        /** Adds the set of (wrapped) AccessPath objects that are reachable from this
-         *  AccessPath object to the given set. */
-        private void reachable(HashSet s) {
-            for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
-                IdentityHashCodeWrapper ap = (IdentityHashCodeWrapper)i.next();
-                if (!s.contains(ap)) {
-                    s.add(ap);
-                    ((AccessPath)ap.getObject()).reachable(s);
-                }
-            }
-        }
-        /** Return an iteration of the AccessPath objects that are reachable from
-         *  this AccessPath. */
-        public Iterator reachable() {
-            HashSet s = new HashSet();
-            s.add(IdentityHashCodeWrapper.create(this));
-            this.reachable(s);
-            return new FilterIterator(s.iterator(), filter);
-        }
-        
-        /** Add the given AccessPath object as a successor to this AccessPath object. */
-        private void addSuccessor(AccessPath ap) {
-            succ.add(IdentityHashCodeWrapper.create(ap));
-        }
-        
-        /** Return an access path that is equivalent to the given access path prepended
-         *  with a transition on the given field and node.  The given access path can
-         *  be null (empty). */
-        public static AccessPath create(jq_Field f, Node n, AccessPath p) {
-            if (p == null) return new AccessPath(f, n, true);
-            AccessPath that = p.findNode(n);
-            if (that == null) {
-                that = new AccessPath(f, n);
-            } else {
-                p = p.copy();
-                that = p.findNode(n);
-            }
-            that.addSuccessor(p);
-            return that;
-        }
-        
-        /** Return an access path that is equivalent to the given access path appended
-         *  with a transition on the given field and node.  The given access path can
-         *  be null (empty). */
-        public static AccessPath create(AccessPath p, jq_Field f, Node n) {
-            if (p == null) return new AccessPath(f, n, true);
-            p = p.copy();
-            AccessPath that = p.findNode(n);
-            if (that == null) {
-                that = new AccessPath(f, n);
-            }
-            that.setLast();
-            for (Iterator i = p.findLast(); i.hasNext(); ) {
-                AccessPath last = (AccessPath)i.next();
-                last.unsetLast();
-                last.addSuccessor(that);
-            }
-            return p;
-        }
-        
-        /** Helper function for findLast(), below. */
-        private void findLast(HashSet s, HashSet last) {
-            for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
-                IdentityHashCodeWrapper ap = (IdentityHashCodeWrapper)i.next();
-                if (!s.contains(ap)) {
-                    s.add(ap);
-                    AccessPath that = (AccessPath)ap.getObject();
-                    if (that._last) last.add(ap);
-                    that.findLast(s, last);
-                }
-            }
-        }
-        
-        /** Return an iteration of the AccessPath nodes that correspond to end states. */
-        public Iterator findLast() {
-            HashSet visited = new HashSet();
-            HashSet last = new HashSet();
-            IdentityHashCodeWrapper ap = IdentityHashCodeWrapper.create(this);
-            visited.add(ap);
-            if (this._last) last.add(ap);
-            this.findLast(visited, last);
-            return new FilterIterator(last.iterator(), filter);
-        }
-        
-        /** Helper function for findNode(Node n), below. */
-        private AccessPath findNode(Node n, HashSet s) {
-            for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
-                IdentityHashCodeWrapper ap = (IdentityHashCodeWrapper)i.next();
-                if (!s.contains(ap)) {
-                    AccessPath p = (AccessPath)ap.getObject();
-                    if (n == p._n) return p;
-                    s.add(ap);
-                    AccessPath q = p.findNode(n, s);
-                    if (q != null) return q;
-                }
-            }
-            return null;
-        }
-        
-        /** Find the AccessPath object that corresponds to the given node. */
-        public AccessPath findNode(Node n) {
-            if (n == this._n) return this;
-            HashSet visited = new HashSet();
-            IdentityHashCodeWrapper ap = IdentityHashCodeWrapper.create(this);
-            visited.add(ap);
-            return findNode(n, visited);
-        }
-        
-        /** Set this transition as a valid end transition. */
-        private void setLast() { this._last = true; }
-        /** Unset this transition as a valid end transition. */
-        private void unsetLast() { this._last = false; }
-        
-        /** Helper function for copy(), below. */
-        private void copy(HashMap m, AccessPath that) {
-            for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
-                IdentityHashCodeWrapper ap = (IdentityHashCodeWrapper)i.next();
-                AccessPath p = (AccessPath)m.get(ap);
-                if (p == null) {
-                    AccessPath that2 = (AccessPath)ap.getObject();
-                    p = new AccessPath(that2._field, that2._n, that2._last);
-                    m.put(ap, p);
-                    that2.copy(m, p);
-                }
-                that.addSuccessor(p);
-            }
-        }
-
-        /** Return a copy of this (complete) access path. */
-        public AccessPath copy() {
-            HashMap m = new HashMap();
-            IdentityHashCodeWrapper ap = IdentityHashCodeWrapper.create(this);
-            AccessPath p = new AccessPath(this._field, this._n, this._last);
-            m.put(ap, p);
-            this.copy(m, p);
-            return p;
-        }
-        
-        /** Helper function for toString(), below. */
-        private void toString(StringBuffer sb, HashSet set) {
-            if (this._field == null) sb.append("[]");
-            else sb.append(this._field.getName());
-            if (this._last) sb.append("<e>");
-            sb.append("->(");
-            for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
-                IdentityHashCodeWrapper ap = (IdentityHashCodeWrapper)i.next();
-                if (set.contains(ap)) {
-                    sb.append("<backedge>");
-                } else {
-                    set.add(ap);
-                    ((AccessPath)ap.getObject()).toString(sb, set);
-                }
-            }
-            sb.append(')');
-        }
-        /** Returns a string representation of this (complete) access path. */
-        public String toString() {
-            StringBuffer sb = new StringBuffer();
-            HashSet visited = new HashSet();
-            IdentityHashCodeWrapper ap = IdentityHashCodeWrapper.create(this);
-            visited.add(ap);
-            toString(sb, visited);
-            return sb.toString();
-        }
-        
-        /** Private constructor.  Use the create() methods above. */
-        private AccessPath(jq_Field f, Node n, boolean last) {
-            this._field = f; this._n = n; this._last = last;
-            this.succ = new HashSet();
-        }
-        /** Private constructor.  Use the create() methods above. */
-        private AccessPath(jq_Field f, Node n) {
-            this(f, n, false);
-        }
-        
-        /** Helper function for equals(AccessPath), below. */
-        private boolean oneEquals(AccessPath that) {
-            //if (this._n != that._n) return false;
-            if (this._field != that._field) return false;
-            if (this._last != that._last) return false;
-            if (this.succ.size() != that.succ.size()) return false;
-            return true;
-        }
-        /** Helper function for equals(AccessPath), below. */
-        private boolean equals(AccessPath that, HashSet s) {
-            // Relies on the fact that the iterators are stable for equivalent sets.
-            // Otherwise, it is an n^2 algorithm.
-            for (Iterator i = this.succ.iterator(), j = that.succ.iterator(); i.hasNext(); ) {
-                IdentityHashCodeWrapper a = (IdentityHashCodeWrapper)i.next();
-                IdentityHashCodeWrapper b = (IdentityHashCodeWrapper)j.next();
-                AccessPath p = (AccessPath)a.getObject();
-                AccessPath q = (AccessPath)b.getObject();
-                if (!p.oneEquals(q)) return false;
-                if (s.contains(a)) continue;
-                s.add(a);
-                if (!p.equals(q, s)) return false;
-            }
-            return true;
-        }
-        /** Returns true if this access path is equal to the given access path. */
-        public boolean equals(AccessPath that) {
-            HashSet s = new HashSet();
-            if (!oneEquals(that)) return false;
-            s.add(IdentityHashCodeWrapper.create(this));
-            return this.equals(that, s);
-        }
-        public boolean equals(Object o) {
-            if (o instanceof AccessPath) return equals((AccessPath)o);
-            return false;
-        }
-        /** Returns the hashcode for this access path. */
-        public int hashCode() {
-            int x = this.local_hashCode();
-            for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
-                IdentityHashCodeWrapper a = (IdentityHashCodeWrapper)i.next();
-                x ^= (((AccessPath)a.getObject()).local_hashCode() << 1);
-            }
-            return x;
-        }
-        /** Returns the hashcode for this individual AccessPath object. */
-        private int local_hashCode() {
-            return _field != null ? _field.hashCode() : 0x31337;
-        }
-        /** Returns the first field of this access path. */
-        public jq_Field first() { return _field; }
-        /** Returns an iteration of the next AccessPath objects. */
-        public Iterator next() {
-            return new FilterIterator(succ.iterator(), filter);
-        }
-        /** A filter to unwrap objects from their IdentityHashCodeWrapper. */
-        public static final FilterIterator.Filter filter = new FilterIterator.Filter() {
-            public Object map(Object o) { return ((IdentityHashCodeWrapper)o).getObject(); }
-        };
-    }
-    
-    /** Intra-method summary graph. */
-    public static class AnalysisSummary {
-        /** The parameter nodes. */
-        final ParamNode[] params;
-        /** All nodes in the summary graph. */
-        final HashMap nodes;
-        /** The returned nodes. */
-        final HashSet returned;
-        /** The thrown nodes. */
-        final HashSet thrown;
-        
-        AnalysisSummary(ParamNode[] param_nodes, GlobalNode my_global, HashSet returned, HashSet thrown, HashSet passedAsParameters) {
-            this.params = param_nodes;
-            this.returned = returned;
-            this.thrown = thrown;
-            this.nodes = new HashMap();
-            // build useful node set
-            HashSet visited = new HashSet();
-            for (int i=0; i<params.length; ++i) {
-                if (params[i] == null) continue;
-                addAsUseful(visited, params[i]);
-            }
-            for (Iterator i=returned.iterator(); i.hasNext(); ) {
-                addAsUseful(visited, (Node)i.next());
-            }
-            for (Iterator i=thrown.iterator(); i.hasNext(); ) {
-                addAsUseful(visited, (Node)i.next());
-            }
-            for (Iterator i=passedAsParameters.iterator(); i.hasNext(); ) {
-                addAsUseful(visited, (Node)i.next());
-            }
-            if (my_global.accessPathEdges != null) {
-                for (Iterator i=my_global.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        addIfUseful(visited, (Node)o);
-                    } else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                            addIfUseful(visited, (Node)j.next());
-                        }
-                    }
-                }
-            }
-            unifyAccessPaths();
-        }
-        
-        private AnalysisSummary(ParamNode[] params, HashSet returned, HashSet thrown, HashMap nodes) {
-            this.params = params;
-            this.returned = returned;
-            this.thrown = thrown;
-            this.nodes = nodes;
-        }
-        
-        /** Add all nodes that are passed as the given passed parameter to the given result set. */
-        public void getNodesThatCall(PassedParameter pp, HashSet result) {
-            for (Iterator i = this.nodeIterator(); i.hasNext(); ) {
-                Node n = (Node)i.next();
-                if ((n.passedParameters != null) && n.passedParameters.contains(pp))
-                    result.add(n);
-            }
-        }
-        
-        /** Utility function to add to a multi map. */
-        static boolean addToMultiMap(HashMap mm, Object from, Object to) {
-            HashSet s = (HashSet)mm.get(from);
-            if (s == null) {
-                mm.put(from, s = new HashSet());
-            }
-            return s.add(to);
-        }
-        
-        /** Utility function to add to a multi map. */
-        static boolean addToMultiMap(HashMap mm, Object from, HashSet to) {
-            HashSet s = (HashSet)mm.get(from);
-            if (s == null) {
-                mm.put(from, s = new HashSet());
-            }
-            return s.addAll(to);
-        }
-        
-        /** Utility function to get the mapping for a callee node. */
-        static HashSet get_mapping(HashMap callee_to_caller, Node callee_n) {
-            HashSet s = (HashSet)callee_to_caller.get(callee_n);
-            if (s != null) return s;
-            s = new HashSet(); s.add(callee_n);
-            return s;
-        }
-        
-        /** Return a deep copy of this analysis summary.
-         *  Nodes, edges, everything is copied.
-         */
-        public AnalysisSummary copy() {
-            HashMap m = new HashMap();
-            for (Iterator i=nodeIterator(); i.hasNext(); ) {
-                Node a = (Node)i.next();
-                Node b = a.copy();
-                m.put(a, b);
-            }
-            for (Iterator i=nodeIterator(); i.hasNext(); ) {
-                Node a = (Node)i.next();
-                Node b = (Node)m.get(a);
-                b.update(m);
-            }
-            HashSet returned = new HashSet();
-            for (Iterator i=this.returned.iterator(); i.hasNext(); ) {
-                returned.add(m.get(i.next()));
-            }
-            HashSet thrown = new HashSet();
-            for (Iterator i=this.thrown.iterator(); i.hasNext(); ) {
-                thrown.add(m.get(i.next()));
-            }
-            ParamNode[] params = new ParamNode[this.params.length];
-            for (int i=0; i<params.length; ++i) {
-                if (this.params[i] == null) continue;
-                params[i] = (ParamNode)m.get(this.params[i]);
-            }
-            HashMap nodes = new HashMap();
-            for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                nodes.put(e.getValue(), e.getValue());
-            }
-            return new AnalysisSummary(params, returned, thrown, nodes);
-        }
-        
-        /** Unify similar access paths from the roots.
-         */
-        public void unifyAccessPaths() {
-            HashSet roots = new HashSet();
-            for (int i=0; i<params.length; ++i) {
-                if (params[i] == null) continue;
-                roots.add(params[i]);
-            }
-            roots.addAll(returned); roots.addAll(thrown);
-            unifyAccessPaths(roots);
-        }
-        
-        /** Unify similar access paths from the given roots.
-         *  The given set is consumed.
-         */
-        public void unifyAccessPaths(HashSet roots) {
-            LinkedList worklist = new LinkedList();
-            for (Iterator i=roots.iterator(); i.hasNext(); ) {
-                worklist.add(i.next());
-            }
-            while (worklist.isEmpty()) {
-                Node n = (Node)worklist.removeFirst();
-                unifyAccessPathEdges(n);
-                if (n.accessPathEdges != null) {
-                    for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                        java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                        FieldNode n2 = (FieldNode)e.getValue();
-                        if (roots.contains(n2)) continue;
-                        worklist.add(n2); roots.add(n2);
-                    }
-                }
-                if (n.addedEdges != null) {
-                    for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                        java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                        Node n2 = (Node)e.getValue();
-                        if (roots.contains(n2)) continue;
-                        worklist.add(n2); roots.add(n2);
-                    }
-                }
-            }
-        }
-        
-        /** Unify similar access path edges from the given node.
-         */
-        public void unifyAccessPathEdges(Node n) {
-            if (n.accessPathEdges != null) {
-                for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    FieldNode n2;
-                    if (o instanceof HashSet) {
-                        HashSet s = (HashSet)o;
-                        n2 = FieldNode.unify(f, s);
-                        for (Iterator j=s.iterator(); j.hasNext(); ) {
-                            FieldNode n3 = (FieldNode)j.next();
-                            if (returned.contains(n3)) {
-                                returned.remove(n3); returned.add(n2);
-                            }
-                            if (thrown.contains(n3)) {
-                                thrown.remove(n3); thrown.add(n2);
-                            }
-                            nodes.remove(n3);
-                        }
-                        e.setValue(n2);
-                    } else {
-                        n2 = (FieldNode)o;
-                    }
-                }
-            }
-        }
-        
-        /** Instantiate a copy of the callee summary into the caller. */
-        public static void instantiate(AnalysisSummary caller, MethodCall mc, AnalysisSummary callee) {
-            callee = callee.copy();
-            //System.out.println("Instantiating "+callee+" into "+caller);
-            HashMap callee_to_caller = new HashMap();
-            // initialize map with parameters.
-            for (int i=0; i<callee.params.length; ++i) {
-                ParamNode pn = callee.params[i];
-                if (pn == null) continue;
-                PassedParameter pp = new PassedParameter(mc, i);
-                HashSet s = new HashSet();
-                caller.getNodesThatCall(pp, s);
-                callee_to_caller.put(pn, s);
-            }
-            for (int ii=0; ii<callee.params.length; ++ii) {
-                ParamNode pn = callee.params[ii];
-                if (pn == null) continue;
-                HashSet s = (HashSet)callee_to_caller.get(pn);
-                pn.replaceBy(s);
-                if (callee.returned.contains(pn)) {
-                    callee.returned.remove(pn); callee.returned.addAll(s);
-                }
-                if (callee.thrown.contains(pn)) {
-                    callee.thrown.remove(pn); callee.thrown.addAll(s);
-                }
-            }
-            ReturnValueNode rvn = new ReturnValueNode(mc);
-            rvn = (ReturnValueNode)caller.nodes.get(rvn);
-            if (rvn != null) {
-                rvn.replaceBy(callee.returned);
-                if (caller.returned.contains(rvn)) {
-                    caller.returned.remove(rvn); caller.returned.addAll(callee.returned);
-                }
-                if (caller.thrown.contains(rvn)) {
-                    caller.thrown.remove(rvn); caller.thrown.addAll(callee.returned);
-                }
-            }
-            ThrownExceptionNode ten = new ThrownExceptionNode(mc);
-            ten = (ThrownExceptionNode)caller.nodes.get(ten);
-            if (ten != null) {
-                ten.replaceBy(callee.thrown);
-                if (caller.returned.contains(ten)) {
-                    caller.returned.remove(ten); caller.returned.addAll(callee.thrown);
-                }
-                if (caller.thrown.contains(ten)) {
-                    caller.thrown.remove(ten); caller.thrown.addAll(callee.thrown);
-                }
-            }
-            HashSet s = new HashSet();
-            s.addAll(callee.returned);
-            s.addAll(callee.thrown);
-            for (int ii=0; ii<callee.params.length; ++ii) {
-                ParamNode pn = callee.params[ii];
-                if (pn == null) continue;
-                HashSet t = (HashSet)callee_to_caller.get(pn);
-                s.addAll(t);
-            }
-            caller.unifyAccessPaths(s);
-        }
-        
-        /** Return a string representation of this summary. */
-        public String toString() {
-            StringBuffer sb = new StringBuffer();
-            for (int i=0; i<params.length; ++i) {
-                if (params[i] == null) continue;
-                sb.append(params[i].toString_long());
-                sb.append('\n');
-            }
-            if (returned != null && !returned.isEmpty()) {
-                sb.append("Returned: ");
-                sb.append(returned);
-                sb.append('\n');
-            }
-            if (thrown != null && !thrown.isEmpty()) {
-                sb.append("Thrown: ");
-                sb.append(thrown);
-                sb.append('\n');
-            }
-            sb.append("All nodes:\n");
-            for (Iterator i=nodes.keySet().iterator(); i.hasNext(); ) {
-                sb.append(i.next());
-                sb.append('\n');
-            }
-            return sb.toString();
-        }
-        
-        /** Utility function to add the given node to the node set if it is useful,
-         *  and transitively for other nodes. */
-        private boolean addIfUseful(HashSet visited, Node n) {
-            if (visited.contains(n)) return nodes.containsKey(n);
-            visited.add(n);
-            boolean useful = false;
-            if (n.addedEdges != null) {
-                useful = true;
-                for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        addAsUseful(visited, (Node)o);
-                    } else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                            addAsUseful(visited, (Node)j.next());
-                        }
-                    }
-                }
-            }
-            if (n.accessPathEdges != null) {
-                for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        if (addIfUseful(visited, (Node)o)) {
-                            useful = true;
-                        } else {
-                            i.remove();
-                        }
-                    } else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                            if (addIfUseful(visited, (Node)j.next())) {
-                                useful = true;
-                            } else {
-                                j.remove();
-                            }
-                        }
-                    }
-                }
-            }
-            if (n.passedParameters != null) useful = true;
-            if (useful)
-                this.nodes.put(n, n);
-            return useful;
-        }
-        /** Utility function to add the given node to the node set as useful,
-         *  and transitively for other nodes. */
-        private void addAsUseful(HashSet visited, Node n) {
-            if (visited.contains(n)) return;
-            visited.add(n); this.nodes.put(n, n);
-            if (n.addedEdges != null) {
-                for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        addAsUseful(visited, (Node)o);
-                    } else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                            addAsUseful(visited, (Node)j.next());
-                        }
-                    }
-                }
-            }
-            if (n.accessPathEdges != null) {
-                for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        if (!addIfUseful(visited, (Node)o)) {
-                            i.remove();
-                        }
-                    } else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                            Node j_n = (Node)j.next();
-                            if (!addIfUseful(visited, j_n)) {
-                                j.remove();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        /** Returns an iteration of all nodes in this summary. */
-        public Iterator nodeIterator() { return nodes.keySet().iterator(); }
-    }
 }

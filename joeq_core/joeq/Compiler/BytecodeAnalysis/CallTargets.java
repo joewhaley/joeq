@@ -18,12 +18,13 @@ import Util.SingletonIterator;
 import jq;
 import java.util.*;
 
-public abstract class CallTargets {
+public abstract class CallTargets extends AbstractSet {
 
     public static CallTargets getTargets(jq_Class callingClass,
                                          jq_Method method,
                                          byte type,
                                          Set possibleReceiverTypes,
+                                         boolean exact,
                                          boolean loadClasses)
     {
         if (type == BytecodeVisitor.INVOKE_STATIC) return getStaticTargets((jq_StaticMethod)method);
@@ -31,6 +32,20 @@ public abstract class CallTargets {
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
         jq.assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE);
 
+        if (!exact) {
+            // temporary hack, until we rewrite the code below to take into account
+            // non-exact sets.
+            Set c = new HashSet();
+            Iterator i = possibleReceiverTypes.iterator();
+            boolean complete = true;
+            while (i.hasNext()) {
+                CallTargets ct = getTargets(callingClass, method, type, (jq_Reference)i.next(), false, loadClasses);
+                c.addAll(ct);
+                if (!ct.isComplete()) complete = false;
+            }
+            return new MultipleCallTargets(c, complete);
+        }
+        
         Set c = new LinearSet();
         boolean complete = true;
         if ((type == BytecodeVisitor.INVOKE_VIRTUAL) && imethod.getDeclaringClass().isPrepared()) {
@@ -372,6 +387,7 @@ public abstract class CallTargets {
         Stack subclass1 = new Stack(); // don't implement
         Stack subclass2 = new Stack(); // do/may implement
         jq_Class rclass = PrimordialClassLoader.loader.getJavaLangObject();
+        jq.assert(rclass.isLoaded()); // java.lang.Object had better be loaded!
         if (rclass.implementsInterface(interf)) subclass2.push(rclass);
         else subclass1.push(rclass);
         while (!subclass1.empty()) {
@@ -436,12 +452,14 @@ public abstract class CallTargets {
     public abstract Iterator iterator();
     public abstract boolean isComplete();
     public abstract CallTargets union(CallTargets s);
+    public abstract int size();
     
     static class NoCallTarget extends CallTargets
     {
         public Iterator iterator() { return NullIterator.INSTANCE; }
         public boolean isComplete() { return false; }
         public CallTargets union(CallTargets s) { return s; }
+        public int size() { return 0; }
         public static final NoCallTarget INSTANCE = new NoCallTarget();
         private NoCallTarget() {}
         public String toString() { return "{}"; }
@@ -464,6 +482,7 @@ public abstract class CallTargets {
             }
             return new MultipleCallTargets(result, is_complete);
         }
+        public int size() { return 1; }
         public String toString() {
             if (complete) return "{ "+method.toString()+" } (complete)";
             else return "{ "+method.toString()+" }";
@@ -488,6 +507,7 @@ public abstract class CallTargets {
             }
             return this;
         }
+        public int size() { return set.size(); }
         public String toString() {
             if (complete) return set.toString()+" (complete)";
             else return set.toString();
