@@ -154,13 +154,18 @@ public class GenRelations {
         
         System.setProperty("pa.skipsolve", "yes");
         System.setProperty("pa.dumpinitial", "yes");
+        System.setProperty("pa.dumpresults", "no");
         if (CS) System.setProperty("pa.cs", "yes");
         if (FLY) System.setProperty("pa.dumpfly", "yes");
         if (SSA) System.setProperty("pa.dumpssa", "yes");
         String dumppath = System.getProperty("pa.dumppath");
         if (dumppath != null) {
-            String sep = System.getProperty("file.separator");
-            if (!dumppath.endsWith(sep)) dumppath += sep;
+            if (dumppath.length() > 0) {
+                File f = new File(dumppath);
+                if (!f.exists()) f.mkdirs();
+                String sep = System.getProperty("file.separator");
+                if (!dumppath.endsWith(sep)) dumppath += sep;
+            }
             if (System.getProperty("pa.callgraph") == null) {
                 System.setProperty("pa.callgraph", dumppath+"callgraph");
             }
