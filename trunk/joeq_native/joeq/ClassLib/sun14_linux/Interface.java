@@ -65,10 +65,12 @@ public final class Interface extends ClassLib.Common.Interface {
             k = (Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
             nullInstanceFields.add(k.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
             
-            // for some reason, thread local gets created during bootstrapping. (SoftReference)
-            // for now, just kill all thread locals.
-            k = (Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
-            nullInstanceFields.add(k.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
+            if (IGNORE_THREAD_LOCALS) {
+                // for some reason, thread local gets created during bootstrapping. (SoftReference)
+                // for now, just kill all thread locals.
+                k = (Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
+                nullInstanceFields.add(k.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
+            }
             
             jq_NativeThread.USE_INTERRUPTER_THREAD = false;
             

@@ -10,7 +10,9 @@ package ClassLib.sun13_win32;
 import java.util.Iterator;
 
 import Bootstrap.ObjectTraverser;
+import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
+import Clazz.jq_Class;
 import Scheduler.jq_NativeThread;
 
 /*
@@ -41,6 +43,19 @@ public final class Interface extends ClassLib.Common.Interface {
         public void initialize() {
             super.initialize();
             jq_NativeThread.USE_INTERRUPTER_THREAD = true;
+        }
+        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
+            if (IGNORE_THREAD_LOCALS) {
+                jq_Class c = f.getDeclaringClass();
+                if (c == PrimordialClassLoader.getJavaLangThread()) {
+                    String fieldName = f.getName().toString();
+                    if (fieldName.equals("threadLocals"))
+                        return java.util.Collections.EMPTY_MAP;
+                    if (fieldName.equals("inheritableThreadLocals"))
+                        return java.util.Collections.EMPTY_MAP;
+                }
+            }
+            return super.mapInstanceField(o, f);
         }
     }
     
