@@ -1343,6 +1343,7 @@ public class TypeAnalysis {
             public abstract void dump() throws java.io.IOException;
         }
         
+        /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
         public static class DetoxModelBuilder extends Modeler {
             
             public static boolean TRACE_BUILDMODEL = false;
@@ -1389,7 +1390,7 @@ public class TypeAnalysis {
                     if (f.createNewFile()) break;
                 }
                 java.io.PrintStream ps = new java.io.PrintStream(new java.io.FileOutputStream(f));
-                /* Produce XML File */
+                // Produce XML File
                 ps.print(model.toXML());
                 ps.close();
             }
@@ -1509,6 +1510,8 @@ public class TypeAnalysis {
             }
 
         }
+         *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
+
     }
     
     static class AnalysisState {
@@ -2304,7 +2307,9 @@ public class TypeAnalysis {
 	    }
             //f.getDeclaringClass().load();
             //if (!f.getDeclaringClass().isInterface()) return false;
+            /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
             if (detox.runtime.Interceptor.crassFilter(f.getName().toString())) return false;
+             *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
 	    //if (TypeCheck.isAssignable(method.getDeclaringClass(), f.getDeclaringClass())) return false;
 	    //if (method.getDeclaringClass() == f.getDeclaringClass()) return false;
             return true;

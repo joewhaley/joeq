@@ -77,18 +77,24 @@ public abstract class DoTypeAnalysis {
 		Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = null;
 	    } else
 	    if (args[x].equals("-printmodel")) {
+                /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
 		Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker.PRINT_MODEL = true;
+                 *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
 	    } else
 	    if (args[x].equals("-tracemethod")) {
 		Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.trace_method_names.add(args[++x]);
 	    } else
 	    if (args[x].equals("-buildmodel")) {
+                /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
 		Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
                     new Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelBuilder();
+                 *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
 	    } else
 	    if (args[x].equals("-checkmodel")) {
+                /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
 		Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
                     new Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker();
+                 *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
 	    } else
 	    if (args[x].equals("-file")) {
 		BufferedReader br = new BufferedReader(new FileReader(args[++x]));
