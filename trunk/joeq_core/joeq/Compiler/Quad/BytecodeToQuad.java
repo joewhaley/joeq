@@ -2158,7 +2158,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 setCurrentGuard(new UnnecessaryGuardOperand());
                 return false;
             } else {
-                Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), ZeroCheck.ZERO_CHECK_I.INSTANCE, null, op);
+                Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), ZeroCheck.ZERO_CHECK_I.INSTANCE, null, op.copy());
                 appendQuad(q);
                 if (false) {
                     endBasicBlock = true;
@@ -2176,7 +2176,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 setCurrentGuard(new UnnecessaryGuardOperand());
                 return false;
             } else {
-                Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), ZeroCheck.ZERO_CHECK_L.INSTANCE, null, op);
+                Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), ZeroCheck.ZERO_CHECK_L.INSTANCE, null, op.copy());
                 appendQuad(q);
                 if (false) {
                     endBasicBlock = true;
