@@ -16,6 +16,7 @@ import java.util.*;
 import jq;
 import Run_Time.*;
 import Bootstrap.*;
+import UTF.*;
 
 public abstract class Driver {
 
@@ -100,9 +101,65 @@ public abstract class Driver {
                         System.err.println("Class "+commandBuffer[index]+" (canonical name "+canonicalClassName+") not found.");
                     }
                 }
+            } else if (commandBuffer[index].equalsIgnoreCase("interpret")) {
+                String fullName = commandBuffer[++index];
+                int b = fullName.lastIndexOf('.')+1;
+                String methodName = fullName.substring(b);
+                String className = canonicalizeClassName(fullName.substring(0, b-1));
+                try {
+                    jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(className);
+                    c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
+                    jq_Method m = c.getStaticMethod(new jq_NameAndDesc(Utf8.get(methodName), Utf8.get("()V")));
+                    if (m != null) {
+                        Interpreter.QuadInterpreter.State s = Interpreter.QuadInterpreter.State.interpretMethod(m, null);
+                        System.out.println("Result of interpretation: "+s);
+                    } else {
+                        System.err.println("Class "+fullName.substring(0, b-1)+" doesn't contain a void static no-argument method with name "+methodName);
+                    }
+                } catch (NoClassDefFoundError x) {
+                    System.err.println("Class "+fullName.substring(0, b-1)+" (canonical name "+className+") not found.");
+                }
+                
+            } else if (commandBuffer[index].equalsIgnoreCase("addpass")) {
+                String passname = commandBuffer[++index];
+                ControlFlowGraphVisitor mv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
+                Object o;
+                try {
+                    Class c = Class.forName(passname);
+                    o = c.newInstance();
+                    if (o instanceof ControlFlowGraphVisitor) {
+                        mv = (ControlFlowGraphVisitor)o;
+                    } else {
+                        if (o instanceof BasicBlockVisitor) {
+                            bbv = (BasicBlockVisitor)o;
+                        } else {
+                            if (o instanceof QuadVisitor) {
+                                qv = (QuadVisitor)o;
+                            } else {
+                                System.err.println("Unknown pass type "+c);
+                                return index;
+                            }
+                            bbv = new QuadVisitor.AllQuadVisitor(qv, trace_bb);
+                        }
+                        mv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv, trace_method);
+                    }
+                    CodeCache.passes.add(mv);
+                } catch (java.lang.ClassNotFoundException x) {
+                    System.err.println("Cannot find pass named "+passname+".");
+                    System.err.println("Check your classpath and make sure you compiled your pass.");
+                    return index;
+                } catch (java.lang.InstantiationException x) {
+                    System.err.println("Cannot instantiate pass "+passname+": "+x);
+                    return index;
+                } catch (java.lang.IllegalAccessException x) {
+                    System.err.println("Cannot access pass "+passname+": "+x);
+                    System.err.println("Be sure that you made your class public?");
+                    return index;
+                }
+                CodeCache.passes.add(mv);
             } else if (commandBuffer[index].equalsIgnoreCase("runpass")) {
                 String passname = commandBuffer[++index];
-                jq_TypeVisitor cv = null; jq_MethodVisitor mv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
+                jq_TypeVisitor cv = null; jq_MethodVisitor mv = null; ControlFlowGraphVisitor cfgv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
                 Object o;
                 try {
                     Class c = Class.forName(passname);
@@ -113,18 +170,23 @@ public abstract class Driver {
                         if (o instanceof jq_MethodVisitor) {
                             mv = (jq_MethodVisitor)o;
                         } else {
-                            if (o instanceof BasicBlockVisitor) {
-                                bbv = (BasicBlockVisitor)o;
+                            if (o instanceof ControlFlowGraphVisitor) {
+                                cfgv = (ControlFlowGraphVisitor)o;
                             } else {
-                                if (o instanceof QuadVisitor) {
-                                    qv = (QuadVisitor)o;
+                                if (o instanceof BasicBlockVisitor) {
+                                    bbv = (BasicBlockVisitor)o;
                                 } else {
-                                    System.err.println("Unknown pass type "+c);
-                                    return index;
+                                    if (o instanceof QuadVisitor) {
+                                        qv = (QuadVisitor)o;
+                                    } else {
+                                        System.err.println("Unknown pass type "+c);
+                                        return index;
+                                    }
+                                    bbv = new QuadVisitor.AllQuadVisitor(qv, trace_bb);
                                 }
-                                bbv = new QuadVisitor.AllQuadVisitor(qv, trace_bb);
+                                cfgv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv, trace_method);
                             }
-                            mv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv, trace_method);
+                            mv = new ControlFlowGraphVisitor.CodeCacheVisitor(cfgv, false);
                         }
                         cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, trace_type);
                     }
@@ -142,7 +204,12 @@ public abstract class Driver {
                 }
                 for (Iterator i = classesToProcess.iterator(); i.hasNext(); ) {
                     jq_Type t = (jq_Type)i.next();
-                    t.accept(cv);
+                    try {
+                        t.accept(cv);
+                    } catch (Exception x) {
+                        System.err.println("Runtime exception occurred while executing pass on "+t+" : "+x);
+                        x.printStackTrace(System.err);
+                    }
                 }
                 System.out.println("Completed pass! "+o);
             } else if (commandBuffer[index].equalsIgnoreCase("exit") || commandBuffer[index].equalsIgnoreCase("quit")) {
