@@ -27,6 +27,7 @@ public abstract class Throwable {
         ExceptionDeliverer.StackFrame backtrace = (ExceptionDeliverer.StackFrame)this.backtrace;
         int i=-1;
         while (backtrace != null) { backtrace = backtrace.getNext(); ++i; }
+        if (i == -1) i = 0;
         return i;
     }
     

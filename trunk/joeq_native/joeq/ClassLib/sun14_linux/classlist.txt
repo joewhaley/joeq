@@ -18,6 +18,7 @@ LCompil3r/BytecodeAnalysis/Bytecodes$EmptyVisitor;
 LCompil3r/Quad/BytecodeToQuad$jq_ReturnAddressType;
 LCompil3r/Reference/x86/*
 LGC/*
+LMain/JoeqVM;
 LMain/jq;
 LMain/TraceFlags;
 LMemory/*
