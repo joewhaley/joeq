@@ -81,6 +81,7 @@ public abstract class Bootstrapper {
         //StackAddress.FACTORY = Bootstrap.BootstrapStackAddress.FACTORY;
         
         ClassLibInterface.useJoeqClasslib(true);
+        ObjectTraverser.IsBootstrapping = true;
         
         CodeAllocator.initializeCompiledMethodMap();
         
