@@ -58,14 +58,41 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     public void registerRelations(BDD V1V2context, BDD V1H1context) {
         if (TRACE) out.println("Adding "+this.m+" with context");
         BDD b;
-        if (V1H1context != null) b = vP.and(V1H1context);
-        else b = vP.id();
+        if (V1H1context != null) {
+            b = vP.and(V1H1context);
+            if (PA.VerifyAssertions) {
+                if (!b.exist(pa.V1cH1cset).equals(vP)) {
+                    System.out.println("m = "+this.m);
+                    System.out.println("vP = "+vP.toStringWithDomains(pa.TS));
+                    System.out.println("V1H1context = "+V1H1context.toStringWithDomains());
+                    System.out.println("b = "+b.toStringWithDomains());
+                    Assert.UNREACHABLE();
+                }
+            }
+        } else {
+            if (PA.VerifyAssertions)
+                Assert._assert((!pa.OBJECT_SENSITIVE && !pa.CONTEXT_SENSITIVE) ||
+                               vP.isZero());
+            b = vP.id();
+        }
         pa.vP.orWith(b);
-        if (V1V2context != null) b = L.and(V1V2context);
-        else b = L.id();
+        if (V1V2context != null) {
+            b = L.and(V1V2context);
+            if (PA.VerifyAssertions) {
+                Assert._assert(b.exist(pa.V1cV2cset).equals(L));
+            }
+        } else {
+            b = L.id();
+        }
         pa.L.orWith(b);
-        if (V1V2context != null) b = S.and(V1V2context);
-        else b = S.id();
+        if (V1V2context != null) {
+            b = S.and(V1V2context);
+            if (PA.VerifyAssertions) {
+                Assert._assert(b.exist(pa.V1cV2cset).equals(S));
+            }
+        } else {
+            b = S.id();
+        }
         pa.S.orWith(b);
     }
     
@@ -118,7 +145,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     }
     
     public void visitMethod(jq_Method m) {
-        Assert._assert(!pa.newMethodSummaries.containsKey(m));
+        if (PA.VerifyAssertions)
+            Assert._assert(!pa.newMethodSummaries.containsKey(m));
         pa.newMethodSummaries.put(m, this);
         
         if (TRACE) out.println("Visiting method "+m);
@@ -151,13 +179,21 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         pa.addClassInitializer(ms.getMethod().getDeclaringClass());
         
         // build up 'formal'
+        int offset;
+        Node thisparam;
+        if (ms.getMethod().isStatic()) {
+            thisparam = GlobalNode.GLOBAL;
+            offset = 0;
+        } else {
+            thisparam = ms.getParamNode(0);
+            offset = 1;
+        }
+        pa.addToFormal(M_bdd, 0, thisparam);
         int nParams = ms.getNumOfParams();
-        int offset = ms.getMethod().isStatic()?1:0;
-        for (int i = 0; i < nParams; ++i) {
+        for (int i = offset; i < nParams; ++i) {
             Node node = ms.getParamNode(i);
             if (node == null) continue;
-            int Z_i = i + offset;
-            pa.addToFormal(M_bdd, Z_i, node);
+            pa.addToFormal(M_bdd, i+1-offset, node);
         }
         
         // build up 'mI', 'actual', 'Iret', 'Ithr'
