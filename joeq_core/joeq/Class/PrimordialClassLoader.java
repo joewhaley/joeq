@@ -30,12 +30,14 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 
 import jq;
+import ClassLib.ClassLibInterface;
 import Clazz.*;
 import UTF.Utf8;
 import Util.ArrayIterator;
 import Util.EnumerationIterator;
 import Util.FilterIterator;
 import Util.UnmodifiableIterator;
+import Util.AppendIterator;
 import Util.Default;
 
 public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileConstants {
@@ -67,17 +69,20 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         }
         Iterator listPackage(final String pathname) {
             // look for directory name first
-            final String filesep   = System.getProperty("file.separator");
+            final String filesep   = "/";
             /* not all .JAR files have entries for directories, unfortunately.
             ZipEntry ze = zf.getEntry(pathname);
             if (ze==null) return Default.nullIterator;
              */
             return new FilterIterator(new EnumerationIterator(zf.entries()),
             new FilterIterator.Filter() {
-                public boolean isElement(Object o) { ZipEntry zze=(ZipEntry) o;
+                public boolean isElement(Object o) {
+                    ZipEntry zze=(ZipEntry) o;
                     String name = zze.getName();
+                    if (TRACE) out.println("Checking if zipentry "+name+" is in package "+pathname);
                     return (!zze.isDirectory()) && name.startsWith(pathname) &&
-                    name.lastIndexOf(filesep)==(pathname.length()-1);
+                            name.endsWith(".class") &&
+                            name.lastIndexOf(filesep)==(pathname.length()-1);
                 }
                 public Object map(Object o) {
                     return ((ZipEntry)o).getName();
@@ -107,12 +112,20 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                 return null; // if anything goes wrong, return null.
             }
         }
-        Iterator listPackage(final String pathname) {
-            File f = new File(path,pathname);
+        Iterator listPackage(final String pathn) {
+            final String filesep = System.getProperty("file.separator");
+            final String pathname;
+            if (filesep.charAt(0) != '/') pathname = pathn.replace('/', filesep.charAt(0));
+            else pathname = pathn;
+            File f = new File(path, pathname);
+            if (TRACE) out.println("Attempting to list "+pathname+" in path "+path);
             if (!f.exists() || !f.isDirectory()) return Default.nullIterator;
             return new FilterIterator(new ArrayIterator(f.list()),
                 new FilterIterator.Filter() {
-                    public Object map(Object o) { return pathname + ((String)o); }
+                    public boolean isElement(Object o) {
+                        return ((String)o).endsWith(".class");
+                    }
+                    public Object map(Object o) { return pathn + ((String)o); }
                 });
         }
     }
@@ -167,6 +180,18 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         };
     }
 
+    public Iterator listPackage(final String pathname) {
+        Iterator result = null;
+        for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
+            ClasspathElement cpe = (ClasspathElement)it.next();
+            Iterator lp = cpe.listPackage(pathname);
+            if (lp == Default.nullIterator) continue;
+            result = result==null?lp:new AppendIterator(lp, result);
+        }
+        if (result == null) return Default.nullIterator;
+        return result;
+    }
+    
     public String classpathToString() {
         final String pathsep = System.getProperty("path.separator");
         StringBuffer result = new StringBuffer(pathsep);
@@ -226,12 +251,6 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     
     private final List/*<ClasspathElement>*/ classpathList;
     
-    public static final PrimordialClassLoader loader;
-    static {
-        loader = new PrimordialClassLoader();
-        initPrimitiveTypes();
-    }
-    
     private PrimordialClassLoader() {
         bs_desc2type = new HashMap();
         classpathList = new ArrayList();
@@ -258,23 +277,30 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         return new DataInputStream(is);
     }
 
-    public jq_Class getJavaLangObject() {
-        //return (jq_Class)getOrCreateBSType("Ljava/lang/Object;");
-        return ClassLib.sun13.java.lang.Object._class;
+    public static final PrimordialClassLoader loader;
+    public static final jq_Class JavaLangObject;
+    public static final jq_Class JavaLangClass;
+    public static final jq_Class JavaLangString;
+    public static final jq_Class JavaLangSystem;
+    public static final jq_Class JavaLangThrowable;
+    static {
+        loader = new PrimordialClassLoader();
+        initPrimitiveTypes();
+        JavaLangObject = (jq_Class)loader.getOrCreateBSType("Ljava/lang/Object;");
+        JavaLangClass = (jq_Class)loader.getOrCreateBSType("Ljava/lang/Class;");
+        JavaLangString = (jq_Class)loader.getOrCreateBSType("Ljava/lang/String;");
+        JavaLangSystem = (jq_Class)loader.getOrCreateBSType("Ljava/lang/System;");
+        JavaLangThrowable = (jq_Class)loader.getOrCreateBSType("Ljava/lang/Throwable;");
     }
-    public jq_Class getJavaLangString() {
-        //return (jq_Class)getOrCreateBSType("Ljava/lang/String;");
-        return ClassLib.sun13.java.lang.String._class;
-    }
-    public jq_Class getJavaLangSystem() {
-        //return (jq_Class)getOrCreateBSType("Ljava/lang/System;");
-        return ClassLib.sun13.java.lang.System._class;
-    }
-    public jq_Class getJavaLangThrowable() {
-        //return (jq_Class)getOrCreateBSType("Ljava/lang/Throwable;");
-        return ClassLib.sun13.java.lang.Throwable._class;
-    }
-
+    
+    public static jq_Class getJavaLangObject() { return JavaLangObject; }
+    public static jq_Class getJavaLangClass() { return JavaLangClass; }
+    public static jq_Class getJavaLangString() { return JavaLangString; }
+    public static jq_Class getJavaLangSystem() { return JavaLangSystem; }
+    public static jq_Class getJavaLangThrowable() { return JavaLangThrowable; }
+    public static jq_Class getJavaLangClassLoader() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ClassLoader;"); }
+    public static jq_Class getJavaLangReflectField() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/reflect/Field;"); }
+    public static jq_Class getJavaLangReflectMethod() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/reflect/Method;"); }
     private final Map/*<Utf8, jq_Type>*/ bs_desc2type;
 
     public Set/*jq_Type*/ getAllTypes() {
@@ -287,9 +313,15 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         return s;
     }
     
+    public final jq_Class getOrCreateClass(String desc, DataInput in) {
+	jq_Class t = (jq_Class)getOrCreateBSType(Utf8.get(desc));
+	t.load(in);
+	return t;
+    }
+
     public final jq_Type getOrCreateBSType(String desc) { return getOrCreateBSType(Utf8.get(desc)); }
     public final jq_Type getOrCreateBSType(Utf8 desc) {
-        if (!jq.Bootstrapping) return ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(this, desc);
+        if (!jq.Bootstrapping) return ClassLibInterface.i.getOrCreateType(this, desc);
         jq_Type t = (jq_Type)bs_desc2type.get(desc);
         if (t == null) {
             if (desc.isDescriptor(jq_ClassFileConstants.TC_CLASS)) {

@@ -9,6 +9,7 @@
 
 package Bootstrap;
 
+import ClassLib.ClassLibInterface;
 import Clazz.*;
 import Run_Time.*;
 import Scheduler.*;
@@ -110,70 +111,6 @@ public class ObjectTraverser {
         return null;
     }
     private static Object NO_OBJECT = new Object();
-        /*
-    public Object getMappedStaticFieldValue(Class c, String fieldName) {
-        jq_Class k = (jq_Class)Reflection.getJQType(c);
-        if (fieldName.equals("_class"))
-            return k;
-        if (c == Class.class) {
-            if (fieldName.equals("_jq_type"))
-                return k.getOrCreateInstanceField("jq_type", "LClazz/jq_Type;");
-        }
-        if (c == ClassLoader.class) {
-            if (fieldName.equals("_desc2type"))
-                return k.getOrCreateInstanceField("desc2type", "Ljava/util/Map;");
-        }
-        if (c == System.class) {
-            if (fieldName.equals("_in"))
-                return k.getOrCreateStaticField("in", "Ljava/io/InputStream;");
-            if (fieldName.equals("_out"))
-                return k.getOrCreateStaticField("out", "Ljava/io/PrintStream;");
-            if (fieldName.equals("_err"))
-                return k.getOrCreateStaticField("err", "Ljava/io/PrintStream;");
-            if (fieldName.equals("_props"))
-                return k.getOrCreateStaticField("props", "Ljava/util/Properties;");
-            if (fieldName.equals("_initializeSystemClass"))
-                return k.getOrCreateStaticMethod("initializeSystemClass", "()V");
-        }
-        if (c == java.util.zip.ZipFile.class) {
-            return getStaticFieldValue(org.jos.java.util.zip.ZipFile.class, fieldName);
-        }
-        if (c.getName().equals("java.io.FileSystem")) {
-            if (fieldName.equals("default_fs")) {
-                Object o2 = mapped_objects.get(c);
-                if (o2 != null) return o2;
-                try {
-                    Constructor init = Class.forName("java.io.Win32FileSystem").getConstructor(null);
-                    init.setAccessible(true);
-                    o2 = init.newInstance(null);
-                    mapped_objects.put(c, o2);
-                } catch (ClassNotFoundException x) {
-                    jq.UNREACHABLE();
-                } catch (NoSuchMethodException x) {
-                    jq.UNREACHABLE();
-                } catch (InvocationTargetException x) {
-                    jq.UNREACHABLE();
-                } catch (IllegalAccessException x) {
-                    jq.UNREACHABLE();
-                } catch (InstantiationException x) {
-                    jq.UNREACHABLE();
-                }
-                return o2;
-            }
-        }
-        if (fieldName.startsWith("class$L")) {
-            // jikes-compiled class file, static class reference.
-            fieldName = "class$"+fieldName.substring(7);
-            //return getStaticFieldValue(c, fieldName);
-            return c;
-        }
-        if (c == java.io.FileDescriptor.class) {
-            if (fieldName.equals("_fd"))
-                return k.getOrCreateInstanceField("fd", "I");
-        }
-        return NO_OBJECT;
-    }
-         */
     private HashMap mapped_objects = new HashMap();
     public Object getMappedInstanceFieldValue(Object o, Class c, String fieldName) {
         if (c == Class.class) {
@@ -288,14 +225,15 @@ public class ObjectTraverser {
             String name = ((java.util.zip.ZipFile)o).getName();
             try {
                 // initialize the fields of the object
-                ClassLib.sun13.java.util.zip.ZipFile.__init__((java.util.zip.ZipFile)o, name);
+                ClassLibInterface.i.init_zipfile((java.util.zip.ZipFile)o, name);
             } catch (IOException x) {
                 jq.UNREACHABLE("cannot open zip file "+o+": "+x);
             }
             
             // we need to reopen the RandomAccessFile on VM startup
             Object[] args = { ((Object[])o2)[0], name, new Boolean(false) };
-            MethodInvocation mi = new MethodInvocation(ClassLib.sun13.java.io.RandomAccessFile._open, args);
+            jq_Method raf_open = ClassLibInterface._class.getOrCreateStaticMethod("open_static", "(Ljava/io/RandomAccessFile;Ljava/lang/String;Z)V");
+            MethodInvocation mi = new MethodInvocation(raf_open, args);
             jq.on_vm_startup.add(mi);
             System.out.println("Added call to reopen zip file "+name+" on joeq startup: "+mi);
             
