@@ -1,12 +1,12 @@
 package Memory.Manager;
 
-import Main.jq;
-import Run_Time.Debug;
 import Memory.HeapAddress;
+import Run_Time.Debug;
 import Run_Time.HighResolutionTimer;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -292,7 +292,7 @@ public class GCWorkQueue {
                 GCUtil.dumpRef(ref);
                 //VM_Memory.dumpMemory(ref, 64, 64);
                 // dump 16 words on either side of bad ref
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
             }
         }
 

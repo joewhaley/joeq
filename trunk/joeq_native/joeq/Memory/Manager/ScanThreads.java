@@ -8,7 +8,7 @@ import Memory.Heap.Heap;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
 import Scheduler.jq_Thread;
-import Util.AppendIterator;
+import Util.Collections.AppendIterator;
 
 /**
  * @author John Whaley

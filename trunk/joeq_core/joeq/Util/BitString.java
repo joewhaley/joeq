@@ -7,13 +7,33 @@
 
 package Util;
 
-import Main.jq;
+import Util.Collections.UnmodifiableIterator;
 
-/*
+/** <code>BitString</code> implements a vector of bits much like <code>java.util.BitSet</code>,
+ * except that this implementation actually works.  Also, <code>BitString</code>
+ * has some groovy features which <code>BitSet</code> doesn't; mostly related to
+ * efficient iteration over <code>true</code> and <code>false</code> components.
+ * <p>
+ * Each component of the <code>BitString</code> has a boolean value.
+ * The bits of a <code>BitString</code> are indexed by non-negative
+ * integers (that means they are zero-based, of course).  Individual
+ * indexed bits can be examined, set, or cleared.  One
+ * <code>BitString</code> may be used to modify the contents of another
+ * <code>BitString</code> through logical AND, logical inclusive OR,
+ * and logical exclusive OR operations.
+ * <p>
+ * By default, all bits in the set initially have the value 
+ * <code>false</code>.
+ * <p>
+ * Every bit set has a current size, which is the number of bits of
+ * space currently in use by the bit set.  Note that the size is related
+ * to the implementation of a bit set, so it may change with implementation.
+ * The length of a bit set related to the logical length of a bit set
+ * and is defined independently of implementation.
+ * 
  * @author  John Whaley
  * @version $Id$
  */
-
 public final class BitString implements Cloneable, java.io.Serializable {
     /* There are 2^BITS_PER_UNIT bits in each unit (int) */
     private static final int BITS_PER_UNIT = 5;
@@ -63,6 +83,13 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return -1;
     }
 
+    /**
+     * Utility function to return the number of 1 bits in the given integer
+     * value.
+     * 
+     * @param b value to check
+     * @return byte number of one bits
+     */
     public static final byte popcount(int b) {
         int t, x;
         x = b;
@@ -75,6 +102,12 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return (byte) x;
     }
 
+    /**
+     * Utility function to return the number of 1 bits in the given long value.
+     * 
+     * @param b value to check
+     * @return byte number of one bits
+     */
     public static final byte popcount(long b) {
         long t, x;
         x = b;
@@ -88,11 +121,25 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return (byte) x;
     }
 
+    /**
+     * Utility function to return the index of the first (lowest-order) one bit
+     * in the given integer.  Returns zero if the given number is zero.
+     * 
+     * @param b value to check
+     * @return byte index of first one bit, or zero if the number is zero
+     */
     public static final int bsf(int b) {
         int t = ~(b | -b);
         return popcount(t);
     }
 
+    /**
+     * Utility function to return the index of the last one bit in the given
+     * integer.  Returns zero if the given number is zero.
+     * 
+     * @param b value to check
+     * @return byte index of first one bit, or zero if the number is zero
+     */
     public static final int bsr(int v) {
         if ((v & 0xFFFF0000) != 0) {
             if ((v & 0xFF000000) != 0)
@@ -107,7 +154,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
 
     /** Highest bit set in a byte. */
-    static final byte bytemsb[] = {0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 /* 256 */};
+    private static final byte bytemsb[] = {0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 /* 256 */};
 
     /**
      * Returns the last index less than <code>where</code> in the
@@ -302,6 +349,10 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return true;
     }
 
+    /**
+     * Check if this set contains all bits of the given set.
+     * @param set the set to check containment with
+     */
     public boolean contains(BitString other) {
         int n = bits.length;
         for (int i = n; i-- > 0;) {
@@ -311,10 +362,14 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
 
     private static void shld(int[] bits, int i1, int i2, int amt) {
-        jq.Assert(amt >= 0 && amt < BITS_PER_UNIT);
+        Assert._assert(amt >= 0 && amt < BITS_PER_UNIT);
         bits[i1] = (bits[i1] << amt) | ((bits[i2] << (BITS_PER_UNIT - amt)) >> (BITS_PER_UNIT - amt));
     }
 
+    /**
+     * Performs a left-shift operation.
+     * @param amt number of bits to shift, can be negative
+     */
     public void shl(int amt) {
         final int div = amt >> BITS_PER_UNIT;
         final int mod = amt & MASK;
@@ -348,15 +403,18 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
 
     private static void shrd(int[] bits, int i1, int i2, int amt) {
-        jq.Assert(amt >= 0 && amt < BITS_PER_UNIT);
+        Assert._assert(amt >= 0 && amt < BITS_PER_UNIT);
         bits[i1] = (bits[i1] >>> amt) | ((bits[i2] >>> (BITS_PER_UNIT - amt)) << (BITS_PER_UNIT - amt));
     }
 
+    /**
+     * Performs a right-shift operation.
+     * @param amt number of bits to shift
+     */
     public void shr(int amt) {
         final int div = amt >> BITS_PER_UNIT;
         final int mod = amt & MASK;
         final int size = bits.length;
-        jq.Assert(amt >= 0);
         // big moves
         if (div > 0) {
             System.arraycopy(bits, div, bits, 0, size - div);
@@ -388,12 +446,6 @@ public final class BitString implements Cloneable, java.io.Serializable {
      */
     public void copyBits(BitString set) {
         System.arraycopy(bits, 0, set.bits, 0, set.bits.length);
-        /*
-        int setLength = set.bits.length;
-        for (int i = setLength; i-- > 0;) {
-            bits[i] = set.bits[i];
-        }
-        */
     }
 
     /**
@@ -401,7 +453,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
      * only on which bits have been set within this <code>BitString</code>.
      */
     public int hashCode() {
-        int h = 1234 * bits.length;
+        int h = 1234;
         for (int i = bits.length; --i >= 0;) {
             h ^= bits[i] * (i + 1);
         }
@@ -516,23 +568,21 @@ public final class BitString implements Cloneable, java.io.Serializable {
         StringBuffer buffer = new StringBuffer();
         boolean needSeparator = false;
         buffer.append('{');
-        int limit = size();
-        for (int i = 0; i < limit; ++i) {
-            if (get(i)) {
-                if (needSeparator) {
-                    buffer.append(", ");
-                } else {
-                    needSeparator = true;
-                }
-                buffer.append(i);
+        for (ForwardBitStringIterator i=iterator(); i.hasNext(); ) {
+            int x = i.nextIndex();
+            if (needSeparator) {
+                buffer.append(", ");
+            } else {
+                needSeparator = true;
             }
+            buffer.append(x);
         }
         buffer.append('}');
         return buffer.toString();
     }
 
     // initialize an array with bit-reversed indices
-    static int[] bit_reverse(int serSize, int[] newSer) {
+    private static int[] bit_reverse(int serSize, int[] newSer) {
         int iterSerSize = 1;
         newSer[0] = 0;
         while (iterSerSize < serSize) {
@@ -547,34 +597,50 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return newSer;
     }
 
+    /**
+     * Returns an iterator that iterates through the bits in forward order.
+     */
     public ForwardBitStringIterator iterator() {
         return new ForwardBitStringIterator();
     }
 
+    /**
+     * Returns an iterator that iterates through the bits in backward order.
+     */
     public BackwardBitStringIterator backwardsIterator() {
         return new BackwardBitStringIterator();
     }
 
+    /**
+     * Returns an iterator that iterates through the bits in backward order,
+     * starting at the given index.
+     */
     public BackwardBitStringIterator backwardsIterator(int i) {
         return new BackwardBitStringIterator(i);
     }
 
-    public abstract static class BitStringIterator implements java.util.Iterator {
+    /**
+     * Abstract bit string iterator class.
+     */
+    public abstract static class BitStringIterator extends UnmodifiableIterator {
 
+        /**
+         * Returns the index of the next bit set.
+         */
         public abstract int nextIndex();
 
-        public Object next() {
+        /**
+         * @see java.util.Iterator#next()
+         */
+        public final Object next() {
             return new Integer(nextIndex());
-        }
-
-        public abstract boolean hasNext();
-
-        public void remove() {
-            throw new UnsupportedOperationException();
         }
 
     }
 
+    /**
+     * Iterator for iterating through a bit string in forward order.
+     */
     public class ForwardBitStringIterator extends BitStringIterator {
         private int j, k, t;
 
@@ -584,6 +650,9 @@ public final class BitString implements Cloneable, java.io.Serializable {
             t = bits[0];
         }
 
+        /**
+         * @see java.util.Iterator#hasNext()
+         */
         public boolean hasNext() {
             while (t == 0) {
                 if (j == bits.length - 1) return false;
@@ -593,6 +662,9 @@ public final class BitString implements Cloneable, java.io.Serializable {
             return true;
         }
 
+        /**
+         * @see Util.BitString.BitStringIterator#nextIndex()
+         */
         public int nextIndex() {
             while (t == 0) {
                 if (j == bits.length - 1) throw new java.util.NoSuchElementException();
@@ -613,54 +685,52 @@ public final class BitString implements Cloneable, java.io.Serializable {
 
     }
 
+    /**
+     * Iterator for iterating through a bit string in backward order.
+     */
     public class BackwardBitStringIterator extends BitStringIterator {
         private int j, k, t;
 
         BackwardBitStringIterator(int i) {
-            if (TRACE) System.out.println("BackwardBitStringIterator for " + BitString.this);
             j = subscript(i);
             t = bits[j];
             t &= (1 << ((i + 1) & MASK)) - 1;
             k = j << BITS_PER_UNIT;
-            if (TRACE) System.out.println("BackwardBitStringIterator i=" + i + " j=" + j + " t=" + Strings.hex(t) + " k=" + k);
         }
 
         BackwardBitStringIterator() {
-            if (TRACE) System.out.println("BackwardBitStringIterator for " + BitString.this);
             j = bits.length - 1;
             t = bits[j];
             k = j << BITS_PER_UNIT;
-            if (TRACE) System.out.println("BackwardBitStringIterator j=" + j + " t=" + Strings.hex(t) + " k=" + k);
         }
 
+        /**
+         * @see java.util.Iterator#hasNext()
+         */
         public boolean hasNext() {
             while (t == 0) {
-                if (TRACE) System.out.println("BackwardBitStringIterator: t == 0");
                 if (j == 0) {
-                    if (TRACE) System.out.println("BackwardBitStringIterator: j == 0 -> the end");
                     return false;
                 }
                 t = bits[--j];
                 k -= 1 << BITS_PER_UNIT;
-                if (TRACE) System.out.println("BackwardBitStringIterator: t = " + Strings.hex(t) + " j = " + j + " k = " + k);
             }
             return true;
         }
 
+        /**
+         * @see Util.BitString.BitStringIterator#nextIndex()
+         */
         public int nextIndex() {
             while (t == 0) {
-                if (TRACE) System.out.println("BackwardBitStringIterator: t = 0");
                 if (j == 0) throw new java.util.NoSuchElementException();
                 t = bits[--j];
                 k -= 1 << BITS_PER_UNIT;
-                if (TRACE) System.out.println("BackwardBitStringIterator: t = " + Strings.hex(t) + " j = " + j + " k = " + k);
             }
             int index = bsr(t) - 1;
             t &= ~(1 << index);
-            if (TRACE) System.out.println("BackwardBitStringIterator: t=" + Strings.hex(t) + " index=" + index + " k=" + k);
             return k + index;
         }
-
-        public static final boolean TRACE = false;
+        
     }
 }

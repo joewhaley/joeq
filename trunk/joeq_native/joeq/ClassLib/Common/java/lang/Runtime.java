@@ -7,7 +7,7 @@
 
 package ClassLib.Common.java.lang;
 
-import Main.jq;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -20,7 +20,7 @@ public abstract class Runtime {
                                  java.lang.String envp[],
                                  java.lang.String path) 
         throws java.io.IOException {
-        jq.TODO();
+        Assert.TODO();
         return null;
     }
 

@@ -31,6 +31,7 @@ import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.QuadVisitor;
 import Run_Time.Reflection;
 import UTF.Utf8;
+import Util.Assert;
 import Util.Strings;
 
 /*
@@ -64,7 +65,7 @@ public abstract class Driver {
                     for (int i = 0; i < size; ++i) {
                         commands[i] = st.nextToken();
                     }
-                    jq.Assert(!st.hasMoreTokens());
+                    Assert._assert(!st.hasMoreTokens());
                 } catch (IOException x) {
                     System.err.println(x.toString());
                     return;
@@ -421,7 +422,7 @@ public abstract class Driver {
             args[m] = Double.valueOf(s_args[++j]);
         } else if (type.isArrayType()) {
             if (!s_args[++j].equals("{"))
-                jq.UNREACHABLE("array parameter doesn't start with {");
+                Assert.UNREACHABLE("array parameter doesn't start with {");
             int count = 0;
             while (!s_args[++j].equals("}")) ++count;
             jq_Type elementType = ((jq_Array) type).getElementType();
@@ -471,9 +472,9 @@ public abstract class Driver {
                     array[k] = Double.parseDouble(s_args[j - count + k]);
                 args[m] = array;
             } else
-                jq.UNREACHABLE("Parsing of type " + type + " is not implemented");
+                Assert.UNREACHABLE("Parsing of type " + type + " is not implemented");
         } else
-            jq.UNREACHABLE("Parsing of type " + type + " is not implemented");
+            Assert.UNREACHABLE("Parsing of type " + type + " is not implemented");
         return j;
     }
 
@@ -484,7 +485,7 @@ public abstract class Driver {
             }
         } catch (ArrayIndexOutOfBoundsException x) {
             x.printStackTrace();
-            jq.UNREACHABLE("not enough method arguments");
+            Assert.UNREACHABLE("not enough method arguments");
         }
         return j;
     }

@@ -72,6 +72,7 @@ import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import UTF.Utf8;
+import Util.Assert;
 import Util.Strings;
 
 /**
@@ -143,7 +144,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         for (int i=exs.length-1; i>=0; --i) {
             jq_TryCatchBC ex = exs[i];
             Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlockByBytecodeIndex(ex.getStartPC());
-            jq.Assert(bc_bb.getStart() < ex.getEndPC());
+            Assert._assert(bc_bb.getStart() < ex.getEndPC());
             BasicBlock ex_handler = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(ex.getHandlerPC()).id];
             ex_handler.setExceptionHandlerEntry();
             int numOfProtectedBlocks = (ex.getEndPC()==method.getBytecode().length?quad_bbs.length:bc_cfg.getBasicBlockByBytecodeIndex(ex.getEndPC()).id) - bc_bb.id;
@@ -182,7 +183,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         // traverse reverse post-order over basic blocks to generate instructions
         Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
         Compil3r.BytecodeAnalysis.BasicBlock first_bb = rpo.nextBB();
-        jq.Assert(first_bb == bc_cfg.getEntry());
+        Assert._assert(first_bb == bc_cfg.getEntry());
         while (rpo.hasNext()) {
             Compil3r.BytecodeAnalysis.BasicBlock bc_bb = rpo.nextBB();
             visited[bc_bb.id] = true;
@@ -349,7 +350,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             RegisterOperand rop = (RegisterOperand)op;
             return (Operand)rop.scratchObject;
         }
-        jq.Assert(op instanceof AConstOperand);
+        Assert._assert(op instanceof AConstOperand);
         return new UnnecessaryGuardOperand();
     }
     
@@ -461,7 +462,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         if (t.isReferenceType()) {
             // refine type.
             t = getArrayElementTypeOf(ref);
-            jq.Assert(!t.isAddressType());
+            Assert._assert(!t.isAddressType());
         }
         RegisterOperand r = getStackRegister(t);
         Quad q = ALoad.create(quad_cfg.getNewQuadID(), operator, r, ref, index, getCurrentGuard());
@@ -532,7 +533,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         if (t.isReferenceType() && ref instanceof RegisterOperand) {
             // perform checkstore
             if (performCheckStore((RegisterOperand)ref, val)) return;
-            jq.Assert(!t.isAddressType());
+            Assert._assert(!t.isAddressType());
         }
         Quad q = AStore.create(quad_cfg.getNewQuadID(), operator, val, ref, index, getCurrentGuard());
         appendQuad(q);
@@ -684,7 +685,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case BINOP_AND: operator = Binary.AND_I.INSTANCE; break;
             case BINOP_OR: operator = Binary.OR_I.INSTANCE; break;
             case BINOP_XOR: operator = Binary.XOR_I.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         BINOPhelper(operator, jq_Primitive.INT, jq_Primitive.INT, jq_Primitive.INT, zero_check);
     }
@@ -700,7 +701,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case BINOP_AND: operator = Binary.AND_L.INSTANCE; break;
             case BINOP_OR: operator = Binary.OR_L.INSTANCE; break;
             case BINOP_XOR: operator = Binary.XOR_L.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         BINOPhelper(operator, jq_Primitive.LONG, jq_Primitive.LONG, jq_Primitive.LONG, zero_check);
     }
@@ -713,7 +714,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case BINOP_MUL: operator = Binary.MUL_F.INSTANCE; break;
             case BINOP_DIV: operator = Binary.DIV_F.INSTANCE; break;
             case BINOP_REM: operator = Binary.REM_F.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         BINOPhelper(operator, jq_Primitive.FLOAT, jq_Primitive.FLOAT, jq_Primitive.FLOAT, false);
     }
@@ -726,7 +727,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case BINOP_MUL: operator = Binary.MUL_D.INSTANCE; break;
             case BINOP_DIV: operator = Binary.DIV_D.INSTANCE; break;
             case BINOP_REM: operator = Binary.REM_D.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         BINOPhelper(operator, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, false);
     }
@@ -742,7 +743,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Unary operator=null;
         switch (op) {
             case UNOP_NEG: operator = Unary.NEG_I.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         UNOPhelper(operator, jq_Primitive.INT, jq_Primitive.INT);
     }
@@ -751,7 +752,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Unary operator=null;
         switch (op) {
             case UNOP_NEG: operator = Unary.NEG_L.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         UNOPhelper(operator, jq_Primitive.LONG, jq_Primitive.LONG);
     }
@@ -760,7 +761,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Unary operator=null;
         switch (op) {
             case UNOP_NEG: operator = Unary.NEG_F.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         UNOPhelper(operator, jq_Primitive.FLOAT, jq_Primitive.FLOAT);
     }
@@ -769,7 +770,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Unary operator=null;
         switch (op) {
             case UNOP_NEG: operator = Unary.NEG_D.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         UNOPhelper(operator, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE);
     }
@@ -780,7 +781,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case SHIFT_LEFT: operator = Binary.SHL_I.INSTANCE; break;
             case SHIFT_RIGHT: operator = Binary.SHR_I.INSTANCE; break;
             case SHIFT_URIGHT: operator = Binary.USHR_I.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         BINOPhelper(operator, jq_Primitive.INT, jq_Primitive.INT, jq_Primitive.INT, false);
     }
@@ -791,7 +792,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case SHIFT_LEFT: operator = Binary.SHL_L.INSTANCE; break;
             case SHIFT_RIGHT: operator = Binary.SHR_L.INSTANCE; break;
             case SHIFT_URIGHT: operator = Binary.USHR_L.INSTANCE; break;
-            default: jq.UNREACHABLE(); break;
+            default: Assert.UNREACHABLE(); break;
         }
         BINOPhelper(operator, jq_Primitive.LONG, jq_Primitive.LONG, jq_Primitive.INT, false);
     }
@@ -922,12 +923,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
         IntIfCmp operator;
         if (t1.isAddressType()) {
             if (!t0.isAddressType() && t0 != jq_Reference.jq_NullType.NULL_TYPE) {
-                jq.UNREACHABLE("comparing address type "+op1+" with non-address type "+op0);
+                Assert.UNREACHABLE("comparing address type "+op1+" with non-address type "+op0);
             }
             operator = IntIfCmp.IFCMP_P.INSTANCE;
         } else if (t0.isAddressType()) {
             if (t1 != jq_Reference.jq_NullType.NULL_TYPE) {
-                jq.UNREACHABLE("comparing address type "+op0+" with non-address type "+op1);
+                Assert.UNREACHABLE("comparing address type "+op0+" with non-address type "+op1);
             }
             operator = IntIfCmp.IFCMP_P.INSTANCE;
         } else {
@@ -968,7 +969,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             appendQuad(q);
             return;
         }
-        jq.Assert(quad_bbs[jsrinfo.entry_block.id] == target_bb);
+        Assert._assert(quad_bbs[jsrinfo.entry_block.id] == target_bb);
         BasicBlock last_bb = quad_bbs[jsrinfo.exit_block.id];
         JSRInfo q_jsrinfo = new JSRInfo(target_bb, last_bb, jsrinfo.changedLocals);
         this.quad_cfg.addJSRInfo(q_jsrinfo);
@@ -1034,7 +1035,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Operand op0 = current_state.pop_I();
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(default_target).id];
-        jq.Assert(high-low+1 == targets.length);
+        Assert._assert(high-low+1 == targets.length);
         Quad q = TableSwitch.create(quad_cfg.getNewQuadID(), TableSwitch.TABLESWITCH.INSTANCE, op0, new IConstOperand(low),
                                     new TargetOperand(target_bb), targets.length);
         for (int i = 0; i < targets.length; ++i) {
@@ -1098,7 +1099,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Return operator;
         if (method.getReturnType().isAddressType()) {
         	operator = Return.RETURN_P.INSTANCE;
-            jq.Assert(t.isAddressType() ||
+            Assert._assert(t.isAddressType() ||
                       t == jq_Reference.jq_NullType.NULL_TYPE ||
                       t.isSubtypeOf(Address._class), t.toString());
         } else {
@@ -1481,7 +1482,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
-                jq.Assert(f instanceof jq_InstanceMethod);
+                Assert._assert(f instanceof jq_InstanceMethod);
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_I_DYNLINK.INSTANCE;
                 else {
@@ -1531,7 +1532,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
-                jq.Assert(f instanceof jq_InstanceMethod);
+                Assert._assert(f instanceof jq_InstanceMethod);
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_L_DYNLINK.INSTANCE;
                 else {
@@ -1581,7 +1582,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
-                jq.Assert(f instanceof jq_InstanceMethod);
+                Assert._assert(f instanceof jq_InstanceMethod);
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_F_DYNLINK.INSTANCE;
                 else {
@@ -1631,7 +1632,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
-                jq.Assert(f instanceof jq_InstanceMethod);
+                Assert._assert(f instanceof jq_InstanceMethod);
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_D_DYNLINK.INSTANCE;
                 else {
@@ -1687,7 +1688,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
-                jq.Assert(f instanceof jq_InstanceMethod);
+                Assert._assert(f instanceof jq_InstanceMethod);
                 if (f.needsDynamicLink(method))
                     oper = f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKESPECIAL_P_DYNLINK.INSTANCE:Invoke.INVOKESPECIAL_A_DYNLINK.INSTANCE;
                 else {
@@ -1737,7 +1738,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
-                jq.Assert(f instanceof jq_InstanceMethod);
+                Assert._assert(f instanceof jq_InstanceMethod);
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_V_DYNLINK.INSTANCE;
                 else {
@@ -1785,7 +1786,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitINSTANCEOF(jq_Type f) {
         super.visitINSTANCEOF(f);
-        jq.Assert(!f.isAddressType(), method.toString());
+        Assert._assert(!f.isAddressType(), method.toString());
         Operand op = current_state.pop_A();
         RegisterOperand res = getStackRegister(jq_Primitive.BOOLEAN);
         Quad q = InstanceOf.create(quad_cfg.getNewQuadID(), InstanceOf.INSTANCEOF.INSTANCE, res, op, new TypeOperand(f));
@@ -1915,10 +1916,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         if (arrayElemType.isAddressType()) {
             if (type.isAddressType() || type == jq_Reference.jq_NullType.NULL_TYPE)
                 return false;
-            jq.UNREACHABLE("Storing non-address value into address array! Array: "+ref+" Type: "+type);
+            Assert.UNREACHABLE("Storing non-address value into address array! Array: "+ref+" Type: "+type);
         }
         if (type.isAddressType()) {
-            jq.UNREACHABLE("Storing address value into non-address array! Array: "+ref+" Type: "+type);
+            Assert.UNREACHABLE("Storing address value into non-address array! Array: "+ref+" Type: "+type);
         }
         if (ref.isExactType()) {
             if (TypeCheck.isAssignable_noload(type, arrayElemType) == TypeCheck.YES)
@@ -1985,7 +1986,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         ZeroCheck oper = null;
         if (rop.getType() == jq_Primitive.LONG) oper = ZeroCheck.ZERO_CHECK_L.INSTANCE;
         else if (rop.getType().isIntLike()) oper = ZeroCheck.ZERO_CHECK_I.INSTANCE;
-        else jq.UNREACHABLE("Zero check on "+rop+" type "+rop.getType());
+        else Assert.UNREACHABLE("Zero check on "+rop+" type "+rop.getType());
         Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), oper, guard, rop.copy());
         appendQuad(q);
         mergeStateWithArithExHandler(false);
@@ -2001,7 +2002,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             else if (type.isIntLike())
                 op2 = current_state.getLocal_I(number);
             else
-                jq.UNREACHABLE("Unknown type for local "+number+" "+rop+": "+type);
+                Assert.UNREACHABLE("Unknown type for local "+number+" "+rop+": "+type);
             if (TRACE) System.out.println(rop+" is a local variable of type "+type+": currently "+op2);
             if (op2 instanceof RegisterOperand) {
                 setGuard((RegisterOperand)op2, guard);
@@ -2032,7 +2033,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             // what is the element type of an array constant 'null'?
             return PrimordialClassLoader.getJavaLangObject();
         } else {
-            jq.UNREACHABLE(op.toString());
+            Assert.UNREACHABLE(op.toString());
             return null;
         }
     }
@@ -2131,8 +2132,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         static class DummyOperand implements Operand {
             private DummyOperand() {}
             static final DummyOperand DUMMY = new DummyOperand();
-            public Quad getQuad() { jq.UNREACHABLE(); return null; }
-            public void attachToQuad(Quad q) { jq.UNREACHABLE(); }
+            public Quad getQuad() { Assert.UNREACHABLE(); return null; }
+            public void attachToQuad(Quad q) { Assert.UNREACHABLE(); }
             public Operand copy() { return DUMMY; }
             public boolean isSimilar(Operand that) { return that == DUMMY; }
             public String toString() { return "<dummy>"; }
@@ -2205,8 +2206,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
 
         void overwriteWith(AbstractState that) {
-            jq.Assert(this.stack.length == that.stack.length);
-            jq.Assert(this.locals.length == that.locals.length);
+            Assert._assert(this.stack.length == that.stack.length);
+            Assert._assert(this.locals.length == that.locals.length);
             System.arraycopy(that.stack, 0, this.stack, 0, that.stackptr);
             System.arraycopy(that.locals, 0, this.locals, 0, that.locals.length);
             this.stackptr = that.stackptr;
@@ -2226,7 +2227,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         boolean merge(AbstractState that, RegisterFactory rf) {
             if (this.stackptr != that.stackptr) throw new VerifyError(this.stackptr+" != "+that.stackptr);
-            jq.Assert(this.locals.length == that.locals.length);
+            Assert._assert(this.locals.length == that.locals.length);
             boolean change = false;
             for (int i=0; i<this.stackptr; ++i) {
                 Operand o = meet(this.stack[i], that.stack[i], true, i, rf);
@@ -2243,8 +2244,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         
         boolean mergeExceptionHandler(AbstractState that, jq_Class exType, RegisterFactory rf) {
             if (exType == null) exType = PrimordialClassLoader.getJavaLangThrowable();
-            jq.Assert(this.locals.length == that.locals.length);
-            jq.Assert(this.stackptr == 1);
+            Assert._assert(this.locals.length == that.locals.length);
+            Assert._assert(this.stackptr == 1);
             boolean change = false;
             RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
             Operand o = meet(this.stack[0], ex, true, 0, rf);
@@ -2420,14 +2421,14 @@ public class BytecodeToQuad extends BytecodeVisitor {
         
         int getStackSize() { return this.stackptr; }
         
-        void push_I(Operand op) { jq.Assert(getTypeOf(op).isIntLike()); push(op); }
-        void push_F(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); push(op); }
-        void push_L(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.LONG); push(op); pushDummy(); }
-        void push_D(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE); push(op); pushDummy(); }
-        void push_A(Operand op) { jq.Assert(getTypeOf(op).isReferenceType() && !getTypeOf(op).isAddressType()); push(op); }
-        void push_P(Operand op) { jq.Assert(getTypeOf(op).isAddressType()); push(op); }
+        void push_I(Operand op) { Assert._assert(getTypeOf(op).isIntLike()); push(op); }
+        void push_F(Operand op) { Assert._assert(getTypeOf(op) == jq_Primitive.FLOAT); push(op); }
+        void push_L(Operand op) { Assert._assert(getTypeOf(op) == jq_Primitive.LONG); push(op); pushDummy(); }
+        void push_D(Operand op) { Assert._assert(getTypeOf(op) == jq_Primitive.DOUBLE); push(op); pushDummy(); }
+        void push_A(Operand op) { Assert._assert(getTypeOf(op).isReferenceType() && !getTypeOf(op).isAddressType()); push(op); }
+        void push_P(Operand op) { Assert._assert(getTypeOf(op).isAddressType()); push(op); }
         void push(Operand op, jq_Type t) {
-            jq.Assert(TypeCheck.isAssignable_noload(getTypeOf(op), t) == TypeCheck.YES);
+            Assert._assert(TypeCheck.isAssignable_noload(getTypeOf(op), t) == TypeCheck.YES);
             push(op); if (t.getReferenceSize() == 8) pushDummy();
         }
         void pushDummy() { push(DummyOperand.DUMMY); }
@@ -2436,21 +2437,21 @@ public class BytecodeToQuad extends BytecodeVisitor {
             this.stack[this.stackptr++] = op;
         }
 
-        Operand pop_I() { Operand op = pop(); jq.Assert(getTypeOf(op).isIntLike()); return op; }
-        Operand pop_F() { Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
-        Operand pop_L() { popDummy(); Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.LONG); return op; }
-        Operand pop_D() { popDummy(); Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE); return op; }
-        Operand pop_A() { Operand op = pop(); jq.Assert(getTypeOf(op).isReferenceType() && !getTypeOf(op).isAddressType()); return op; }
+        Operand pop_I() { Operand op = pop(); Assert._assert(getTypeOf(op).isIntLike()); return op; }
+        Operand pop_F() { Operand op = pop(); Assert._assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
+        Operand pop_L() { popDummy(); Operand op = pop(); Assert._assert(getTypeOf(op) == jq_Primitive.LONG); return op; }
+        Operand pop_D() { popDummy(); Operand op = pop(); Assert._assert(getTypeOf(op) == jq_Primitive.DOUBLE); return op; }
+        Operand pop_A() { Operand op = pop(); Assert._assert(getTypeOf(op).isReferenceType() && !getTypeOf(op).isAddressType()); return op; }
         Operand pop_P() {
             Operand op = pop();
             if (op instanceof AConstOperand) {
                 op = new PConstOperand(null);
             }
-            jq.Assert(getTypeOf(op).isAddressType() ||
+            Assert._assert(getTypeOf(op).isAddressType() ||
                       getTypeOf(op).isSubtypeOf(Address._class));
             return op;
         }
-        void popDummy() { Operand op = pop(); jq.Assert(op == DummyOperand.DUMMY); }
+        void popDummy() { Operand op = pop(); Assert._assert(op == DummyOperand.DUMMY); }
         Operand pop(jq_Type t) {
             if (t.getReferenceSize() == 8) popDummy();
             Operand op = pop();
@@ -2459,7 +2460,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     op = new PConstOperand(null);
                 }
                 jq_Type t2 = getTypeOf(op);
-                jq.Assert(t2 == jq_Reference.jq_NullType.NULL_TYPE ||
+                Assert._assert(t2 == jq_Reference.jq_NullType.NULL_TYPE ||
                           t2.isAddressType() ||
                           t2.isSubtypeOf(Address._class));
             }
@@ -2475,24 +2476,24 @@ public class BytecodeToQuad extends BytecodeVisitor {
         void pokeStack(int i, Operand op) { this.stack[this.stackptr-i-1] = op; }
         void clearStack() { this.stackptr = 0; }
         
-        Operand getLocal_I(int i) { Operand op = getLocal(i); jq.Assert(getTypeOf(op).isIntLike()); return op; }
-        Operand getLocal_F(int i) { Operand op = getLocal(i); jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
+        Operand getLocal_I(int i) { Operand op = getLocal(i); Assert._assert(getTypeOf(op).isIntLike()); return op; }
+        Operand getLocal_F(int i) { Operand op = getLocal(i); Assert._assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
         Operand getLocal_L(int i) {
             Operand op = getLocal(i);
-            jq.Assert(getTypeOf(op) == jq_Primitive.LONG);
-            jq.Assert(getLocal(i+1) == DummyOperand.DUMMY);
+            Assert._assert(getTypeOf(op) == jq_Primitive.LONG);
+            Assert._assert(getLocal(i+1) == DummyOperand.DUMMY);
             return op;
         }
         Operand getLocal_D(int i) {
             Operand op = getLocal(i);
-            jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE);
-            jq.Assert(getLocal(i+1) == DummyOperand.DUMMY);
+            Assert._assert(getTypeOf(op) == jq_Primitive.DOUBLE);
+            Assert._assert(getLocal(i+1) == DummyOperand.DUMMY);
             return op;
         }
         Operand getLocal_A(int i) {
             Operand op = getLocal(i);
-            jq.Assert(getTypeOf(op).isReferenceType());
-            jq.Assert(!getTypeOf(op).isAddressType());
+            Assert._assert(getTypeOf(op).isReferenceType());
+            Assert._assert(!getTypeOf(op).isAddressType());
             return op;
         }
         Operand getLocal(int i) {
@@ -2529,23 +2530,23 @@ public class BytecodeToQuad extends BytecodeVisitor {
         public boolean isAddressType() { return false; }
         public String getJDKName() { return desc.toString(); }
         public String getJDKDesc() { return getJDKName(); }
-        public Clazz.jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }
-        public Clazz.jq_Class getInterface(Utf8 desc) { jq.UNREACHABLE(); return null; }
-        public boolean implementsInterface(Clazz.jq_Class k) { jq.UNREACHABLE(); return false; }
-        public Clazz.jq_InstanceMethod getVirtualMethod(Clazz.jq_NameAndDesc nd) { jq.UNREACHABLE(); return null; }
+        public Clazz.jq_Class[] getInterfaces() { Assert.UNREACHABLE(); return null; }
+        public Clazz.jq_Class getInterface(Utf8 desc) { Assert.UNREACHABLE(); return null; }
+        public boolean implementsInterface(Clazz.jq_Class k) { Assert.UNREACHABLE(); return false; }
+        public Clazz.jq_InstanceMethod getVirtualMethod(Clazz.jq_NameAndDesc nd) { Assert.UNREACHABLE(); return null; }
         public String getName() { return "<retaddr>"; }
         public String shortName() { return "<retaddr>"; }
-        public boolean isClassType() { jq.UNREACHABLE(); return false; }
-        public boolean isArrayType() { jq.UNREACHABLE(); return false; }
-        public boolean isFinal() { jq.UNREACHABLE(); return false; }
-        public jq_Reference getDirectPrimarySupertype() { jq.UNREACHABLE(); return null; }
-        public int getDepth() { jq.UNREACHABLE(); return 0; }
-        public void load() { jq.UNREACHABLE(); }
-        public void verify() { jq.UNREACHABLE(); }
-        public void prepare() { jq.UNREACHABLE(); }
-        public void sf_initialize() { jq.UNREACHABLE(); }
-        public void compile() { jq.UNREACHABLE(); }
-        public void cls_initialize() { jq.UNREACHABLE(); }
+        public boolean isClassType() { Assert.UNREACHABLE(); return false; }
+        public boolean isArrayType() { Assert.UNREACHABLE(); return false; }
+        public boolean isFinal() { Assert.UNREACHABLE(); return false; }
+        public jq_Reference getDirectPrimarySupertype() { Assert.UNREACHABLE(); return null; }
+        public int getDepth() { Assert.UNREACHABLE(); return 0; }
+        public void load() { Assert.UNREACHABLE(); }
+        public void verify() { Assert.UNREACHABLE(); }
+        public void prepare() { Assert.UNREACHABLE(); }
+        public void sf_initialize() { Assert.UNREACHABLE(); }
+        public void compile() { Assert.UNREACHABLE(); }
+        public void cls_initialize() { Assert.UNREACHABLE(); }
         public String toString() { return "<retaddr> (target="+returnTarget+")"; }
         public boolean equals(Object rat) {
             if (!(rat instanceof jq_ReturnAddressType)) return false;

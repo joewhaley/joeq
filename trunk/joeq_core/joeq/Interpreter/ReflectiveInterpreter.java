@@ -11,6 +11,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -23,11 +24,10 @@ import Clazz.jq_Primitive;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Main.HostedVM;
-import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import Util.ArrayIterator;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -43,7 +43,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
     public Object invokeReflective(jq_Method m) throws Throwable {
         //System.out.println("Invoking reflectively: "+m);
         jq_Class t = m.getDeclaringClass();
-        jq.Assert(t.isClsInitialized());
+        Assert._assert(t.isClsInitialized());
         Class c = Reflection.getJDKType(t);
         jq_Type[] param_jq = m.getParamTypes();
         int offset = 0;
@@ -61,7 +61,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                 else if (pc == Short.TYPE) param[i-offset] = new Short((short)state.pop_I());
                 else if (pc == Character.TYPE) param[i-offset] = new Character((char)state.pop_I());
                 else if (pc == Boolean.TYPE) param[i-offset] = new Boolean(state.pop_I()!=0);
-                else jq.UNREACHABLE(pc.toString());
+                else Assert.UNREACHABLE(pc.toString());
             } else {
                 param[i-offset] = state.pop_A();
             }
@@ -71,7 +71,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                 Constructor co = c.getDeclaredConstructor(param_jdk);
                 co.setAccessible(true);
                 UninitializedType u = (UninitializedType)state.pop_A();
-                jq.Assert(u.k == m.getDeclaringClass());
+                Assert._assert(u.k == m.getDeclaringClass());
                 Object inited = co.newInstance(param);
                 ((ReflectiveState)state).replaceUninitializedReferences(inited, u);
                 return null;
@@ -83,13 +83,13 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
             else thisptr = null;
             return mr.invoke(thisptr, param);
         } catch (NoSuchMethodException x) {
-            jq.UNREACHABLE("host jdk does not contain method "+m);
+            Assert.UNREACHABLE("host jdk does not contain method "+m);
         } catch (InstantiationException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         } catch (IllegalAccessException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         } catch (IllegalArgumentException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         } catch (InvocationTargetException x) {
             throw new WrappedException(x.getTargetException());
         }
@@ -112,8 +112,8 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
             try {
                 return this.invokeMethod(m, callee);
             } catch (MonitorExit x) {
-                jq.Assert(m.isSynchronized());
-                jq.Assert(state != callee);
+                Assert._assert(m.isSynchronized());
+                Assert._assert(state != callee);
                 return callee.getReturnVal_A();
             }
         }
@@ -238,7 +238,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                 try {
                     v.continueForwardTraversal();
                 } catch (MonitorExit x) {
-                    jq.Assert(x.o == o, "synchronization blocks are not nested!");
+                    Assert._assert(x.o == o, "synchronization blocks are not nested!");
                     return;
                 } catch (WrappedException ix) {
                     // if the method throws an exception, the object will automatically be unlocked
@@ -280,7 +280,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
 
         jq_StaticMethod rootm = null;
         Utf8 rootm_name = Utf8.get(rootMethodName);
-        for(Iterator it = new ArrayIterator(c.getDeclaredStaticMethods());
+        for(Iterator it = Arrays.asList(c.getDeclaredStaticMethods()).iterator();
             it.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod)it.next();
             if (m.getName() == rootm_name) {
@@ -289,7 +289,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
             }
         }
         if (rootm == null)
-            jq.UNREACHABLE("root method not found: "+rootMethodClassName+"."+rootMethodName);
+            Assert.UNREACHABLE("root method not found: "+rootMethodClassName+"."+rootMethodName);
         Object[] args = parseMethodArgs(rootm.getParamWords(), rootm.getParamTypes(), s_args, 0);
         ReflectiveState initialState = new ReflectiveState(args);
         Object retval = new ReflectiveInterpreter(initialState).invokeMethod(rootm);
@@ -322,7 +322,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                     if (argsSize != paramTypes.length) ++m;
                 } else if (paramTypes[i].isArrayType()) {
                     if (!s_args[++j].equals("{")) 
-                        jq.UNREACHABLE("array parameter doesn't start with {");
+                        Assert.UNREACHABLE("array parameter doesn't start with {");
                     int count=0;
                     while (!s_args[++j].equals("}")) ++count;
                     jq_Type elementType = ((jq_Array)paramTypes[i]).getElementType();
@@ -372,13 +372,13 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                             array[k] = Double.parseDouble(s_args[j-count+k]);
                         args[m] = array;
                     } else
-                        jq.UNREACHABLE("Parsing an argument of type "+paramTypes[i]+" is not implemented");
+                        Assert.UNREACHABLE("Parsing an argument of type "+paramTypes[i]+" is not implemented");
                 } else
-                    jq.UNREACHABLE("Parsing an argument of type "+paramTypes[i]+" is not implemented");
+                    Assert.UNREACHABLE("Parsing an argument of type "+paramTypes[i]+" is not implemented");
             }
         } catch (ArrayIndexOutOfBoundsException x) {
             x.printStackTrace();
-            jq.UNREACHABLE("not enough method arguments");
+            Assert.UNREACHABLE("not enough method arguments");
         }
         return args;
     }

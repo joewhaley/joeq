@@ -7,8 +7,8 @@
 
 package ClassLib.Common.java.lang;
 
-import Main.jq;
 import Run_Time.SystemInterface;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -18,7 +18,7 @@ abstract class Shutdown {
     
     static void halt(int status) {
         SystemInterface.die(status);
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
     }
     private static void runAllFinalizers() {
         try {

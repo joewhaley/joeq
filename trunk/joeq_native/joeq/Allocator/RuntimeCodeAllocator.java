@@ -13,11 +13,11 @@ import Clazz.jq_BytecodeMap;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_TryCatch;
-import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
+import Util.Assert;
 import Util.Strings;
 
 /*
@@ -78,7 +78,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                                        int offset,
                                        int alignment) {
         // should not be called recursively.
-        jq.Assert(!isGenerating);
+        Assert._assert(!isGenerating);
         if (TRACE) SystemInterface.debugwriteln("Code generation started: "+this);
         isGenerating = true;
         // align pointer
@@ -96,7 +96,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                 // start_ptr:   points to start of current block
                 // end_ptr:     points to end of current block
                 // current_ptr: current pointer for current block
-                jq.Assert(!start_ptr.isNull());
+                Assert._assert(!start_ptr.isNull());
                 CodeAddress end_ptr = (CodeAddress)start_ptr.offset(CodeAddress.size()).peek();
                 CodeAddress current_ptr = (CodeAddress)end_ptr.peek();
                 if (end_ptr.difference(current_ptr) >= estimatedSize) {
@@ -160,7 +160,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
             // overflow!
             int newEstimatedSize = endAddress.difference(startAddress) << 1;
             allocateNewBlock(Math.max(BLOCK_SIZE, newEstimatedSize));
-            jq.Assert(currentAddress.difference(startAddress)+size < heapEnd.difference(heapCurrent));
+            Assert._assert(currentAddress.difference(startAddress)+size < heapEnd.difference(heapCurrent));
             SystemInterface.mem_cpy(heapCurrent, startAddress, currentAddress.difference(startAddress));
             if (!entrypointAddress.isNull())
                 entrypointAddress = (CodeAddress)heapCurrent.offset(entrypointAddress.difference(startAddress));
@@ -217,12 +217,12 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex,
                                                  jq_BytecodeMap bcm, ExceptionDeliverer exd,
                                                  List code_relocs, List data_relocs) {
-            jq.Assert(isGenerating);
+            Assert._assert(isGenerating);
             CodeAddress start = getStart();
             CodeAddress entrypoint = getEntry();
             CodeAddress current = getCurrent();
             CodeAddress end = getEnd();
-            jq.Assert(current.difference(end) <= 0);
+            Assert._assert(current.difference(end) <= 0);
             if (end != heapEnd) {
                 if (TRACE) SystemInterface.debugwriteln("Prior block, recalculating maxfreeprevious (was "+Strings.hex(maxFreePrevious)+")");
                 // prior block

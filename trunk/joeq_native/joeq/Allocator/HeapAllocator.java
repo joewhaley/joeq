@@ -16,11 +16,11 @@ import Clazz.jq_ClassFileConstants;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import Memory.Heap.Heap;
 import Run_Time.SystemInterface;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -145,7 +145,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
                 SystemInterface.mem_cpy(HeapAddress.addressOf(p), HeapAddress.addressOf(o), k.getInstanceSize()-ObjectLayout.OBJ_HEADER_SIZE);
             return p;
         } else {
-            jq.Assert(t.isArrayType());
+            Assert._assert(t.isArrayType());
             jq_Array k = (jq_Array)t;
             int length = Array.getLength(o);
             Object p = k.newInstance(length);

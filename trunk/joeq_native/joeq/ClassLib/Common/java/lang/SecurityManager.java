@@ -8,10 +8,10 @@
 package ClassLib.Common.java.lang;
 
 import Clazz.jq_CompiledCode;
-import Main.jq;
 import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -32,7 +32,7 @@ public class SecurityManager {
             if (cc == null) classes[i] = null;
             else classes[i] = Reflection.getJDKType(cc.getMethod().getDeclaringClass());
         }
-        jq.Assert(i == classes.length);
+        Assert._assert(i == classes.length);
         return classes;
     }
 

@@ -7,7 +7,7 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Main.jq;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -40,11 +40,11 @@ public class BasicBlock {
     public boolean isSubroutineRet() { return isSubroutineRet; }
     void setSubroutineRet(ControlFlowGraph cfg, BasicBlock jsub_bb) {
         isSubroutineRet = true;
-        jq.Assert(this.successors.length == 0);
+        Assert._assert(this.successors.length == 0);
         this.successors = new BasicBlock[jsub_bb.predecessors.length];
         for (int i=0; i<this.successors.length; ++i) {
             int ret_target_index = jsub_bb.predecessors[i].id + 1;
-            jq.Assert(ret_target_index < cfg.getNumberOfBasicBlocks());
+            Assert._assert(ret_target_index < cfg.getNumberOfBasicBlocks());
             BasicBlock ret_target = cfg.getBasicBlock(ret_target_index);
             this.successors[i] = ret_target;
             BasicBlock[] new_pred = new BasicBlock[ret_target.predecessors.length+1];
@@ -62,7 +62,7 @@ public class BasicBlock {
     }
     
     void addExceptionHandler_first(ExceptionHandlerSet eh) {
-        jq.Assert(eh.parent == null);
+        Assert._assert(eh.parent == null);
         eh.parent = this.exception_handler_set;
         this.exception_handler_set = eh;
     }

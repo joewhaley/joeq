@@ -8,9 +8,9 @@
 package Bootstrap;
 
 import Clazz.jq_Class;
-import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
+import Util.Assert;
 import Util.Strings;
 
 /**
@@ -24,7 +24,7 @@ public class BootstrapHeapAddress extends HeapAddress implements BootstrapAddres
     public static class BootstrapHeapAddressFactory extends HeapAddressFactory {
         BootImage bi;
         public BootstrapHeapAddressFactory(BootImage bi) {
-            jq.Assert(bi != null);
+            Assert._assert(bi != null);
             this.bi = bi;
         }
         public int size() { return 4; }
@@ -45,17 +45,17 @@ public class BootstrapHeapAddress extends HeapAddress implements BootstrapAddres
     
     public BootstrapHeapAddress(int value) { this.value = value; }
     
-    public Address peek() { jq.UNREACHABLE(); return null; }
-    public byte    peek1() { jq.UNREACHABLE(); return 0; }
-    public short   peek2() { jq.UNREACHABLE(); return 0; }
-    public int     peek4() { jq.UNREACHABLE(); return 0; }
-    public long    peek8() { jq.UNREACHABLE(); return 0; }
+    public Address peek() { Assert.UNREACHABLE(); return null; }
+    public byte    peek1() { Assert.UNREACHABLE(); return 0; }
+    public short   peek2() { Assert.UNREACHABLE(); return 0; }
+    public int     peek4() { Assert.UNREACHABLE(); return 0; }
+    public long    peek8() { Assert.UNREACHABLE(); return 0; }
     
-    public void poke(Address v) { jq.UNREACHABLE(); }
-    public void poke1(byte v) { jq.UNREACHABLE(); }
-    public void poke2(short v) { jq.UNREACHABLE(); }
-    public void poke4(int v) { jq.UNREACHABLE(); }
-    public void poke8(long v) { jq.UNREACHABLE(); }
+    public void poke(Address v) { Assert.UNREACHABLE(); }
+    public void poke1(byte v) { Assert.UNREACHABLE(); }
+    public void poke2(short v) { Assert.UNREACHABLE(); }
+    public void poke4(int v) { Assert.UNREACHABLE(); }
+    public void poke8(long v) { Assert.UNREACHABLE(); }
     
     public Address offset(int offset) { return new BootstrapHeapAddress(value+offset); }
     public Address align(int shift) {

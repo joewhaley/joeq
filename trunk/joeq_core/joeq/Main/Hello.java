@@ -10,6 +10,7 @@ package Main;
 import java.util.Iterator;
 
 import Bootstrap.PrimordialClassLoader;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -32,7 +33,7 @@ public abstract class Hello {
         Iterator i = PrimordialClassLoader.loader.listPackage(packageName);
         while (i.hasNext()) {
             String s = (String)i.next();
-            jq.Assert(s.endsWith(".class"));
+            Assert._assert(s.endsWith(".class"));
             s = s.substring(0, s.length()-6);
             System.out.println("L"+s+";");
         }

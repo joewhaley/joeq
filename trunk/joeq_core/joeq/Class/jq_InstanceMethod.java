@@ -12,6 +12,7 @@ package Clazz;
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -74,9 +75,9 @@ public class jq_InstanceMethod extends jq_Method {
     
     public final void prepare() { prepare(INVALID_OFFSET); }
     public final void prepare(int offset) {
-        jq.Assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset;
+        Assert._assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset;
     }
-    public final int getOffset() { chkState(STATE_PREPARED); jq.Assert(offset != INVALID_OFFSET); return offset; }
+    public final int getOffset() { chkState(STATE_PREPARED); Assert._assert(offset != INVALID_OFFSET); return offset; }
     public final boolean isVirtual() { chkState(STATE_PREPARED); return offset != INVALID_OFFSET; }
     public final boolean needsDynamicLink(jq_Method method) {
         if (!jq.RunningNative) return (state < STATE_PREPARED) || getDeclaringClass().needsDynamicLink(method);

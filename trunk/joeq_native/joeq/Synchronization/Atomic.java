@@ -14,6 +14,7 @@ import Clazz.jq_InstanceField;
 import Main.jq;
 import Memory.HeapAddress;
 import Run_Time.Reflection;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -25,7 +26,7 @@ public abstract class Atomic {
         if (!jq.RunningNative) {
             Field f2 = (Field)Reflection.getJDKMember(f);
             f2.setAccessible(true);
-            jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);
+            Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
             try {
                 int v = ((Integer)f2.get(o)).intValue();
                 if (v == before) {
@@ -35,7 +36,7 @@ public abstract class Atomic {
                     return v;
                 }
             } catch (IllegalAccessException x) {
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
                 return 0;
             }
         } else {

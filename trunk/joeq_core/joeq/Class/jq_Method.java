@@ -21,6 +21,8 @@ import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Compil3r.Quad.AndersenInterface.AndersenType;
 import Main.jq;
 import UTF.Utf8;
+import Util.Assert;
+import Util.Convert;
 
 /*
  * @author  John Whaley
@@ -97,21 +99,21 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
         // parse attributes
         byte[] a = getAttribute("Code");
         if (a != null) {
-            max_stack = jq.twoBytesToChar(a, 0);
-            max_locals = jq.twoBytesToChar(a, 2);
-            int bytecode_length = jq.fourBytesToInt(a, 4);
+            max_stack = Convert.twoBytesToChar(a, 0);
+            max_locals = Convert.twoBytesToChar(a, 2);
+            int bytecode_length = Convert.fourBytesToInt(a, 4);
             if (bytecode_length <= 0)
                 throw new ClassFormatError();
             bytecode = new byte[bytecode_length];
             System.arraycopy(a, 8, bytecode, 0, bytecode_length);
-            int ex_table_length = jq.twoBytesToChar(a, 8+bytecode_length);
+            int ex_table_length = Convert.twoBytesToChar(a, 8+bytecode_length);
             exception_table = new jq_TryCatchBC[ex_table_length];
             int idx = 10+bytecode_length;
             for (int i=0; i<ex_table_length; ++i) {
-                char start_pc = jq.twoBytesToChar(a, idx);
-                char end_pc = jq.twoBytesToChar(a, idx+2);
-                char handler_pc = jq.twoBytesToChar(a, idx+4);
-                char catch_cpidx = jq.twoBytesToChar(a, idx+6);
+                char start_pc = Convert.twoBytesToChar(a, idx);
+                char end_pc = Convert.twoBytesToChar(a, idx+2);
+                char handler_pc = Convert.twoBytesToChar(a, idx+4);
+                char catch_cpidx = Convert.twoBytesToChar(a, idx+6);
                 idx += 8;
                 jq_Class catch_class;
                 if (catch_cpidx != 0) {
@@ -125,15 +127,15 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
                     catch_class = null;
                 exception_table[i] = new jq_TryCatchBC(start_pc, end_pc, handler_pc, catch_class);
             }
-            int attrib_count = jq.twoBytesToChar(a, idx);
+            int attrib_count = Convert.twoBytesToChar(a, idx);
             codeattribMap = new HashMap();
             idx += 2;
             for (int i=0; i<attrib_count; ++i) {
-                char name_index = jq.twoBytesToChar(a, idx);
+                char name_index = Convert.twoBytesToChar(a, idx);
                 if (clazz.getCPtag(name_index) != CONSTANT_Utf8)
                     throw new ClassFormatError();
                 Utf8 attribute_desc = (Utf8)clazz.getCPasUtf8(name_index);
-                int attribute_length = jq.fourBytesToInt(a, idx+2);
+                int attribute_length = Convert.fourBytesToInt(a, idx+2);
                 // todo: maybe we only want to parse attributes we care about...
                 byte[] attribute_data = new byte[attribute_length];
                 System.arraycopy(a, idx+6, attribute_data, 0, attribute_length);
@@ -145,13 +147,13 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
             }
             a = getCodeAttribute(Utf8.get("LineNumberTable"));
             if (a != null) {
-                char num_of_line_attribs = jq.twoBytesToChar(a, 0);
+                char num_of_line_attribs = Convert.twoBytesToChar(a, 0);
                 if (a.length != (num_of_line_attribs*4+2))
                     throw new ClassFormatError();
                 this.line_num_table = new jq_LineNumberBC[num_of_line_attribs];
                 for (int i=0; i<num_of_line_attribs; ++i) {
-                    char start_pc = jq.twoBytesToChar(a, i*4+2);
-                    char line_number = jq.twoBytesToChar(a, i*4+4);
+                    char start_pc = Convert.twoBytesToChar(a, i*4+2);
+                    char line_number = Convert.twoBytesToChar(a, i*4+4);
                     this.line_num_table[i] = new jq_LineNumberBC(start_pc, line_number);
                 }
                 Arrays.sort(this.line_num_table);
@@ -160,21 +162,21 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
             }
             a = getCodeAttribute(Utf8.get("LocalVariableTable"));
             if (a != null) {
-                char num_of_local_vars = jq.twoBytesToChar(a, 0);
+                char num_of_local_vars = Convert.twoBytesToChar(a, 0);
                 if (a.length != (num_of_local_vars*10+2))
                     throw new ClassFormatError();
 
                 this.localvar_table = new jq_LocalVarTableEntry[num_of_local_vars];
                 for (int i=0; i<num_of_local_vars; ++i) {
-                    char start_pc = jq.twoBytesToChar(a, i*10+2);
-                    char length = jq.twoBytesToChar(a, i*10+4);
-                    char name_index = jq.twoBytesToChar(a, i*10+6);
+                    char start_pc = Convert.twoBytesToChar(a, i*10+2);
+                    char length = Convert.twoBytesToChar(a, i*10+4);
+                    char name_index = Convert.twoBytesToChar(a, i*10+6);
                     if (clazz.getCPtag(name_index) != CONSTANT_Utf8)
                         throw new ClassFormatError();
-                    char desc_index = jq.twoBytesToChar(a, i*10+8);
+                    char desc_index = Convert.twoBytesToChar(a, i*10+8);
                     if (clazz.getCPtag(desc_index) != CONSTANT_Utf8)
                         throw new ClassFormatError();
-                    char index = jq.twoBytesToChar(a, i*10+10);
+                    char index = Convert.twoBytesToChar(a, i*10+10);
                     this.localvar_table[i] = new jq_LocalVarTableEntry(start_pc, length, new jq_NameAndDesc(clazz.getCPasUtf8(name_index), clazz.getCPasUtf8(desc_index)), index);
                 }
                 Arrays.sort(this.localvar_table);
@@ -226,22 +228,22 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
             // TODO: include line number table.
             int size = 8 + bytecode.length + 2 + 8*exception_table.length + 2;
             byte[] code = new byte[size];
-            jq.charToTwoBytes(max_stack, code, 0);
-            jq.charToTwoBytes(max_locals, code, 2);
-            jq.intToFourBytes(bytecode.length, code, 4);
+            Convert.charToTwoBytes(max_stack, code, 0);
+            Convert.charToTwoBytes(max_locals, code, 2);
+            Convert.intToFourBytes(bytecode.length, code, 4);
             System.arraycopy(bytecode, 0, code, 8, bytecode.length);
-            jq.charToTwoBytes((char)exception_table.length, code, 8+bytecode.length);
+            Convert.charToTwoBytes((char)exception_table.length, code, 8+bytecode.length);
             int idx = 10+bytecode.length;
             for (int i=0; i<exception_table.length; ++i) {
-                jq.charToTwoBytes(exception_table[i].getStartPC(), code, idx);
-                jq.charToTwoBytes(exception_table[i].getEndPC(), code, idx+2);
-                jq.charToTwoBytes(exception_table[i].getHandlerPC(), code, idx+4);
-                jq.charToTwoBytes(cpr.get(exception_table[i].getExceptionType()), code, idx+6);
+                Convert.charToTwoBytes(exception_table[i].getStartPC(), code, idx);
+                Convert.charToTwoBytes(exception_table[i].getEndPC(), code, idx+2);
+                Convert.charToTwoBytes(exception_table[i].getHandlerPC(), code, idx+4);
+                Convert.charToTwoBytes(cpr.get(exception_table[i].getExceptionType()), code, idx+6);
                 idx += 8;
             }
             char attrib_count = (char)0; // TODO: code attributes
             // TODO: LocalVariableTable
-            jq.charToTwoBytes(attrib_count, code, idx);
+            Convert.charToTwoBytes(attrib_count, code, idx);
             attributes.put(Utf8.get("Code"), code);
         }
     }
@@ -277,7 +279,7 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
     public final jq_CompiledCode compile() {
         if (state == STATE_CLSINITIALIZED) return default_compiled_version;
 	synchronized (this) {
-            jq.Assert(!jq.DontCompile);
+            Assert._assert(!jq.DontCompile);
             chkState(STATE_PREPARED);
 	    default_compiled_version = _delegate.compile(this);
 	    state = STATE_CLSINITIALIZED;
@@ -300,7 +302,7 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
     public final jq_CompiledCode getDefaultCompiledVersion() { chkState(STATE_SFINITIALIZED); return default_compiled_version; }
     public char getMaxStack() {
         chkState(STATE_LOADED);
-        jq.Assert(getBytecode() != null);
+        Assert._assert(getBytecode() != null);
         return max_stack;
     }
     public void setMaxStack(char m) {
@@ -308,7 +310,7 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
     }
     public char getMaxLocals() {
         chkState(STATE_LOADED);
-        jq.Assert(getBytecode() != null);
+        Assert._assert(getBytecode() != null);
         return max_locals;
     }
     public void setMaxLocals(char m) {
@@ -320,7 +322,7 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
     }
     public jq_TryCatchBC[] getExceptionTable() {
         chkState(STATE_LOADED);
-        jq.Assert(getBytecode() != null);
+        Assert._assert(getBytecode() != null);
         return exception_table;
     }
     public jq_LocalVarTableEntry getLocalVarTableEntry(int bci, int index) {

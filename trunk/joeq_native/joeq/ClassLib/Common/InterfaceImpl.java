@@ -32,6 +32,7 @@ import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Scheduler.jq_Thread;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -247,98 +248,98 @@ public class InterfaceImpl implements Interface {
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         return ClassLib.Common.java.lang.Class.createNewClass(f);
     }
     
     public java.lang.reflect.Constructor createNewConstructor(Clazz.jq_Initializer f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         return ClassLib.Common.java.lang.reflect.Constructor.createNewConstructor(f);
     }
     
     public void initNewConstructor(java.lang.reflect.Constructor dis, Clazz.jq_Initializer f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         ClassLib.Common.java.lang.reflect.Constructor.initNewConstructor((ClassLib.Common.java.lang.reflect.Constructor)o, f);
     }
     
     public java.lang.reflect.Field createNewField(Clazz.jq_Field f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         return ClassLib.Common.java.lang.reflect.Field.createNewField(f);
     }
     
     public void initNewField(java.lang.reflect.Field dis, Clazz.jq_Field f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         ClassLib.Common.java.lang.reflect.Field.initNewField((ClassLib.Common.java.lang.reflect.Field)o, f);
     }
     
     public java.lang.reflect.Method createNewMethod(Clazz.jq_Method f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         return ClassLib.Common.java.lang.reflect.Method.createNewMethod(f);
     }
     
     public void initNewMethod(java.lang.reflect.Method dis, Clazz.jq_Method f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         ClassLib.Common.java.lang.reflect.Method.initNewMethod((ClassLib.Common.java.lang.reflect.Method)o, f);
     }
     
     public Clazz.jq_Field getJQField(java.lang.reflect.Field f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
         return ((ClassLib.Common.java.lang.reflect.Field)o).jq_field;
     }
     
     public Clazz.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
         return ((ClassLib.Common.java.lang.reflect.Constructor)o).jq_init;
     }
     
     public Clazz.jq_Method getJQMethod(java.lang.reflect.Method f) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
         return ((ClassLib.Common.java.lang.reflect.Method)o).jq_method;
     }
     
     public Clazz.jq_Type getJQType(java.lang.Class k) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = k;
         return ((ClassLib.Common.java.lang.Class)o).jq_type;
     }
     
     public Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, UTF.Utf8 desc) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = cl;
         return ((ClassLib.Common.java.lang.ClassLoader)o).getOrCreateType(desc);
     }
     
     public void unloadType(java.lang.ClassLoader cl, Clazz.jq_Type t) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = cl;
         ((ClassLib.Common.java.lang.ClassLoader)o).unloadType(t);
     }
     
     public void init_zipfile(java.util.zip.ZipFile dis, java.lang.String name) throws java.io.IOException {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         ((ClassLib.Common.java.util.zip.ZipFile)o).__init__(name);
     }
     
     public void init_inflater(java.util.zip.Inflater dis, boolean nowrap) throws java.io.IOException {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         ((ClassLib.Common.java.util.zip.Inflater)o).__init__(nowrap);
     }
     
     public void initializeSystemClass() throws java.lang.Throwable {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         ClassLib.Common.java.lang.System.initializeSystemClass();
     }
     
     public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         java.lang.Object o = t;
         return ((ClassLib.Common.java.lang.Thread)o).jq_thread;
     }    

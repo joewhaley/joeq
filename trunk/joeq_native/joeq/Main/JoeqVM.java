@@ -15,6 +15,7 @@ import Scheduler.jq_MainThread;
 import Scheduler.jq_NativeThread;
 import Scheduler.jq_Thread;
 import UTF.Utf8;
+import Util.Assert;
 import Util.Strings;
 
 public abstract class JoeqVM {
@@ -143,7 +144,7 @@ public abstract class JoeqVM {
         mt.start();
         jq_NativeThread.startNativeThreads();
         nt.nativeThreadEntry();
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
     }
 
     public static void printUsage() {

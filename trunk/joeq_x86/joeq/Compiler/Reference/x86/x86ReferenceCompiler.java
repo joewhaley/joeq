@@ -50,6 +50,7 @@ import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.Utf8;
+import Util.Assert;
 import Util.Strings;
 
 /**
@@ -223,7 +224,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             jq_Type[] params = method.getParamTypes();
             n_paramwords = method.getParamWords();
             int n_localwords = method.getMaxLocals();
-            jq.Assert(n_paramwords <= n_localwords);
+            Assert._assert(n_paramwords <= n_localwords);
             
             // stack frame before prolog:
             // b0: FP->| caller's saved FP  |
@@ -292,7 +293,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                     }
                     // lock the java.lang.Class object
                     Class c = Reflection.getJDKType(method.getDeclaringClass());
-                    jq.Assert(c != null);
+                    Assert._assert(c != null);
                     emitPushAddressOf(c);
                 } else {
                     if (TraceBytecodes) {
@@ -849,7 +850,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 asm.emit2_Reg_Mem(x86.XOR_m_r32, EAX, 0, ESP);
                 break;
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         }
     }
     public void visitLBINOP(byte op) {
@@ -927,7 +928,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 asm.emit2_Reg_Mem(x86.XOR_m_r32, EDX, 4, ESP);
                 break;
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         }
     }
     public void visitFBINOP(byte op) {
@@ -970,7 +971,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 asm.emit2_FPReg(x86.FFREE, 0);
                 break;
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         }
     }
     public void visitDBINOP(byte op) {
@@ -1013,7 +1014,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 asm.emit2_FPReg(x86.FFREE, 0);
                 break;
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         }
     }
     public void visitIUNOP(byte op) {
@@ -1022,7 +1023,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushAddressOf(SystemInterface.toCString(i_start+": IUNOP "+op));
             emitCallMemory(SystemInterface._debugwriteln);
         }
-        jq.Assert(op == UNOP_NEG);
+        Assert._assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.NEG_m32, 0, ESP);
     }
     public void visitLUNOP(byte op) {
@@ -1031,7 +1032,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushAddressOf(SystemInterface.toCString(i_start+": LUNOP "+op));
             emitCallMemory(SystemInterface._debugwriteln);
         }
-        jq.Assert(op == UNOP_NEG);
+        Assert._assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.NEG_m32, 4, ESP);  // hi
         asm.emit2_Mem(x86.NEG_m32, 0, ESP);  // lo
         asm.emitARITH_Mem_Imm(x86.SBB_m_i32, 4, ESP, 0);
@@ -1042,7 +1043,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushAddressOf(SystemInterface.toCString(i_start+": FUNOP "+op));
             emitCallMemory(SystemInterface._debugwriteln);
         }
-        jq.Assert(op == UNOP_NEG);
+        Assert._assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.FLD_m32, 0, ESP);
         asm.emit2(x86.FCHS);
         asm.emit2_Mem(x86.FSTP_m32, 0, ESP);
@@ -1077,7 +1078,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 asm.emit2_Mem(x86.SHR_m32_rc, 0, ESP);
                 break;
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         }
     }
     public void visitLSHIFT(byte op) {
@@ -1151,7 +1152,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 break;
             }
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         }
     }
     public void visitIINC(int i, int v) {
@@ -1525,7 +1526,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 case CMP_LE: opc = x86.JLE; break;
                 case CMP_GT: opc = x86.JG; break;
                 case CMP_AE: opc = x86.JAE; break;
-                default: jq.UNREACHABLE();
+                default: Assert.UNREACHABLE();
             }
             if (target <= i_start)
                 asm.emitCJUMP_Back(opc, t);
@@ -1611,7 +1612,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallMemory(SystemInterface._debugwriteln);
         }
         int count = high-low+1;
-        jq.Assert(count == targets.length);
+        Assert._assert(count == targets.length);
         asm.emitShort_Reg(x86.POP_r, EAX);
         if (low != 0)
             asm.emitARITH_Reg_Imm(x86.SUB_r_i32, EAX, low);
@@ -1661,7 +1662,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             }
             // lock the java.lang.Class object
             Class c = Reflection.getJDKType(method.getDeclaringClass());
-            jq.Assert(c != null);
+            Assert._assert(c != null);
             emitPushAddressOf(c);
         } else {
             if (TraceBytecodes) {
@@ -2333,7 +2334,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         }
         switch(op) {
             case INVOKE_VIRTUAL: {
-                jq.Assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
+                Assert._assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_PREPARED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 int objptroffset = (f.getParamWords() << 2) - 4;
@@ -2345,13 +2346,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             }
             case INVOKE_SPECIAL:
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
-                jq.Assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
+                Assert._assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_PREPARED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case INVOKE_STATIC:
-                jq.Assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
+                Assert._assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_SFINITIALIZED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
@@ -2364,7 +2365,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 asm.emit2_Reg_Mem(x86.LEA, ESP, f.getParamWords()<<2, ESP);
                 break;
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         }
     }
     private void INVOKEhelper(byte op, jq_Method f) {
@@ -2726,7 +2727,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         } else if (f.getName() == Utf8.get("<init>")) {
             INVOKEhelper(INVOKE_SPECIAL, f);
         } else {
-            jq.UNREACHABLE(f.toString());
+            Assert.UNREACHABLE(f.toString());
         }
     }
         
@@ -2794,7 +2795,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.PUSH_r, ECX);
         } else {
             System.err.println(f.toString());
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
 

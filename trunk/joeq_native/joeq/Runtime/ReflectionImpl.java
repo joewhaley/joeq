@@ -36,6 +36,7 @@ import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import UTF.Utf8;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -62,7 +63,7 @@ public class ReflectionImpl implements Reflection.Delegate {
             if (c == Short.TYPE) return jq_Primitive.SHORT;
             if (c == Boolean.TYPE) return jq_Primitive.BOOLEAN;
             if (c == Void.TYPE) return jq_Primitive.VOID;
-            jq.UNREACHABLE(c.toString());
+            Assert.UNREACHABLE(c.toString());
             return null;
         }
         String className = c.getName().replace('.','/');
@@ -95,7 +96,7 @@ public class ReflectionImpl implements Reflection.Delegate {
         if (c.getDesc() == Utf8.SHORT_DESC) return Short.TYPE;
         if (c.getDesc() == Utf8.BOOLEAN_DESC) return Boolean.TYPE;
         if (c.getDesc() == Utf8.VOID_DESC) return Void.TYPE;
-        jq.UNREACHABLE(c.getName());
+        Assert.UNREACHABLE(c.getName());
         return null;
     }
     public Class getJDKType(jq_Reference c) {
@@ -287,7 +288,7 @@ uphere:
         } else if (m instanceof jq_ClassInitializer) {
             return null; // <clinit> methods have no Method object
         } else {
-            jq.Assert(m instanceof jq_Method);
+            Assert._assert(m instanceof jq_Method);
             jq_Method m2 = (jq_Method)m;
             int offset = m2.isStatic()?0:1;
             jq_Type[] param_types = m2.getParamTypes();
@@ -307,128 +308,128 @@ uphere:
     // reflective invocations.
     public void invokestatic_V(jq_StaticMethod m) throws Throwable {
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
     public int invokestatic_I(jq_StaticMethod m) throws Throwable {
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             return (int)Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return 0;
         }
     }
     public Object invokestatic_A(jq_StaticMethod m) throws Throwable {
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             return ((HeapAddress)Unsafe.invokeA(m.getDefaultCompiledVersion().getEntrypoint())).asObject();
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return null;
         }
     }
     public long invokestatic_J(jq_StaticMethod m) throws Throwable {
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return 0L;
         }
     }
     public void invokestatic_V(jq_StaticMethod m, Object arg1) throws Throwable {
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return;
         }
     }
     public void invokeinstance_V(jq_InstanceMethod m, Object dis) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return;
         }
     }
     public Object invokeinstance_A(jq_InstanceMethod m, Object dis) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             return ((HeapAddress)Unsafe.invokeA(m.getDefaultCompiledVersion().getEntrypoint())).asObject();
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return null;
         }
     }
     public void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return;
         }
     }
     public Object invokeinstance_A(jq_InstanceMethod m, Object dis, Object arg1) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             return ((HeapAddress)Unsafe.invokeA(m.getDefaultCompiledVersion().getEntrypoint())).asObject();
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return null;
         }
     }
     public boolean invokeinstance_Z(jq_InstanceMethod m, Object dis, Object arg1) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             return ((int)Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint())) != 0;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return false;
         }
     }
     public void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, Object arg2) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             Unsafe.pushArgA(HeapAddress.addressOf(arg2));
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return;
         }
     }
     public void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, Object arg2, Object arg3) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             Unsafe.pushArgA(HeapAddress.addressOf(arg2));
@@ -436,14 +437,14 @@ uphere:
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return;
         }
     }
     public void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, Object arg2, Object arg3, long arg4) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             Unsafe.pushArgA(HeapAddress.addressOf(arg2));
@@ -453,14 +454,14 @@ uphere:
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return;
         }
     }
     public void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, int arg2, long arg3, int arg4) throws Throwable {
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(dis), m.getDeclaringClass()));
         if (jq.RunningNative) {
-            jq.Assert(m.getDeclaringClass().isClsInitRunning());
+            Assert._assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             Unsafe.pushArgA(HeapAddress.addressOf(arg1));
             Unsafe.pushArg(arg2);
@@ -470,7 +471,7 @@ uphere:
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
         } else {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return;
         }
     }
@@ -480,18 +481,18 @@ uphere:
         jq_Type[] params = m.getParamTypes();
         int offset;
         if (dis != null) {
-            jq.Assert(!m.isStatic());
+            Assert._assert(!m.isStatic());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             offset = 1;
         } else {
             offset = 0;
         }
         if (args != null) {
-            jq.Assert(params.length == args.length+offset);
+            Assert._assert(params.length == args.length+offset);
             for (int i=0; i<args.length; ++i) {
                 jq_Type c = params[i+offset];
                 if (c.isAddressType()) {
-                    jq.TODO();
+                    Assert.TODO();
                 } else if (c.isReferenceType()) {
                     if (args[i] != null && !TypeCheck.isAssignable(jq_Reference.getTypeOf(args[i]), c))
                         throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
@@ -523,11 +524,11 @@ uphere:
                     } else if (c == jq_Primitive.BOOLEAN) {
                         int v = Reflection.unwrapToBoolean(args[i])?1:0;
                         Unsafe.pushArg(v);
-                    } else jq.UNREACHABLE(c.toString());
+                    } else Assert.UNREACHABLE(c.toString());
                 }
             }
         } else {
-            jq.Assert(params.length == offset);
+            Assert._assert(params.length == offset);
         }
         try {
             return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
@@ -541,18 +542,18 @@ uphere:
         jq_Type[] params = m.getParamTypes();
         int offset;
         if (dis != null) {
-            jq.Assert(!m.isStatic());
+            Assert._assert(!m.isStatic());
             Unsafe.pushArgA(HeapAddress.addressOf(dis));
             offset = 1;
         } else {
             offset = 0;
         }
         if (args != null) {
-            jq.Assert(params.length == args.length+offset);
+            Assert._assert(params.length == args.length+offset);
             for (int i=0; i<args.length; ++i) {
                 jq_Type c = params[i+offset];
                 if (c.isAddressType()) {
-                    jq.TODO();
+                    Assert.TODO();
                 } else if (c.isReferenceType()) {
                     if (args[i] != null && !TypeCheck.isAssignable(jq_Reference.getTypeOf(args[i]), c))
                         throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
@@ -584,11 +585,11 @@ uphere:
                     } else if (c == jq_Primitive.BOOLEAN) {
                         int v = Reflection.unwrapToBoolean(args[i])?1:0;
                         Unsafe.pushArg(v);
-                    } else jq.UNREACHABLE(c.toString());
+                    } else Assert.UNREACHABLE(c.toString());
                 }
             }
         } else {
-            jq.Assert(params.length == offset);
+            Assert._assert(params.length == offset);
         }
         try {
             return Unsafe.invokeA(m.getDefaultCompiledVersion().getEntrypoint());
@@ -598,95 +599,95 @@ uphere:
     }
     
     public int getfield_I(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
+        Assert._assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return 0;
             return ((Integer)q).intValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek4();
     }
     public long getfield_L(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
+        Assert._assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return 0L;
             return ((Long)q).longValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek8();
     }
     public float getfield_F(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.FLOAT);
+        Assert._assert(f.getType() == jq_Primitive.FLOAT);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return 0f;
             return ((Float)q).floatValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return Float.intBitsToFloat(getfield_I(o, f));
     }
     public double getfield_D(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.DOUBLE);
+        Assert._assert(f.getType() == jq_Primitive.DOUBLE);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return 0.;
             return ((Double)q).doubleValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return Double.longBitsToDouble(getfield_L(o, f));
     }
     public Object getfield_A(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType().isReferenceType() && !f.getType().isAddressType());
+        Assert._assert(f.getType().isReferenceType() && !f.getType().isAddressType());
         if (!jq.RunningNative) return Reflection.obj_trav.getInstanceFieldValue(o, f);
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return ((HeapAddress) HeapAddress.addressOf(o).offset(f.getOffset()).peek()).asObject();
     }
     public Address getfield_P(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType().isAddressType());
+        Assert._assert(f.getType().isAddressType());
         if (!jq.RunningNative) return (Address)Reflection.obj_trav.getInstanceFieldValue(o, f);
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek();
     }
     public byte getfield_B(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.BYTE);
+        Assert._assert(f.getType() == jq_Primitive.BYTE);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return 0;
             return ((Byte)q).byteValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek1();
     }
     public char getfield_C(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.CHAR);
+        Assert._assert(f.getType() == jq_Primitive.CHAR);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return 0;
             return ((Character)q).charValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return (char)HeapAddress.addressOf(o).offset(f.getOffset()).peek4();
     }
     public short getfield_S(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.SHORT);
+        Assert._assert(f.getType() == jq_Primitive.SHORT);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return 0;
             return ((Short)q).shortValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek2();
     }
     public boolean getfield_Z(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType() == jq_Primitive.BOOLEAN);
+        Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
             Object q = Reflection.obj_trav.getInstanceFieldValue(o, f);
             if (q == null) return false;
             return ((Boolean)q).booleanValue();
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek1()!=0;
     }
     public Object getfield(Object o, jq_InstanceField f) {
@@ -701,43 +702,43 @@ uphere:
         if (t == jq_Primitive.CHAR) return new Character(getfield_C(o, f));
         if (t == jq_Primitive.SHORT) return new Short(getfield_S(o, f));
         if (t == jq_Primitive.BOOLEAN) return new Boolean(getfield_Z(o, f));
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
     public void putfield_I(Object o, jq_InstanceField f, int v) {
-        jq.Assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
+        Assert._assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Integer(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke4(v);
     }
     public void putfield_L(Object o, jq_InstanceField f, long v) {
-        jq.Assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
+        Assert._assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Long(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke8(v);
     }
     public void putfield_F(Object o, jq_InstanceField f, float v) {
-        jq.Assert(f.getType() == jq_Primitive.FLOAT);
+        Assert._assert(f.getType() == jq_Primitive.FLOAT);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Float(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         putfield_I(o, f, Float.floatToRawIntBits(v));
     }
     public void putfield_D(Object o, jq_InstanceField f, double v) {
-        jq.Assert(f.getType() == jq_Primitive.DOUBLE);
+        Assert._assert(f.getType() == jq_Primitive.DOUBLE);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Double(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         putfield_L(o, f, Double.doubleToRawLongBits(v));
     }
     public void putfield_A(Object o, jq_InstanceField f, Object v) {
@@ -745,58 +746,58 @@ uphere:
             Reflection.obj_trav.putInstanceFieldValue(o, f, v);
             return;
         }
-        jq.Assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke(HeapAddress.addressOf(v));
     }
     public void putfield_P(Object o, jq_InstanceField f, Address v) {
-        jq.Assert(f.getType().isAddressType());
+        Assert._assert(f.getType().isAddressType());
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, v);
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke(v);
     }
     public void putfield_B(Object o, jq_InstanceField f, byte v) {
-        jq.Assert(f.getType() == jq_Primitive.BYTE);
+        Assert._assert(f.getType() == jq_Primitive.BYTE);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Byte(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke1(v);
     }
     public void putfield_C(Object o, jq_InstanceField f, char v) {
-        jq.Assert(f.getType() == jq_Primitive.CHAR);
+        Assert._assert(f.getType() == jq_Primitive.CHAR);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Character(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke2((short)((v<<16)>>16));
     }
     public void putfield_S(Object o, jq_InstanceField f, short v) {
-        jq.Assert(f.getType() == jq_Primitive.SHORT);
+        Assert._assert(f.getType() == jq_Primitive.SHORT);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Short(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke2(v);
     }
     public void putfield_Z(Object o, jq_InstanceField f, boolean v) {
-        jq.Assert(f.getType() == jq_Primitive.BOOLEAN);
+        Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putInstanceFieldValue(o, f, new Boolean(v));
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke1(v?(byte)1:(byte)0);
     }
     
     public int getstatic_I(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
+        Assert._assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return 0;
@@ -805,7 +806,7 @@ uphere:
         return f.getAddress().peek4();
     }
     public long getstatic_L(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
+        Assert._assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return 0L;
@@ -814,7 +815,7 @@ uphere:
         return f.getAddress().peek8();
     }
     public float getstatic_F(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.FLOAT);
+        Assert._assert(f.getType() == jq_Primitive.FLOAT);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return 0L;
@@ -823,7 +824,7 @@ uphere:
         return Float.intBitsToFloat(getstatic_I(f));
     }
     public double getstatic_D(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.DOUBLE);
+        Assert._assert(f.getType() == jq_Primitive.DOUBLE);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return 0L;
@@ -832,12 +833,12 @@ uphere:
         return Double.longBitsToDouble(getstatic_L(f));
     }
     public Object getstatic_A(jq_StaticField f) {
-        jq.Assert(f.getType().isReferenceType() && !f.getType().isAddressType());
+        Assert._assert(f.getType().isReferenceType() && !f.getType().isAddressType());
         if (!jq.RunningNative) return Reflection.obj_trav.getStaticFieldValue(f);
         return ((HeapAddress) f.getAddress().peek()).asObject();
     }
     public Address getstatic_P(jq_StaticField f) {
-        jq.Assert(f.getType().isAddressType());
+        Assert._assert(f.getType().isAddressType());
         if (!jq.RunningNative) {
             Address a = (Address)Reflection.obj_trav.getStaticFieldValue(f);
             //if (a == null) return HeapAddress.getNull();
@@ -846,7 +847,7 @@ uphere:
         return f.getAddress().peek();
     }
     public boolean getstatic_Z(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.BOOLEAN);
+        Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return false;
@@ -855,7 +856,7 @@ uphere:
         return f.getAddress().peek4()!=0;
     }
     public byte getstatic_B(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.BYTE);
+        Assert._assert(f.getType() == jq_Primitive.BYTE);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return 0;
@@ -864,7 +865,7 @@ uphere:
         return f.getAddress().peek1();
     }
     public short getstatic_S(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.SHORT);
+        Assert._assert(f.getType() == jq_Primitive.SHORT);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return 0;
@@ -873,7 +874,7 @@ uphere:
         return f.getAddress().peek2();
     }
     public char getstatic_C(jq_StaticField f) {
-        jq.Assert(f.getType() == jq_Primitive.CHAR);
+        Assert._assert(f.getType() == jq_Primitive.CHAR);
         if (!jq.RunningNative) {
             Object o = Reflection.obj_trav.getStaticFieldValue(f);
             if (o == null) return 0;
@@ -882,7 +883,7 @@ uphere:
         return (char)f.getAddress().peek4();
     }
     public void putstatic_I(jq_StaticField f, int v) {
-        jq.Assert(f.getType() == jq_Primitive.INT);
+        Assert._assert(f.getType() == jq_Primitive.INT);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Integer(v));
             return;
@@ -890,7 +891,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_L(jq_StaticField f, long v) {
-        jq.Assert(f.getType() == jq_Primitive.LONG);
+        Assert._assert(f.getType() == jq_Primitive.LONG);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Long(v));
             return;
@@ -898,7 +899,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_F(jq_StaticField f, float v) {
-        jq.Assert(f.getType() == jq_Primitive.FLOAT);
+        Assert._assert(f.getType() == jq_Primitive.FLOAT);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Float(v));
             return;
@@ -906,7 +907,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_D(jq_StaticField f, double v) {
-        jq.Assert(f.getType() == jq_Primitive.DOUBLE);
+        Assert._assert(f.getType() == jq_Primitive.DOUBLE);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Double(v));
             return;
@@ -914,8 +915,8 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_A(jq_StaticField f, Object v) {
-        jq.Assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
-        jq.Assert(!f.getType().isAddressType());
+        Assert._assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
+        Assert._assert(!f.getType().isAddressType());
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, v);
             return;
@@ -923,7 +924,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_P(jq_StaticField f, Address v) {
-        jq.Assert(f.getType().isAddressType());
+        Assert._assert(f.getType().isAddressType());
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, v);
             return;
@@ -931,7 +932,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_Z(jq_StaticField f, boolean v) {
-        jq.Assert(f.getType() == jq_Primitive.BOOLEAN);
+        Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Boolean(v));
             return;
@@ -939,7 +940,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v?1:0);
     }
     public void putstatic_B(jq_StaticField f, byte v) {
-        jq.Assert(f.getType() == jq_Primitive.BYTE);
+        Assert._assert(f.getType() == jq_Primitive.BYTE);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Byte(v));
             return;
@@ -947,7 +948,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, (int)v);
     }
     public void putstatic_S(jq_StaticField f, short v) {
-        jq.Assert(f.getType() == jq_Primitive.SHORT);
+        Assert._assert(f.getType() == jq_Primitive.SHORT);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Short(v));
             return;
@@ -955,7 +956,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, (int)v);
     }
     public void putstatic_C(jq_StaticField f, char v) {
-        jq.Assert(f.getType() == jq_Primitive.CHAR);
+        Assert._assert(f.getType() == jq_Primitive.CHAR);
         if (!jq.RunningNative) {
             Reflection.obj_trav.putStaticFieldValue(f, new Character(v));
             return;
@@ -964,7 +965,7 @@ uphere:
     }
     
     public int arraylength(Object o) {
-        jq.Assert(getTypeOf(o).isArrayType());
+        Assert._assert(getTypeOf(o).isArrayType());
         if (!jq.RunningNative) return Array.getLength(o);
         return HeapAddress.addressOf(o).offset(Allocator.ObjectLayout.ARRAY_LENGTH_OFFSET).peek4();
     }

@@ -39,11 +39,11 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_TryCatchBC;
 import Clazz.jq_Type;
-import Main.jq;
 import UTF.Utf8;
-import Util.ByteSequence;
-import Util.LinearSet;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.LinearSet;
+import Util.IO.ByteSequence;
 
 /*
  * @author  John Whaley
@@ -6210,7 +6210,7 @@ public interface Bytecodes {
         
         public NEWARRAY(jq_Array type) {
             super(jq_ClassFileConstants.jbc_NEWARRAY, (short)2);
-            jq.Assert(type.getElementType().isPrimitiveType());
+            Assert._assert(type.getElementType().isPrimitiveType());
             this.type = type;
         }
         
@@ -7470,7 +7470,7 @@ public interface Bytecodes {
          * @param out Output stream
          */
         public void dump(DataOutputStream out) throws IOException {
-            jq.Assert(index != 0);
+            Assert._assert(index != 0);
             out.writeByte(opcode);
             out.writeChar(index);
         }
@@ -7502,7 +7502,7 @@ public interface Bytecodes {
          */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             o = cp.get((char)bytes.readUnsignedShort());
-            jq.Assert(!(o instanceof jq_MemberReference));
+            Assert._assert(!(o instanceof jq_MemberReference));
             length = 3;
         }
         
@@ -8334,23 +8334,23 @@ public interface Bytecodes {
         public boolean isAddressType() { return false; }
         public String getJDKName() { return desc.toString(); }
         public String getJDKDesc() { return getJDKName(); }
-        public Clazz.jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }
-        public Clazz.jq_Class getInterface(Utf8 desc) { jq.UNREACHABLE(); return null; }
-        public boolean implementsInterface(Clazz.jq_Class k) { jq.UNREACHABLE(); return false; }
-        public Clazz.jq_InstanceMethod getVirtualMethod(Clazz.jq_NameAndDesc nd) { jq.UNREACHABLE(); return null; }
-        public String getName() { jq.UNREACHABLE(); return null; }
-        public String shortName() { jq.UNREACHABLE(); return null; }
-        public boolean isClassType() { jq.UNREACHABLE(); return false; }
-        public boolean isArrayType() { jq.UNREACHABLE(); return false; }
-        public boolean isFinal() { jq.UNREACHABLE(); return false; }
-        public jq_Reference getDirectPrimarySupertype() { jq.UNREACHABLE(); return null; }
-        public int getDepth() { jq.UNREACHABLE(); return 0; }
-        public void load() { jq.UNREACHABLE(); }
-        public void verify() { jq.UNREACHABLE(); }
-        public void prepare() { jq.UNREACHABLE(); }
-        public void sf_initialize() { jq.UNREACHABLE(); }
-        public void compile() { jq.UNREACHABLE(); }
-        public void cls_initialize() { jq.UNREACHABLE(); }
+        public Clazz.jq_Class[] getInterfaces() { Assert.UNREACHABLE(); return null; }
+        public Clazz.jq_Class getInterface(Utf8 desc) { Assert.UNREACHABLE(); return null; }
+        public boolean implementsInterface(Clazz.jq_Class k) { Assert.UNREACHABLE(); return false; }
+        public Clazz.jq_InstanceMethod getVirtualMethod(Clazz.jq_NameAndDesc nd) { Assert.UNREACHABLE(); return null; }
+        public String getName() { Assert.UNREACHABLE(); return null; }
+        public String shortName() { Assert.UNREACHABLE(); return null; }
+        public boolean isClassType() { Assert.UNREACHABLE(); return false; }
+        public boolean isArrayType() { Assert.UNREACHABLE(); return false; }
+        public boolean isFinal() { Assert.UNREACHABLE(); return false; }
+        public jq_Reference getDirectPrimarySupertype() { Assert.UNREACHABLE(); return null; }
+        public int getDepth() { Assert.UNREACHABLE(); return 0; }
+        public void load() { Assert.UNREACHABLE(); }
+        public void verify() { Assert.UNREACHABLE(); }
+        public void prepare() { Assert.UNREACHABLE(); }
+        public void sf_initialize() { Assert.UNREACHABLE(); }
+        public void compile() { Assert.UNREACHABLE(); }
+        public void cls_initialize() { Assert.UNREACHABLE(); }
         public String toString() { return "ReturnAddress (target="+returnTarget+")"; }
         public boolean equals(Object rat) {
             if (!(rat instanceof jq_ReturnAddressType)) return false;
@@ -8385,9 +8385,9 @@ public interface Bytecodes {
         public void setHandlerPC(InstructionHandle i) { this.handler = i; }
         
         public jq_TryCatchBC finish() {
-            jq.Assert(this.start.getPosition() >= 0);
-            jq.Assert(this.end.getPosition()+this.end.getInstruction().getLength() > 0);
-            jq.Assert(this.handler.getPosition() >= 0);
+            Assert._assert(this.start.getPosition() >= 0);
+            Assert._assert(this.end.getPosition()+this.end.getInstruction().getLength() > 0);
+            Assert._assert(this.handler.getPosition() >= 0);
             return new jq_TryCatchBC((char)this.start.getPosition(),
                                      (char)(this.end.getPosition()+this.end.getInstruction().getLength()),
                                      (char)this.handler.getPosition(),

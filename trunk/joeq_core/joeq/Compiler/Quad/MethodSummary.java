@@ -48,16 +48,16 @@ import Compil3r.Quad.Operator.Putstatic;
 import Compil3r.Quad.Operator.Return;
 import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.RegisterFactory.Register;
-import Main.jq;
-import Util.CollectionTestWrapper;
-import Util.Default;
-import Util.FilterIterator;
-import Util.HashCodeComparator;
-import Util.IdentityHashCodeWrapper;
-import Util.InstrumentedSetWrapper;
-import Util.SetFactory;
-import Util.SortedArraySet;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.CollectionTestWrapper;
+import Util.Collections.FilterIterator;
+import Util.Collections.HashCodeComparator;
+import Util.Collections.IdentityHashCodeWrapper;
+import Util.Collections.InstrumentedSetWrapper;
+import Util.Collections.Pair;
+import Util.Collections.SetFactory;
+import Util.Collections.SortedArraySet;
 
 /**
  *
@@ -111,8 +111,8 @@ public class MethodSummary {
     public static HashMap clone_cache;
     public static MethodSummary getSummary(ControlFlowGraph cfg, CallSite cs) {
         if (clone_cache != null) {
-            //System.out.println("Checking cache for "+Default.pair(cfg, cs));
-            MethodSummary ms = (MethodSummary) clone_cache.get(Default.pair(cfg, cs));
+            //System.out.println("Checking cache for "+new Pair(cfg, cs));
+            MethodSummary ms = (MethodSummary) clone_cache.get(new Pair(cfg, cs));
             if (ms != null) {
                 //System.out.println("Using specialized version of "+ms.getMethod()+" for call site "+cs);
                 return ms;
@@ -174,7 +174,7 @@ public class MethodSummary {
             int i = r.getNumber();
             if (r.isTemp()) i += nLocals;
             if (n instanceof Set) n = NodeSet.FACTORY.makeSet((Set)n);
-            else jq.Assert(n instanceof Node);
+            else Assert._assert(n instanceof Node);
             s.registers[i] = n;
             if (TRACE_INTRA) out.println("Setting register "+r+" to "+n);
         }
@@ -182,7 +182,7 @@ public class MethodSummary {
         protected Object getRegister(Register r) {
             int i = r.getNumber();
             if (r.isTemp()) i += nLocals;
-            jq.Assert(s.registers[i] != null);
+            Assert._assert(s.registers[i] != null);
             return s.registers[i];
         }
 
@@ -559,7 +559,7 @@ public class MethodSummary {
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
-            jq.Assert(m == Run_Time.Arrays._multinewarray || params.length == plo.length());
+            Assert._assert(m == Run_Time.Arrays._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
                 if (!params[i].isReferenceType()
                     /*|| params[i].isAddressType()*/
@@ -934,7 +934,7 @@ public class MethodSummary {
                 }
                 removeSelf = false;
             }
-            if (VERIFY_ASSERTIONS) jq.Assert(!set.contains(this));
+            if (VERIFY_ASSERTIONS) Assert._assert(!set.contains(this));
             if (this.predecessors != null) {
                 for (Iterator i=this.predecessors.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -1001,7 +1001,7 @@ public class MethodSummary {
                         if (removeSelf) {
                             boolean b = that.removePredecessor(f, this);
                             if (TRACE_INTRA) out.println("Removed "+this+" from predecessor set of "+that+"."+f);
-                            jq.Assert(b);
+                            Assert._assert(b);
                         }
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             Node node2 = (Node)j.next();
@@ -1017,7 +1017,7 @@ public class MethodSummary {
                             if (removeSelf) {
                                 boolean b = that.removePredecessor(f, this);
                                 if (TRACE_INTRA) out.println("Removed "+this+" from predecessor set of "+that+"."+f);
-                                jq.Assert(b);
+                                Assert._assert(b);
                             }
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 Node node2 = (Node)j.next();
@@ -1086,7 +1086,7 @@ public class MethodSummary {
                     Object q = um.get(o);
                     if (o instanceof UnknownTypeNode) q = o;
                     if (o == GlobalNode.GLOBAL) q = o;
-                    if (VERIFY_ASSERTIONS) jq.Assert(q != null, o+" is missing from map");
+                    if (VERIFY_ASSERTIONS) Assert._assert(q != null, o+" is missing from map");
                     if (TRACE_INTRA) out.println("Updated edge "+f+" "+o+" to "+q);
                     m.put(f, q);
                 } else {
@@ -1094,11 +1094,11 @@ public class MethodSummary {
                     m.put(f, lhs);
                     for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                         Object r = j.next();
-                        jq.Assert(r != null);
+                        Assert._assert(r != null);
                         Object q = um.get(r);
                         if (r instanceof UnknownTypeNode) q = r;
                         if (r == GlobalNode.GLOBAL) q = o;
-                        if (VERIFY_ASSERTIONS) jq.Assert(q != null, r+" is missing from map");
+                        if (VERIFY_ASSERTIONS) Assert._assert(q != null, r+" is missing from map");
                         if (TRACE_INTRA) out.println("Updated edge "+f+" "+r+" to "+q);
                         lhs.add(q);
                     }
@@ -1169,7 +1169,7 @@ public class MethodSummary {
                     m.put(f, lhs);
                     for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                         Object r = j.next();
-                        jq.Assert(r != null);
+                        Assert._assert(r != null);
                         Object q = um.get(r);
                         if (q == null) q = r;
                         else if (TRACE_INTRA) out.println("Updated edge "+f+" "+r+" to "+q);
@@ -1246,16 +1246,16 @@ public class MethodSummary {
             Object o = this.predecessors.get(f);
             if (o instanceof Node) {
                 if (n != o) {
-                    jq.UNREACHABLE("predecessor of "+this+" should be "+n+", but is "+o);
+                    Assert.UNREACHABLE("predecessor of "+this+" should be "+n+", but is "+o);
                     return false;
                 }
             } else if (o == null) {
-                jq.UNREACHABLE("predecessor of "+this+" should be "+n+", but is missing");
+                Assert.UNREACHABLE("predecessor of "+this+" should be "+n+", but is missing");
                 return false;
             } else {
                 Set s = (Set) o;
                 if (!s.contains(n)) {
-                    jq.UNREACHABLE("predecessor of "+this+" should be "+n);
+                    Assert.UNREACHABLE("predecessor of "+this+" should be "+n);
                     return false;
                 }
             }
@@ -1777,9 +1777,9 @@ public class MethodSummary {
         private GlobalNode(GlobalNode that) {
             super(that);
         }
-        public AndersenReference getDeclaredType() { jq.UNREACHABLE(); return null; }
+        public AndersenReference getDeclaredType() { Assert.UNREACHABLE(); return null; }
         public final Node copy() {
-            jq.Assert(this != GLOBAL);
+            Assert._assert(this != GLOBAL);
             return new GlobalNode(this);
         }
         public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
@@ -1935,7 +1935,7 @@ public class MethodSummary {
             if (fn.field_predecessors == null) fn.field_predecessors = NodeSet.FACTORY.makeSet();
             fn.field_predecessors.add(base);
             if (s != null) {
-                if (VERIFY_ASSERTIONS) jq.Assert(base.accessPathEdges.get(f) == s);
+                if (VERIFY_ASSERTIONS) Assert._assert(base.accessPathEdges.get(f) == s);
                 s.add(fn);
             } else {
                 base.accessPathEdges.put(f, fn);
@@ -1963,7 +1963,7 @@ public class MethodSummary {
             // go through once to add all quads, so that the hash code will be stable.
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 FieldNode dat = (FieldNode)i.next();
-                jq.Assert(f == dat.f);
+                Assert._assert(f == dat.f);
                 dis.quads.addAll(dat.quads);
             }
             // once again to do the replacement.
@@ -1987,11 +1987,11 @@ public class MethodSummary {
                 }
                 removeSelf = false;
             }
-            if (VERIFY_ASSERTIONS) jq.Assert(!set.contains(this));
+            if (VERIFY_ASSERTIONS) Assert._assert(!set.contains(this));
             if (this.field_predecessors != null) {
                 for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
                     Node that = (Node)i.next();
-                    jq.Assert(that != null);
+                    Assert._assert(that != null);
                     if (removeSelf) {
                         i.remove();
                         that._removeAccessPathEdge(f, this);
@@ -2033,11 +2033,11 @@ public class MethodSummary {
                 this.field_predecessors = NodeSet.FACTORY.makeSet();
                 for (Iterator j=m.iterator(); j.hasNext(); ) {
                     Object p = j.next();
-                    jq.Assert(p != null);
+                    Assert._assert(p != null);
                     Object o = um.get(p);
                     if (p instanceof UnknownTypeNode) o = p;
                     if (p == GlobalNode.GLOBAL) o = p;
-                    if (VERIFY_ASSERTIONS) jq.Assert(o != null, ((Node)p).toString_long()+" (field predecessor of "+this.toString_long()+")");
+                    if (VERIFY_ASSERTIONS) Assert._assert(o != null, ((Node)p).toString_long()+" (field predecessor of "+this.toString_long()+")");
                     this.field_predecessors.add(o);
                 }
                 addGlobalAccessPathEdges(this);
@@ -2924,14 +2924,14 @@ outer:
                 Object o = i.next();
                 if (o instanceof UnknownTypeNode) continue;
                 if (!nodes.containsKey(o)) {
-                    jq.UNREACHABLE("Returned node "+o+" not in set.");
+                    Assert.UNREACHABLE("Returned node "+o+" not in set.");
                 }
             }
             for (Iterator i=thrown.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 if (o instanceof UnknownTypeNode) continue;
                 if (!nodes.containsKey(o)) {
-                    jq.UNREACHABLE("Returned node "+o+" not in set.");
+                    Assert.UNREACHABLE("Returned node "+o+" not in set.");
                 }
             }
             for (Iterator i=nodes.keySet().iterator(); i.hasNext(); ) {
@@ -2942,14 +2942,14 @@ outer:
                     if (o instanceof Node) {
                         if (o instanceof UnknownTypeNode) continue;
                         if (!nodes.containsKey(o)) {
-                            jq.UNREACHABLE("Predecessor node "+o+" of "+nod+" not in set.");
+                            Assert.UNREACHABLE("Predecessor node "+o+" of "+nod+" not in set.");
                         }
                     } else {
                         for (Iterator k=((Set)o).iterator(); k.hasNext(); ) {
                             Node q = (Node)k.next();
                             if (q instanceof UnknownTypeNode) continue;
                             if (!nodes.containsKey(q)) {
-                                jq.UNREACHABLE("Predecessor node "+q+" of "+nod+" not in set.");
+                                Assert.UNREACHABLE("Predecessor node "+q+" of "+nod+" not in set.");
                             }
                         }
                     }
@@ -3068,7 +3068,7 @@ outer:
             Node a = (Node)i.next();
             Node b = (Node)m.get(a);
             if (a instanceof UnknownTypeNode) b = a;
-            jq.Assert(b != null);
+            Assert._assert(b != null);
             returned.add(b);
         }
         Set thrown = NodeSet.FACTORY.makeSet();
@@ -3076,7 +3076,7 @@ outer:
             Node a = (Node)i.next();
             Node b = (Node)m.get(a);
             if (a instanceof UnknownTypeNode) b = a;
-            jq.Assert(b != null);
+            Assert._assert(b != null);
             thrown.add(b);
         }
         ParamNode[] params = new ParamNode[this.params.length];
@@ -3093,13 +3093,13 @@ outer:
                 Set s2 = NodeSet.FACTORY.makeSet();
                 for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                     Object o2 = m.get(j.next());
-                    jq.Assert(o2 != null);
+                    Assert._assert(o2 != null);
                     s2.add(o2);
                 }
                 o = s2;
             } else if (o != null) {
                 o = m.get(o);
-                jq.Assert(o != null, e.toString());
+                Assert._assert(o != null, e.toString());
             }
             callToRVN.put(mc, o);
         }
@@ -3112,21 +3112,21 @@ outer:
                 Set s2 = NodeSet.FACTORY.makeSet();
                 for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                     Object o2 = m.get(j.next());
-                    jq.Assert(o2 != null);
+                    Assert._assert(o2 != null);
                     s2.add(o2);
                 }
                 o = s2;
             } else if (o != null) {
                 o = m.get(o);
-                jq.Assert(o != null, e.toString());
+                Assert._assert(o != null, e.toString());
             }
             callToTEN.put(mc, o);
         }
         LinkedHashMap nodes = new LinkedHashMap();
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-            jq.Assert(e.getValue() != GlobalNode.GLOBAL);
-            jq.Assert(!(e.getValue() instanceof UnknownTypeNode));
+            Assert._assert(e.getValue() != GlobalNode.GLOBAL);
+            Assert._assert(!(e.getValue() instanceof UnknownTypeNode));
             nodes.put(e.getValue(), e.getValue());
         }
         Map passedParamToNodes = null;
@@ -3155,7 +3155,7 @@ outer:
                 for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     FieldNode n2 = (FieldNode)e.getValue();
-                    jq.Assert(n2 != null);
+                    Assert._assert(n2 != null);
                     if (roots.contains(n2)) continue;
                     worklist.add(n2); roots.add(n2);
                 }
@@ -3166,14 +3166,14 @@ outer:
                     Object o = e.getValue();
                     if (o instanceof Node) {
                         Node n2 = (Node)o;
-                        jq.Assert(n2 != null);
+                        Assert._assert(n2 != null);
                         if (roots.contains(n2)) continue;
                         worklist.add(n2); roots.add(n2);
                     } else {
                         Set s = NodeSet.FACTORY.makeSet((Set)o);
                         for (Iterator j=s.iterator(); j.hasNext(); ) {
                             Object p = j.next();
-                            jq.Assert(p != null);
+                            Assert._assert(p != null);
                             if (roots.contains(p)) j.remove();
                         }
                         if (!s.isEmpty()) {
@@ -3195,7 +3195,7 @@ outer:
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                 jq_Field f = (jq_Field)e.getKey();
                 Object o = e.getValue();
-                jq.Assert(o != null);
+                Assert._assert(o != null);
                 FieldNode n2;
                 if (o instanceof FieldNode) {
                     n2 = (FieldNode)o;
@@ -3239,7 +3239,7 @@ outer:
             callee.verify();
             caller.verify();
         }
-        jq.Assert(caller.calls.contains(mc));
+        Assert._assert(caller.calls.contains(mc));
         HashMap callee_to_caller = new HashMap();
         if (TRACE_INST) out.println("Adding global node to map: "+GlobalNode.GLOBAL.toString_long());
         callee_to_caller.put(GlobalNode.GLOBAL, GlobalNode.GLOBAL);
@@ -3268,8 +3268,8 @@ outer:
             java.util.Map.Entry e = (java.util.Map.Entry) i.next();
             ProgramLocation mc2 = (ProgramLocation) e.getKey();
             if (VERIFY_ASSERTIONS) {
-                jq.Assert(caller.calls.contains(mc2));
-                jq.Assert(!mc.equals(mc2));
+                Assert._assert(caller.calls.contains(mc2));
+                Assert._assert(!mc.equals(mc2));
             }
             Object rvn2 = e.getValue();
             if (TRACE_INST) out.println("Adding rvn for callee call: "+rvn2);
@@ -3289,8 +3289,8 @@ outer:
             java.util.Map.Entry e = (java.util.Map.Entry) i.next();
             ProgramLocation mc2 = (ProgramLocation) e.getKey();
             if (VERIFY_ASSERTIONS) {
-                jq.Assert(caller.calls.contains(mc2));
-                jq.Assert(!mc.equals(mc2));
+                Assert._assert(caller.calls.contains(mc2));
+                Assert._assert(!mc.equals(mc2));
             }
             Object ten2 = e.getValue();
             if (TRACE_INST) out.println("Adding ten for callee call: "+ten2);
@@ -3549,7 +3549,7 @@ outer:
         }
         path.add(n);
         if (visited.contains(n)) {
-            if (VERIFY_ASSERTIONS) jq.Assert(nodes.containsKey(n), n.toString());
+            if (VERIFY_ASSERTIONS) Assert._assert(nodes.containsKey(n), n.toString());
             return;
         }
         if (n instanceof UnknownTypeNode) {
@@ -3625,65 +3625,65 @@ outer:
         for (int i=0; i<this.params.length; ++i) {
             if (this.params[i] == null) continue;
             if (!nodes.containsKey(this.params[i])) {
-                jq.UNREACHABLE(this.params[i].toString_long());
+                Assert.UNREACHABLE(this.params[i].toString_long());
             }
         }
         for (Iterator i=returned.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
             if (n instanceof UnknownTypeNode) continue;
             if (!nodes.containsKey(n)) {
-                jq.UNREACHABLE(n.toString_long());
+                Assert.UNREACHABLE(n.toString_long());
             }
         }
         for (Iterator i=thrown.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
             if (n instanceof UnknownTypeNode) continue;
             if (!nodes.containsKey(n)) {
-                jq.UNREACHABLE(n.toString_long());
+                Assert.UNREACHABLE(n.toString_long());
             }
         }
         for (Iterator i=callToRVN.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             if (!calls.contains(e.getKey())) {
-                jq.UNREACHABLE(e.toString());
+                Assert.UNREACHABLE(e.toString());
             }
             Object o = e.getValue();
             if (o instanceof Set) {
                 for (Iterator j=((Set) o).iterator(); j.hasNext(); ) {
                     Object o2 = j.next();
                     if (!nodes.containsKey(o2)) {
-                        jq.UNREACHABLE(this.toString()+" ::: "+e.toString()+" ::: "+o2);
+                        Assert.UNREACHABLE(this.toString()+" ::: "+e.toString()+" ::: "+o2);
                     }
                 }
             } else if (o != null) {
                 if (!nodes.containsKey(o)) {
-                    jq.UNREACHABLE(e.toString());
+                    Assert.UNREACHABLE(e.toString());
                 }
             }
         }
         for (Iterator i=callToTEN.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             if (!calls.contains(e.getKey())) {
-                jq.UNREACHABLE(e.toString());
+                Assert.UNREACHABLE(e.toString());
             }
             Object o = e.getValue();
             if (o instanceof Set) {
                 for (Iterator j=((Set) o).iterator(); j.hasNext(); ) {
                     Object o2 = j.next();
                     if (!nodes.containsKey(o2)) {
-                        jq.UNREACHABLE(e.toString());
+                        Assert.UNREACHABLE(e.toString());
                     }
                 }
             } else if (o != null) {
                 if (!nodes.containsKey(o)) {
-                    jq.UNREACHABLE(e.toString());
+                    Assert.UNREACHABLE(e.toString());
                 }
             }
         }
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
             if (n instanceof UnknownTypeNode) {
-                jq.UNREACHABLE(n.toString_long());
+                Assert.UNREACHABLE(n.toString_long());
             }
             if (n.addedEdges != null) {
                 for (Iterator j=n.addedEdges.entrySet().iterator(); j.hasNext(); ) {
@@ -3693,10 +3693,10 @@ outer:
                     if (o instanceof Node) {
                         Node n2 = (Node) o;
                         if (!(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
-                            jq.UNREACHABLE(n2.toString_long());
+                            Assert.UNREACHABLE(n2.toString_long());
                         }
                         if (!n2.hasPredecessor(f, n)) {
-                            jq.UNREACHABLE(n2.toString_long()+" has no predecessor "+n.toString_long());
+                            Assert.UNREACHABLE(n2.toString_long()+" has no predecessor "+n.toString_long());
                         }
                     } else if (o == null) {
                         
@@ -3705,10 +3705,10 @@ outer:
                         for (Iterator k=s.iterator(); k.hasNext(); ) {
                             Node n2 = (Node) k.next();
                             if (!(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
-                                jq.UNREACHABLE(n2.toString_long());
+                                Assert.UNREACHABLE(n2.toString_long());
                             }
                             if (!n2.hasPredecessor(f, n)) {
-                                jq.UNREACHABLE(n2.toString_long()+" has no predecessor "+n.toString_long());
+                                Assert.UNREACHABLE(n2.toString_long()+" has no predecessor "+n.toString_long());
                             }
                         }
                     }
@@ -3722,10 +3722,10 @@ outer:
                     if (o instanceof Node) {
                         Node n2 = (Node) o;
                         if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
-                            jq.UNREACHABLE(this.toString()+" ::: "+n2);
+                            Assert.UNREACHABLE(this.toString()+" ::: "+n2);
                         }
                         if (!n2.hasEdge(f, n)) {
-                            jq.UNREACHABLE(this.toString()+" ::: "+n2+" -> "+n);
+                            Assert.UNREACHABLE(this.toString()+" ::: "+n2+" -> "+n);
                         }
                     } else if (o == null) {
                         
@@ -3734,10 +3734,10 @@ outer:
                         for (Iterator k=s.iterator(); k.hasNext(); ) {
                             Node n2 = (Node) k.next();
                             if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
-                                jq.UNREACHABLE(n2.toString_long());
+                                Assert.UNREACHABLE(n2.toString_long());
                             }
                             if (!n2.hasEdge(f, n)) {
-                                jq.UNREACHABLE(n2.toString_long()+" has no edge "+n.toString_long());
+                                Assert.UNREACHABLE(n2.toString_long()+" has no edge "+n.toString_long());
                             }
                         }
                     }
@@ -3751,10 +3751,10 @@ outer:
                     if (o instanceof FieldNode) {
                         FieldNode n2 = (FieldNode) o;
                         if (!nodes.containsKey(n2)) {
-                            jq.UNREACHABLE(n2.toString_long());
+                            Assert.UNREACHABLE(n2.toString_long());
                         }
                         if (!n2.field_predecessors.contains(n)) {
-                            jq.UNREACHABLE(n2.toString_long()+" has no field pred "+n.toString_long());
+                            Assert.UNREACHABLE(n2.toString_long()+" has no field pred "+n.toString_long());
                         }
                     } else if (o == null) {
                         
@@ -3763,10 +3763,10 @@ outer:
                         for (Iterator k=s.iterator(); k.hasNext(); ) {
                             FieldNode n2 = (FieldNode) k.next();
                             if (!nodes.containsKey(n2)) {
-                                jq.UNREACHABLE(n2.toString_long());
+                                Assert.UNREACHABLE(n2.toString_long());
                             }
                             if (!n2.field_predecessors.contains(n)) {
-                                jq.UNREACHABLE(n2.toString_long()+" has no field pred "+n.toString_long());
+                                Assert.UNREACHABLE(n2.toString_long()+" has no field pred "+n.toString_long());
                             }
                         }
                     }
@@ -3779,23 +3779,23 @@ outer:
                     for (Iterator j=fn.field_predecessors.iterator(); j.hasNext(); ) {
                         Node n2 = (Node) j.next();
                         if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
-                            jq.UNREACHABLE(this.toString()+" ::: "+n2.toString_long());
+                            Assert.UNREACHABLE(this.toString()+" ::: "+n2.toString_long());
                         }
                         if (!n2.hasAccessPathEdge(f, fn)) {
-                            jq.UNREACHABLE(this.toString()+" ::: "+n2.toString_long()+" => "+fn.toString_long());
+                            Assert.UNREACHABLE(this.toString()+" ::: "+n2.toString_long()+" => "+fn.toString_long());
                         }
                     }
                 }
             }
             if (n instanceof ReturnValueNode) {
                 if (!multiset_contains(callToRVN, n)) {
-                    jq.UNREACHABLE(n.toString_long());
+                    Assert.UNREACHABLE(n.toString_long());
                 }
             }
             if (n instanceof ThrownExceptionNode) {
                 if (!multiset_contains(callToTEN, n)) {
                     System.out.println(callToTEN);
-                    jq.UNREACHABLE(this.toString()+" ::: "+n.toString_long());
+                    Assert.UNREACHABLE(this.toString()+" ::: "+n.toString_long());
                 }
             }
         }
@@ -3814,13 +3814,13 @@ outer:
 
     void verifyNoReferences(Node n) {
         if (returned.contains(n))
-            jq.UNREACHABLE("ERROR: returned set contains "+n);
+            Assert.UNREACHABLE("ERROR: returned set contains "+n);
         if (thrown.contains(n))
-            jq.UNREACHABLE("ERROR: thrown set contains "+n);
+            Assert.UNREACHABLE("ERROR: thrown set contains "+n);
         if (false) {
             for (int i=0; i<this.params.length; ++i) {
                 if (this.params[i] == n)
-                    jq.UNREACHABLE("ERROR: param #"+i+" "+n);
+                    Assert.UNREACHABLE("ERROR: param #"+i+" "+n);
             }
         }
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
@@ -3828,24 +3828,24 @@ outer:
             if (n2 instanceof UnknownTypeNode) continue;
             if (n2.addedEdges != null) {
                 if (n2.addedEdges.containsValue(n)) {
-                    jq.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
+                    Assert.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
                 }
             }
             if (n2.predecessors != null) {
                 if (n2.predecessors.containsValue(n)) {
-                    jq.UNREACHABLE("ERROR: "+n2+" contains predecessor "+n);
+                    Assert.UNREACHABLE("ERROR: "+n2+" contains predecessor "+n);
                 }
             }
             if (n2.accessPathEdges != null) {
                 if (n2.accessPathEdges.containsValue(n)) {
-                    jq.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
+                    Assert.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
                 }
             }
             if (n2 instanceof FieldNode) {
                 FieldNode fn = (FieldNode) n2;
                 if (fn.field_predecessors != null) {
                     if (fn.field_predecessors.contains(n)) {
-                        jq.UNREACHABLE("ERROR: "+fn+" contains a field predecessor "+n);
+                        Assert.UNREACHABLE("ERROR: "+fn+" contains a field predecessor "+n);
                     }
                 }
             }

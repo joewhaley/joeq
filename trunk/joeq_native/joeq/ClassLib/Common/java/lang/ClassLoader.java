@@ -25,6 +25,7 @@ import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -48,7 +49,7 @@ public abstract class ClassLoader {
         if (security != null) {
             security.checkCreateClassLoader();
         }
-        jq.Assert(parent != null);
+        Assert._assert(parent != null);
         this.parent = parent;
         Map m = new HashMap();
         this.desc2type = m;
@@ -60,7 +61,7 @@ public abstract class ClassLoader {
             security.checkCreateClassLoader();
         }
         java.lang.ClassLoader parent = getSystemClassLoader();
-        jq.Assert(parent != null);
+        Assert._assert(parent != null);
         this.parent = parent;
         Map m = new HashMap();
         this.desc2type = m;
@@ -89,7 +90,7 @@ public abstract class ClassLoader {
                 } catch (java.lang.Error x) {
                     throw x;
                 } catch (java.lang.Throwable x) {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 }
             }
         }
@@ -122,7 +123,7 @@ public abstract class ClassLoader {
     }
     private java.lang.Class findBootstrapClass(java.lang.String name) throws ClassNotFoundException {
         java.lang.Object o = PrimordialClassLoader.loader;
-        jq.Assert(this == o);
+        Assert._assert(this == o);
         if (!name.startsWith("[")) name = "L"+name+";";
         Utf8 desc = Utf8.get(name.replace('.','/'));
         jq_Type k;
@@ -156,7 +157,7 @@ public abstract class ClassLoader {
 
     // additional methods
     public jq_Type getType(Utf8 desc) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         Map desc2type = this.desc2type;
         jq_Type t = (jq_Type)desc2type.get(desc);
         return t;
@@ -176,7 +177,7 @@ public abstract class ClassLoader {
                 t = jq_Class.newClass((java.lang.ClassLoader)o, desc);
             } else {
                 if (!desc.isDescriptor(jq_ClassFileConstants.TC_ARRAY))
-                    jq.UNREACHABLE("bad descriptor! "+desc);
+                    Assert.UNREACHABLE("bad descriptor! "+desc);
                 Utf8 elementDesc = desc.getArrayElementDescriptor();
                 jq_Type elementType;
                 elementType = this.getOrCreateType(elementDesc); // recursion

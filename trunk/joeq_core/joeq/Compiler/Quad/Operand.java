@@ -13,9 +13,9 @@ import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.Quad.RegisterFactory.Register;
-import Main.jq;
 import Memory.Address;
 import Run_Time.Reflection;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -64,7 +64,7 @@ public interface Operand {
         public void clearExactType() { flags &= ~PRECISE_TYPE; }
         public boolean hasMoreConservativeFlags(RegisterOperand that) { return that.getFlags() == (getFlags() | that.getFlags()); }
         public Operand copy() { return new RegisterOperand(this.register, this.type, this.flags); }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof RegisterOperand && ((RegisterOperand)that).getRegister() == this.getRegister(); }
         public String toString() { return register+" "+((type==null)?"<g>":type.shortName()); }
@@ -87,7 +87,7 @@ public interface Operand {
             if (value == null) return null;
             return Reflection.getTypeOf(this.value);
         }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new AConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof AConstOperand && ((AConstOperand)that).getValue() == this.getValue(); }
@@ -108,7 +108,7 @@ public interface Operand {
         public jq_Reference getType() {
             return Address._class;
         }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new PConstOperand(value); }
         public boolean isSimilar(Operand o) {
@@ -129,7 +129,7 @@ public interface Operand {
         public int getValue() { return value; }
         public void setValue(int o) { this.value = o; }
         public String toString() { return "IConst: "+value; }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new IConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof IConstOperand && ((IConstOperand)that).getValue() == this.getValue(); }
@@ -145,7 +145,7 @@ public interface Operand {
         public float getValue() { return value; }
         public void setValue(float o) { this.value = o; }
         public String toString() { return "FConst: "+value; }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new FConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof FConstOperand && ((FConstOperand)that).getValue() == this.getValue(); }
@@ -161,7 +161,7 @@ public interface Operand {
         public long getValue() { return value; }
         public void setValue(long o) { this.value = o; }
         public String toString() { return "LConst: "+value; }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new LConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof LConstOperand && ((LConstOperand)that).getValue() == this.getValue(); }
@@ -177,7 +177,7 @@ public interface Operand {
         public double getValue() { return value; }
         public void setValue(double o) { this.value = o; }
         public String toString() { return "DConst: "+value; }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new DConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof DConstOperand && ((DConstOperand)that).getValue() == this.getValue(); }
@@ -190,7 +190,7 @@ public interface Operand {
         //public boolean equals(Object that) { return that instanceof UnnecessaryGuardOperand; }
         public String toString() { return "<no guard>"; }
         public Operand copy() { return new UnnecessaryGuardOperand(); }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof UnnecessaryGuardOperand; }
     }
@@ -205,7 +205,7 @@ public interface Operand {
         public void setCondition(byte o) { this.condition = o; }
         public String toString() { return BytecodeVisitor.cmpopnames[condition]; }
         public Operand copy() { return new ConditionOperand(condition); }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof ConditionOperand && ((ConditionOperand)that).getCondition() == this.getCondition(); }
     }
@@ -218,7 +218,7 @@ public interface Operand {
         public void resolve() { this.field = (jq_Field) this.field.resolve(); }
         public String toString() { return "."+field.getName(); }
         public Operand copy() { return new FieldOperand(field); }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof FieldOperand && ((FieldOperand)that).getField() == this.getField(); }
     }
@@ -230,7 +230,7 @@ public interface Operand {
         public void setType(jq_Type f) { this.type = f; }
         public String toString() { return type.toString(); }
         public Operand copy() { return new TypeOperand(type); }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof TypeOperand && ((TypeOperand)that).getType() == this.getType(); }
     }
@@ -242,7 +242,7 @@ public interface Operand {
         public void setTarget(BasicBlock f) { this.target = f; }
         public String toString() { return target.toString(); }
         public Operand copy() { return new TargetOperand(target); }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof TargetOperand && ((TargetOperand)that).getTarget() == this.getTarget(); }
     }
@@ -255,7 +255,7 @@ public interface Operand {
         public void resolve() { this.target = (jq_Method) this.target.resolve(); }
         public String toString() { return target.toString(); }
         public Operand copy() { return new MethodOperand(target); }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof MethodOperand && ((MethodOperand)that).getMethod() == this.getMethod(); }
     }
@@ -283,7 +283,7 @@ public interface Operand {
             System.arraycopy(this.table, 0, t2, 0, t2.length);
             return new IntValueTableOperand(t2);
         }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return false; }
     }
@@ -311,7 +311,7 @@ public interface Operand {
             System.arraycopy(this.table, 0, t2, 0, t2.length);
             return new BasicBlockTableOperand(t2);
         }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return false; }
     }
@@ -341,7 +341,7 @@ public interface Operand {
             }
             return new ParamListOperand(t2);
         }
-        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return false; }
     }

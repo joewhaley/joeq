@@ -21,6 +21,7 @@ import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -121,7 +122,7 @@ public class Method extends AccessibleObject {
         if (retType == jq_Primitive.BYTE) return new Byte((byte)result);
         if (retType == jq_Primitive.SHORT) return new Short((short)result);
         if (retType == jq_Primitive.CHAR) return new Character((char)result);
-        jq.UNREACHABLE(); return null;
+        Assert.UNREACHABLE(); return null;
     }
     // additional methods.
     // ONLY TO BE CALLED BY jq_Member CONSTRUCTOR!!!
@@ -135,10 +136,10 @@ public class Method extends AccessibleObject {
         java.lang.String name = jq_method.getName().toString();
         o.name = name;
         java.lang.Class clazz = jq_method.getDeclaringClass().getJavaLangClassObject();
-        jq.Assert(clazz != null);
+        Assert._assert(clazz != null);
         o.clazz = clazz;
         java.lang.Class returnType = jq_method.getReturnType().getJavaLangClassObject();
-        jq.Assert(returnType != null);
+        Assert._assert(returnType != null);
         o.returnType = returnType;
         jq_Type[] paramTypes = jq_method.getParamTypes();
         int offset;
@@ -149,7 +150,7 @@ public class Method extends AccessibleObject {
         java.lang.Class[] parameterTypes = new java.lang.Class[paramTypes.length-offset];
         for (int i=offset; i<paramTypes.length; ++i) {
             parameterTypes[i-offset] = Reflection.getJDKType(paramTypes[i]);
-            jq.Assert(parameterTypes[i-offset] != null);
+            Assert._assert(parameterTypes[i-offset] != null);
         }
         o.parameterTypes = parameterTypes;
         // TODO: exception types

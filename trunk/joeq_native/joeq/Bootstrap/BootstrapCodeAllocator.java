@@ -18,10 +18,11 @@ import Clazz.jq_BytecodeMap;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_TryCatch;
-import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
 import Run_Time.ExceptionDeliverer;
+import Util.Assert;
+import Util.Convert;
 
 /*
  * @author  John Whaley
@@ -139,13 +140,13 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         return b[j];
     }
     public short peek2(CodeAddress k) {
-        return jq.twoBytesToShort(peek1(k), peek1((CodeAddress) k.offset(1)));
+        return Convert.twoBytesToShort(peek1(k), peek1((CodeAddress) k.offset(1)));
     }
     public int peek4(CodeAddress k) {
-        return jq.fourBytesToInt(peek1(k), peek1((CodeAddress) k.offset(1)), peek1((CodeAddress) k.offset(2)), peek1((CodeAddress) k.offset(3)));
+        return Convert.fourBytesToInt(peek1(k), peek1((CodeAddress) k.offset(1)), peek1((CodeAddress) k.offset(2)), peek1((CodeAddress) k.offset(3)));
     }
     public long peek8(CodeAddress k) {
-        return jq.twoIntsToLong(peek4(k), peek4((CodeAddress) k.offset(4)));
+        return Convert.twoIntsToLong(peek4(k), peek4((CodeAddress) k.offset(4)));
     }
     
     public class Bootstrapx86CodeBuffer extends CodeAllocator.x86CodeBuffer {
@@ -220,7 +221,7 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         }
 
         public void skip(int nbytes) {
-            jq.Assert(nbytes < bundle_size);
+            Assert._assert(nbytes < bundle_size);
             idx += nbytes;
             //checkSize();
         }

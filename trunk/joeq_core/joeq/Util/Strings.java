@@ -122,12 +122,12 @@ public abstract class Strings {
      * @return new String object
      */
     public static final String replace(String str, String old, String new_) {
-        int          index, old_index;
+        int index, old_index;
         StringBuffer buf = new StringBuffer();
         
         try {
             if((index = str.indexOf(old)) != -1) { // `old' found in str
-                old_index = 0;                       // String start offset
+                old_index = 0;                     // String start offset
                 
                 // While we have something to replace
                 while((index = str.indexOf(old, old_index)) != -1) {

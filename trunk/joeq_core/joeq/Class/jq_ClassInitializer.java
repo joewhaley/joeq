@@ -11,8 +11,8 @@ package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
 import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
-import Main.jq;
 import UTF.Utf8;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -27,8 +27,8 @@ public final class jq_ClassInitializer extends jq_StaticMethod implements Anders
     }
     // ONLY TO BE CALLED BY jq_ClassLoader!!!
     static jq_ClassInitializer newClassInitializer(jq_Class clazz, jq_NameAndDesc nd) {
-        jq.Assert(nd.getName() == Utf8.get("<clinit>"));
-        jq.Assert(nd.getDesc() == Utf8.get("()V"));
+        Assert._assert(nd.getName() == Utf8.get("<clinit>"));
+        Assert._assert(nd.getDesc() == Utf8.get("()V"));
         return new jq_ClassInitializer(clazz, nd);
     }
 

@@ -14,6 +14,7 @@ import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.Debug;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -79,12 +80,12 @@ public class jq_CompiledCode implements Comparable {
     }
 
     public void deliverException(CodeAddress entry, StackAddress fp, Throwable x) {
-        jq.Assert(ed != null);
+        Assert._assert(ed != null);
         _delegate.deliverToStackFrame(ed, this, x, entry, fp);
     }
 
     public Object getThisPointer(CodeAddress ip, StackAddress fp) {
-        jq.Assert(ed != null);
+        Assert._assert(ed != null);
         return _delegate.getThisPointer(ed, this, ip, fp);
     }
 
@@ -100,7 +101,7 @@ public class jq_CompiledCode implements Comparable {
         if (entrypoint.difference(start.offset(5)) >= 0) {
             if (TRACE_REDIRECT) Debug.writeln("redirecting via trampoline");
             // both should start with "push EBP"
-            jq.Assert(entrypoint.peek1() == newEntrypoint.peek1());
+            Assert._assert(entrypoint.peek1() == newEntrypoint.peek1());
             // put target address (just after push EBP)
             entrypoint.offset(-4).poke4(newEntrypoint.difference(entrypoint) + 1);
             // put jump instruction
@@ -136,7 +137,7 @@ public class jq_CompiledCode implements Comparable {
     private static Delegate _delegate;
 
     public void patchDirectBindCalls() {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
 	if (code_reloc != null) {
 	    Iterator i = code_reloc.iterator();
 	    _delegate.patchDirectBindCalls(i);
@@ -144,7 +145,7 @@ public class jq_CompiledCode implements Comparable {
     }
 
     public void patchDirectBindCalls(jq_Method method, jq_CompiledCode cc) {
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         if (code_reloc != null) {
             Iterator i = code_reloc.iterator();
 	    _delegate.patchDirectBindCalls(i, method, cc);
@@ -155,7 +156,7 @@ public class jq_CompiledCode implements Comparable {
         if (this == that) return 0;
         if (this.start.difference(that.start) < 0) return -1;
         if (this.start.difference(that.start.offset(that.length)) < 0) {
-            jq.UNREACHABLE(this + " overlaps " + that);
+            Assert.UNREACHABLE(this + " overlaps " + that);
         }
         return 1;
     }

@@ -11,6 +11,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -21,9 +23,7 @@ import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticMethod;
 import Run_Time.TypeCheck;
-import Util.AppendIterator;
-import Util.ArrayIterator;
-import Util.SingletonIterator;
+import Util.Collections.AppendIterator;
 
 /*
  * @author  John Whaley
@@ -107,10 +107,10 @@ public abstract class DoTypeAnalysis {
                 } else {
                     classname = args[x];
                 }
-                i = new AppendIterator(new SingletonIterator(classname), i);
+                i = new AppendIterator(Collections.singleton(classname).iterator(), i);
             }
         }
-        if (i == null) i = new SingletonIterator("jq.class");
+        if (i == null) i = Collections.singleton("jq.class").iterator();
         
         LinkedList classes = new LinkedList();
         while (i.hasNext()) {
@@ -158,7 +158,7 @@ public abstract class DoTypeAnalysis {
         //c.compile();
         
         Iterator it;
-        for(it = new ArrayIterator(c.getDeclaredStaticMethods());
+        for(it = Arrays.asList(c.getDeclaredStaticMethods()).iterator();
             it.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod)it.next();
             if (m.getBytecode() == null) continue;
@@ -168,7 +168,7 @@ public abstract class DoTypeAnalysis {
                 Compil3r.BytecodeAnalysis.TypeAnalysis.analyze(m);
             }
         }
-        for(it = new ArrayIterator(c.getDeclaredInstanceMethods());
+        for(it = Arrays.asList(c.getDeclaredInstanceMethods()).iterator();
             it.hasNext(); ) {
             jq_InstanceMethod m = (jq_InstanceMethod)it.next();
             if (m.isAbstract()) continue;

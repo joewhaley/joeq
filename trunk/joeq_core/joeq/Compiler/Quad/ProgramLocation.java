@@ -23,9 +23,9 @@ import Compil3r.Quad.Operator.Invoke;
 import Compil3r.Quad.SSAReader.SSAClass;
 import Compil3r.Quad.SSAReader.SSAMethod;
 import Compil3r.Quad.SSAReader.SSAType;
-import Main.jq;
-import Util.HashCodeComparator;
-import Util.SortedArraySet;
+import Util.Assert;
+import Util.Collections.HashCodeComparator;
+import Util.Collections.SortedArraySet;
 
 /**
  * This class combines a jq_Method with a Quad to represent a location in the code.
@@ -137,7 +137,7 @@ public abstract class ProgramLocation {
                 else
                     return BytecodeVisitor.INVOKE_STATIC;
             } else {
-                jq.Assert(q.getOperator() instanceof Invoke.InvokeInterface);
+                Assert._assert(q.getOperator() instanceof Invoke.InvokeInterface);
                 return BytecodeVisitor.INVOKE_INTERFACE;
             }
         }

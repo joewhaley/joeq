@@ -16,8 +16,8 @@ import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_StaticField;
-import Main.jq;
 import Run_Time.Reflection;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -52,7 +52,7 @@ public abstract class ObjectTraverser {
                 UTF.Utf8 u = (UTF.Utf8)i.next();
                 if (TRACE) out.println("Checking mirror class "+u);
                 String s = u.toString();
-                jq.Assert(s.charAt(0) == 'L');
+                Assert._assert(s.charAt(0) == 'L');
                 try {
                     c = Class.forName(s.substring(1, s.length()-1).replace('/', '.'));
                     f2 = Reflection.getJDKField(c, fieldName);
@@ -62,13 +62,13 @@ public abstract class ObjectTraverser {
                 }
             }
         }
-        jq.Assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
+        Assert._assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
         f2.setAccessible(true);
-        jq.Assert((f2.getModifiers() & Modifier.STATIC) != 0);
+        Assert._assert((f2.getModifiers() & Modifier.STATIC) != 0);
         try {
             return this.mapValue(f2.get(null));
         } catch (IllegalAccessException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return null;
         }
     }
@@ -84,13 +84,13 @@ public abstract class ObjectTraverser {
     public Object getInstanceFieldValue_reflection(Object base, Class c, String fieldName) {
         if (TRACE) out.println("Getting value of instance field "+c+"."+fieldName+" via reflection");
         Field f2 = Reflection.getJDKField(c, fieldName);
-        jq.Assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+        Assert._assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
         f2.setAccessible(true);
-        jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);
+        Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
             return this.mapValue(f2.get(base));
         } catch (IllegalAccessException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return null;
         }
     }
@@ -109,7 +109,7 @@ public abstract class ObjectTraverser {
                 UTF.Utf8 u = (UTF.Utf8)i.next();
                 if (TRACE) out.println("Checking mirror class "+u);
                 String s = u.toString();
-                jq.Assert(s.charAt(0) == 'L');
+                Assert._assert(s.charAt(0) == 'L');
                 try {
                     c = Class.forName(s.substring(1, s.length()-1).replace('/', '.'));
                     f2 = Reflection.getJDKField(c, fieldName);
@@ -119,13 +119,13 @@ public abstract class ObjectTraverser {
                 }
             }
         }
-        jq.Assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
+        Assert._assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
         f2.setAccessible(true);
-        jq.Assert((f2.getModifiers() & Modifier.STATIC) != 0);
+        Assert._assert((f2.getModifiers() & Modifier.STATIC) != 0);
         try {
             f2.set(null, o);
         } catch (IllegalAccessException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
     
@@ -137,13 +137,13 @@ public abstract class ObjectTraverser {
     public void putInstanceFieldValue(Object base, Class c, String fieldName, Object o) {
         if (TRACE) out.println("Setting value of static field "+c+"."+fieldName+" via reflection");
         Field f2 = Reflection.getJDKField(c, fieldName);
-        jq.Assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+        Assert._assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
         f2.setAccessible(true);
-        jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);
+        Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
             f2.set(base, o);
         } catch (IllegalAccessException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
 }

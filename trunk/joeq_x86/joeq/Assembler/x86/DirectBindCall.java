@@ -10,8 +10,8 @@ package Assembler.x86;
 import Allocator.DefaultCodeAllocator;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
-import Main.jq;
 import Memory.CodeAddress;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -28,7 +28,7 @@ public class DirectBindCall {
     
     public void patch() {
         jq_CompiledCode cc = target.getDefaultCompiledVersion();
-        jq.Assert(cc != null);
+        Assert._assert(cc != null);
         DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
     }
     

@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -46,10 +47,10 @@ import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import Util.ArrayIterator;
-import Util.DirectBufferedFileOutputStream;
-import Util.ExtendedDataOutput;
-import Util.LinearSet;
+import Util.Assert;
+import Util.Collections.LinearSet;
+import Util.IO.DirectBufferedFileOutputStream;
+import Util.IO.ExtendedDataOutput;
 
 /*
  * @author  John Whaley
@@ -182,7 +183,7 @@ public abstract class Bootstrapper {
 
         jq_StaticMethod rootm = null;
         Utf8 rootm_name = Utf8.get(rootMethodName);
-        for(Iterator it = new ArrayIterator(c.getDeclaredStaticMethods());
+        for(Iterator it = Arrays.asList(c.getDeclaredStaticMethods()).iterator();
             it.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod)it.next();
             if (m.getName() == rootm_name) {
@@ -216,11 +217,11 @@ public abstract class Bootstrapper {
                 if (classname.equals("")) continue;
                 if (classname.charAt(0) == '#') continue;
                 if (classname.endsWith("*")) {
-                    jq.Assert(classname.startsWith("L"));
+                    Assert._assert(classname.startsWith("L"));
                     Iterator i = PrimordialClassLoader.loader.listPackage(classname.substring(1, classname.length()-1));
                     while (i.hasNext()) {
                         String s = (String)i.next();
-                        jq.Assert(s.endsWith(".class"));
+                        Assert._assert(s.endsWith(".class"));
                         s = "L"+s.substring(0, s.length()-6)+";";
                         jq_Class t = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(s);
                         t.prepare();
@@ -301,7 +302,7 @@ public abstract class Bootstrapper {
                     while (it.hasNext()) {
                         jq_Type t = (jq_Type)it.next();
                         System.out.println("Trimming type: "+t.getName());
-                        jq.Assert(t.isPrepared());
+                        Assert._assert(t.isPrepared());
                         if (t.isClassType()) {
                             rs.trimClass((jq_Class)t);
                         }
@@ -374,12 +375,12 @@ public abstract class Bootstrapper {
         Iterator it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
-            jq.Assert(t.isPrepared());
+            Assert._assert(t.isPrepared());
             t.sf_initialize();
             // initialize static field values, too.
             if (t.isClassType()) {
                 jq_Class k = (jq_Class)t;
-                jq.Assert((k.getSuperclass() == null) || classset.contains(k.getSuperclass()),
+                Assert._assert((k.getSuperclass() == null) || classset.contains(k.getSuperclass()),
                           k.getSuperclass()+" (superclass of "+k+") is not in class set!");
                 jq_StaticField[] sfs = k.getDeclaredStaticFields();
                 for (int j=0; j<sfs.length; ++j) {
@@ -418,7 +419,7 @@ public abstract class Bootstrapper {
         it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
-            jq.Assert(t.isSFInitialized());
+            Assert._assert(t.isSFInitialized());
             
             if (t == Unsafe._class) continue;
             //System.out.println("Compiling type: "+t.getName());
@@ -457,7 +458,7 @@ public abstract class Bootstrapper {
         // now that we have visited all reachable objects, jq.on_vm_startup is built
         int index = objmap.numOfEntries();
         HeapAddress addr = objmap.getOrAllocateObject(jq.on_vm_startup);
-        jq.Assert(objmap.numOfEntries() > index);
+        Assert._assert(objmap.numOfEntries() > index);
         objmap.find_reachable(index);
         jq_StaticField _on_vm_startup = jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;");
         jq_class.setStaticData(_on_vm_startup, addr);
@@ -497,7 +498,7 @@ public abstract class Bootstrapper {
             while (it.hasNext()) {
                 jq_Type t = (jq_Type)it.next();
                 if (t == Unsafe._class) continue;
-                jq.Assert(t.isClsInitialized());
+                Assert._assert(t.isClsInitialized());
                 System.out.println(t+": "+objmap.getAddressOf(t).stringRep());
                 if (t.isReferenceType()) {
                     jq_Reference r = (jq_Reference)t;

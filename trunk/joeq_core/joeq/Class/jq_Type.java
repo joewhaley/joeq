@@ -14,6 +14,7 @@ import Main.jq;
 import Run_Time.Debug;
 import Run_Time.Reflection;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -120,8 +121,8 @@ public abstract class jq_Type implements AndersenType {
     public static final boolean TRACE = false;
 
     public final boolean isSubtypeOf(jq_Type that) {
-        jq.Assert(this.isPrepared());
-        jq.Assert(that.isPrepared());
+        Assert._assert(this.isPrepared());
+        Assert._assert(that.isPrepared());
         
         int off = that.offset;
         if (that == this.display[off]) {

@@ -23,9 +23,9 @@ import Compil3r.Quad.MethodSummary.OutsideNode;
 import Compil3r.Quad.MethodSummary.ParamNode;
 import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.PointerExplorer.InlineSet;
-import Main.jq;
-import Util.Default;
-import Util.LinearSet;
+import Util.Assert;
+import Util.Collections.LinearSet;
+import Util.Collections.Pair;
 
 /**
  * @author John Whaley
@@ -118,7 +118,7 @@ outer:
                         if (n4 instanceof OutsideNode)
                             while (((OutsideNode)n4).skip != null)
                                 n4 = ((OutsideNode)n4).skip;
-                        Object reason = pa.edgesToReasons.get(Default.pair(n3, n4));
+                        Object reason = pa.edgesToReasons.get(new Pair(n3, n4));
                         if (reason instanceof FieldNode) {
                             if (TRACE) out.println("found field node "+n3+" with outdegree "+outEdges3.size());
                             if (ap.contains(reason)) {
@@ -138,7 +138,7 @@ outer:
                                 if (n5 instanceof OutsideNode)
                                     while (((OutsideNode)n5).skip != null)
                                         n5 = ((OutsideNode)n5).skip;
-                                Object reason2 = pa.edgesToReasons.get(Default.pair(n4, n5));
+                                Object reason2 = pa.edgesToReasons.get(new Pair(n4, n5));
                                 if (reason2 instanceof ProgramLocation) {
                                     ProgramLocation mc2 = (ProgramLocation) reason2;
                                     AndersenMethod targetMethod = ((ParamNode) n4).m;
@@ -167,7 +167,7 @@ outer:
                         }
                     }
                     TRACE = b;
-                    jq.Assert(exact_types == null);
+                    Assert._assert(exact_types == null);
                 }
             }
             for (Iterator it=outEdges.iterator(); it.hasNext(); ) {
@@ -179,7 +179,7 @@ outer:
                     addNextToWorklist(n2, mc, visited, node_worklist);
                     continue;
                 }
-                Object reason = pa.edgesToReasons.get(Default.pair(n, n2));
+                Object reason = pa.edgesToReasons.get(new Pair(n, n2));
                 if (!(reason instanceof ProgramLocation)) {
                     if (TRACE) out.println("Edge "+n+"=>"+n2+" : unknown reason "+reason);
                     addNextToWorklist(n2, mc, visited, node_worklist);
@@ -265,7 +265,7 @@ outer:
                     } else {
                         new_mc2.add(methodcall);
                         Set exact_target_set = (Set) exact_targets_map.get(methodcall);
-                        jq.Assert(exact_target_set != null);
+                        Assert._assert(exact_target_set != null);
                         if (exact_target_set.size() > exact_target_set2.size()) {
                             if (TRACE) out.println("Edge "+n+"=>"+n2+" : "+exact_target_set2.size()+" targets (smaller than "+exact_target_set.size()+")");
                             AndersenMethod targetMethod = ((ParamNode) n).m;
@@ -367,7 +367,7 @@ outer:
                     addNextToWorklist(n2, mc, visited, node_worklist);
                     continue;
                 }
-                Object reason = pa.edgesToReasons.get(Default.pair(n, n2));
+                Object reason = pa.edgesToReasons.get(new Pair(n, n2));
                 if (!(reason instanceof ProgramLocation)) {
                     if (TRACE) out.println("Edge "+n+"=>"+n2+" : unknown reason "+reason);
                     addNextToWorklist(n2, mc, visited, node_worklist);
@@ -453,7 +453,7 @@ outer:
                     } else {
                         new_mc2.add(methodcall);
                         Set exact_target_set = (Set) exact_targets_map.get(methodcall);
-                        jq.Assert(exact_target_set != null);
+                        Assert._assert(exact_target_set != null);
                         if (exact_target_set.size() > exact_target_set2.size()) {
                             if (TRACE) out.println("Edge "+n+"=>"+n2+" : "+exact_target_set2.size()+" targets (smaller than "+exact_target_set.size()+")");
                             AndersenMethod targetMethod = ((ParamNode) n).m;
@@ -613,7 +613,7 @@ outer:
                 if (node instanceof OutsideNode) {
                     while (((OutsideNode)node).skip != null)
                         node = ((OutsideNode)node).skip;
-                    List pair = Default.pair(node, null);
+                    List pair = new Pair(node, null);
                     if (!multimap.containsKey(pair)) {
                         worklist.add(pair);
                     }
@@ -647,7 +647,7 @@ outerloop:
                     while (((OutsideNode)n2).skip != null)
                         n2 = ((OutsideNode)n2).skip;
                 Set s2 = s;
-                Object reason = pa.edgesToReasons.get(Default.pair(n, n2));
+                Object reason = pa.edgesToReasons.get(new Pair(n, n2));
                 if (TRACE) out.println("Edge: "+n2+" Reason: "+reason);
                 if (false) {
                     if (outEdges.size() >= 2 &&
@@ -656,7 +656,7 @@ outerloop:
                         AndersenField f = ((FieldNode)n).f;
                         AccessPath ap2 = AccessPath.create(f, n, ap);
                         if (ap2 != null) {
-                            Object key = Default.pair(reason, ap2);
+                            Object key = new Pair(reason, ap2);
                             boolean change = multimap.containsKey(key);
                             MethodSummary.addToMultiMap(multimap, key, s);
                             if (change) {
@@ -689,7 +689,7 @@ outerloop:
                         s2 = new LinkedHashSet();
                         for (Iterator j=s.iterator(); j.hasNext(); ) {
                             ProgramLocation mc = (ProgramLocation) j.next();
-                            Object key = Default.pair(pair, mc);
+                            Object key = new Pair(pair, mc);
                             Set n_targets_mc = (Set) chaCache.get(key);
                             if (n_targets_mc == null)
                                 chaCache.put(key, n_targets_mc = mc.getCallTargets(n_typeset, true));
@@ -697,7 +697,7 @@ outerloop:
                                 j.remove();
                                 continue;
                             }
-                            Object key2 = Default.pair(Default.pair(n2, ap), mc);
+                            Object key2 = new Pair(new Pair(n2, ap), mc);
                             Set n2_targets_mc = (Set) chaCache.get(key2);
                             if (n2_targets_mc == null)
                                 chaCache.put(key, n2_targets_mc = mc.getCallTargets(n2_typeset, true));
@@ -711,7 +711,7 @@ outerloop:
                         }
                     }
                 }
-                Object key = Default.pair(n2, ap);
+                Object key = new Pair(n2, ap);
                 boolean change = multimap.containsKey(key);
                 MethodSummary.addToMultiMap(multimap, key, s2);
                 if (change) {
@@ -728,18 +728,18 @@ outerloop:
         if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
         SpecializationParameter specialp = new SpecializationParameter(paramNum, ap, exact_types2);
         ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)targetMethod);
-        Object pair = Default.pair(mc2, target_cfg);
+        Object pair = new Pair(mc2, target_cfg);
         Specialization special = (Specialization) callSitesToClones.get(pair);
         if (special != null) {
             TRACE = true;
             if (TRACE) System.out.println("Specialization already exists for call site! "+special);
-            jq.Assert(special.target == target_cfg);
+            Assert._assert(special.target == target_cfg);
             Specialization special2 = new Specialization(target_cfg, specialp);
             boolean change = special2.set.addAll(special.set);
             if (change) {
                 if (TRACE) System.out.println("Made new specialization: "+special2);
                 Set set = (Set)to_clone.get(special);
-                jq.Assert(set != null);
+                Assert._assert(set != null);
                 if (TRACE) System.out.println("Removed call site: "+mc2);
                 set.remove(mc2);
                 if (set.isEmpty()) {
@@ -865,7 +865,7 @@ outer:
                     addNextToWorklist(n2, mc, visited, node_worklist);
                     continue;
                 }
-                Object reason = pa.edgesToReasons.get(Default.pair(n, n2));
+                Object reason = pa.edgesToReasons.get(new Pair(n, n2));
                 if (!(reason instanceof ProgramLocation)) {
                     if (TRACE) out.println("Edge "+n+"=>"+n2+" : unknown reason "+reason);
                     addNextToWorklist(n2, mc, visited, node_worklist);
@@ -911,18 +911,18 @@ outer:
                         if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
                         SpecializationParameter specialp = new SpecializationParameter(paramNum, null, exact_types2);
                         ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)targetMethod);
-                        Object pair = Default.pair(mc2, target_cfg);
+                        Object pair = new Pair(mc2, target_cfg);
                         Specialization special = (Specialization) callSitesToClones.get(pair);
                         if (special != null) {
                             TRACE = true;
                             if (TRACE) System.out.println("Specialization already exists for call site! "+special);
-                            jq.Assert(special.target == target_cfg);
+                            Assert._assert(special.target == target_cfg);
                             Specialization special2 = new Specialization(target_cfg, specialp);
                             boolean change = special2.set.addAll(special.set);
                             if (change) {
                                 if (TRACE) System.out.println("Made new specialization: "+special2);
                                 Set set = (Set)to_clone.get(special);
-                                jq.Assert(set != null);
+                                Assert._assert(set != null);
                                 if (TRACE) System.out.println("Removed call site: "+mc2);
                                 set.remove(mc2);
                                 if (set.isEmpty()) {
@@ -974,7 +974,7 @@ outer:
                     } else {
                         new_mc2.add(methodcall);
                         Set exact_target_set = (Set) exact_targets_map.get(methodcall);
-                        jq.Assert(exact_target_set != null);
+                        Assert._assert(exact_target_set != null);
                         if (exact_target_set.size() > exact_target_set2.size()) {
                             if (TRACE) out.println("Edge "+n+"=>"+n2+" : "+exact_target_set2.size()+" targets (smaller than "+exact_target_set.size()+")");
                             AndersenMethod targetMethod = ((ParamNode) n).m;
@@ -983,18 +983,18 @@ outer:
                                 if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
                                 SpecializationParameter specialp = new SpecializationParameter(paramNum, null, exact_types2);
                                 ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)targetMethod);
-                                Object pair = Default.pair(mc2, target_cfg);
+                                Object pair = new Pair(mc2, target_cfg);
                                 Specialization special = (Specialization) callSitesToClones.get(pair);
                                 if (special != null) {
                                     TRACE = true;
                                     if (TRACE) System.out.println("Specialization already exists! "+special);
-                                    jq.Assert(special.target == target_cfg);
+                                    Assert._assert(special.target == target_cfg);
                                     Specialization special2 = new Specialization(target_cfg, specialp);
                                     boolean change = special2.set.addAll(special.set);
                                     if (change) {
                                         if (TRACE) System.out.println("Made new specialization: "+special2);
                                         Set set = (Set)to_clone.get(special);
-                                        jq.Assert(set != null);
+                                        Assert._assert(set != null);
                                         if (TRACE) System.out.println("Removed call site: "+mc2);
                                         set.remove(mc2);
                                         if (set.isEmpty()) {
@@ -1093,7 +1093,7 @@ outer:
                                 if (n2 instanceof OutsideNode)
                                     while (((OutsideNode)n2).skip != null)
                                         n2 = ((OutsideNode)n2).skip;
-                                Object reason = pa.edgesToReasons.get(Default.pair(n, n2));
+                                Object reason = pa.edgesToReasons.get(new Pair(n, n2));
                                 if (reason instanceof ProgramLocation) {
                                     if (TRACE) out.println("Edge "+n+"=>"+n2+" : from "+reason);
                                     ProgramLocation mc2 = (ProgramLocation) reason;

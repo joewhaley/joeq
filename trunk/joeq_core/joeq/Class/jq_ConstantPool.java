@@ -19,9 +19,9 @@ import java.util.Set;
 
 import Bootstrap.PrimordialClassLoader;
 import Compil3r.BytecodeAnalysis.Bytecodes;
-import Main.jq;
 import Run_Time.Debug;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -204,7 +204,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 }
                 break; }
             default:
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
                 return;
             }
         }
@@ -240,35 +240,35 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         return constant_pool[index];
     }
     public final Integer getAsInt(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_Integer);
+        Assert._assert(constant_pool_tags[index] == CONSTANT_Integer);
         return (Integer)constant_pool[index];
     }
     public final Float getAsFloat(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_Float);
+        Assert._assert(constant_pool_tags[index] == CONSTANT_Float);
         return (Float)constant_pool[index];
     }
     public final Long getAsLong(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_Long);
+        Assert._assert(constant_pool_tags[index] == CONSTANT_Long);
         return (Long)constant_pool[index];
     }
     public final Double getAsDouble(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_Double);
+        Assert._assert(constant_pool_tags[index] == CONSTANT_Double);
         return (Double)constant_pool[index];
     }
     public final String getAsString(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_String);
+        Assert._assert(constant_pool_tags[index] == CONSTANT_String);
         return (String)constant_pool[index];
     }
     public final Utf8 getAsUtf8(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_Utf8);
+        Assert._assert(constant_pool_tags[index] == CONSTANT_Utf8);
         return (Utf8)constant_pool[index];
     }
     public final jq_Type getAsType(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_ResolvedClass);
+        Assert._assert(constant_pool_tags[index] == CONSTANT_ResolvedClass);
         return (jq_Type)constant_pool[index];
     }
     public final jq_Member getAsMember(char index) {
-        jq.Assert(constant_pool_tags[index] == CONSTANT_ResolvedSFieldRef ||
+        Assert._assert(constant_pool_tags[index] == CONSTANT_ResolvedSFieldRef ||
                   constant_pool_tags[index] == CONSTANT_ResolvedIFieldRef ||
                   constant_pool_tags[index] == CONSTANT_ResolvedSMethodRef ||
                   constant_pool_tags[index] == CONSTANT_ResolvedIMethodRef);
@@ -498,7 +498,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             int i;
             for (i=0; i<constant_pool.length; ++i) {
                 if (o.equals(get((char)i))) {
-                    jq.Assert(getTag((char)i) == tag);
+                    Assert._assert(getTag((char)i) == tag);
                     return (char)i;
                 }
             }
@@ -509,7 +509,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             i = constant_pool.length + toadd_cp.size();
             toadd_cp.add(cpe);
  
-            jq.Assert(i <= Character.MAX_VALUE);
+            Assert._assert(i <= Character.MAX_VALUE);
             return (char)i;
         }
         
@@ -554,7 +554,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             Iterator i = entrySet.iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry)i.next();
-                jq.Assert(j < Character.MAX_VALUE);
+                Assert._assert(j < Character.MAX_VALUE);
                 e.setValue(new Character((char)(++j)));
                 if ((e.getKey() instanceof Long) ||
                     (e.getKey() instanceof Double))
@@ -566,7 +566,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         jq_ConstantPool finish() {
             int cp_size = renumber();
             int j = 0;
-            jq.Assert(cp_size <= Character.MAX_VALUE);
+            Assert._assert(cp_size <= Character.MAX_VALUE);
             jq_ConstantPool newcp = new jq_ConstantPool(cp_size);
             Set entrySet = new_entries.entrySet();
             Iterator i = entrySet.iterator();
@@ -574,7 +574,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 Map.Entry e = (Map.Entry)i.next();
                 Object o = e.getKey();
                 char index = ((Character)e.getValue()).charValue();
-                ++j; jq.Assert(index == j, (int)index + "!=" + (int)j);
+                ++j; Assert._assert(index == j, (int)index + "!=" + (int)j);
                 //System.out.println("CP Entry "+j+": "+o);
                 newcp.constant_pool[j] = o;
                 if (o instanceof Utf8) {
@@ -604,7 +604,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 } else if (o instanceof jq_StaticField) {
                     newcp.constant_pool_tags[j] = CONSTANT_ResolvedSFieldRef;
                 } else {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 }
             }
             return newcp;
@@ -638,7 +638,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             // note: this relies on the fact that the two iterators return the same order
             int cp_size = renumber();
             int j = 0;
-            jq.Assert(cp_size <= Character.MAX_VALUE);
+            Assert._assert(cp_size <= Character.MAX_VALUE);
             out.writeChar(cp_size);
             Set entrySet = new_entries.entrySet();
             Iterator i = entrySet.iterator();
@@ -646,7 +646,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 Map.Entry e = (Map.Entry)i.next();
                 Object o = e.getKey();
                 char index = ((Character)e.getValue()).charValue();
-                ++j; jq.Assert(index == j);
+                ++j; Assert._assert(index == j);
                 if (o instanceof Utf8) {
                     out.writeByte(CONSTANT_Utf8);
                     ((Utf8)o).dump(out);
@@ -690,7 +690,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     out.writeChar(get(f.getDeclaringClass()));
                     out.writeChar(get(f.getNameAndDesc()));
                 } else {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 }
             }
         }
@@ -698,7 +698,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         public char get(Object o) {
             Character c = (Character)new_entries.get(o);
             if (c == null) {
-                jq.UNREACHABLE("No such constant pool entry: type "+o.getClass()+" value "+o);
+                Assert.UNREACHABLE("No such constant pool entry: type "+o.getClass()+" value "+o);
             }
             return c.charValue();
         }
@@ -730,7 +730,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             Bytecodes.EmptyVisitor v = new Bytecodes.EmptyVisitor() {
                 public void visitCPInstruction(Bytecodes.CPInstruction i) {
                     i.setIndex(my_cpr);
-                    jq.Assert(i.getIndex() != 0);
+                    Assert._assert(i.getIndex() != 0);
                 }
             };
             il.accept(v);
@@ -823,7 +823,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     index = adder.add(o, CONSTANT_ResolvedSFieldRef);
                     //newcp.constant_pool_tags[j] = CONSTANT_ResolvedSFieldRef;
                 } else {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 }
 
                 e.setValue(new Character((char) (index++)));
@@ -844,12 +844,12 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
 
         public void remove(Object o) {
-            jq.UNREACHABLE(
+            Assert.UNREACHABLE(
                 "No remove allowed in jq_ConstantPool.ConstantPoolAdder! ");
         }
 
         public void dump(DataOutput out) throws IOException {
-            jq.UNREACHABLE(
+            Assert.UNREACHABLE(
                 "TODO: implement Dump in jq_ConstantPool.ConstantPoolAdder! ");
         }
 

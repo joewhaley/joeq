@@ -19,6 +19,7 @@ import Clazz.jq_StaticMethod;
 import Main.jq;
 import Run_Time.Debug;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -195,7 +196,7 @@ public abstract class ClassLibInterface {
             } else if (t instanceof jq_StaticMethod) {
                 return c.getOrCreateStaticMethod(u1);
             } else {
-                jq.UNREACHABLE(); return null;
+                Assert.UNREACHABLE(); return null;
             }
         }
     }

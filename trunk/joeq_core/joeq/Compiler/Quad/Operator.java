@@ -39,6 +39,7 @@ import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
+import Util.Assert;
 import Util.Templates.UnmodifiableList;
 
 /**
@@ -112,7 +113,7 @@ public abstract class Operator {
         else if (op instanceof AConstOperand)
             return ((AConstOperand)op).getValue();
         else if (op instanceof PConstOperand)
-            jq.TODO();
+            Assert.TODO();
         else if (op instanceof IConstOperand)
             return new Integer(((IConstOperand)op).getValue());
         else if (op instanceof FConstOperand)
@@ -121,7 +122,7 @@ public abstract class Operator {
             return new Long(((LConstOperand)op).getValue());
         else if (op instanceof DConstOperand)
             return new Double(((DConstOperand)op).getValue());
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
 
@@ -325,7 +326,7 @@ public abstract class Operator {
             if (type == jq_Primitive.FLOAT) return MOVE_F.INSTANCE;
             if (type == jq_Primitive.LONG) return MOVE_L.INSTANCE;
             if (type == jq_Primitive.DOUBLE) return MOVE_D.INSTANCE;
-            jq.UNREACHABLE(); return null;
+            Assert.UNREACHABLE(); return null;
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
@@ -1235,7 +1236,7 @@ public abstract class Operator {
                 case BytecodeVisitor.CMP_GT: r = s1 > s2; break;
                 case BytecodeVisitor.CMP_AE: r = Run_Time.MathSupport.ucmp(s1, s2); break;
                 case BytecodeVisitor.CMP_UNCOND: r = true; break;
-                default: jq.UNREACHABLE(); r = false; break;
+                default: Assert.UNREACHABLE(); r = false; break;
                 }
                 if (r) s.branchTo(getTarget(q).getTarget());
             }
@@ -1253,7 +1254,7 @@ public abstract class Operator {
                 case BytecodeVisitor.CMP_EQ: r = s1 == s2; break;
                 case BytecodeVisitor.CMP_NE: r = s1 != s2; break;
                 case BytecodeVisitor.CMP_UNCOND: r = true; break;
-                default: jq.UNREACHABLE(); r = false; break;
+                default: Assert.UNREACHABLE(); r = false; break;
                 }
                 if (r) s.branchTo(getTarget(q).getTarget());
             }
@@ -1271,7 +1272,7 @@ public abstract class Operator {
                 case BytecodeVisitor.CMP_EQ: r = s1.difference(s2) == 0; break;
                 case BytecodeVisitor.CMP_NE: r = s1.difference(s2) != 0; break;
                 case BytecodeVisitor.CMP_UNCOND: r = true; break;
-                default: jq.UNREACHABLE(); r = false; break;
+                default: Assert.UNREACHABLE(); r = false; break;
                 }
                 if (r) s.branchTo(getTarget(q).getTarget());
             }
@@ -3080,7 +3081,7 @@ public abstract class Operator {
             public String toString() { return "CHECKCAST"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 jq_Type t = getType(q).getType();
-                jq.Assert(!t.isAddressType());
+                Assert._assert(!t.isAddressType());
                 Object o = getObjectOpValue(getSrc(q), s);
                 if (o != null) {
                     jq_Type t2 = Reflection.getTypeOf(o);
@@ -3125,7 +3126,7 @@ public abstract class Operator {
             public String toString() { return "INSTANCEOF"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 jq_Type t = getType(q).getType();
-                jq.Assert(!t.isAddressType());
+                Assert._assert(!t.isAddressType());
                 Object o = getObjectOpValue(getSrc(q), s);
                 int v;
                 if (o == null) v = 0;
@@ -3437,7 +3438,7 @@ public abstract class Operator {
                 Unsafe.longJump(a, b, c, d);
                 jq.UNREACHABLE();
                 */
-                jq.TODO();
+                Assert.TODO();
             }
         }
         public static class DIE extends Special {
@@ -3448,7 +3449,7 @@ public abstract class Operator {
             public void interpret(Quad q, QuadInterpreter s) {
 		int a = getIntOpValue(getOp1(q), s);
 		Run_Time.Debug.die(a);
-		jq.UNREACHABLE();
+		Assert.UNREACHABLE();
             }
         }
         public static class GET_TYPE_OF extends Special {

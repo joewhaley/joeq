@@ -28,7 +28,7 @@ public final class Interface extends ClassLib.Common.InterfaceImpl {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && (desc.toString().startsWith("Ljava/") ||
                                                     desc.toString().startsWith("Lcom/ibm/jvm/"))) {
             UTF.Utf8 u = UTF.Utf8.get("LClassLib/ibm13_linux/"+desc.toString().substring(1));
-            return new Util.AppendIterator(super.getImplementationClassDescs(desc),
+            return new Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
                                             java.util.Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);

@@ -52,9 +52,10 @@ import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
-import Util.ExtendedDataOutput;
-import Util.IdentityHashCodeWrapper;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.IdentityHashCodeWrapper;
+import Util.IO.ExtendedDataOutput;
 
 /*
  * @author  John Whaley
@@ -98,7 +99,7 @@ public class BootImage implements ELFConstants {
     }
 
     public final HeapAddress addressOf(Object o) {
-        jq.Assert(!(o instanceof Address));
+        Assert._assert(!(o instanceof Address));
         return getOrAllocateObject(o);
     }
     
@@ -119,7 +120,7 @@ public class BootImage implements ELFConstants {
         } catch (ClassNotFoundException x) {
             // bootstrapping jvm can't find the class?
             System.err.println("ERROR: bootstrapping jvm cannot find class "+cname);
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
 
@@ -135,7 +136,7 @@ public class BootImage implements ELFConstants {
         Entry e = (Entry)hash.get(k);
         if (e != null) return e.getAddress();
         // not yet allocated, allocate it.
-        jq.Assert(alloc_enabled);
+        Assert._assert(alloc_enabled);
         Class objType = o.getClass();
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
         if (!jq.boot_types.contains(type)) {
@@ -152,7 +153,7 @@ public class BootImage implements ELFConstants {
             if (TRACE)
                 out.println("Allocating entry "+entries.size()+": "+objType+" length "+Array.getLength(o)+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr));
         } else {
-            jq.Assert(type.isClassType());
+            Assert._assert(type.isClassType());
             addr = heapCurrent + ObjectLayout.OBJ_HEADER_SIZE;
             size = ((jq_Class)type).getInstanceSize();
             if (TRACE)
@@ -169,7 +170,7 @@ public class BootImage implements ELFConstants {
     public static boolean IGNORE_UNKNOWN_OBJECTS = false;
     
     public HeapAddress getAddressOf(Object o) {
-        jq.Assert(!(o instanceof Address));
+        Assert._assert(!(o instanceof Address));
         if (o == null) return HeapAddress.getNull();
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
@@ -180,7 +181,7 @@ public class BootImage implements ELFConstants {
         }
         Class objType = o.getClass();
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
-        jq.Assert(type.isClsInitialized(), type.toString());
+        Assert._assert(type.isClsInitialized(), type.toString());
         return e.getAddress();
     }
 
@@ -207,7 +208,7 @@ public class BootImage implements ELFConstants {
             Object val = Reflection.getstatic_A(f);
             if (val != null) {
                 if (val instanceof Address) {
-                    jq.UNREACHABLE("Error: "+f+" contains "+((Address)val).stringRep());
+                    Assert.UNREACHABLE("Error: "+f+" contains "+((Address)val).stringRep());
                 }
                 HeapAddress addr = HeapAddress.addressOf(val);
                 if (TRACE) out.println("Adding data reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
@@ -245,7 +246,7 @@ public class BootImage implements ELFConstants {
                 char v = Reflection.getstatic_C(f);
                 k.setStaticData(f, v);
             } else
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
         } else if (ftype.isAddressType()) {
             Address addr = Reflection.getstatic_P(f);
             if (addr == null) addr = HeapAddress.getNull();
@@ -272,7 +273,7 @@ public class BootImage implements ELFConstants {
             Object o = e.getObject();
             if (o == null) continue;
             HeapAddress addr = e.getAddress();
-            jq.Assert(!addr.isNull());
+            Assert._assert(!addr.isNull());
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
@@ -293,7 +294,7 @@ public class BootImage implements ELFConstants {
                     }
                 }
             } else {
-                jq.Assert(jqType.isClassType());
+                Assert._assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
@@ -327,7 +328,7 @@ public class BootImage implements ELFConstants {
         private HeapAddress address; // address in target vm
         private Entry(Object o, HeapAddress address) { this.o = o; this.address = address; }
         static Entry create(Object o, HeapAddress address) {
-            jq.Assert(o != null);
+            Assert._assert(o != null);
             return new Entry(o, address);
         }
         Object getObject() { return o; }
@@ -580,7 +581,7 @@ public class BootImage implements ELFConstants {
         int k = 2+NUM_OF_EXTERNAL_SYMS;
         while (i.hasNext()) {
             ExternalReference extref = (ExternalReference)i.next();
-            jq.Assert(extref.getSymbolIndex() == k);
+            Assert._assert(extref.getSymbolIndex() == k);
             String name = extref.getName();
             if (name.length() <= 8) {
                 write_bytes(out, name, 8);  // s_name
@@ -629,7 +630,7 @@ public class BootImage implements ELFConstants {
             else if (t == jq_Primitive.BOOLEAN) type |= T_UCHAR;
             else if (t == jq_Primitive.SHORT) type |= T_SHORT;
             else if (t == jq_Primitive.CHAR) type |= T_USHORT;
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             type |= T_STRUCT;
         }
@@ -668,7 +669,7 @@ public class BootImage implements ELFConstants {
             else if (t == jq_Primitive.BOOLEAN) type |= T_UCHAR;
             else if (t == jq_Primitive.SHORT) type |= T_SHORT;
             else if (t == jq_Primitive.CHAR) type |= T_USHORT;
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             type |= T_STRUCT;
         }
@@ -863,7 +864,7 @@ public class BootImage implements ELFConstants {
             ++j;
         }
 		BootImage.out.println("Written: "+ndatareloc+" relocations                    \n");
-        jq.Assert(j == ndatareloc);
+        Assert._assert(j == ndatareloc);
         
         // write line numbers
         
@@ -878,7 +879,7 @@ public class BootImage implements ELFConstants {
             dumpMETHODSYMENT(out, r);
             ++j;
         }
-        jq.Assert(j == num_ccs);
+        Assert._assert(j == num_ccs);
         
         // write string table
         dump_strings(out);
@@ -966,7 +967,7 @@ public class BootImage implements ELFConstants {
                     }
                 }
             } else {
-                jq.Assert(jqType.isClassType());
+                Assert._assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
@@ -995,11 +996,11 @@ public class BootImage implements ELFConstants {
     
     private void dumpHeap(ExtendedDataOutput out)
     throws IOException {
-        jq.Assert(ObjectLayout.ARRAY_LENGTH_OFFSET == -12);
-        jq.Assert(ObjectLayout.STATUS_WORD_OFFSET == -8);
-        jq.Assert(ObjectLayout.VTABLE_OFFSET == -4);
-        jq.Assert(ObjectLayout.OBJ_HEADER_SIZE == 8);
-        jq.Assert(ObjectLayout.ARRAY_HEADER_SIZE == 12);
+        Assert._assert(ObjectLayout.ARRAY_LENGTH_OFFSET == -12);
+        Assert._assert(ObjectLayout.STATUS_WORD_OFFSET == -8);
+        Assert._assert(ObjectLayout.VTABLE_OFFSET == -4);
+        Assert._assert(ObjectLayout.OBJ_HEADER_SIZE == 8);
+        Assert._assert(ObjectLayout.ARRAY_HEADER_SIZE == 12);
         Iterator i = entries.iterator();
         int currentAddr=0;
         int j=0;
@@ -1014,9 +1015,9 @@ public class BootImage implements ELFConstants {
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
                 BootImage.out.println("Dumping entry "+j+": "+objType+" "+Strings.hex(System.identityHashCode(o))+" addr "+addr.stringRep());
-            jq.Assert(!jqType.isAddressType());
+            Assert._assert(!jqType.isAddressType());
             if (!jqType.isClsInitialized()) {
-                jq.UNREACHABLE(jqType.toString());
+                Assert.UNREACHABLE(jqType.toString());
                 return;
             }
             HeapAddress vtable;
@@ -1035,7 +1036,7 @@ public class BootImage implements ELFConstants {
                 out.writeUInt(0);
                 out.writeUInt(vtable.to32BitValue());
                 currentAddr += ObjectLayout.ARRAY_HEADER_SIZE;
-                jq.Assert(addr.to32BitValue() == currentAddr);
+                Assert._assert(addr.to32BitValue() == currentAddr);
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
                 if (elemType.isPrimitiveType()) {
                     if (elemType == jq_Primitive.INT) {
@@ -1078,7 +1079,7 @@ public class BootImage implements ELFConstants {
                         for (int k=0; k<length; ++k)
                             out.writeUShort(v[k]);
                         currentAddr += length << 1;
-                    } else jq.UNREACHABLE();
+                    } else Assert.UNREACHABLE();
                 } else if (elemType.isAddressType()) {
                     Address[] v = (Address[])o;
                     for (int k=0; k<length; ++k) {
@@ -1100,7 +1101,7 @@ public class BootImage implements ELFConstants {
                     currentAddr += length << 2;
                 }
             } else {
-                jq.Assert(jqType.isClassType());
+                Assert._assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 while (currentAddr+ObjectLayout.OBJ_HEADER_SIZE < addr.to32BitValue()) {
                     out.writeByte((byte)0); ++currentAddr;
@@ -1108,7 +1109,7 @@ public class BootImage implements ELFConstants {
                 out.writeUInt(0);
                 out.writeUInt(vtable.to32BitValue());
                 currentAddr += 8;
-                jq.Assert(addr.to32BitValue() == currentAddr);
+                Assert._assert(addr.to32BitValue() == currentAddr);
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
                     jq_InstanceField f = fields[k];
@@ -1135,7 +1136,7 @@ public class BootImage implements ELFConstants {
                             out.writeShort(Reflection.getfield_S(o, f));
                         else if (ftype == jq_Primitive.CHAR)
                             out.writeUShort(Reflection.getfield_C(o, f));
-                        else jq.UNREACHABLE();
+                        else Assert.UNREACHABLE();
                     } else if (ftype.isAddressType()) {
                         Address a = Reflection.getfield_P(o, f);
                         out.writeUInt(a==null?0:a.to32BitValue());
@@ -1161,7 +1162,7 @@ public class BootImage implements ELFConstants {
     
     public static void write_bytes(ExtendedDataOutput out, String s, int len)
     throws IOException {
-        jq.Assert(s.length() <= len);
+        Assert._assert(s.length() <= len);
         int i;
         for (i=0; ; ++i) {
             if (i == s.length()) {
@@ -1301,7 +1302,7 @@ public class BootImage implements ELFConstants {
                 Code2HeapReference cr = (Code2HeapReference)r;
                 textrel.addReloc(new RelocEntry(cr.getFrom().to32BitValue(), datasyment, RelocEntry.R_386_32));
             } else {
-                jq.UNREACHABLE(r.toString());
+                Assert.UNREACHABLE(r.toString());
             }
         }
         
@@ -1317,7 +1318,7 @@ public class BootImage implements ELFConstants {
             } else if (r instanceof ExternalReference) {
                 // already done.
             } else {
-                jq.UNREACHABLE(r.toString());
+                Assert.UNREACHABLE(r.toString());
             }
         }
         
@@ -1337,7 +1338,7 @@ public class BootImage implements ELFConstants {
             bca.dump(out);
         }
         public void load(Section.UnloadedSection s, ELF file) throws IOException {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
 
@@ -1359,7 +1360,7 @@ public class BootImage implements ELFConstants {
             }
         }
         public void load(Section.UnloadedSection s, ELF file) throws IOException {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
     

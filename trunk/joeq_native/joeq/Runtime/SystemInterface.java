@@ -23,6 +23,7 @@ import Memory.StackAddress;
 import Scheduler.jq_RegisterState;
 import Scheduler.jq_Thread;
 import UTF.Utf8;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -161,7 +162,7 @@ public abstract class SystemInterface {
             int v = (int) Unsafe.invoke(open_library_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); return 0; }
+        } catch (Throwable t) { Assert.UNREACHABLE(); return 0; }
     }
 
     public static void close_library(int/*CPointer*/ library) {
@@ -170,7 +171,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(close_library_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
 
     public static CodeAddress get_proc_address(int/*CPointer*/ library, byte[] name) {
@@ -181,7 +182,7 @@ public abstract class SystemInterface {
             CodeAddress v = (CodeAddress) Unsafe.invokeA(get_proc_address_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); return null; }
+        } catch (Throwable t) { Assert.UNREACHABLE(); return null; }
     }
     
     public static final Collection/*<Library>*/ libraries = new LinkedList();
@@ -294,7 +295,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(debugwwrite_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     
     public static void debugwrite(Utf8 msg) {
@@ -312,7 +313,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(debugwrite_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     
     public static void debugwriteln(String msg) {
@@ -329,7 +330,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(debugwwriteln_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     
     public static void debugwriteln(byte[] msg) {
@@ -343,7 +344,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(debugwriteln_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
 
     public static Address syscalloc(int size) {
@@ -353,7 +354,7 @@ public abstract class SystemInterface {
             Address v = Unsafe.invokeA(syscalloc_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return null;
     }
     
@@ -363,7 +364,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(sysfree_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
 
     public static void die(int code) {
@@ -405,7 +406,7 @@ public abstract class SystemInterface {
                 long v = Unsafe.invoke(currentTimeMillis_0);
                 Unsafe.getThreadBlock().enableThreadSwitch();
                 return v;
-            } catch (Throwable t) { jq.UNREACHABLE(); }
+            } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
 
@@ -417,7 +418,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(mem_cpy_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
 
     public static void mem_set(Address to, int size, byte b) {
@@ -428,7 +429,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(mem_set_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     
     // constants from fcntl.h
@@ -450,7 +451,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(file_open_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int file_readbytes(int fd, Address startAddress, int length) {
@@ -462,7 +463,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(file_readbytes_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int file_writebyte(int fd, int b) {
@@ -473,7 +474,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(file_writebyte_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int file_writebytes(int fd, Address startAddress, int length) {
@@ -485,7 +486,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(file_writebytes_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int file_sync(int fd) {
@@ -495,7 +496,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(file_sync_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static final int SEEK_SET = 0; // from stdio.h
@@ -511,7 +512,7 @@ public abstract class SystemInterface {
             long v = Unsafe.invoke(file_seek_16);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int file_close(int fd) {
@@ -521,7 +522,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(file_close_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     
@@ -531,7 +532,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(console_available_0);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     
@@ -541,7 +542,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(main_argc_0);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int main_argv_length(int i) {
@@ -551,7 +552,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(main_argv_length_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static void main_argv(int i, byte[] b) {
@@ -561,7 +562,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(main_argv_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     
     public static int fs_getdcwd(int i, byte[] b) {
@@ -573,7 +574,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_getdcwd_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int fs_fullpath(String s, byte[] b) {
@@ -585,7 +586,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_fullpath_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static Address fs_gettruename(String s) {
@@ -595,7 +596,7 @@ public abstract class SystemInterface {
             Address v = Unsafe.invokeA(fs_gettruename_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return null;
     }
     public static final int FILE_ATTRIBUTE_READONLY  = 0x001; // in mapiwin.h
@@ -612,7 +613,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_getfileattributes_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int fs_access(String s, int mode) {
@@ -623,7 +624,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_access_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static long fs_getfiletime(String s) {
@@ -633,7 +634,7 @@ public abstract class SystemInterface {
             long v = Unsafe.invoke(fs_getfiletime_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0L;
     }
     public static long fs_stat_size(String s) {
@@ -643,7 +644,7 @@ public abstract class SystemInterface {
             long v = Unsafe.invoke(fs_stat_size_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0L;
     }
     public static int fs_remove(String s) {
@@ -653,7 +654,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_remove_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int fs_opendir(String s) {
@@ -663,7 +664,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_opendir_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static Address fs_readdir(int p) {
@@ -673,7 +674,7 @@ public abstract class SystemInterface {
             Address v = Unsafe.invokeA(fs_readdir_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return null;
     }
     public static int fs_closedir(int p) {
@@ -683,7 +684,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_closedir_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int fs_mkdir(String s) {
@@ -693,7 +694,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_mkdir_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int fs_rename(String s, String s1) {
@@ -704,7 +705,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_rename_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static final int _S_IEXEC  = 0x0000040; // from sys/stat.h
@@ -718,7 +719,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_chmod_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int fs_setfiletime(String s, long time) {
@@ -730,7 +731,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_setfiletime_12);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int fs_getlogicaldrives() {
@@ -739,7 +740,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(fs_getlogicaldrives_0);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static void yield() {
@@ -747,7 +748,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(yield_0);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     public static void msleep(int ms) {
         try {
@@ -755,7 +756,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(msleep_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     public static int/*CPointer*/ create_thread(CodeAddress start_address, HeapAddress param) {
         try {
@@ -765,32 +766,32 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(create_thread_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int init_thread() {
         try {
             int v = (int)Unsafe.invoke(init_thread_0);
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int resume_thread(int/*CPointer*/ thread_handle) {
         try {
             Unsafe.pushArg(thread_handle);
-            jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+            Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(resume_thread_4);
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int suspend_thread(int/*CPointer*/ thread_handle) {
         try {
             Unsafe.pushArg(thread_handle);
-            jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+            Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(suspend_thread_4);
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static StackAddress allocate_stack(int size) {
@@ -800,44 +801,44 @@ public abstract class SystemInterface {
             StackAddress v = (StackAddress)Unsafe.invokeA(allocate_stack_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return null;
     }
     public static int/*CPointer*/ get_current_thread_handle() {
         try {
-            jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+            Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(get_current_thread_handle_0);
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static boolean get_thread_context(int pid, jq_RegisterState context) {
         try {
             Unsafe.pushArgA(HeapAddress.addressOf(context));
             Unsafe.pushArg(pid);
-            jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+            Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(get_thread_context_8);
             return v!=0;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return false;
     }
     public static boolean set_thread_context(int pid, jq_RegisterState context) {
         try {
             Unsafe.pushArgA(HeapAddress.addressOf(context));
             Unsafe.pushArg(pid);
-            jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+            Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(set_thread_context_8);
             return v!=0;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return false;
     }
     public static void set_current_context(jq_Thread thread, jq_RegisterState context) {
         try {
             Unsafe.pushArgA(HeapAddress.addressOf(context));
             Unsafe.pushArgA(HeapAddress.addressOf(thread));
-            jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+            Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             Unsafe.invoke(set_current_context_8);
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     public static final int ITIMER_VIRTUAL = 1;
     public static void set_interval_timer(int type, int ms) {
@@ -847,7 +848,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(set_interval_timer_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
     public static int/*CPointer*/ init_semaphore() {
         try {
@@ -855,7 +856,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(init_semaphore_0);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static final int INFINITE = -1;
@@ -870,7 +871,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(wait_for_single_object_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
     public static int release_semaphore(int/*CPointer*/ semaphore, int v1) {
@@ -881,7 +882,7 @@ public abstract class SystemInterface {
             int v = (int)Unsafe.invoke(release_semaphore_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
 }

@@ -1,10 +1,10 @@
 package Memory.Heap;
 
 import Allocator.HeapAllocator;
-import Main.jq;
-import Run_Time.Debug;
 import Memory.HeapAddress;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -40,7 +40,7 @@ public class LargeHeap extends Heap {
         start = (HeapAddress) SystemInterface.syscalloc(size);
         if (start.isNull()) {
             Debug.writeln("Panic!  Cannot allocate ", size, "bytes.");
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         end = (HeapAddress) start.offset(size);
         largeSpaceAlloc = new short[GC_INITIAL_LARGE_SPACE_PAGES];

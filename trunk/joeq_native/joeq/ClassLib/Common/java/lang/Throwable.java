@@ -7,8 +7,8 @@
 
 package ClassLib.Common.java.lang;
 
-import Main.jq;
 import Run_Time.ExceptionDeliverer;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -26,7 +26,7 @@ public abstract class Throwable {
         else if (s instanceof java.io.PrintStream)
             ExceptionDeliverer.printStackTrace(backtrace, (java.io.PrintStream)s);
         else
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
     }
     
     public java.lang.Throwable fillInStackTrace() {

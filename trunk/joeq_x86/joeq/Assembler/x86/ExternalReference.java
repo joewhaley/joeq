@@ -10,8 +10,8 @@ package Assembler.x86;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import Main.jq;
 import Memory.HeapAddress;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -29,10 +29,10 @@ public class ExternalReference extends Reloc {
         this.external_name = external_name;
     }
 
-    public void setSymbolIndex(int ndx) { jq.Assert(ndx != 0); this.symbol_ndx = ndx; }
+    public void setSymbolIndex(int ndx) { Assert._assert(ndx != 0); this.symbol_ndx = ndx; }
     
     public void dumpCOFF(DataOutput out) throws IOException {
-        jq.Assert(symbol_ndx != 0);
+        Assert._assert(symbol_ndx != 0);
         out.writeInt(heap_from.to32BitValue()); // r_vaddr
         out.writeInt(symbol_ndx);               // r_symndx
         out.writeChar(Reloc.RELOC_ADDR32);      // r_type

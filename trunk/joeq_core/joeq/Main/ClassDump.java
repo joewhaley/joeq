@@ -8,6 +8,7 @@
 package Main;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import Bootstrap.PrimordialClassLoader;
@@ -18,7 +19,6 @@ import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import UTF.Utf8;
-import Util.ArrayIterator;
 
 /**
  * @author  John Whaley
@@ -55,7 +55,7 @@ public abstract class ClassDump {
 
     public static void compileClass(PrintStream out, jq_Class t) {
         Iterator it;
-        for(it = new ArrayIterator(t.getDeclaredStaticMethods());
+        for(it = Arrays.asList(t.getDeclaredStaticMethods()).iterator();
             it.hasNext(); ) {
             jq_StaticMethod c = (jq_StaticMethod)it.next();
             if (c.getBytecode() == null) continue;
@@ -66,7 +66,7 @@ public abstract class ClassDump {
                 System.out.println(cfg.fullDump());
             }
         }
-        for(it = new ArrayIterator(t.getDeclaredInstanceMethods());
+        for(it = Arrays.asList(t.getDeclaredInstanceMethods()).iterator();
             it.hasNext(); ) {
             jq_InstanceMethod c = (jq_InstanceMethod)it.next();
             if (c.isAbstract()) continue;
@@ -107,35 +107,35 @@ public abstract class ClassDump {
             out.println("superclass: "+t.getSuperclass().getName());
             Iterator it;
             out.print("known subclasses: ");
-            for(it = new ArrayIterator(t.getSubClasses());
+            for(it = Arrays.asList(t.getSubClasses()).iterator();
                 it.hasNext(); ) {
                 jq_Class c = (jq_Class)it.next();
                 out.print(c.getName()+" ");
             }
             out.println();
             out.print("declared interfaces: ");
-            for(it = new ArrayIterator(t.getDeclaredInterfaces());
+            for(it = Arrays.asList(t.getDeclaredInterfaces()).iterator();
                 it.hasNext(); ) {
                 jq_Class c = (jq_Class)it.next();
                 out.print(c.getName()+" ");
             }
             out.println();
             out.print("declared instance fields: ");
-            for(it = new ArrayIterator(t.getDeclaredInstanceFields());
+            for(it = Arrays.asList(t.getDeclaredInstanceFields()).iterator();
                 it.hasNext(); ) {
                 jq_InstanceField c = (jq_InstanceField)it.next();
                 out.print(c.getName()+" ");
             }
             out.println();
             out.print("declared static fields: ");
-            for(it = new ArrayIterator(t.getDeclaredStaticFields());
+            for(it = Arrays.asList(t.getDeclaredStaticFields()).iterator();
                 it.hasNext(); ) {
                 jq_StaticField c = (jq_StaticField)it.next();
                 out.print(c.getName()+" ");
             }
             out.println();
             out.print("declared instance methods: ");
-            for(it = new ArrayIterator(t.getDeclaredInstanceMethods());
+            for(it = Arrays.asList(t.getDeclaredInstanceMethods()).iterator();
                 it.hasNext(); ) {
                 jq_InstanceMethod c = (jq_InstanceMethod)it.next();
                 out.println(c.getName()+" ");
@@ -150,7 +150,7 @@ public abstract class ClassDump {
             }
             out.println();
             out.print("declared static methods: ");
-            for(it = new ArrayIterator(t.getDeclaredStaticMethods());
+            for(it = Arrays.asList(t.getDeclaredStaticMethods()).iterator();
                 it.hasNext(); ) {
                 jq_StaticMethod c = (jq_StaticMethod)it.next();
                 out.println(c.getName()+" ");
@@ -179,14 +179,14 @@ public abstract class ClassDump {
         if (t.isPrepared()) {
             Iterator it;
             out.print("interfaces: ");
-            for(it = new ArrayIterator(t.getInterfaces());
+            for(it = Arrays.asList(t.getInterfaces()).iterator();
                 it.hasNext(); ) {
                 jq_Class c = (jq_Class)it.next();
                 out.print(c+" ");
             }
             out.println();
             out.print("virtual methods: ");
-            for(it = new ArrayIterator(t.getVirtualMethods());
+            for(it = Arrays.asList(t.getVirtualMethods()).iterator();
                 it.hasNext(); ) {
                 jq_InstanceMethod c = (jq_InstanceMethod)it.next();
                 out.print(c+" ");

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-import Util.AppendListIterator;
+import Util.Collections.AppendListIterator;
 
 /*
  * @author  John Whaley

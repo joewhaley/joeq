@@ -3,11 +3,11 @@ package Memory.Heap;
 import Allocator.ObjectLayout;
 import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
-import Main.jq;
 import Memory.Address;
-import Run_Time.Debug;
 import Memory.HeapAddress;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -28,7 +28,7 @@ public class ImmortalHeap extends Heap {
         start = (HeapAddress) SystemInterface.syscalloc(size);
         if (start.isNull()) {
             Debug.writeln("Panic!  Cannot allocate ", size, "bytes.");
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         end = (HeapAddress) start.offset(size);
         allocationCursor = start;
@@ -141,7 +141,7 @@ public class ImmortalHeap extends Heap {
         // allocate remaining space 
         allocationCursor = (HeapAddress) allocationCursor.offset(size - offset);
         if (allocationCursor.difference(end) > 0)
-            jq.UNREACHABLE("Immortal heap space exhausted");
+            Assert.UNREACHABLE("Immortal heap space exhausted");
         // subtract back offset bytes
         HeapAddress a = (HeapAddress) result.offset(-offset);
         if (false) {

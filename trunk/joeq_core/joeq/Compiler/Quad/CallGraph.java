@@ -13,7 +13,7 @@ import java.util.LinkedList;
 
 import Clazz.jq_Method;
 import Compil3r.Quad.Operator.Invoke;
-import Main.jq;
+import Util.Assert;
 
 /**
  * Abstract representation of a call graph.
@@ -47,7 +47,7 @@ public abstract class CallGraph {
 
     public jq_Method getTargetMethod(Object context, ProgramLocation callSite) {
         Collection c = getTargetMethods(context, callSite);
-        jq.Assert(c.size() == 1);
+        Assert._assert(c.size() == 1);
         return (jq_Method) c.iterator().next();
     }
     
@@ -83,7 +83,7 @@ public abstract class CallGraph {
                     for (Iterator k=getTargetMethods(cs).iterator(); k.hasNext(); ) {
                         jq_Method callee = (jq_Method) k.next();
                         if (visited.contains(callee)) {
-                            // cycle in call graph.
+                            // back or cross edge in call graph.
                             continue;
                         }
                         visited.add(callee);

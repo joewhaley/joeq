@@ -7,8 +7,8 @@ import Allocator.DefaultHeapAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_StaticField;
-import Run_Time.Debug;
 import Memory.HeapAddress;
+import Run_Time.Debug;
 
 /**
  * @author John Whaley

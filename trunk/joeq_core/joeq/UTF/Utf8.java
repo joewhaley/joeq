@@ -11,9 +11,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import Clazz.jq_ClassFileConstants;
-import Main.jq;
 import Run_Time.Debug;
-import Util.UnmodifiableIterator;
+import Util.Assert;
+import Util.Collections.UnmodifiableIterator;
 
 /**
  * @author  John Whaley
@@ -192,12 +192,12 @@ here:
     }
 
     public Utf8 getArrayElementDescriptor() {
-        jq.Assert(isDescriptor(TC_ARRAY));
+        Assert._assert(isDescriptor(TC_ARRAY));
         return get(data, 1, data.length);
     }
     
     public Utf8 getAsArrayDescriptor() {
-        jq.Assert(isValidTypeDescriptor());
+        Assert._assert(isValidTypeDescriptor());
         // todo: might need to reevaluate making a new array on every query.
         byte[] b = new byte[data.length+1];
         b[0] = TC_ARRAY;
@@ -206,7 +206,7 @@ here:
     }
     
     public Utf8 getAsClassDescriptor() {
-        jq.Assert(data[0] != TC_ARRAY);
+        Assert._assert(data[0] != TC_ARRAY);
         // todo: might need to reevaluate making a new array on every query.
         byte[] b = new byte[data.length+2];
         b[0] = TC_CLASS;
@@ -222,7 +222,7 @@ here:
     public class MethodDescriptorIterator extends UnmodifiableIterator {
         int currentIndex;
         MethodDescriptorIterator() {
-            jq.Assert(isDescriptor(TC_PARAM));
+            Assert._assert(isDescriptor(TC_PARAM));
             currentIndex = 0;
         }
         public boolean hasNext() {
@@ -254,7 +254,7 @@ here:
             return get(data, startIndex, currentIndex+1);
         }
         public Utf8 getReturnDescriptor() {
-            jq.Assert(!hasNext());
+            Assert._assert(!hasNext());
             return get(data, currentIndex+2, data.length);
         }
     }
@@ -282,12 +282,12 @@ here:
     // Helper function.
     private static int addToTable_helper(byte[] b, int hash, int[] chain, int index) {
         if (NO_NEW) {
-            jq.UNREACHABLE("Trying to add Utf8 "+fromUtf8(b));
+            Assert.UNREACHABLE("Trying to add Utf8 "+fromUtf8(b));
         }
         if (++size == table.length) growTable_helper();
         if (!checkUtf8(b)) {
             fromUtf8(b); // fromUtf8 has more informative error messages.
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         table[size] = new Utf8(b, hash);
         chain[index] = size+1;
@@ -345,7 +345,7 @@ here:
     }
 
     public void dump(DataOutput out) throws IOException {
-        jq.Assert(data.length <= Character.MAX_VALUE);
+        Assert._assert(data.length <= Character.MAX_VALUE);
         out.writeChar(data.length);
         out.write(data);
     }
