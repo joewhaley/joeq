@@ -473,7 +473,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             i = constant_pool.length + toadd_cp.size();
             toadd_cp.add(cpe);
  
-             jq.assert(i <= Character.MAX_VALUE);
+            jq.assert(i <= Character.MAX_VALUE);
             return (char)i;
         }
         
@@ -510,7 +510,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
     }
     
     public static class ConstantPoolRebuilder {
-	HashMap new_entries;
+	HashMap new_entries = new HashMap();
 
 	private int renumber() {
 	    int j = 0;
@@ -520,8 +520,8 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
 		Map.Entry e = (Map.Entry)i.next();
 		jq.assert(j < Character.MAX_VALUE);
 		e.setValue(new Character((char)(++j)));
-		if ((e.getValue() instanceof Long) ||
-		    (e.getValue() instanceof Double))
+		if ((e.getKey() instanceof Long) ||
+		    (e.getKey() instanceof Double))
 		    ++j;
 	    }
 	    return j+1;
@@ -538,7 +538,8 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
 		Map.Entry e = (Map.Entry)i.next();
 		Object o = e.getKey();
 		char index = ((Character)e.getValue()).charValue();
-		++j; jq.assert(index == j);
+		++j; jq.assert(index == j, (int)index + "!=" + (int)j);
+                //System.out.println("CP Entry "+j+": "+o);
 		newcp.constant_pool[j] = o;
 		if (o instanceof Utf8) {
 		    newcp.constant_pool_tags[j] = CONSTANT_Utf8;
@@ -577,10 +578,14 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
 	    byte[] bc = m.getBytecode();
 	    if (bc == null) return;
 	    Bytecodes.InstructionList il = new Bytecodes.InstructionList(m.getDeclaringClass().getCP(), bc);
+            this.addCode(il);
+	}
+
+	public void addCode(Bytecodes.InstructionList il) {
 	    RebuildCPVisitor v = new RebuildCPVisitor();
 	    il.accept(v);
 	}
-
+        
 	public void addExceptions(jq_Method m) {
 	    // TODO
 	}
@@ -655,7 +660,11 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
 	}
 
 	public char get(Object o) {
-	    return ((Character)new_entries.get(o)).charValue();
+            Character c = (Character)new_entries.get(o);
+            if (c == null) {
+                jq.UNREACHABLE("No such constant pool entry: type "+o.getClass()+" value "+o);
+            }
+	    return c.charValue();
 	}
 
 	public void addString(String o) {
@@ -671,6 +680,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
 	    new_entries.put(o.getDesc(), null);
 	    new_entries.put(o.getDeclaringClass(), null);
 	    new_entries.put(o.getDeclaringClass().getDesc(), null);
+            new_entries.put(o, null);
 	}
 	public void addOther(Object o) {
 	    new_entries.put(o, null);

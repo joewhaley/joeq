@@ -74,7 +74,11 @@ public class x86Assembler implements x86Constants {
         branchtargetmap.put(target, new Integer(ip));
     }
     public int getBranchTarget(Object target) {
-        return ((Integer)branchtargetmap.get(target)).intValue();
+        Integer i = (Integer)branchtargetmap.get(target);
+        if (i == null) {
+            jq.UNREACHABLE("Invalid branch target: "+target+" offset "+getCurrentOffset());
+        }
+        return i.intValue();
     }
     public Map getBranchTargetMap() {
         return branchtargetmap;

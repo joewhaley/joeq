@@ -12,6 +12,7 @@ package Clazz;
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Map;
+import java.util.HashMap;
 import jq;
 
 import Bootstrap.PrimordialClassLoader;
@@ -31,6 +32,12 @@ public final class jq_InstanceField extends jq_Field {
     // ONLY TO BE CALLED BY jq_ClassLoader!!!
     static jq_InstanceField newInstanceField(jq_Class clazz, jq_NameAndDesc nd) {
         return new jq_InstanceField(clazz, nd);
+    }
+    
+    public final void load(jq_InstanceField that) {
+        this.access_flags = that.access_flags;
+        this.attributes = (Map)((HashMap)that.attributes).clone();
+        state = STATE_LOADED;
     }
     
     public final void load(char access_flags, DataInput in) 

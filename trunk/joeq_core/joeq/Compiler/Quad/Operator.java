@@ -31,7 +31,6 @@ import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Util.Templates.UnmodifiableList;
-import Interpreter.ReflectiveInterpreter.ReflectiveVMInterface;
 import Interpreter.QuadInterpreter.State;
 import Interpreter.QuadInterpreter.UninitializedReference;
 import java.util.Set;
@@ -1474,65 +1473,86 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
-	public void interpret(Quad q, State s) {
-	    jq_Field f = getField(q).getField();
-	    s.putReg(getDest(q).getRegister(), ReflectiveVMInterface.INSTANCE.getField(null, f));
-	}
-
         public static class GETSTATIC_I extends Getstatic {
             public static final GETSTATIC_I INSTANCE = new GETSTATIC_I();
             private GETSTATIC_I() { }
             public String toString() { return "GETSTATIC_I"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), Reflection.getstatic_I(f));
+            }
         }
         public static class GETSTATIC_F extends Getstatic {
             public static final GETSTATIC_F INSTANCE = new GETSTATIC_F();
             private GETSTATIC_F() { }
             public String toString() { return "GETSTATIC_F"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_F(getDest(q).getRegister(), Reflection.getstatic_F(f));
+            }
         }
         public static class GETSTATIC_L extends Getstatic {
             public static final GETSTATIC_L INSTANCE = new GETSTATIC_L();
             private GETSTATIC_L() { }
             public String toString() { return "GETSTATIC_L"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_L(getDest(q).getRegister(), Reflection.getstatic_L(f));
+            }
         }
         public static class GETSTATIC_D extends Getstatic {
             public static final GETSTATIC_D INSTANCE = new GETSTATIC_D();
             private GETSTATIC_D() { }
             public String toString() { return "GETSTATIC_D"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_D(getDest(q).getRegister(), Reflection.getstatic_D(f));
+            }
         }
         public static class GETSTATIC_A extends Getstatic {
             public static final GETSTATIC_A INSTANCE = new GETSTATIC_A();
             private GETSTATIC_A() { }
             public String toString() { return "GETSTATIC_A"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_A(getDest(q).getRegister(), Reflection.getstatic_A(f));
+            }
         }
         public static class GETSTATIC_Z extends Getstatic {
             public static final GETSTATIC_Z INSTANCE = new GETSTATIC_Z();
             private GETSTATIC_Z() { }
             public String toString() { return "GETSTATIC_Z"; }
 	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
-		Integer v = new Integer(((Boolean)ReflectiveVMInterface.INSTANCE.getField(null, f)).booleanValue()?1:0);
-		s.putReg(getDest(q).getRegister(), v);
+		jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), Reflection.getstatic_Z(f)?1:0);
             }
         }
         public static class GETSTATIC_B extends Getstatic {
             public static final GETSTATIC_B INSTANCE = new GETSTATIC_B();
             private GETSTATIC_B() { }
             public String toString() { return "GETSTATIC_B"; }
+	    public void interpret(Quad q, State s) {
+		jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), (int)Reflection.getstatic_B(f));
+            }
         }
         public static class GETSTATIC_C extends Getstatic {
             public static final GETSTATIC_C INSTANCE = new GETSTATIC_C();
             private GETSTATIC_C() { }
             public String toString() { return "GETSTATIC_C"; }
 	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
-		Integer v = new Integer(((Character)ReflectiveVMInterface.INSTANCE.getField(null, f)).charValue());
-		s.putReg(getDest(q).getRegister(), v);
+		jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), (int)Reflection.getstatic_C(f));
             }
         }
         public static class GETSTATIC_S extends Getstatic {
             public static final GETSTATIC_S INSTANCE = new GETSTATIC_S();
             private GETSTATIC_S() { }
             public String toString() { return "GETSTATIC_S"; }
+	    public void interpret(Quad q, State s) {
+		jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), (int)Reflection.getstatic_S(f));
+            }
         }
         public static class GETSTATIC_I_DYNLINK extends GETSTATIC_I {
             public static final GETSTATIC_I_DYNLINK INSTANCE = new GETSTATIC_I_DYNLINK();
@@ -1671,46 +1691,64 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
-	public void interpret(Quad q, State s) {
-	    jq_Field f = getField(q).getField();
-	    Object v = getWrappedOpValue(getSrc(q), s);
-	    ReflectiveVMInterface.INSTANCE.putField(null, f, v);
-	}
-
         public static class PUTSTATIC_I extends Putstatic {
             public static final PUTSTATIC_I INSTANCE = new PUTSTATIC_I();
             private PUTSTATIC_I() { }
             public String toString() { return "PUTSTATIC_I"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+		int i = getIntOpValue(getSrc(q), s);
+                Reflection.putstatic_I(f, i);
+            }
         }
         public static class PUTSTATIC_F extends Putstatic {
             public static final PUTSTATIC_F INSTANCE = new PUTSTATIC_F();
             private PUTSTATIC_F() { }
             public String toString() { return "PUTSTATIC_F"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+		float i = getFloatOpValue(getSrc(q), s);
+                Reflection.putstatic_F(f, i);
+            }
         }
         public static class PUTSTATIC_L extends Putstatic {
             public static final PUTSTATIC_L INSTANCE = new PUTSTATIC_L();
             private PUTSTATIC_L() { }
             public String toString() { return "PUTSTATIC_L"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+		long i = getLongOpValue(getSrc(q), s);
+                Reflection.putstatic_L(f, i);
+            }
         }
         public static class PUTSTATIC_D extends Putstatic {
             public static final PUTSTATIC_D INSTANCE = new PUTSTATIC_D();
             private PUTSTATIC_D() { }
             public String toString() { return "PUTSTATIC_D"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+		double i = getDoubleOpValue(getSrc(q), s);
+                Reflection.putstatic_D(f, i);
+            }
         }
         public static class PUTSTATIC_A extends Putstatic {
             public static final PUTSTATIC_A INSTANCE = new PUTSTATIC_A();
             private PUTSTATIC_A() { }
             public String toString() { return "PUTSTATIC_A"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+		Object i = getObjectOpValue(getSrc(q), s);
+                Reflection.putstatic_A(f, i);
+            }
         }
         public static class PUTSTATIC_Z extends Putstatic {
             public static final PUTSTATIC_Z INSTANCE = new PUTSTATIC_Z();
             private PUTSTATIC_Z() { }
             public String toString() { return "PUTSTATIC_Z"; }
 	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
 		int i = getIntOpValue(getSrc(q), s);
-		Object v = new Boolean(i!=0);
-		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+                Reflection.putstatic_Z(f, i!=0);
 	    }
         }
         public static class PUTSTATIC_B extends Putstatic {
@@ -1718,10 +1756,9 @@ public abstract class Operator {
             private PUTSTATIC_B() { }
             public String toString() { return "PUTSTATIC_B"; }
 	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
 		int i = getIntOpValue(getSrc(q), s);
-		Object v = new Byte((byte)i);
-		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+                Reflection.putstatic_B(f, (byte)i);
 	    }
         }
         public static class PUTSTATIC_S extends Putstatic {
@@ -1729,10 +1766,9 @@ public abstract class Operator {
             private PUTSTATIC_S() { }
             public String toString() { return "PUTSTATIC_S"; }
 	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
 		int i = getIntOpValue(getSrc(q), s);
-		Object v = new Short((short)i);
-		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+                Reflection.putstatic_S(f, (short)i);
 	    }
         }
         public static class PUTSTATIC_C extends Putstatic {
@@ -1740,10 +1776,9 @@ public abstract class Operator {
             private PUTSTATIC_C() { }
             public String toString() { return "PUTSTATIC_C"; }
 	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
 		int i = getIntOpValue(getSrc(q), s);
-		Object v = new Character((char)i);
-		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+                Reflection.putstatic_C(f, (char)i);
 	    }
         }
         public static class PUTSTATIC_I_DYNLINK extends PUTSTATIC_I {
@@ -1879,66 +1914,95 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
-	public void interpret(Quad q, State s) {
-	    Object o = getObjectOpValue(getBase(q), s);
-	    jq_Field f = getField(q).getField();
-	    s.putReg(getDest(q).getRegister(), ReflectiveVMInterface.INSTANCE.getField(o, f));
-	}
-
         public static class GETFIELD_I extends Getfield {
             public static final GETFIELD_I INSTANCE = new GETFIELD_I();
             private GETFIELD_I() { }
             public String toString() { return "GETFIELD_I"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), Reflection.getfield_I(o, f));
+            }
         }
         public static class GETFIELD_F extends Getfield {
             public static final GETFIELD_F INSTANCE = new GETFIELD_F();
             private GETFIELD_F() { }
             public String toString() { return "GETFIELD_F"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_F(getDest(q).getRegister(), Reflection.getfield_F(o, f));
+            }
         }
         public static class GETFIELD_L extends Getfield {
             public static final GETFIELD_L INSTANCE = new GETFIELD_L();
             private GETFIELD_L() { }
             public String toString() { return "GETFIELD_L"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_L(getDest(q).getRegister(), Reflection.getfield_L(o, f));
+            }
         }
         public static class GETFIELD_D extends Getfield {
             public static final GETFIELD_D INSTANCE = new GETFIELD_D();
             private GETFIELD_D() { }
             public String toString() { return "GETFIELD_D"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_D(getDest(q).getRegister(), Reflection.getfield_D(o, f));
+            }
         }
         public static class GETFIELD_A extends Getfield {
             public static final GETFIELD_A INSTANCE = new GETFIELD_A();
             private GETFIELD_A() { }
             public String toString() { return "GETFIELD_A"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_A(getDest(q).getRegister(), Reflection.getfield_A(o, f));
+            }
         }
         public static class GETFIELD_B extends Getfield {
             public static final GETFIELD_B INSTANCE = new GETFIELD_B();
             private GETFIELD_B() { }
             public String toString() { return "GETFIELD_B"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), (int)Reflection.getfield_B(o, f));
+            }
         }
         public static class GETFIELD_C extends Getfield {
             public static final GETFIELD_C INSTANCE = new GETFIELD_C();
             private GETFIELD_C() { }
             public String toString() { return "GETFIELD_C"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		s.putReg_I(getDest(q).getRegister(), ((Character)ReflectiveVMInterface.INSTANCE.getField(o, f)).charValue());
-	    }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), (int)Reflection.getfield_C(o, f));
+            }
         }
         public static class GETFIELD_S extends Getfield {
             public static final GETFIELD_S INSTANCE = new GETFIELD_S();
             private GETFIELD_S() { }
             public String toString() { return "GETFIELD_S"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), (int)Reflection.getfield_S(o, f));
+            }
         }
         public static class GETFIELD_Z extends Getfield {
             public static final GETFIELD_Z INSTANCE = new GETFIELD_Z();
             private GETFIELD_Z() { }
             public String toString() { return "GETFIELD_Z"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		s.putReg_I(getDest(q).getRegister(), ((Boolean)ReflectiveVMInterface.INSTANCE.getField(o, f)).booleanValue()?1:0);
-	    }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_I(getDest(q).getRegister(), Reflection.getfield_Z(o, f)?1:0);
+            }
         }
         public static class GETFIELD_I_DYNLINK extends GETFIELD_I {
             public static final GETFIELD_I_DYNLINK INSTANCE = new GETFIELD_I_DYNLINK();
@@ -2081,81 +2145,95 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
-	public void interpret(Quad q, State s) {
-	    Object o = getObjectOpValue(getBase(q), s);
-	    jq_Field f = getField(q).getField();
-	    Object v = getWrappedOpValue(getSrc(q), s);
-	    ReflectiveVMInterface.INSTANCE.putField(o, f, v);
-	}
-
         public static class PUTFIELD_I extends Putfield {
             public static final PUTFIELD_I INSTANCE = new PUTFIELD_I();
             private PUTFIELD_I() { }
             public String toString() { return "PUTFIELD_I"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_I(o, f, getIntOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_F extends Putfield {
             public static final PUTFIELD_F INSTANCE = new PUTFIELD_F();
             private PUTFIELD_F() { }
             public String toString() { return "PUTFIELD_F"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_F(o, f, getFloatOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_L extends Putfield {
             public static final PUTFIELD_L INSTANCE = new PUTFIELD_L();
             private PUTFIELD_L() { }
             public String toString() { return "PUTFIELD_L"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_L(o, f, getLongOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_D extends Putfield {
             public static final PUTFIELD_D INSTANCE = new PUTFIELD_D();
             private PUTFIELD_D() { }
             public String toString() { return "PUTFIELD_D"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_D(o, f, getDoubleOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_A extends Putfield {
             public static final PUTFIELD_A INSTANCE = new PUTFIELD_A();
             private PUTFIELD_A() { }
             public String toString() { return "PUTFIELD_A"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_A(o, f, getObjectOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_B extends Putfield {
             public static final PUTFIELD_B INSTANCE = new PUTFIELD_B();
             private PUTFIELD_B() { }
             public String toString() { return "PUTFIELD_B"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Byte((byte)v));
-	    }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_B(o, f, (byte)getIntOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_C extends Putfield {
             public static final PUTFIELD_C INSTANCE = new PUTFIELD_C();
             private PUTFIELD_C() { }
             public String toString() { return "PUTFIELD_C"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Character((char)v));
-	    }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_C(o, f, (char)getIntOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_S extends Putfield {
             public static final PUTFIELD_S INSTANCE = new PUTFIELD_S();
             private PUTFIELD_S() { }
             public String toString() { return "PUTFIELD_S"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Short((short)v));
-	    }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_S(o, f, (short)getIntOpValue(getSrc(q), s));
+            }
         }
         public static class PUTFIELD_Z extends Putfield {
             public static final PUTFIELD_Z INSTANCE = new PUTFIELD_Z();
             private PUTFIELD_Z() { }
             public String toString() { return "PUTFIELD_Z"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Boolean(v!=0));
-	    }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_Z(o, f, getIntOpValue(getSrc(q), s)!=0);
+            }
         }
         public static class PUTFIELD_I_DYNLINK extends PUTFIELD_I {
             public static final PUTFIELD_I_DYNLINK INSTANCE = new PUTFIELD_I_DYNLINK();
@@ -2377,7 +2455,7 @@ public abstract class Operator {
 	    public void interpret(Quad q, State s) {
 		int i = getIntOpValue(getIndex(q), s);
 		Object o = getObjectOpValue(getRef(q), s);
-		int length = ReflectiveVMInterface.INSTANCE.arraylength(o);
+		int length = Reflection.arraylength(o);
 		if (i < 0 || i >= length) {
 		    s.handleException(new ArrayIndexOutOfBoundsException(s.currentLocation()+" index: "+i+", length: "+length));
 		}
@@ -2464,7 +2542,7 @@ public abstract class Operator {
 	public void interpret_virtual(Quad q, State s) {
 	    ParamListOperand plo = getParamList(q);
 	    jq_Method f = getMethod(q).getMethod();
-	    jq_Reference t = (jq_Reference)ReflectiveVMInterface.INSTANCE.getJQTypeOf(s.getReg_A(plo.get(0).getRegister()));
+	    jq_Reference t = Reflection.getTypeOf(s.getReg_A(plo.get(0).getRegister()));
 	    t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
 	    f = t.getVirtualMethod(f.getNameAndDesc());
 	    if ((f == null) || f.isAbstract()) {
@@ -2768,7 +2846,7 @@ public abstract class Operator {
 	    public void interpret(Quad q, State s) {
 		jq_Type t = getType(q).getType();
 		int v = getIntOpValue(getSize(q), s);
-		Object o = ReflectiveVMInterface.INSTANCE.new_array(t, v);
+                Object o = java.lang.reflect.Array.newInstance(Reflection.getJDKType(((jq_Array)t).getElementType()), v);
 		s.putReg_A(getDest(q).getRegister(), o);
 	    }
         }
@@ -2850,7 +2928,9 @@ public abstract class Operator {
 	    public void interpret(Quad q, State s) {
 		jq_Type t = getType(q).getType();
 		Object o = getObjectOpValue(getSrc(q), s);
-		int v = ReflectiveVMInterface.INSTANCE.instance_of(o, t)?1:0;
+                int v;
+                if (o == null) v = 0;
+                else v = Reflection.getJDKType(t).isAssignableFrom(o.getClass())?1:0;
 		s.putReg_I(getDest(q).getRegister(), v);
 	    }
         }
@@ -2880,7 +2960,7 @@ public abstract class Operator {
             public String toString() { return "ARRAYLENGTH"; }
 	    public void interpret(Quad q, State s) {
 		Object o = getObjectOpValue(getSrc(q), s);
-		int v = ReflectiveVMInterface.INSTANCE.arraylength(o);
+		int v = Reflection.arraylength(o);
 		s.putReg_I(getDest(q).getRegister(), v);
 	    }
         }
@@ -2909,7 +2989,9 @@ public abstract class Operator {
             private MONITORENTER() { }
             public String toString() { return "MONITORENTER"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		Object o = getObjectOpValue(getSrc(q), s);
+                if (!jq.Bootstrapping)
+                    Run_Time.Monitor.monitorenter(o);
 	    }
         }
         public static class MONITOREXIT extends Monitor {
@@ -2917,7 +2999,9 @@ public abstract class Operator {
             private MONITOREXIT() { }
             public String toString() { return "MONITOREXIT"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		Object o = getObjectOpValue(getSrc(q), s);
+                if (!jq.Bootstrapping)
+                    Run_Time.Monitor.monitorexit(o);
 	    }
         }
     }
@@ -2945,7 +3029,9 @@ public abstract class Operator {
             private PEEK_1() { }
             public String toString() { return "PEEK_1"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int o = getIntOpValue(getAddress(q), s);
+                if (!jq.Bootstrapping)
+                    s.putReg_I(getDest(q).getRegister(), (byte)Unsafe.peek(o));
 	    }
         }
         public static class PEEK_2 extends MemLoad {
@@ -2953,7 +3039,9 @@ public abstract class Operator {
             private PEEK_2() { }
             public String toString() { return "PEEK_2"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int o = getIntOpValue(getAddress(q), s);
+                if (!jq.Bootstrapping)
+                    s.putReg_I(getDest(q).getRegister(), (short)Unsafe.peek(o));
 	    }
         }
         public static class PEEK_4 extends MemLoad {
@@ -2961,7 +3049,9 @@ public abstract class Operator {
             private PEEK_4() { }
             public String toString() { return "PEEK_4"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int o = getIntOpValue(getAddress(q), s);
+                if (!jq.Bootstrapping)
+                    s.putReg_I(getDest(q).getRegister(), (int)Unsafe.peek(o));
 	    }
         }
     }
@@ -2988,7 +3078,10 @@ public abstract class Operator {
             private POKE_1() { }
             public String toString() { return "POKE_1"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int o = getIntOpValue(getAddress(q), s);
+		byte v = (byte)getIntOpValue(getValue(q), s);
+                if (!jq.Bootstrapping)
+                    Unsafe.poke1(o, v);
 	    }
         }
         public static class POKE_2 extends MemStore {
@@ -2996,7 +3089,10 @@ public abstract class Operator {
             private POKE_2() { }
             public String toString() { return "POKE_2"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int o = getIntOpValue(getAddress(q), s);
+		short v = (short)getIntOpValue(getValue(q), s);
+                if (!jq.Bootstrapping)
+                    Unsafe.poke2(o, v);
 	    }
         }
         public static class POKE_4 extends MemStore {
@@ -3004,7 +3100,10 @@ public abstract class Operator {
             private POKE_4() { }
             public String toString() { return "POKE_4"; }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int o = getIntOpValue(getAddress(q), s);
+		int v = (int)getIntOpValue(getValue(q), s);
+                if (!jq.Bootstrapping)
+                    Unsafe.poke4(o, v);
 	    }
         }
     }
@@ -3062,7 +3161,8 @@ public abstract class Operator {
             public String toString() { return "GET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+                if (!jq.Bootstrapping)
+                    s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), Unsafe.getThreadBlock());
 	    }
         }
         public static class SET_THREAD_BLOCK extends Special {
@@ -3071,7 +3171,9 @@ public abstract class Operator {
             public String toString() { return "SET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		Scheduler.jq_Thread o = (Scheduler.jq_Thread)getObjectOpValue(getOp1(q), s);
+                if (!jq.Bootstrapping)
+                    Unsafe.setThreadBlock(o);
 	    }
         }
         public static class ALLOCA extends Special {
@@ -3090,7 +3192,12 @@ public abstract class Operator {
             public String toString() { return "LONG_JUMP"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int a = getIntOpValue(getOp1(q), s);
+		int b = getIntOpValue(getOp2(q), s);
+		int c = getIntOpValue(getOp3(q), s);
+		int d = getIntOpValue(getOp4(q), s);
+                Unsafe.longJump(a, b, c, d);
+                jq.UNREACHABLE();
 	    }
         }
         public static class DIE extends Special {
@@ -3099,7 +3206,9 @@ public abstract class Operator {
             public String toString() { return "DIE"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
 	    public void interpret(Quad q, State s) {
-		// TODO: skip for now.
+		int a = getIntOpValue(getOp1(q), s);
+                Run_Time.SystemInterface.die(a);
+                jq.UNREACHABLE();
 	    }
         }
         public static class GET_TYPE_OF extends Special {

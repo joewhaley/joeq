@@ -27,12 +27,14 @@ import Allocator.DefaultHeapAllocator;
 import Bootstrap.BootstrapRootSet;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
+import Compil3r.BytecodeAnalysis.Bytecodes;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import Run_Time.Reflection;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
+import Util.LinkedHashMap;
 import Synchronization.Atomic;
 
 // friend jq_ClassLoader;
@@ -114,15 +116,15 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (access_flags & ACC_ABSTRACT) != 0;
     }
     public final jq_Class getSuperclass() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return super_class;
     }
     public final jq_Class[] getDeclaredInterfaces() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return declared_interfaces;
     }
     public final jq_Class getDeclaredInterface(Utf8 desc) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         for (int i=0; i<declared_interfaces.length; ++i) {
             jq_Class in = declared_interfaces[i];
             if (in.getDesc() == desc)
@@ -131,19 +133,23 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return null;
     }
     public final jq_InstanceField[] getDeclaredInstanceFields() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return declared_instance_fields;
     }
     public final jq_InstanceField getDeclaredInstanceField(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return (jq_InstanceField)findByNameAndDesc(declared_instance_fields, nd);
     }
     public final jq_StaticField[] getDeclaredStaticFields() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return static_fields;
     }
+    public final jq_StaticField getDeclaredStaticField(jq_NameAndDesc nd) {
+        chkState(STATE_LOADING3);
+        return (jq_StaticField)findByNameAndDesc(static_fields, nd);
+    }
     public final jq_StaticField getStaticField(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         jq_StaticField f = (jq_StaticField)findByNameAndDesc(static_fields, nd);
         if (f != null) return f;
 	if (this.isInterface()) {
@@ -197,7 +203,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
     // NOTE: fields in superinterfaces may appear multiple times.
     public final jq_StaticField[] getStaticFields() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
 	int length = this.getNumberOfStaticFields();
         jq_StaticField[] sfs = new jq_StaticField[length];
 	int current = this.getStaticFields_helper(sfs, 0);
@@ -205,23 +211,23 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return sfs;
     }
     public final jq_InstanceMethod[] getDeclaredInstanceMethods() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return declared_instance_methods;
     }
     public final jq_InstanceMethod getDeclaredInstanceMethod(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return (jq_InstanceMethod)findByNameAndDesc(declared_instance_methods, nd);
     }
     public final jq_StaticMethod[] getDeclaredStaticMethods() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return static_methods;
     }
     public final jq_StaticMethod getDeclaredStaticMethod(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return (jq_StaticMethod)findByNameAndDesc(static_methods, nd);
     }
     public final jq_StaticMethod getStaticMethod(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         jq_StaticMethod m = (jq_StaticMethod)findByNameAndDesc(static_methods, nd);
         if (m != null) return m;
         // check superclasses.
@@ -279,7 +285,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
 
     public final jq_InstanceMethod getInstanceMethod(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         jq_InstanceMethod m = (jq_InstanceMethod)findByNameAndDesc(declared_instance_methods, nd);
         if (m != null) return m;
         // check superclasses.
@@ -298,11 +304,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return null;
     }
     public final jq_Initializer getInitializer(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return (jq_Initializer)getDeclaredInstanceMethod(nd);
     }
     public final jq_ClassInitializer getClassInitializer() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return (jq_ClassInitializer)getDeclaredStaticMethod(new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V")));
     }
     public final jq_ConstantPool getCP() {
@@ -437,18 +443,18 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return const_pool.getAsInstanceMethod(index);
     }
     public final byte[] getAttribute(Utf8 name) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return (byte[])attributes.get(name);
     }
     public final byte[] getAttribute(String name) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return getAttribute(Utf8.get(name));
     }
     public final Iterator getAttributes() {
         return attributes.keySet().iterator();
     }
     public final Utf8 getSourceFile() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         byte[] attrib = getAttribute("SourceFile");
         if (attrib == null) return null;
         if (attrib.length != 2)
@@ -459,24 +465,24 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return getCPasUtf8(cpi);
     }
     public final boolean isSynthetic() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return getAttribute("Synthetic") != null;
     }
     public final boolean isDeprecated() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return getAttribute("Deprecated") != null;
     }
     public final jq_Class[] getInnerClasses() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         jq.TODO();
         return null;
     }
     public final jq_Class[] getSubClasses() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return subclasses;
     }
     public final jq_Class[] getSubInterfaces() {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         return subinterfaces;
     }
    //// Available after resolving
@@ -512,7 +518,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return instance_fields;
     }
     public final jq_InstanceField getInstanceField(jq_NameAndDesc nd) {
-        chkState(STATE_LOADED);
+        chkState(STATE_LOADING3);
         jq_InstanceField m = (jq_InstanceField)findByNameAndDesc(declared_instance_fields, nd);
         if (m != null) return m;
         // check superclasses.
@@ -541,6 +547,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         jq.assert(sf.getDeclaringClass() == this);
         jq.assert(sf.getType().getReferenceSize() != 8);
         int index = (sf.getAddress() - Unsafe.addressOf(static_data)) >> 2;
+        if (index < 0 || index >= static_data.length) {
+            jq.UNREACHABLE("sf: "+sf+" index: "+index);
+        }
         static_data[index] = data;
     }
     public final void setStaticData(jq_StaticField sf, long data) {
@@ -643,7 +652,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         if (isLoaded()) return; // quick test.
         synchronized (this) {
             if (isLoaded()) return; // other thread already loaded this type.
-            if ((state == STATE_LOADING1) || (state == STATE_LOADING2))
+            if ((state == STATE_LOADING1) || (state == STATE_LOADING2) || (state == STATE_LOADING3))
                 throw new ClassCircularityError(this.toString()); // recursively called load (?)
             state = STATE_LOADING1;
             if (TRACE) SystemInterface.debugmsg("Beginning loading "+this+"...");
@@ -836,12 +845,15 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 attributes = new HashMap();
                 readAttributes(in, attributes);
 
+                state = STATE_LOADING3;
+                
                 // if this is a class library, look for and load our mirror (implementation) class
-                String impl_desc = ClassLibInterface.i.getImplementationClassDesc(getDesc());
-                if (impl_desc != null) {
-                    Utf8 impl_utf = Utf8.get(impl_desc);
+                Iterator impls = ClassLibInterface.i.getImplementationClassDescs(getDesc());
+                while (impls.hasNext()) {
+                    Utf8 impl_utf = (Utf8)impls.next();
                     jq_Class mirrorclass = (jq_Class)ClassLibInterface.i.getOrCreateType(class_loader, impl_utf);
                     try {
+                        if (TRACE) SystemInterface.debugmsg("Attempting to load mirror class "+mirrorclass);
                         mirrorclass.load();
                     } catch (NoClassDefFoundError x) {
                         // no mirror class
@@ -850,6 +862,92 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     }
                     if (mirrorclass != null) {
                         this.merge(mirrorclass);
+                    }
+                }
+                
+                // if this is a class library interface, remap method bodies.
+                if (this.super_class != null && this.super_class.getDesc() == Utf8.get("LClassLib/ClassLibInterface;")) {
+                    if (TRACE) SystemInterface.debugmsg(this+" is a class lib interface, rewriting method bodies.");
+                    final jq_ConstantPool.ConstantPoolRebuilder cpr = this.rebuildConstantPool(false);
+                    // visit all instance methods.
+                    LinkedHashMap newInstanceMethods = new LinkedHashMap();
+                    for (int i=0; i<this.declared_instance_methods.length; ++i) {
+                        jq_InstanceMethod this_m = this.declared_instance_methods[i];
+                        jq_NameAndDesc nd = this_m.getNameAndDesc();
+                        jq.assert(merge_convertNameAndDesc(nd) == nd);
+                        byte[] bc = this_m.getBytecode();
+                        if (bc == null)
+                            continue;
+                        // extract instructions of method.
+                        Bytecodes.InstructionList il = new Bytecodes.InstructionList(this_m);
+
+                        // update constant pool references in the instructions, and add them to our constant pool.
+                        rewriteMethod(cpr, il);
+                        
+                        // cache the instruction list for later.
+                        newInstanceMethods.put(this_m, il);
+                    }
+                    // visit all static methods.
+                    LinkedHashMap newStaticMethods = new LinkedHashMap();
+                    for (int i=0; i<this.static_methods.length; ++i) {
+                        jq_StaticMethod this_m = this.static_methods[i];
+                        jq_NameAndDesc nd = this_m.getNameAndDesc();
+                        jq.assert(merge_convertNameAndDesc(nd) == nd);
+                        byte[] bc = this_m.getBytecode();
+                        if (bc == null)
+                            continue;
+                        // extract instructions of method.
+                        Bytecodes.InstructionList il = new Bytecodes.InstructionList(this_m);
+
+                        // update constant pool references in the instructions, and add them to our constant pool.
+                        rewriteMethod(cpr, il);
+                        
+                        // cache the instruction list for later.
+                        newStaticMethods.put(this_m, il);
+                    }
+                    this.const_pool = cpr.finish();
+                    // rebuild method arrays
+                    this.declared_instance_methods = new jq_InstanceMethod[newInstanceMethods.size()];
+                    int j = -1;
+                    for (Iterator i=newInstanceMethods.entrySet().iterator(); i.hasNext(); ) {
+                        Map.Entry e = (Map.Entry)i.next();
+                        jq_InstanceMethod i_m = (jq_InstanceMethod)e.getKey();
+                        Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
+                        if (i_l != null) {
+                            if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for instance method "+i_m+".");
+                            // reset index to match the new constant pool.
+                            i_l.accept(new Bytecodes.EmptyVisitor() {
+                                public void visitCPInstruction(Bytecodes.CPInstruction x) {
+                                    x.setIndex(cpr);
+                                }
+                            });
+                            i_m.setCode(i_l, cpr);
+                        } else {
+                            if (TRACE) SystemInterface.debugmsg("No bytecodes for instance method "+i_m+".");
+                        }
+                        //if (TRACE) SystemInterface.debugmsg("Adding instance method "+i_m+" to array.");
+                        this.declared_instance_methods[++j] = i_m;
+                    }
+                    this.static_methods = new jq_StaticMethod[newStaticMethods.size()];
+                    j = -1;
+                    for (Iterator i=newStaticMethods.entrySet().iterator(); i.hasNext(); ) {
+                        Map.Entry e = (Map.Entry)i.next();
+                        jq_StaticMethod i_m = (jq_StaticMethod)e.getKey();
+                        Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
+                        if (i_l != null) {
+                            if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for static method "+i_m+".");
+                            // reset index to match the new constant pool.
+                            i_l.accept(new Bytecodes.EmptyVisitor() {
+                                public void visitCPInstruction(Bytecodes.CPInstruction x) {
+                                    x.setIndex(cpr);
+                                }
+                            });
+                            i_m.setCode(i_l, cpr);
+                        } else {
+                            if (TRACE) SystemInterface.debugmsg("No bytecodes for static method "+i_m+".");
+                        }
+                        //if (TRACE) SystemInterface.debugmsg("Adding static method "+i_m+" to array.");
+                        this.static_methods[++j] = i_m;
                     }
                 }
                 
@@ -1006,6 +1104,375 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     
     public void merge(jq_Class that) {
+        // initialize constant pool rebuilder
+        final jq_ConstantPool.ConstantPoolRebuilder cpr = rebuildConstantPool(true);
+        
+        // add all instance fields.
+        LinkedList newInstanceFields = new LinkedList();
+        for (int i=0; i<that.declared_instance_fields.length; ++i) {
+            jq_InstanceField that_f = that.declared_instance_fields[i];
+            jq_NameAndDesc nd = merge_convertNameAndDesc(that_f.getNameAndDesc());
+            jq_InstanceField this_f = this.getDeclaredInstanceField(nd);
+            if (this_f != null) {
+                if (TRACE) SystemInterface.debugmsg("Instance field "+this_f+" already exists, skipping.");
+                if (this_f.getAccessFlags() != that_f.getAccessFlags()) {
+                    if (TRACE) 
+                        SystemInterface.debugmsg("Access flags of instance field "+this_f+" from merged class do not match. ("+
+                                                 (int)this_f.getAccessFlags()+"!="+(int)that_f.getAccessFlags()+")");
+                }
+                continue;
+            }
+            this_f = getOrCreateInstanceField(nd);
+            jq.assert(this_f.getState() == STATE_UNLOADED);
+            this_f.load(that_f);
+            if (TRACE) SystemInterface.debugmsg("Adding instance field: "+this_f);
+            this.addDeclaredMember(nd, this_f);
+            newInstanceFields.add(this_f);
+	    cpr.addOther(this_f.getName());
+	    cpr.addOther(this_f.getDesc());
+	    cpr.addAttributeNames(this_f);
+        }
+        if (newInstanceFields.size() > 0) {
+            jq_InstanceField[] ifs = new jq_InstanceField[this.declared_instance_fields.length+newInstanceFields.size()];
+            System.arraycopy(this.declared_instance_fields, 0, ifs, 0, this.declared_instance_fields.length);
+            int j = this.declared_instance_fields.length-1;
+            for (Iterator i=newInstanceFields.iterator(); i.hasNext(); )
+                ifs[++j] = (jq_InstanceField)i.next();
+            this.declared_instance_fields = ifs;
+        }
+        
+        // add all static fields.
+        LinkedList newStaticFields = new LinkedList();
+        for (int i=0; i<that.static_fields.length; ++i) {
+            jq_StaticField that_f = that.static_fields[i];
+            jq_NameAndDesc nd = merge_convertNameAndDesc(that_f.getNameAndDesc());
+            jq_StaticField this_f = this.getDeclaredStaticField(nd);
+            if (this_f != null) {
+                if (TRACE) SystemInterface.debugmsg("Static field "+this_f+" already exists, skipping.");
+                if (this_f.getAccessFlags() != that_f.getAccessFlags()) {
+                    if (TRACE) 
+                        SystemInterface.debugmsg("Access flags of static field "+this_f+" from merged class do not match. ("+
+                                                 (int)this_f.getAccessFlags()+"!="+(int)that_f.getAccessFlags()+")");
+                }
+                continue;
+            }
+            this_f = getOrCreateStaticField(nd);
+            jq.assert(this_f.getState() == STATE_UNLOADED);
+            this_f.load(that_f);
+            if (TRACE) SystemInterface.debugmsg("Adding static field: "+this_f);
+            this.addDeclaredMember(nd, this_f);
+            newStaticFields.add(this_f);
+	    cpr.addOther(this_f.getName());
+	    cpr.addOther(this_f.getDesc());
+	    cpr.addAttributeNames(this_f);
+        }
+        if (newStaticFields.size() > 0) {
+            jq_StaticField[] ifs = new jq_StaticField[this.static_fields.length+newStaticFields.size()];
+            System.arraycopy(this.static_fields, 0, ifs, 0, this.static_fields.length);
+            int j = this.static_fields.length-1;
+            for (Iterator i=newStaticFields.iterator(); i.hasNext(); ) {
+                ifs[++j] = (jq_StaticField)i.next();
+                this.static_data_size += ifs[j].getWidth();
+            }
+            this.static_fields = ifs;
+        }
+        
+        // visit all instance methods.
+        LinkedHashMap newInstanceMethods = new LinkedHashMap();
+        for (int i=0; i<that.declared_instance_methods.length; ++i) {
+            jq_InstanceMethod that_m = that.declared_instance_methods[i];
+            jq_NameAndDesc nd = merge_convertNameAndDesc(that_m.getNameAndDesc());
+            jq_InstanceMethod this_m = this.getDeclaredInstanceMethod(nd);
+            byte[] bc = that_m.getBytecode();
+            if (bc == null) {
+                if (this_m != null) {
+                    if (TRACE) SystemInterface.debugmsg("Using existing body for instance method "+this_m+".");
+                } else {
+                    System.err.println("Body of method "+that_m+" doesn't already exist!");
+                }
+                continue;
+            }
+            // extract instructions of method.
+            Bytecodes.InstructionList il = new Bytecodes.InstructionList(that_m);
+            
+            // update constant pool references in the instructions, and add them to our constant pool.
+            rewriteMethod(cpr, il);
+            
+            if (this_m != null) {
+                // method exists, use that one.
+                if (TRACE) SystemInterface.debugmsg("Using existing instance method object "+this_m+".");
+            } else {
+                if (TRACE) SystemInterface.debugmsg("Creating new instance method object "+nd+".");
+                this_m = getOrCreateInstanceMethod(nd);
+                this.addDeclaredMember(nd, this_m);
+            }
+            this_m.load(that_m);
+            
+            // cache the instruction list for later.
+            newInstanceMethods.put(this_m, il);
+        }
+        for (int i=0; i<this.declared_instance_methods.length; ++i) {
+            jq_InstanceMethod this_m = this.declared_instance_methods[i];
+            if (newInstanceMethods.containsKey(this_m)) {
+                if (TRACE) SystemInterface.debugmsg("Skipping replaced instance method object "+this_m+".");
+                continue;
+            }
+            byte[] bc = this_m.getBytecode();
+            if (bc == null) {
+                if (TRACE) SystemInterface.debugmsg("Skipping native/abstract instance method object "+this_m+".");
+                newInstanceMethods.put(this_m, null);
+                continue;
+            }
+            
+            // extract instruction list.
+            Bytecodes.InstructionList il = new Bytecodes.InstructionList(this_m);
+            
+            // add constant pool references from instruction list.
+            cpr.addCode(il);
+            
+            // cache the instruction list for later.
+            newInstanceMethods.put(this_m, il);
+        }
+        
+        // visit all static methods.
+        LinkedHashMap newStaticMethods = new LinkedHashMap();
+        for (int i=0; i<that.static_methods.length; ++i) {
+            jq_StaticMethod that_m = that.static_methods[i];
+            Bytecodes.InstructionList il;
+            jq_StaticMethod this_m;
+            if (that_m instanceof jq_ClassInitializer) {
+                if (TRACE) SystemInterface.debugmsg("Creating special static method for "+that_m+" class initializer.");
+                jq.assert(that_m.getBytecode() != null);
+                Utf8 newname = Utf8.get("clinit_"+that.getJDKName());
+                jq_NameAndDesc nd = new jq_NameAndDesc(newname, that_m.getDesc());
+                this_m = getOrCreateStaticMethod(nd);
+                this.addDeclaredMember(nd, this_m);
+                this_m.load(that_m);
+                
+                // add a call to the special method in our class initializer.
+                jq_ClassInitializer clinit = getClassInitializer();
+                Bytecodes.InstructionList il2;
+                if (clinit == null) {
+                    jq_NameAndDesc nd2 = new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V"));
+                    clinit = (jq_ClassInitializer)getOrCreateStaticMethod(nd2);
+                    this.addDeclaredMember(nd2, clinit);
+                    clinit.load((char)(ACC_PUBLIC | ACC_STATIC), (char)0, (char)0, new byte[0],
+                           new jq_TryCatchBC[0], new jq_LineNumberBC[0], new HashMap());
+                    if (TRACE) SystemInterface.debugmsg("Created class initializer "+clinit);
+                    il2 = new Bytecodes.InstructionList();
+                    Bytecodes.RETURN re = new Bytecodes.RETURN();
+                    il2.append(re);
+                    il2.setPositions();
+                    newStaticMethods.put(clinit, il2);
+                } else {
+                    if (TRACE) SystemInterface.debugmsg("Using existing class initializer "+clinit);
+                    il2 = new Bytecodes.InstructionList(clinit);
+                }
+                Bytecodes.INVOKESTATIC is = new Bytecodes.INVOKESTATIC(this_m);
+                il2.insert(is);
+                cpr.addMember(this_m);
+                
+                // extract instructions of method.
+                il = new Bytecodes.InstructionList(that_m);
+            } else {
+                jq_NameAndDesc nd = merge_convertNameAndDesc(that_m.getNameAndDesc());
+                this_m = this.getDeclaredStaticMethod(nd);
+                byte[] bc = that_m.getBytecode();
+                if (bc == null) {
+                    if (this_m != null) {
+                        if (TRACE) SystemInterface.debugmsg("Using existing body for static method "+this_m+".");
+                    } else {
+                        System.err.println("Body of method "+that_m+" doesn't already exist!");
+                    }
+                    continue;
+                }
+                // extract instructions of method.
+                il = new Bytecodes.InstructionList(that_m);
+                
+                if (this_m != null) {
+                    // method exists, use that one.
+                    if (TRACE) SystemInterface.debugmsg("Using existing static method object "+this_m+".");
+                } else {
+                    this_m = getOrCreateStaticMethod(nd);
+                    this.addDeclaredMember(nd, this_m);
+                    if (TRACE) SystemInterface.debugmsg("Created new static method object "+this_m+".");
+                }
+                this_m.load(that_m);
+            }
+            
+            // update constant pool references in the instructions, and add them to our constant pool.
+            rewriteMethod(cpr, il);
+            
+            // cache the instruction list for later.
+            newStaticMethods.put(this_m, il);
+        }
+        for (int i=0; i<this.static_methods.length; ++i) {
+            jq_StaticMethod this_m = this.static_methods[i];
+            if (newStaticMethods.containsKey(this_m)) {
+                if (TRACE) SystemInterface.debugmsg("Skipping replaced static method object "+this_m+".");
+                continue;
+            }
+            byte[] bc = this_m.getBytecode();
+            if (bc == null) {
+                if (TRACE) SystemInterface.debugmsg("Skipping native/abstract static method object "+this_m+".");
+                newStaticMethods.put(this_m, null);
+                continue;
+            }
+            
+            // extract instruction list.
+            Bytecodes.InstructionList il = new Bytecodes.InstructionList(this_m);
+            
+            // add constant pool references from instruction list.
+            cpr.addCode(il);
+            
+            // cache the instruction list for later.
+            newStaticMethods.put(this_m, il);
+        }
+        
+        // nothing more to add to constant pool, finish it.
+        this.const_pool = cpr.finish();
+        
+        // rebuild method arrays.
+        this.declared_instance_methods = new jq_InstanceMethod[newInstanceMethods.size()];
+        int j = -1;
+        for (Iterator i=newInstanceMethods.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            jq_InstanceMethod i_m = (jq_InstanceMethod)e.getKey();
+            Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
+            if (i_l != null) {
+                if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for instance method "+i_m+".");
+                // reset index to match the new constant pool.
+                i_l.accept(new Bytecodes.EmptyVisitor() {
+                    public void visitCPInstruction(Bytecodes.CPInstruction x) {
+                        x.setIndex(cpr);
+                    }
+                });
+                i_m.setCode(i_l, cpr);
+            } else {
+                if (TRACE) SystemInterface.debugmsg("No bytecodes for instance method "+i_m+".");
+            }
+            //if (TRACE) SystemInterface.debugmsg("Adding instance method "+i_m+" to array.");
+            this.declared_instance_methods[++j] = i_m;
+        }
+        this.static_methods = new jq_StaticMethod[newStaticMethods.size()];
+        j = -1;
+        for (Iterator i=newStaticMethods.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            jq_StaticMethod i_m = (jq_StaticMethod)e.getKey();
+            Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
+            if (i_l != null) {
+                if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for static method "+i_m+".");
+                // reset index to match the new constant pool.
+                i_l.accept(new Bytecodes.EmptyVisitor() {
+                    public void visitCPInstruction(Bytecodes.CPInstruction x) {
+                        x.setIndex(cpr);
+                    }
+                });
+                i_m.setCode(i_l, cpr);
+            } else {
+                if (TRACE) SystemInterface.debugmsg("No bytecodes for static method "+i_m+".");
+            }
+            //if (TRACE) SystemInterface.debugmsg("Adding static method "+i_m+" to array.");
+            this.static_methods[++j] = i_m;
+        }
+        if (TRACE) SystemInterface.debugmsg("Finished merging class "+this+".");
+    }
+    
+    static Utf8 merge_convertDesc(Utf8 utf8) {
+        String s = utf8.toString();
+        int i = s.indexOf("ClassLib/");
+        if (i == -1) return utf8;
+        for (;;) {
+            int j = s.indexOf('/', i+10);
+            if (j == -1) return Utf8.get(s);
+            int k = s.indexOf(';', j);
+            String t = s.substring(j+1, k).replace('/','.');
+            try {
+                Class.forName(t);
+                s = s.substring(0, i) + s.substring(j+1);
+            } catch (ClassNotFoundException x) {
+                if (TRACE) SystemInterface.debugmsg("When converting classlib desc, class "+t+" not found.");
+            }
+            i = s.indexOf("ClassLib/", i+1);
+            if (i == -1) break;
+        }
+        //if (TRACE) SystemInterface.debugmsg("converted desc: "+utf8+" to "+s);
+        return Utf8.get(s);
+    }
+    
+    jq_NameAndDesc merge_convertNameAndDesc(jq_NameAndDesc t) {
+        Utf8 u = merge_convertDesc(t.getDesc());
+        Utf8 n = t.getName();
+        if (this == PrimordialClassLoader.getJavaLangObject()) {
+        //if (this.super_class == null) {
+            // trim initial "_", if it exists.
+            String s = n.toString();
+            if (s.charAt(0) == '_') {
+                n = Utf8.get(s.substring(1));
+                return new jq_NameAndDesc(n, u);
+            }
+        }
+        if (u == t.getDesc())
+            return t;
+        else
+            return new jq_NameAndDesc(n, u);
+    }
+    
+    static jq_Reference merge_convertCPEntry(jq_Reference t) {
+        Utf8 u = merge_convertDesc(t.getDesc());
+        if (u == t.getDesc())
+            return t;
+        else
+            return (jq_Reference)ClassLib.ClassLibInterface.i.getOrCreateType(t.class_loader, u);
+    }
+    
+    static jq_Member merge_convertCPEntry(jq_Member t) {
+        jq_NameAndDesc u1 = t.getDeclaringClass().merge_convertNameAndDesc(t.getNameAndDesc());
+        Utf8 u2 = merge_convertDesc(t.getDeclaringClass().getDesc());
+        if (u1 == t.getNameAndDesc() && u2 == t.getDeclaringClass().getDesc())
+            return t;
+        else {
+            jq_Class c;
+            if (u2 != t.getDeclaringClass().getDesc())
+                c = (jq_Class)ClassLib.ClassLibInterface.i.getOrCreateType(t.getDeclaringClass().class_loader, u2);
+            else
+                c = t.getDeclaringClass();
+            if (t instanceof jq_InstanceField) {
+                return c.getOrCreateInstanceField(u1);
+            } else if (t instanceof jq_StaticField) {
+                return c.getOrCreateStaticField(u1);
+            } else if (t instanceof jq_InstanceMethod) {
+                return c.getOrCreateInstanceMethod(u1);
+            } else if (t instanceof jq_StaticMethod) {
+                return c.getOrCreateStaticMethod(u1);
+            } else {
+                jq.UNREACHABLE(); return null;
+            }
+        }
+    }
+    
+    private void rewriteMethod(jq_ConstantPool.ConstantPoolRebuilder cp, Bytecodes.InstructionList il) {
+        final jq_ConstantPool.ConstantPoolRebuilder cpr = cp;
+        il.accept(new Bytecodes.EmptyVisitor() {
+            public void visitCPInstruction(Bytecodes.CPInstruction x) {
+                Object o = x.getObject();
+		if (o instanceof String) {
+		    cpr.addString((String)o);
+		} else if (o instanceof jq_Type) {
+                    if (o instanceof jq_Reference)
+                        x.setObject(o = merge_convertCPEntry((jq_Reference)o));
+		    cpr.addType((jq_Type)o);
+		} else if (o instanceof jq_Member) {
+                    x.setObject(o = merge_convertCPEntry((jq_Member)o));
+		    cpr.addMember((jq_Member)o);
+		} else {
+		    cpr.addOther(o);
+		}
+            }
+        });
+    }
+    
+    public void merge_old(jq_Class that) {
         // initialize constant pool adder
         jq_ConstantPool.Adder cp_adder = const_pool.getAdder();
         
@@ -1026,7 +1493,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // overridden static method
                 char access_flags = sm.getAccessFlags();
                 if (classfield_index == 0) {
-                    jq_StaticField that_sf = that.getStaticField(new jq_NameAndDesc(Utf8.get("_class"), Utf8.get("LClazz/jq_Class;")));
+                    jq_StaticField that_sf = that.getDeclaredStaticField(new jq_NameAndDesc(Utf8.get("_class"), Utf8.get("LClazz/jq_Class;")));
                     jq.assert(that_sf != null);
                     classfield_index = cp_adder.add(that_sf, CONSTANT_ResolvedSFieldRef);
                 }
@@ -1632,10 +2099,11 @@ uphere2:
         }
     }
     
-    public jq_ConstantPool.ConstantPoolRebuilder rebuildConstantPool() {
+    public jq_ConstantPool.ConstantPoolRebuilder rebuildConstantPool(boolean addCode) {
 	jq_ConstantPool.ConstantPoolRebuilder cpr = new jq_ConstantPool.ConstantPoolRebuilder();
 	cpr.addType(this);
-	cpr.addType(this.getSuperclass());
+        if (this.getSuperclass() != null)
+            cpr.addType(this.getSuperclass());
 	for (int i=0; i < declared_interfaces.length; ++i) {
 	    jq_Class f = declared_interfaces[i];
 	    cpr.addType(f);
@@ -1659,14 +2127,16 @@ uphere2:
 	    cpr.addOther(f.getName());
 	    cpr.addOther(f.getDesc());
 	    cpr.addAttributeNames(f);
-	    cpr.addCode(f); cpr.addExceptions(f);
+	    if (addCode) cpr.addCode(f);
+            cpr.addExceptions(f);
 	}
 	for (int i=0; i < static_methods.length; ++i) {
 	    jq_StaticMethod f = static_methods[i];
 	    cpr.addOther(f.getName());
 	    cpr.addOther(f.getDesc());
 	    cpr.addAttributeNames(f);
-	    cpr.addCode(f); cpr.addExceptions(f);
+	    if (addCode) cpr.addCode(f);
+            cpr.addExceptions(f);
 	}
 	Utf8 sourcefile = getSourceFile();
 	if (sourcefile != null) {
@@ -1687,7 +2157,7 @@ uphere2:
 	out.writeChar(minor_version);
 	out.writeChar(major_version);
 	
-	jq_ConstantPool.ConstantPoolRebuilder cpr = rebuildConstantPool();
+	jq_ConstantPool.ConstantPoolRebuilder cpr = rebuildConstantPool(true);
 	cpr.dump(out);
 	
 	out.writeChar(access_flags);

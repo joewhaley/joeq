@@ -257,7 +257,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     int length = Array.getLength(o);
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
-                        Object o2 = v[k];
+                        Object o2 = obj_trav.mapValue(v[k]);
                         if (o2 != null) {
                             getOrAllocateObject(o2);
                             addDataReloc(addr+(k<<2), Unsafe.addressOf(o2));
@@ -827,7 +827,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     int length = Array.getLength(o);
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
-                        Object o2 = v[k];
+                        Object o2 = obj_trav.mapValue(v[k]);
 			if (o2 == p) {
 			    System.err.println("Possible path: ["+k+"]");
 			    visited.add(w);
@@ -951,7 +951,8 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 } else {
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
-                        try { write_ulong(out, getAddressOf(v[k])); }
+                        Object o2 = obj_trav.mapValue(v[k]);
+                        try { write_ulong(out, getAddressOf(o2)); }
                         catch (UnknownObjectException x) {
                             System.err.println("Object array element #"+k);
                             //x.appendMessage("Object array element #"+k+" in ");

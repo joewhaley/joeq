@@ -21,6 +21,7 @@ import java.io.DataOutput;
 import jq;
 import ClassLib.ClassLibInterface;
 import Run_Time.StackWalker;
+import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.Utf8;
@@ -50,14 +51,31 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         jq.assert(nd != null);
         this.clazz = clazz; this.nd = nd;
         Member c = null;
-        if (!jq.Bootstrapping) {
+        try {
             if (this instanceof jq_Field) {
-                c = ClassLibInterface.i.createNewField((jq_Field)this);
+                if (!jq.Bootstrapping) {
+                    c = ClassLibInterface.i.createNewField((jq_Field)this);
+                } else {
+                    c = Reflection.getJDKField(Class.forName(clazz.getJDKName()), nd.getName().toString());
+                }
             } else if (this instanceof jq_Initializer) {
-                c = ClassLibInterface.i.createNewConstructor((jq_Initializer)this);
+                if (!jq.Bootstrapping) {
+                    c = ClassLibInterface.i.createNewConstructor((jq_Initializer)this);
+                } else {
+                    Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
+                    c = Reflection.getJDKConstructor(Class.forName(clazz.getJDKName()), args);
+                }
             } else {
-                c = ClassLibInterface.i.createNewMethod((jq_Method)this);
+                if (!jq.Bootstrapping) {
+                    c = ClassLibInterface.i.createNewMethod((jq_Method)this);
+                } else {
+                    Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
+                    c = Reflection.getJDKMethod(Class.forName(clazz.getJDKName()), nd.getName().toString(), args);
+                }
             }
+        } catch (ClassNotFoundException x) {
+            System.err.println("Error! Class "+clazz+" not found in host JVM.");
+            x.printStackTrace();
         }
         this.member_object = c;
     }

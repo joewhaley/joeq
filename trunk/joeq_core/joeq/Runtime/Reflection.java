@@ -96,11 +96,11 @@ public abstract class Reflection {
     // Map between our jq_Member objects and JDK Member objects
     public static final jq_Field getJQMember(Field f) {
         if (!jq.Bootstrapping) return ClassLibInterface.i.getJQField(f);
-        jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
+        jq_Class c = (jq_Class)getJQType(f.getDeclaringClass()); c.load();
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
         if (m == null) {
-            jq.UNREACHABLE(f.toString());
+            jq.UNREACHABLE(c+"."+nd+" jdk: "+f.toString());
         }
         return m;
     }
@@ -139,8 +139,18 @@ public abstract class Reflection {
         }
         return m;
     }
+    public static boolean USE_DECLARED_FIELDS_CACHE = true;
+    private static java.util.HashMap declaredFieldsCache;
     public static final Field getJDKField(Class c, String name) {
-        Field[] fields = c.getDeclaredFields();
+        Field[] fields = null;
+        if (USE_DECLARED_FIELDS_CACHE) {
+            if (declaredFieldsCache == null) declaredFieldsCache = new java.util.HashMap();
+            else fields = (Field[])declaredFieldsCache.get(c);
+            if (fields == null)
+                declaredFieldsCache.put(c, fields = c.getDeclaredFields());
+        } else {
+            fields = c.getDeclaredFields();
+        }
         for (int i=0; i<fields.length; ++i) {
             Field f2 = fields[i];
             if (f2.getName().equals(name)) {
@@ -225,6 +235,23 @@ uphere:
             }
             return ret;
         }
+    }
+    
+    public static Class[] getArgTypesFromDesc(Utf8 desc) {
+        Utf8.MethodDescriptorIterator i = desc.getParamDescriptors();
+        // count them up
+        int num = 0;
+        while (i.hasNext()) { i.nextUtf8(); ++num; }
+        // get them for real
+        Class[] param_types = new Class[num];
+        i = desc.getParamDescriptors();
+        for (int j=0; j<num; ++j) {
+            Utf8 pd = (Utf8)i.nextUtf8();
+            jq_Type t = PrimordialClassLoader.loader.getOrCreateBSType(pd);
+            param_types[j] = getJDKType(t);
+        }
+        //Utf8 rd = i.getReturnDescriptor();
+        return param_types;
     }
     
     // reflective invocations.
@@ -566,6 +593,21 @@ uphere:
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(o), f.getDeclaringClass()));
         return (Unsafe.peek(Unsafe.addressOf(o)+f.getOffset())&0xFF)!=0;
     }
+    public static Object getfield(Object o, jq_InstanceField f) {
+        if (jq.Bootstrapping) return obj_trav.getInstanceFieldValue(o, f);
+        jq_Type t = f.getType();
+        if (t.isReferenceType()) return getfield_A(o, f);
+        if (t == jq_Primitive.INT) return new Integer(getfield_I(o, f));
+        if (t == jq_Primitive.FLOAT) return new Float(getfield_F(o, f));
+        if (t == jq_Primitive.LONG) return new Long(getfield_L(o, f));
+        if (t == jq_Primitive.DOUBLE) return new Double(getfield_D(o, f));
+        if (t == jq_Primitive.BYTE) return new Byte(getfield_B(o, f));
+        if (t == jq_Primitive.CHAR) return new Character(getfield_C(o, f));
+        if (t == jq_Primitive.SHORT) return new Short(getfield_S(o, f));
+        if (t == jq_Primitive.BOOLEAN) return new Boolean(getfield_Z(o, f));
+        jq.UNREACHABLE();
+        return null;
+    }
     public static void putfield_I(Object o, jq_InstanceField f, int v) {
         jq.assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
         if (jq.Bootstrapping) {
@@ -730,6 +772,15 @@ uphere:
     public static void putstatic_C(jq_StaticField f, char v) {
         jq.assert(f.getType() == jq_Primitive.CHAR);
         f.getDeclaringClass().setStaticData(f, (int)v);
+    }
+    
+    public static int arraylength(Object o) {
+        jq.assert(getTypeOf(o).isArrayType());
+        if (!jq.Bootstrapping) return Unsafe.peek(Unsafe.addressOf(o) + Allocator.ObjectLayout.ARRAY_LENGTH_OFFSET);
+        return Array.getLength(o);
+    }
+    public static Object arrayload_A(Object[] o, int i) {
+        return obj_trav.mapValue(o[i]);
     }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");

@@ -51,6 +51,33 @@ public class ObjectTraverser {
         }
          */
         if (TRACE) out.println("Getting value of static field "+c+"."+fieldName+" through reflection");
+        Field f2 = Reflection.getJDKField(c, fieldName);
+        if (f2 == null) {
+            for (Iterator i=ClassLibInterface.i.getImplementationClassDescs(f.getDeclaringClass().getDesc()); i.hasNext(); ) {
+                UTF.Utf8 u = (UTF.Utf8)i.next();
+                if (TRACE) out.println("Checking mirror class "+u);
+                String s = u.toString();
+                jq.assert(s.charAt(0) == 'L');
+                try {
+                    c = Class.forName(s.substring(1, s.length()-1).replace('/', '.'));
+                    f2 = Reflection.getJDKField(c, fieldName);
+                    if (f2 != null) break;
+                } catch (ClassNotFoundException x) {
+                    if (TRACE) out.println("Mirror class "+s+" doesn't exist");
+                }
+            }
+        }
+        jq.assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
+        f2.setAccessible(true);
+        jq.assert((f2.getModifiers() & Modifier.STATIC) != 0);
+        try {
+            return mapValue(f2.get(null));
+        } catch (IllegalAccessException x) {
+            jq.UNREACHABLE();
+            return null;
+        }
+        
+        /*
         Class c2 = c;
         while (c != null) {
             Field[] fields = c.getDeclaredFields();
@@ -71,6 +98,7 @@ public class ObjectTraverser {
         }
         jq.UNREACHABLE("host jdk does not contain static field "+c2.getName()+"."+fieldName);
         return null;
+         */
     }
     
     public Object getInstanceFieldValue(Object o, jq_InstanceField f) {
@@ -94,6 +122,17 @@ public class ObjectTraverser {
             return mapValue(res);
         }
         if (TRACE) out.println("Getting value of instance field "+c+"."+fieldName+" through reflection");
+        Field f2 = Reflection.getJDKField(c, fieldName);
+        jq.assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+        f2.setAccessible(true);
+        jq.assert((f2.getModifiers() & Modifier.STATIC) == 0);
+        try {
+            return mapValue(f2.get(o));
+        } catch (IllegalAccessException x) {
+            jq.UNREACHABLE();
+            return null;
+        }
+        /*
         Class c2 = c;
         while (c != null) {
             Field[] fields = c.getDeclaredFields();
@@ -114,6 +153,7 @@ public class ObjectTraverser {
         }
         jq.UNREACHABLE("host jdk does not contain instance field "+c2.getName()+"."+fieldName);
         return null;
+         */
     }
     private static Object NO_OBJECT = new Object();
     private HashMap mapped_objects = new HashMap();
@@ -323,6 +363,16 @@ public class ObjectTraverser {
             return;
         }
         if (TRACE) out.println("Setting value of instance field "+c+"."+fieldName+" through reflection");
+        Field f2 = Reflection.getJDKField(c, fieldName);
+        jq.assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+        f2.setAccessible(true);
+        jq.assert((f2.getModifiers() & Modifier.STATIC) == 0);
+        try {
+            f2.set(o, v);
+        } catch (IllegalAccessException x) {
+            jq.UNREACHABLE();
+        }
+        /*
         Class c2 = c;
         while (c != null) {
             Field[] fields = c.getDeclaredFields();
@@ -342,6 +392,7 @@ public class ObjectTraverser {
             c = c.getSuperclass();
         }
         jq.UNREACHABLE("host jdk does not contain instance field "+c2.getName()+"."+fieldName);
+         */
     }
     public boolean putMappedInstanceFieldValue(Object o, Class c, String fieldName, Object v) {
         if (c == Class.class) {

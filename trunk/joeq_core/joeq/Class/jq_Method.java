@@ -49,6 +49,17 @@ public abstract class jq_Method extends jq_Member {
         parseMethodSignature();
     }
     
+    public final void load(jq_Method that) {
+        this.access_flags = that.access_flags;
+        this.max_stack = that.max_stack;
+        this.max_locals = that.max_locals;
+        this.bytecode = that.bytecode;
+        this.exception_table = that.exception_table;
+        this.line_num_table = that.line_num_table;
+        this.codeattribMap = that.codeattribMap;
+        state = STATE_LOADED;
+    }
+    
     public final void load(char access_flags, char max_stack, char max_locals, byte[] bytecode,
                            jq_TryCatchBC[] exception_table, jq_LineNumberBC[] line_num_table,
                            Map codeattribMap) {
@@ -161,21 +172,68 @@ public abstract class jq_Method extends jq_Member {
 	}
     }
 
-    public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
+    public void setCode(Bytecodes.InstructionList il, jq_ConstantPool.ConstantPoolRebuilder cpr) {
+        final jq_ConstantPool.ConstantPoolRebuilder my_cpr = cpr;
+        Bytecodes.EmptyVisitor v = new Bytecodes.EmptyVisitor() {
+            public void visitCPInstruction(Bytecodes.CPInstruction i) {
+                i.setIndex(my_cpr);
+                jq.assert(i.getIndex() != 0);
+            }
+        };
+        il.accept(v);
+        Bytecodes.CodeException[] ex_table = new Bytecodes.CodeException[exception_table.length];
+        for (int i=0; i<ex_table.length; ++i) {
+            ex_table[i] = new Bytecodes.CodeException(il, exception_table[i]);
+        }
+        Bytecodes.LineNumber[] line_num = new Bytecodes.LineNumber[line_num_table.length];
+        for (int i=0; i<line_num.length; ++i) {
+            line_num[i] = new Bytecodes.LineNumber(il, line_num_table[i]);
+        }
+        bytecode = il.getByteCode();
+        // TODO: recalculate max_stack and max_locals.
+        for (int i=0; i<ex_table.length; ++i) {
+            exception_table[i] = ex_table[i].finish();
+        }
+        for (int i=0; i<line_num.length; ++i) {
+            line_num_table[i] = line_num[i].finish();
+        }
+    }
+    
+    public void update(jq_ConstantPool.ConstantPoolRebuilder cpr) {
 	if (bytecode != null) {
 	    Bytecodes.InstructionList il = new Bytecodes.InstructionList(getDeclaringClass().getCP(), bytecode);
-	    final jq_ConstantPool.ConstantPoolRebuilder my_cpr = cpr;
-	    Bytecodes.EmptyVisitor v = new Bytecodes.EmptyVisitor() {
-		public void visitCPInstruction(Bytecodes.CPInstruction i) {
-		    i.setIndex(my_cpr);
-		    jq.assert(i.getIndex() != 0);
-		}
-	    };
-	    il.accept(v);
-	    bytecode = il.getByteCode();
-	    attributes.put(Utf8.get("Code"), bytecode);
-	    // TODO: LocalVariableTable
-	}
+            setCode(il, cpr);
+        }
+    }
+    
+    public void remakeCodeAttribute(jq_ConstantPool.ConstantPoolRebuilder cpr) {
+        if (bytecode != null) {
+            // TODO: include line number table.
+            int size = 8 + bytecode.length + 2 + 8*exception_table.length + 2;
+            byte[] code = new byte[size];
+            jq.charToTwoBytes(max_stack, code, 0);
+            jq.charToTwoBytes(max_locals, code, 2);
+            jq.intToFourBytes(bytecode.length, code, 4);
+            System.arraycopy(bytecode, 0, code, 8, bytecode.length);
+            jq.charToTwoBytes((char)exception_table.length, code, 8+bytecode.length);
+            int idx = 10+bytecode.length;
+            for (int i=0; i<exception_table.length; ++i) {
+                jq.charToTwoBytes(exception_table[i].getStartPC(), code, idx);
+                jq.charToTwoBytes(exception_table[i].getEndPC(), code, idx+2);
+                jq.charToTwoBytes(exception_table[i].getHandlerPC(), code, idx+4);
+                jq.charToTwoBytes(cpr.get(exception_table[i].getExceptionType()), code, idx+6);
+                idx += 8;
+            }
+            char attrib_count = (char)0; // TODO: code attributes
+            // TODO: LocalVariableTable
+            jq.charToTwoBytes(attrib_count, code, idx);
+            attributes.put(Utf8.get("Code"), code);
+        }
+    }
+    
+    public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
+        update(cpr);
+        remakeCodeAttribute(cpr);
         // TODO: Exceptions
 	super.dumpAttributes(out, cpr);
     }
@@ -256,10 +314,16 @@ public abstract class jq_Method extends jq_Member {
         jq.assert(getBytecode() != null);
         return max_stack;
     }
+    public void setMaxStack(char m) {
+        this.max_stack = m;
+    }
     public char getMaxLocals() {
         chkState(STATE_LOADED);
         jq.assert(getBytecode() != null);
         return max_locals;
+    }
+    public void setMaxLocals(char m) {
+        this.max_locals = m;
     }
     public byte[] getBytecode() {
         chkState(STATE_LOADED);
