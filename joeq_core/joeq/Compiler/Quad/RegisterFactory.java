@@ -108,15 +108,62 @@ public class RegisterFactory {
     }
     
     public boolean isLocal(Operand op, int index, jq_Type type) {
-	if (index >= getLocalSize()) return false;
+	if (index >= getLocalSize(type)) return false;
         if (op instanceof RegisterOperand) {
             Register r = ((RegisterOperand)op).getRegister();
             if (getLocal(index, type) == r) return true;
         }
         return false;
     }
+    
+    public Register makeTempReg(jq_Type t) {
+        if (t.isReferenceType()) {
+            int i = stack_A.size();
+            stack_A.add(i, new Register(i, true));
+	    return (Register)stack_A.get(i);
+	}
+        if (t.isIntLike()) {
+            int i = stack_I.size();
+            stack_I.add(i, new Register(i, true));
+	    return (Register)stack_I.get(i);
+	}
+        if (t == jq_Primitive.FLOAT) {
+            int i = stack_F.size();
+            stack_F.add(i, new Register(i, true));
+	    return (Register)stack_F.get(i);
+	}
+        if (t == jq_Primitive.LONG) {
+            int i = stack_L.size();
+            stack_L.add(i, new Register(i, true));
+	    return (Register)stack_L.get(i);
+	}
+        if (t == jq_Primitive.DOUBLE) {
+            int i = stack_D.size();
+            stack_D.add(i, new Register(i, true));
+	    return (Register)stack_D.get(i);
+	}
+        jq.UNREACHABLE();
+        return null;
+    }
 
-    private int getLocalSize() { return local_I.size(); }
+    public int getLocalSize(jq_Type t) {
+        if (t.isReferenceType()) return local_A.size();
+        if (t.isIntLike()) return local_I.size();
+        if (t == jq_Primitive.FLOAT) return local_F.size();
+        if (t == jq_Primitive.LONG) return local_L.size();
+        if (t == jq_Primitive.DOUBLE) return local_D.size();
+        jq.UNREACHABLE();
+        return 0;
+    }
+    public int getStackSize(jq_Type t) {
+        if (t.isReferenceType()) return stack_A.size();
+        if (t.isIntLike()) return stack_I.size();
+        if (t == jq_Primitive.FLOAT) return stack_F.size();
+        if (t == jq_Primitive.LONG) return stack_L.size();
+        if (t == jq_Primitive.DOUBLE) return stack_D.size();
+        jq.UNREACHABLE();
+        return 0;
+    }
 
     public RegisterOperand makeGuardReg() {
         return new RegisterOperand(new Register(-1, true), null);
