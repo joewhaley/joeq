@@ -1265,19 +1265,21 @@ public class PA {
                     addToCHA(T_bdd, Nmap.get(javaLangObject_fakeclone), m);     // for super.clone()
                 }
                 if (m == null) continue;
+                //System.out.println("n = " + n + ", m = " + m);
                 
                 if(USE_BOGUS_SUMMARIES && m != null) {
-                        jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
-                        if(replacement != null) {
-                                if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
-                                            " with a call to "+ replacement);
-                        
+                    jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
+                    if(replacement != null) {
+                        if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
+                                        " with a call to "+ replacement);
+                    
                         addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
                         continue;
-                    }                    
+                    }                 
                 }
                 
                 if(USE_REFLECTION_PROVIDER && m != null && ReflectionInformationProvider.isNewInstance(n)){
+                    if(TRACE_REFLECTION) System.out.println("Found a reflective call to " + m);
                     Collection/*<jq_Method>*/ targets = getReflectionProvider().getNewInstanceTargets(n);
                     if(targets != null){
                         for(Iterator iter = targets.iterator(); iter.hasNext();){
@@ -1288,6 +1290,8 @@ public class PA {
                             addToCHA(T_bdd, Nmap.get(target), target);
                         }
                         continue;
+                    }else{
+                        if(TRACE_REFLECTION) System.out.println("No reflective targets for a call to " + m);    
                     }                    
                 }
             
@@ -1311,7 +1315,7 @@ public class PA {
         }
     }
     ReflectionInformationProvider reflectionInformationProvider = null;
-    private ReflectionInformationProvider getReflectionProvider() {
+    public ReflectionInformationProvider getReflectionProvider() {
         if(this.reflectionInformationProvider == null){
             this.reflectionInformationProvider = new ReflectionInformationProvider.CribSheetReflectionInformationProvider();            
         }

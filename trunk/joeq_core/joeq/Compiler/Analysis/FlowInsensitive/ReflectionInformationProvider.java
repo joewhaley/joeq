@@ -150,7 +150,10 @@ public abstract class ReflectionInformationProvider {
         String className = target.getDeclaringClass().getName(); 
         String methodName = target.getName().toString();
         
-        return className.equals("java.lang.Class") && methodName.equals("newInstance");
+        if(!className.equals("java.lang.Class")) return false;
+        if(!methodName.equals("newInstance")) return false;
+        
+        return true;
     }
 
     /**
