@@ -29,6 +29,8 @@ public interface PointerAnalysisResults {
     /** Returns the set of potentially-modified locations of the
      * given call (and transitively any calls the target may make).  Each
      * location is represented by an SSALocation.
+     * 
+     * a.f = b;  everything that 'a.f' can point to
      */
     Set/*<SSALocation>*/ mod(ProgramLocation call);
     
@@ -36,21 +38,13 @@ public interface PointerAnalysisResults {
      *  Returns the set of potentially-referenced locations of the
      * given call (and transitively any calls the target may make).  Each
      * location is represented by an SSALocation.
+     * 
+     * a = b.f;  everything that 'b.f' can point to
      */
     Set/*<SSALocation>*/ ref(ProgramLocation call);
-
-    
-    //-------------- 2. Sets of affected locations for a LOAD or a STORE --------------//
-    
-    /** 
-     * Returns the set of locations that the load/store instruction at the
-     * given location can possibly reference.  Each location is represented
-     * by an SSALocation.
-     */
-    Set/*<SSALocation>*/ pointsTo(ProgramLocation op);
     
     
-    //-------------- 3. Aliasing of parameters                          --------------//
+    //-------------- 2. Aliasing of parameters                          --------------//
     
     /**
      * Returns a set of location/contextset pairs of locations that may be
