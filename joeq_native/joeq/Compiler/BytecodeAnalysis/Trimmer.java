@@ -218,7 +218,7 @@ public class Trimmer {
     
     class TrimmerVisitor extends BytecodeVisitor {
         
-        jq_Method getstatic_method;
+        //jq_Method getstatic_method;
         
         TrimmerVisitor(jq_Method method) {
             super(method);
@@ -306,7 +306,7 @@ public class Trimmer {
         public void visitAGETSTATIC(jq_StaticField f) {
             super.visitAGETSTATIC(f);
             GETSTATIChelper(f);
-            if (true) {
+            /*
                 if (f.getType() == jq_InstanceMethod._class ||
                     f.getType() == jq_StaticMethod._class ||
                     f.getType() == jq_Method._class ||
@@ -316,7 +316,7 @@ public class Trimmer {
                     getstatic_method = (jq_Method)Reflection.getstatic_A(f);
                     if (this.TRACE) this.out.println("getstatic field "+f+" value: "+getstatic_method);
                 }
-            }
+             */
         }
         public void visitZGETSTATIC(jq_StaticField f) {
             super.visitZGETSTATIC(f);
@@ -484,6 +484,7 @@ public class Trimmer {
             // class initializer added when method is visited.
             //jq.Assert(f.getDeclaringClass() != Unsafe._class);
         }
+        /*
         private void reflective_invoke(byte op, jq_Method f) {
             if (f.getDeclaringClass() == Reflection._class) {
                 if (f.getName().toString().startsWith("invokestatic")) {
@@ -499,34 +500,35 @@ public class Trimmer {
                 }
             }
         }
+         */
         public void visitIINVOKE(byte op, jq_Method f) {
             super.visitIINVOKE(op, f);
-            reflective_invoke(op, f);
+            //reflective_invoke(op, f);
             INVOKEhelper(op, f);
         }
         public void visitLINVOKE(byte op, jq_Method f) {
             super.visitLINVOKE(op, f);
-            reflective_invoke(op, f);
+            //reflective_invoke(op, f);
             INVOKEhelper(op, f);
         }
         public void visitFINVOKE(byte op, jq_Method f) {
             super.visitFINVOKE(op, f);
-            reflective_invoke(op, f);
+            //reflective_invoke(op, f);
             INVOKEhelper(op, f);
         }
         public void visitDINVOKE(byte op, jq_Method f) {
             super.visitDINVOKE(op, f);
-            reflective_invoke(op, f);
+            //reflective_invoke(op, f);
             INVOKEhelper(op, f);
         }
         public void visitAINVOKE(byte op, jq_Method f) {
             super.visitAINVOKE(op, f);
-            reflective_invoke(op, f);
+            //reflective_invoke(op, f);
             INVOKEhelper(op, f);
         }
         public void visitVINVOKE(byte op, jq_Method f) {
             super.visitVINVOKE(op, f);
-            reflective_invoke(op, f);
+            //reflective_invoke(op, f);
             INVOKEhelper(op, f);
         }
         public void visitNEW(jq_Type f) {
