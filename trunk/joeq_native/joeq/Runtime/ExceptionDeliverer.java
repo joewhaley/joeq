@@ -1,5 +1,5 @@
 /*
- * StackWalker.java
+ * ExceptionDeliverer.java
  *
  * Created on January 11, 2001, 10:34 PM
  *
@@ -34,11 +34,13 @@ public abstract class ExceptionDeliverer {
             case 0: throw new NullPointerException();
             case 1: throw new ArrayIndexOutOfBoundsException();
             case 2: throw new ArithmeticException();
+            case 3: throw new StackOverflowError();
             default: throw new InternalError("unknown hardware exception type: "+code);
         }
     }
     
     public abstract void deliverToStackFrame(jq_CompiledCode cc, Throwable x, int ip, int fp);
+    public abstract Object getThisPointer(jq_CompiledCode cc, int ip, int fp);
     
     public static void deliverToCurrentThread(Throwable x, int ip, int fp) {
         jq_Class x_type = (jq_Class)Unsafe.getTypeOf(x);
@@ -46,7 +48,7 @@ public abstract class ExceptionDeliverer {
         for (;;) {
             jq_CompiledCode cc = CodeAllocator.getCodeContaining(ip);
             if (TRACE) SystemInterface.debugmsg("Checking compiled code "+cc);
-            if (cc == null) {
+            if ((cc == null) || (fp == 0)) {
                 // reached the top!
                 System.out.println("Exception in thread \""+Unsafe.getThreadBlock()+"\" "+x);
                 x.printStackTrace(System.out);
@@ -56,14 +58,29 @@ public abstract class ExceptionDeliverer {
             } else {
                 int address = cc.findCatchBlock(ip, x_type);
                 if (address != 0) {
+                    // TODO: analyze the catch block to see if the backtrace is necessary.
+                    if (true) {
+                        //StackFrame sf = (StackFrame)Reflection.getfield_A(x, ClassLib.sun13.java.lang.Throwable._backtrace);
+                        //sf.fillInStackTrace();
+                    }
+                    
                     // go to this catch block!
                     if (TRACE) SystemInterface.debugmsg("Jumping to catch block at "+jq.hex8(address));
                     cc.deliverException(address, fp, x);
                     jq.UNREACHABLE();
                     return;
                 }
-                if (cc.getMethod().isSynchronized()) {
-                    // TODO: need to perform monitorexit here
+                if (cc.getMethod() != null && cc.getMethod().isSynchronized()) {
+                    // need to perform monitorexit here.
+                    Object o;
+                    if (cc.getMethod().isStatic()) {
+                        o = Reflection.getJDKType(cc.getMethod().getDeclaringClass());
+                        if (TRACE) SystemInterface.debugmsg("Performing monitorexit on static method "+cc.getMethod()+": object "+o);
+                    } else {
+                        o = cc.getThisPointer(ip, fp);
+                        if (TRACE) SystemInterface.debugmsg("Performing monitorexit on instance method "+cc.getMethod()+": object "+o.getClass()+"@"+jq.hex(System.identityHashCode(o)));
+                    }
+                    Monitor.monitorexit(o);
                 }
                 ip = Unsafe.peek(fp+4);
                 fp = Unsafe.peek(fp);
@@ -72,60 +89,82 @@ public abstract class ExceptionDeliverer {
     }
     
     public static void printStackTrace(Object backtrace, java.io.PrintWriter pw) {
-        int/*CodeAddress*/[] ips = (int[])backtrace;
-        for (int i=0; i<ips.length; ++i) {
-            jq_CompiledCode cc = CodeAllocator.getCodeContaining(ips[i]);
+        StackFrame sf = (StackFrame)backtrace;
+        while (sf.next != null) {
+            int/*CodeAddress*/ ip = sf.ip;
+            jq_CompiledCode cc = CodeAllocator.getCodeContaining(ip);
+            String s;
             if (cc != null) {
                 jq_Method m = cc.getMethod();
-                String sourcefile = m.getDeclaringClass().getSourceFile();
-                int code_offset = ips[i] - cc.getEntrypoint();
-                int bc_index = cc.getBytecodeIndex(code_offset);
-                int line_num = m.getLineNumber(bc_index);
-                String s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
-                pw.println(s.toCharArray());
+                int code_offset = ip - cc.getEntrypoint();
+                if (m != null) {
+                    String sourcefile = m.getDeclaringClass().getSourceFile();
+                    int bc_index = cc.getBytecodeIndex(ip);
+                    int line_num = m.getLineNumber(bc_index);
+                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
+                } else {
+                    s = "\tat <unknown cc> (start:"+jq.hex8(ip-code_offset)+" off:"+jq.hex(code_offset)+")";
+                }
             } else {
-                String s = "\tat <unknown> (ip:"+jq.hex8(ips[i])+")";
-                pw.println(s.toCharArray());
+                s = "\tat <unknown addr> (ip:"+jq.hex8(ip)+")";
             }
+            pw.println(s.toCharArray());
+            sf = sf.next;
         }
     }
 
     public static void printStackTrace(Object backtrace, java.io.PrintStream pw) {
-        int/*Address*/[] ips = (int[])backtrace;
-        for (int i=0; i<ips.length; ++i) {
-            jq_CompiledCode cc = CodeAllocator.getCodeContaining(ips[i]);
+        StackFrame sf = (StackFrame)backtrace;
+        while (sf.next != null) {
+            int/*CodeAddress*/ ip = sf.ip;
+            jq_CompiledCode cc = CodeAllocator.getCodeContaining(ip);
+            String s;
             if (cc != null) {
                 jq_Method m = cc.getMethod();
-                String sourcefile = m.getDeclaringClass().getSourceFile();
-                int code_offset = ips[i] - cc.getEntrypoint();
-                int bc_index = cc.getBytecodeIndex(ips[i]);
-                int line_num = m.getLineNumber(bc_index);
-                String s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
-                pw.println(s.toCharArray());
+                int code_offset = ip - cc.getEntrypoint();
+                if (m != null) {
+                    String sourcefile = m.getDeclaringClass().getSourceFile();
+                    int bc_index = cc.getBytecodeIndex(ip);
+                    int line_num = m.getLineNumber(bc_index);
+                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
+                } else {
+                    s = "\tat <unknown cc> (start:"+jq.hex8(ip-code_offset)+" off:"+jq.hex(code_offset)+")";
+                }
             } else {
-                String s = "\tat <unknown> (ip:"+jq.hex8(ips[i])+")";
-                pw.println(s.toCharArray());
+                s = "\tat <unknown addr> (ip:"+jq.hex8(ip)+")";
             }
+            pw.println(s.toCharArray());
+            sf = sf.next;
         }
     }
     
     public static Object getStackTrace() {
+        // stack traces are a linked list.
         int/*CodeAddress*/ ip = Unsafe.peek(Unsafe.EBP()+4);
         int/*StackAddress*/ fp = Unsafe.peek(Unsafe.EBP());
-        StackWalker sw = new StackWalker(ip, fp);
-        // once to count
-        int size = 0;
-        while (sw.hasNext()) {
-            sw.next();
-            ++size;
+        StackFrame sf = new StackFrame(fp, ip);
+        sf.fillInStackTrace();
+        return sf;
+    }
+    
+    static class StackFrame {
+        int fp; // location of this stack frame
+        int ip; // ip address
+        StackFrame next; // next frame in linked list
+        
+        StackFrame(int/*StackAddress*/ fp, int/*CodeAddress*/ ip) {
+            this.fp = fp; this.ip = ip;
         }
-        int/*CodeAddress*/[] ips = new int[size];
-        sw = new StackWalker(ip, fp);
-        for (int i=0; i<ips.length; ++i) {
-            ips[i] = sw.getIP();
-            sw.next();
+        
+        void fillInStackTrace() {
+            StackFrame dis = this;
+            while (dis.fp != 0) {
+                int/*CodeAddress*/ ip2 = Unsafe.peek(dis.fp+4);
+                int/*StackAddress*/ fp2 = Unsafe.peek(dis.fp);
+                dis.next = new StackFrame(fp2, ip2);
+                dis = dis.next;
+            }
         }
-        return ips;
     }
     
     public static final jq_StaticMethod _athrow;
