@@ -37,6 +37,7 @@ public abstract class Solver {
     
     abstract InferenceRule createInferenceRule(List/*<RuleTerm>*/ top, RuleTerm bottom);
     abstract Relation createEquivalenceRelation(FieldDomain fd);
+    abstract Relation createNotEquivalenceRelation(FieldDomain fd);
     abstract Relation createRelation(String name,
                                      List/*<String>*/ names,
                                      List/*<FieldDomain>*/ fieldDomains,
@@ -56,6 +57,7 @@ public abstract class Solver {
     Map/*<String,FieldDomain>*/ nameToFieldDomain;
     Map/*<String,Relation>*/ nameToRelation;
     Map/*<FieldDomain,Relation>*/ equivalenceRelations;
+    Map/*<FieldDomain,Relation>*/ notequivalenceRelations;
     List/*<InferenceRule>*/ rules;
     Collection/*<Relation>*/ relationsToLoad;
     Collection/*<Relation>*/ relationsToLoadTuples;
@@ -244,7 +246,7 @@ public abstract class Solver {
                 while (s.endsWith(" ") || s.endsWith("\n")) s = s.substring(0,s.length()-1);                
             }
             //out.println("Parsing: "+s);
-            StringTokenizer st = new StringTokenizer(s, " (,/).=", true);
+            StringTokenizer st = new StringTokenizer(s, " (,/).=!", true);
             if (!st.hasMoreTokens()) continue;
             InferenceRule r = parseRule(st);
             if (TRACE) out.println("Loaded rule(s) "+r);
@@ -297,6 +299,10 @@ public abstract class Solver {
     RuleTerm parseRuleTerm(Map/*<String,Variable>*/ nameToVar, StringTokenizer st) {
         String relationName = nextToken(st);
         String openParen = nextToken(st);
+        boolean flip = false;
+        if (openParen.equals("!")) {
+            flip = true; openParen = nextToken(st);
+        }
         if (openParen.equals("=")) {
             // "a = b".
             FieldDomain fd = null;
@@ -314,13 +320,15 @@ public abstract class Solver {
             }
             if (fd == null)
                 throw new IllegalArgumentException("Cannot use \"=\" on two unbound variables.");
-            Relation r = getEquivalenceRelation(fd);
+            Relation r = flip ? getNotEquivalenceRelation(fd) : getEquivalenceRelation(fd);
             List vars = new Pair(var1, var2);
             RuleTerm rt = new RuleTerm(vars, r);
             return rt;
         } else if (!openParen.equals("("))
             throw new IllegalArgumentException("Expected \"(\" or \"=\", got \""+openParen+"\"");
-
+        if (flip)
+            throw new IllegalArgumentException("Unexpected \"!\"");
+            
         Relation r = getRelation(relationName);
         if (r == null)
             throw new IllegalArgumentException("Unknown relation "+relationName);
@@ -368,6 +376,14 @@ public abstract class Solver {
         Relation r = (Relation) equivalenceRelations.get(fd);
         if (r == null) {
             equivalenceRelations.put(fd, r = createEquivalenceRelation(fd));
+        }
+        return r;
+    }
+    
+    Relation getNotEquivalenceRelation(FieldDomain fd) {
+        Relation r = (Relation) notequivalenceRelations.get(fd);
+        if (r == null) {
+            notequivalenceRelations.put(fd, r = createNotEquivalenceRelation(fd));
         }
         return r;
     }
