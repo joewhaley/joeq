@@ -29,6 +29,7 @@ import Compil3r.Quad.Operand.BasicBlockTableOperand;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
+import Run_Time.TypeCheck;
 import Util.Templates.UnmodifiableList;
 import Interpreter.ReflectiveInterpreter.ReflectiveVMInterface;
 import Interpreter.QuadInterpreter.State;
@@ -1263,8 +1264,8 @@ public abstract class Operator {
             ((BasicBlockTableOperand)q.getOp4()).set(i, t);
         }
         public static Operand getSrc(Quad q) { return q.getOp1(); }
-        public static TargetOperand getDefault(Quad q) { return (TargetOperand)q.getOp2(); }
-        public static IConstOperand getLow(Quad q) { return (IConstOperand)q.getOp3(); }
+        public static IConstOperand getLow(Quad q) { return (IConstOperand)q.getOp2(); }
+        public static TargetOperand getDefault(Quad q) { return (TargetOperand)q.getOp3(); }
         public static BasicBlock getTarget(Quad q, int i) { return ((BasicBlockTableOperand)q.getOp4()).get(i); }
         public static BasicBlockTableOperand getTargetTable(Quad q) { return (BasicBlockTableOperand)q.getOp4(); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
@@ -2140,7 +2141,7 @@ public abstract class Operator {
             public String toString() { return "NULL_CHECK"; }
 	    public void interpret(Quad q, State s) {
 		if (getObjectOpValue(getSrc(q), s) == null) {
-		    s.handleException(new NullPointerException());
+		    s.handleException(new NullPointerException(s.currentLocation()));
 		}
 	    }
         }
@@ -2171,7 +2172,7 @@ public abstract class Operator {
             public String toString() { return "ZERO_CHECK_I"; }
 	    public void interpret(Quad q, State s) {
 		if (getIntOpValue(getSrc(q), s) == 0) {
-		    s.handleException(new ArithmeticException());
+		    s.handleException(new ArithmeticException(s.currentLocation()));
 		}
 	    }
         }
@@ -2182,7 +2183,7 @@ public abstract class Operator {
             public String toString() { return "ZERO_CHECK_L"; }
 	    public void interpret(Quad q, State s) {
 		if (getLongOpValue(getSrc(q), s) == 0L) {
-		    s.handleException(new ArithmeticException());
+		    s.handleException(new ArithmeticException(s.currentLocation()));
 		}
 	    }
         }
@@ -2217,7 +2218,7 @@ public abstract class Operator {
 		Object o = getObjectOpValue(getRef(q), s);
 		int length = ReflectiveVMInterface.INSTANCE.arraylength(o);
 		if (i < 0 || i >= length) {
-		    s.handleException(new ArrayIndexOutOfBoundsException("index: "+i+", length: "+length));
+		    s.handleException(new ArrayIndexOutOfBoundsException(s.currentLocation()+" index: "+i+", length: "+length));
 		}
 	    }
         }
@@ -2251,11 +2252,13 @@ public abstract class Operator {
 	    public void interpret(Quad q, State s) {
 		Object[] o = (Object[])getObjectOpValue(getRef(q), s);
 		Object e = getObjectOpValue(getElement(q), s);
-		try {
-		    Run_Time.TypeCheck.arrayStoreCheck(e, o);
-		} catch (ArrayStoreException x) {
-		    s.handleException(x);
-		}
+		if (e == null) return;
+		jq_Reference t = Reflection.getTypeOf(e);
+		t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+		jq_Array a = (jq_Array)Reflection.getTypeOf(o);
+		jq_Type t2 = a.getElementType();
+		if (!TypeCheck.isAssignable(t, t2))
+		    s.handleException(new ArrayStoreException(t+" into array "+a));
 	    }
         }
     }
@@ -2294,14 +2297,18 @@ public abstract class Operator {
 	    t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
 	    f = t.getVirtualMethod(f.getNameAndDesc());
 	    if ((f == null) || f.isAbstract()) {
-		s.handleException(new AbstractMethodError());
+		s.handleException(new AbstractMethodError(s.currentLocation()));
 		return;
 	    }
 	    State result = s.invokeMethod(f, plo);
 	    if (result.getThrown() != null)
 		s.handleException(result.getThrown());
-	    else if (getDest(q) != null)
-		s.putReg(getDest(q).getRegister(), result.getReturnValue());
+	    else if (getDest(q) != null) {
+		Object r = result.getReturnValue();
+		if (f.getReturnType() == jq_Primitive.BOOLEAN && r instanceof Boolean) r = new Integer(((Boolean)r).booleanValue()?1:0);
+		else if (f.getReturnType() == jq_Primitive.CHAR && r instanceof Character) r = new Integer(((Character)r).charValue());
+		s.putReg(getDest(q).getRegister(), r);
+	    }
 	}
 
 	public void interpret_static(Quad q, State s) {
@@ -2310,8 +2317,12 @@ public abstract class Operator {
 	    State result = s.invokeMethod(f, plo);
 	    if (result.getThrown() != null)
 		s.handleException(result.getThrown());
-	    else if (getDest(q) != null)
-		s.putReg(getDest(q).getRegister(), result.getReturnValue());
+	    else if (getDest(q) != null) {
+		Object r = result.getReturnValue();
+		if (f.getReturnType() == jq_Primitive.BOOLEAN && r instanceof Boolean) r = new Integer(((Boolean)r).booleanValue()?1:0);
+		else if (f.getReturnType() == jq_Primitive.CHAR && r instanceof Character) r = new Integer(((Character)r).charValue());
+		s.putReg(getDest(q).getRegister(), r);
+	    }
 	}
 
         public static class INVOKEVIRTUAL_V extends Invoke {
@@ -2646,10 +2657,13 @@ public abstract class Operator {
 	    public void interpret(Quad q, State s) {
 		jq_Type t = getType(q).getType();
 		Object o = getObjectOpValue(getSrc(q), s);
-		try {
-		    ReflectiveVMInterface.INSTANCE.checkcast(o, t);
-		} catch (ClassCastException x) {
-		    s.handleException(x);
+		if (o != null) {
+		    jq_Type t2 = Reflection.getTypeOf(o);
+		    t2.load(); t2.verify(); t2.prepare(); t2.sf_initialize(); t2.cls_initialize();
+		    if (!TypeCheck.isAssignable(t2, t)) {
+			s.handleException(new ClassCastException(t2+" cannot be cast into "+t));
+			return;
+		    }
 		}
 		s.putReg_A(getDest(q).getRegister(), o);
 	    }
