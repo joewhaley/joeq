@@ -122,6 +122,6 @@ public abstract class ClassLibInterface {
     public abstract java.util.Set bootstrapNullInstanceFields() ;
     public abstract java.lang.String getImplementationClassDesc(UTF.Utf8 desc) ;
     
-    //public static final Clazz.jq_Class _class = (Clazz.jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
+    public static final Clazz.jq_Class _class = (Clazz.jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
     
 }
