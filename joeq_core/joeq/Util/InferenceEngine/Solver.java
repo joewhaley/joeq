@@ -334,6 +334,18 @@ public abstract class Solver {
             int index = ".bddminfree".length()+1;
             int n = Integer.parseInt(s.substring(index).trim());
             ((BDDSolver) this).BDDMINFREE = n;
+        } else if (s.startsWith(".findbestorder")) {
+            int index = ".findbestorder".length()+1;
+            String val = "";
+            if (s.length() > index)
+                val = s.substring(index).trim();
+            System.setProperty("findbestorder", val);
+        } else if (s.startsWith(".incremental")) {
+            int index = ".incremental".length()+1;
+            String val = "";
+            if (s.length() > index)
+                val = s.substring(index).trim();
+            System.setProperty("incremental", val);
         } else {
             outputError(lineNum, 0, s, "Unknown directive \""+s+"\"");
             throw new IllegalArgumentException();
@@ -617,6 +629,7 @@ public abstract class Solver {
         } else {
             var = new Variable();
         }
+        if (var.fieldDomain == null) var.fieldDomain = fd;
         return var;
     }
     

@@ -46,7 +46,7 @@ public class BDDInferenceRule extends InferenceRule {
     long totalTime;
     boolean find_best_order = !System.getProperty("findbestorder", "no").equals("no");
     
-    public BDDInferenceRule(BDDSolver solver, List/* <RuleTerm> */ top, RuleTerm bottom) {
+    public BDDInferenceRule(BDDSolver solver, List/*<RuleTerm>*/ top, RuleTerm bottom) {
         super(top, bottom);
         updateCount = 0;
         this.solver = solver;
@@ -626,7 +626,7 @@ public class BDDInferenceRule extends InferenceRule {
         if (true) {
             try {
                 fbo = new FindBestOrder(b1, b2, b3, BDDFactory.and,
-                        solver.BDDCACHE, solver.BDDNODES/2,
+                        solver.BDDNODES, solver.BDDCACHE, solver.BDDNODES/2,
                         Long.MAX_VALUE, 5000);
             } catch (IOException x) {
             }

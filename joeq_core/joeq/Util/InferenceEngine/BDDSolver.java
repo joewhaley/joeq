@@ -445,6 +445,7 @@ public class BDDSolver extends Solver {
         int final_table_size = bdd.getAllocNum();
         System.out.println("MAX_NODES="+final_table_size);
         System.out.println("FINAL_NODES="+final_node_size);
+        super.reportStats();
     }
     
 }
