@@ -46,7 +46,7 @@ import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 import UTF.Utf8;
 
-import Compil3r.Analysis.BytecodeVisitor;
+import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 
 import jq;
 
@@ -2580,6 +2580,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.INC_r32, ECX);
             asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
             asm.emitShort_Reg(x86.PUSH_r, ECX);
+        } else if (f == Unsafe._installRemapper) {
+            INVOKEhelper(INVOKE_STATIC, f);
         } else {
             System.err.println(f.toString());
             jq.UNREACHABLE();

@@ -1,0 +1,183 @@
+/*
+ * QuadVisitor.java
+ *
+ * Created on January 9, 2002, 8:14 AM
+ *
+ * @author  Administrator
+ * @version 
+ */
+
+package Compil3r.Quad;
+
+public interface QuadVisitor {
+
+    /** A potentially excepting instruction.. */
+    public void visitExceptionThrower(Quad obj);
+    /** An instruction that loads from memory. */
+    public void visitLoad(Quad obj);
+    /** An instruction that stores into memory. */
+    public void visitStore(Quad obj);
+    /** An instruction that may branch (not including exceptional control flow). */
+    public void visitBranch(Quad obj);
+    /** A conditional branch instruction. */
+    public void visitCondBranch(Quad obj);
+    /** An exception check instruction. */
+    public void visitCheck(Quad obj);
+    /** An instruction.that accesses a static field. */
+    public void visitStaticField(Quad obj);
+    /** An instruction.that accesses an instance field. */
+    public void visitInstanceField(Quad obj);
+    /** An instruction.that does an allocation. */
+    public void visitAllocation(Quad obj);
+    /** An instruction.that does a type check. */
+    public void visitTypeCheck(Quad obj);
+    
+    /** An array load instruction. */
+    public void visitALoad(Quad obj);
+    /** An array store instruction. */
+    public void visitAStore(Quad obj);
+    /** An array length instruction. */
+    public void visitALength(Quad obj);
+    /** A binary operation instruction. */
+    public void visitBinary(Quad obj);
+    /** An array bounds check instruction. */
+    public void visitBoundsCheck(Quad obj);
+    /** A type cast check instruction. */
+    public void visitCheckCast(Quad obj);
+    /** A get instance field instruction. */
+    public void visitGetfield(Quad obj);
+    /** A get static field instruction. */
+    public void visitGetstatic(Quad obj);
+    /** A goto instruction. */
+    public void visitGoto(Quad obj);
+    /** A type instance of instruction. */
+    public void visitInstanceOf(Quad obj);
+    /** A compare and branch instruction. */
+    public void visitIntIfCmp(Quad obj);
+    /** An invoke instruction. */
+    public void visitInvoke(Quad obj);
+    /** A jump local subroutine instruction. */
+    public void visitJsr(Quad obj);
+    /** A lookup switch instruction. */
+    public void visitLookupSwitch(Quad obj);
+    /** A raw memory load instruction. */
+    public void visitMemLoad(Quad obj);
+    /** A raw memory store instruction. */
+    public void visitMemStore(Quad obj);
+    /** An object monitor lock/unlock instruction. */
+    public void visitMonitor(Quad obj);
+    /** A register move instruction. */
+    public void visitMove(Quad obj);
+    /** An object allocation instruction. */
+    public void visitNew(Quad obj);
+    /** An array allocation instruction. */
+    public void visitNewArray(Quad obj);
+    /** A null pointer check instruction. */
+    public void visitNullCheck(Quad obj);
+    /** A put instance field instruction. */
+    public void visitPutfield(Quad obj);
+    /** A put static field instruction. */
+    public void visitPutstatic(Quad obj);
+    /** A return from local subroutine instruction. */
+    public void visitRet(Quad obj);
+    /** A return from method instruction. */
+    public void visitReturn(Quad obj);
+    /** A special instruction. */
+    public void visitSpecial(Quad obj);
+    /** An object array store type check instruction. */
+    public void visitStoreCheck(Quad obj);
+    /** A jump table switch instruction. */
+    public void visitTableSwitch(Quad obj);
+    /** A unary operation instruction. */
+    public void visitUnary(Quad obj);
+    
+    public abstract class EmptyVisitor implements QuadVisitor {
+        /** A potentially excepting instruction.. */
+        public void visitExceptionThrower(Quad obj) {}
+        /** An instruction that loads from memory. */
+        public void visitLoad(Quad obj) {}
+        /** An instruction that stores into memory. */
+        public void visitStore(Quad obj) {}
+        /** An instruction that may branch (not including exceptional control flow). */
+        public void visitBranch(Quad obj) {}
+        /** A conditional branch instruction. */
+        public void visitCondBranch(Quad obj) {}
+        /** An exception check instruction. */
+        public void visitCheck(Quad obj) {}
+        /** An instruction.that accesses a static field. */
+        public void visitStaticField(Quad obj) {}
+        /** An instruction.that accesses an instance field. */
+        public void visitInstanceField(Quad obj) {}
+        /** An instruction.that does an allocation. */
+        public void visitAllocation(Quad obj) {}
+        /** An instruction.that does a type check. */
+        public void visitTypeCheck(Quad obj) {}
+
+        /** An array load instruction. */
+        public void visitALoad(Quad obj) {}
+        /** An array store instruction. */
+        public void visitAStore(Quad obj) {}
+        /** An array length instruction. */
+        public void visitALength(Quad obj) {}
+        /** A binary operation instruction. */
+        public void visitBinary(Quad obj) {}
+        /** An array bounds check instruction. */
+        public void visitBoundsCheck(Quad obj) {}
+        /** A type cast check instruction. */
+        public void visitCheckCast(Quad obj) {}
+        /** A get instance field instruction. */
+        public void visitGetfield(Quad obj) {}
+        /** A get static field instruction. */
+        public void visitGetstatic(Quad obj) {}
+        /** A goto instruction. */
+        public void visitGoto(Quad obj) {}
+        /** A type instance of instruction. */
+        public void visitInstanceOf(Quad obj) {}
+        /** A compare and branch instruction. */
+        public void visitIntIfCmp(Quad obj) {}
+        /** An invoke instruction. */
+        public void visitInvoke(Quad obj) {}
+        /** A jump local subroutine instruction. */
+        public void visitJsr(Quad obj) {}
+        /** A lookup switch instruction. */
+        public void visitLookupSwitch(Quad obj) {}
+        /** A raw memory load instruction. */
+        public void visitMemLoad(Quad obj) {}
+        /** A raw memory store instruction. */
+        public void visitMemStore(Quad obj) {}
+        /** An object monitor lock/unlock instruction. */
+        public void visitMonitor(Quad obj) {}
+        /** A register move instruction. */
+        public void visitMove(Quad obj) {}
+        /** An object allocation instruction. */
+        public void visitNew(Quad obj) {}
+        /** An array allocation instruction. */
+        public void visitNewArray(Quad obj) {}
+        /** A null pointer check instruction. */
+        public void visitNullCheck(Quad obj) {}
+        /** A put instance field instruction. */
+        public void visitPutfield(Quad obj) {}
+        /** A put static field instruction. */
+        public void visitPutstatic(Quad obj) {}
+        /** A return from local subroutine instruction. */
+        public void visitRet(Quad obj) {}
+        /** A return from method instruction. */
+        public void visitReturn(Quad obj) {}
+        /** A special instruction. */
+        public void visitSpecial(Quad obj) {}
+        /** An object array store type check instruction. */
+        public void visitStoreCheck(Quad obj) {}
+        /** A jump table switch instruction. */
+        public void visitTableSwitch(Quad obj) {}
+        /** A unary operation instruction. */
+        public void visitUnary(Quad obj) {}
+    }
+    
+    public class AllQuadVisitor implements BasicBlockVisitor {
+        final QuadVisitor qv;
+        public AllQuadVisitor(QuadVisitor qv) { this.qv = qv; }
+        public void visitBasicBlock(BasicBlock bb) { bb.visitQuads(qv); }
+    }
+    
+}
+
