@@ -60,7 +60,7 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
     public static boolean isAssignable(jq_Type S, jq_Type T) {
         if (S == T)
             return true;
-        T.prepare();
+        S.prepare(); T.prepare();
         return S.isSubtypeOf(T);
     }
     
