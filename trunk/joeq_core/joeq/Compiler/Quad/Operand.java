@@ -12,6 +12,7 @@ package Compil3r.Quad;
 import Clazz.*;
 import Compil3r.Quad.RegisterFactory.Register;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import Run_Time.Reflection;
 import jq;
 
 public interface Operand {
@@ -74,6 +75,10 @@ public interface Operand {
         public String toString() {
             if (value instanceof String) return "AConst: \""+value+"\"";
             return "AConst: "+value;
+        }
+        public jq_Reference getType() {
+            if (value == null) return null;
+            return Reflection.getTypeOf(this.value);
         }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
