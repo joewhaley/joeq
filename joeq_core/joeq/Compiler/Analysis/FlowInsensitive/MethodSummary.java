@@ -440,7 +440,7 @@ public class MethodSummary {
             //base.addAccessPathEdge(f, fn);
             result.add(fn);
             if (INSIDE_EDGES)
-                base.getEdges(f, result);
+                base.getAllEdges(f, result);
         }
         /** Abstractly perform a heap load operation corresponding to quad 'obj'
          *  with the given destination register, bases and field.  The destination
@@ -1083,7 +1083,7 @@ public class MethodSummary {
          */
         public Collection next(Object node) {
             Node n = (Node) node;
-            return n.getEdgeTargets();
+            return n.getNonEscapingEdgeTargets();
         }
 
         /* (non-Javadoc)
@@ -1541,7 +1541,7 @@ public class MethodSummary {
             n.removePredecessor(m, this);
             return _removeEdge(m, n);
         }
-        public boolean hasEdge(jq_Field m, Node n) {
+        public boolean hasNonEscapingEdge(jq_Field m, Node n) {
             if (addedEdges == null) return false;
             Object o = addedEdges.get(m);
             if (o == n) return true;
@@ -1680,7 +1680,7 @@ public class MethodSummary {
         
         /** Add the nodes that are targets of inside edges on the given field
          *  to the given result set. */
-        public final void getEdges(jq_Field m, Set result) {
+        public final void getAllEdges(jq_Field m, Set result) {
             if (addedEdges != null) {
                 Object o = addedEdges.get(m);
                 if (o != null) {
@@ -1695,12 +1695,12 @@ public class MethodSummary {
                 getEdges_escaped(m, result);
         }
         
-        public final Set getEdges(jq_Field m) {
+        public final Set getAllEdges(jq_Field m) {
             if (addedEdges != null) {
                 Object o = addedEdges.get(m);
                 if (o != null) {
                     if (o instanceof Set) {
-                        Set s = (Set)o;
+                        Set s = NodeSet.FACTORY.makeSet((Set)o);
                         if (this.escapes)
                             getEdges_escaped(m, s);
                         return s;
@@ -1719,6 +1719,42 @@ public class MethodSummary {
                 Set s = NodeSet.FACTORY.makeSet(1);
                 getEdges_escaped(m, s);
                 return s;
+            }
+            return Collections.EMPTY_SET;
+        }
+        
+        public final Set getAllEdges() {
+            if (this.escapes) {
+                jq_Reference type = getDeclaredType();
+                Set result = new LinkedHashSet();
+                if (type instanceof jq_Class) {
+                    jq_Class c = (jq_Class) type;
+                    for (Iterator i = Arrays.asList(c.getInstanceFields()).iterator();
+                         i.hasNext(); ) {
+                        final jq_InstanceField f = (jq_InstanceField) i.next();
+                        if (!f.getType().isReferenceType()) continue;
+                        final Set r = NodeSet.FACTORY.makeSet();
+                        getEdges_escaped(f, r);
+                        result.add(new Map.Entry() {
+                            public Object getKey() {
+                                return f;
+                            }
+                            public Object getValue() {
+                                return r;
+                            }
+                            public Object setValue(Object value) {
+                                throw new UnsupportedOperationException();
+                            }
+                        });
+                    }
+                }
+                if (addedEdges != null) {
+                    result.addAll(addedEdges.entrySet());
+                }
+                return result;
+            }
+            if (addedEdges != null) {
+                return addedEdges.entrySet();
             }
             return Collections.EMPTY_SET;
         }
@@ -1760,26 +1796,26 @@ public class MethodSummary {
         
         /** Return a set of Map.Entry objects corresponding to the inside edges
          *  of this node. */
-        public Set getEdges() {
+        public Set getNonEscapingEdges() {
             if (addedEdges == null) return Collections.EMPTY_SET;
             return addedEdges.entrySet();
         }
 
         /** Return the set of fields that this node has inside edges with. */
-        public Set getEdgeFields() {
+        public Set getNonEscapingEdgeFields() {
             if (addedEdges == null) return Collections.EMPTY_SET;
             return addedEdges.keySet();
         }
         
         /** Return the collection of target nodes that this node has inside
          * edges with. */
-        public Collection getEdgeTargets() {
+        public Collection getNonEscapingEdgeTargets() {
             if (addedEdges == null) return Collections.EMPTY_SET;
             return new FlattenedCollection(addedEdges.values());
         }
         
         /** Returns true if this node has any added inside edges. */
-        public boolean hasEdges() {
+        public boolean hasNonEscapingEdges() {
             return addedEdges != null;
         }
         
@@ -1904,7 +1940,7 @@ public class MethodSummary {
             if (addedEdges != null) {
                 int index = map.get(this);
                 Assert._assert(s == map.size());
-                for (Iterator i = this.getEdges().iterator(); i.hasNext(); ) {
+                for (Iterator i = this.getNonEscapingEdges().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry) i.next();
                     jq_Field f = (jq_Field) e.getKey();
                     Collection c;
@@ -2149,11 +2185,11 @@ public class MethodSummary {
         public String toString_short() { return "Object "+getDeclaredType(); }
         
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#getEdgeFields()
+         * @see Compil3r.Quad.MethodSummary.Node#getNonEscapingEdgeFields()
          */
-        public Set getEdgeFields() {
+        public Set getNonEscapingEdgeFields() {
             if (ADD_EDGES)
-                return super.getEdgeFields();
+                return super.getNonEscapingEdgeFields();
             if (object == null) return Collections.EMPTY_SET;
             jq_Reference type = jq_Reference.getTypeOf(object);
             HashSet ll = new HashSet();
@@ -2172,7 +2208,7 @@ public class MethodSummary {
                     ll.add(null);
                 }
             }
-            ll.addAll(super.getEdgeFields());
+            ll.addAll(super.getNonEscapingEdgeFields());
             return ll;
         }
 
@@ -2181,7 +2217,7 @@ public class MethodSummary {
          */
         public Set getEdges() {
             if (ADD_EDGES)
-                return super.getEdges();
+                return super.getNonEscapingEdges();
             if (object == null) return Collections.EMPTY_SET;
             jq_Reference type = jq_Reference.getTypeOf(object);
             HashMap ll = new HashMap();
@@ -2208,13 +2244,13 @@ public class MethodSummary {
             return ll.entrySet();
         }
 
-        public boolean hasEdge(jq_Field m, Node n) {
+        public boolean hasNonEscapingEdge(jq_Field m, Node n) {
             if (ADD_EDGES)
-                return super.hasEdge(m, n);
+                return super.hasNonEscapingEdge(m, n);
             if (object == null)
                 return false;
             if (!(n instanceof ConcreteObjectNode))
-                return super.hasEdge(m, n);
+                return super.hasNonEscapingEdge(m, n);
             Object other = ((ConcreteObjectNode) n).object;
             jq_Reference type = jq_Reference.getTypeOf(object);
             if (type.isClassType()) {
@@ -2234,7 +2270,7 @@ public class MethodSummary {
                     if (other == oa[i]) return true;
                 }
             }
-            return super.hasEdge(m, n);
+            return super.hasNonEscapingEdge(m, n);
         }
 
         /* (non-Javadoc)
@@ -2242,7 +2278,7 @@ public class MethodSummary {
          */
         public boolean hasEdges() {
             if (ADD_EDGES)
-                return super.hasEdges();
+                return super.hasNonEscapingEdges();
             return object != null;
         }
 
@@ -3917,7 +3953,7 @@ outer:
                 if (roots.contains(n2)) continue;
                 worklist.add(n2); roots.add(n2);
             }
-            for (Iterator i=n.getEdges().iterator(); i.hasNext(); ) {
+            for (Iterator i=n.getNonEscapingEdges().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
                 Object o = e.getValue();
                 if (o instanceof Node) {
@@ -4201,7 +4237,7 @@ outer:
         if (n.addedEdges != null) {
             if (TRACE_INTER) out.println("Useful because of added edge: "+n);
             useful = true;
-            for (Iterator i = n.getEdgeTargets().iterator(); i.hasNext(); ) {
+            for (Iterator i = n.getNonEscapingEdgeTargets().iterator(); i.hasNext(); ) {
                 addAsUseful(visited, path, (Node) i.next());
             }
         }
@@ -4273,7 +4309,7 @@ outer:
         }
         visited.add(n); this.nodes.put(n, n);
         if (TRACE_INTER) out.println("Useful: "+n);
-        for (Iterator i = n.getEdgeTargets().iterator(); i.hasNext(); ) {
+        for (Iterator i = n.getNonEscapingEdgeTargets().iterator(); i.hasNext(); ) {
             addAsUseful(visited, path, (Node) i.next());
         }
         if (n.accessPathEdges != null) {
@@ -4430,7 +4466,7 @@ outer:
                         if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
                             Assert.UNREACHABLE(this.toString()+" ::: "+n2);
                         }
-                        if (!n2.hasEdge(f, n)) {
+                        if (!n2.hasNonEscapingEdge(f, n)) {
                             Assert.UNREACHABLE(this.toString()+" ::: "+n2+" -> "+n);
                         }
                     } else if (o == null) {
@@ -4442,7 +4478,7 @@ outer:
                             if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
                                 Assert.UNREACHABLE(n2.toString_long());
                             }
-                            if (!n2.hasEdge(f, n)) {
+                            if (!n2.hasNonEscapingEdge(f, n)) {
                                 Assert.UNREACHABLE(n2.toString_long()+" has no edge "+n.toString_long());
                             }
                         }
@@ -4568,7 +4604,7 @@ outer:
         }
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
-            for (Iterator j=n.getEdges().iterator(); j.hasNext(); ) {
+            for (Iterator j=n.getNonEscapingEdges().iterator(); j.hasNext(); ) {
                 Map.Entry e = (Map.Entry) j.next();
                 String fieldName = ""+e.getKey();
                 Iterator k;
