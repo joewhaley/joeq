@@ -9,8 +9,6 @@
 
 package Compil3r.Reference.x86;
 
-import Allocator.SimpleAllocator;
-import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Type;
 import Clazz.jq_Reference;
