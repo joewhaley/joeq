@@ -1552,6 +1552,7 @@ uphere2:
     
     public static jq_InstanceMethod getInvokespecialTarget(jq_Class clazz, jq_InstanceMethod method)
     throws AbstractMethodError {
+        clazz.load();
         if (!clazz.isSpecial())
             return method;
         if (method.isInitializer())
@@ -1563,6 +1564,7 @@ uphere2:
             clazz = clazz.getSuperclass();
             if (clazz == null)
                 throw new AbstractMethodError();
+            clazz.load();
             method = clazz.getDeclaredInstanceMethod(nd);
             if (method != null)
                 return method;
