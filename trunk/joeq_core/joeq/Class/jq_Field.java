@@ -12,9 +12,11 @@ package Clazz;
 import Allocator.CodeAllocator;
 import Allocator.HeapAllocator;
 import ClassLib.ClassLibInterface;
+import jq;
 
 import java.io.DataInput;
 import java.io.IOException;
+import java.util.Map;
 
 public abstract class jq_Field extends jq_Member {
 
@@ -26,6 +28,19 @@ public abstract class jq_Field extends jq_Member {
         type = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), nd.getDesc());
     }
     
+    public void load(char access_flags, DataInput in) 
+    throws IOException, ClassFormatError {
+	super.load(access_flags, in);
+	if (!jq.Bootstrapping)
+	    ClassLibInterface.i.initNewField((java.lang.reflect.Field)this.member_object, this);
+    }
+
+    public void load(char access_flags, Map attributes) {
+	super.load(access_flags, attributes);
+	if (!jq.Bootstrapping)
+	    ClassLibInterface.i.initNewField((java.lang.reflect.Field)this.member_object, this);
+    }
+
     public final jq_Type getType() { return type; }
     public boolean isVolatile() { chkState(STATE_LOADING2); return (access_flags & ACC_VOLATILE) != 0; }
     public boolean isTransient() { chkState(STATE_LOADING2); return (access_flags & ACC_TRANSIENT) != 0; }
