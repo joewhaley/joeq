@@ -4,15 +4,18 @@
 package joeq.Main;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.File;
 import java.net.URL;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
@@ -30,8 +33,8 @@ import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
-import joeq.Util.Strings;
 import joeq.Util.SimpleInterpreter;
+import joeq.Util.Strings;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -344,7 +347,13 @@ public abstract class Driver {
                     System.err.println("Be sure that you made your class public?");
                     return index;
                 }
-                for (Iterator i = classesToProcess.iterator(); i.hasNext();) {
+                // Sort classesToProcess
+                Collection s = new TreeSet(new Comparator() {
+                    public int compare(Object o1, Object o2) {
+                        return o1.toString().compareTo(o2.toString());
+                    }
+                });
+                for (Iterator i = s.iterator(); i.hasNext();) {
                     jq_Type t = (jq_Type) i.next();
                     try {
                         t.accept(cv);

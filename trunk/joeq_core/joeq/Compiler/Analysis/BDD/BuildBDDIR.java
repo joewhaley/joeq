@@ -67,7 +67,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap regMap;
     IndexMap memberMap;
     
-    int quadBits = 18, opBits = 8, regBits = 16, constantBits = 32, memberBits = 13;    
+    int quadBits = 18, opBits = 8, regBits = 17, constantBits = 32, memberBits = 13;    
 
     BDDFactory bdd;
     BDDDomain quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -79,7 +79,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         quadMap = new IndexMap("quad");
         regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
-        bdd = BDDFactory.init(1000000, 10000);
+        bdd = BDDFactory.init(1000000, 50000);
         quad = makeDomain("quad", quadBits);
         opc = makeDomain("opc", opBits);
         dest = makeDomain("dest", regBits);
@@ -92,6 +92,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         allQuads = bdd.zero();
         int [] varOrder = bdd.makeVarOrdering(true, "constant_quadxtargetxfallthrough_destxsrc1xsrc2_member_opc");
         bdd.setVarOrder(varOrder);
+        bdd.setMaxIncrease(500000);
     }
     
     void handleTarget(TargetOperand top) {
