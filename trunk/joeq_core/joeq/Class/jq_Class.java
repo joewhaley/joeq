@@ -2152,7 +2152,7 @@ uphere2:
             System.arraycopy(declared_interfaces, 0, this.interfaces, n_super_interfaces, declared_interfaces.length);
 
             // set up tables for fast type checking.
-            this.display = new jq_Reference[DISPLAY_SIZE+2];
+            this.display = new jq_Type[DISPLAY_SIZE+2];
             if (!this.isInterface()) {
                 jq_Reference dps = this.getDirectPrimarySupertype();
                 if (dps != null) {

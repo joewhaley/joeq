@@ -229,7 +229,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
             
             jq_Type innermost = this.getInnermostElementType();
             innermost.load();
-            this.display = new jq_Reference[DISPLAY_SIZE+2];
+            this.display = new jq_Type[DISPLAY_SIZE+2];
             if (!(innermost instanceof jq_Class) ||
                 !((jq_Class) innermost).isInterface()) {
                 jq_Reference dps = this.getDirectPrimarySupertype();
