@@ -45,6 +45,7 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
+import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Analysis.BDD.BuildBDDIR;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
@@ -1128,7 +1129,9 @@ public class PA {
                     if (t != null) continue;
                     m = n;
                 } else {
-                    if (t == null || !t.isSubtypeOf(n.getDeclaringClass())) continue;
+                    if (t == null ||
+                        t == jq_NullType.NULL_TYPE ||
+                        !t.isSubtypeOf(n.getDeclaringClass())) continue;
                     m = t.getVirtualMethod(n.getNameAndDesc());
                 }
                 if ((m == javaLangObject_clone && t != object_class) || n == javaLangObject_fakeclone) {
