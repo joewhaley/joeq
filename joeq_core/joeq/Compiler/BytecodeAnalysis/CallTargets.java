@@ -16,7 +16,6 @@ import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
-import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Collections.HashCodeComparator;
@@ -573,8 +572,8 @@ public abstract class CallTargets extends AbstractSet {
     
     public static class SingleCallTarget extends CallTargets
     {
-        final AndersenMethod method; final boolean complete;
-        public SingleCallTarget(AndersenMethod m, boolean c) { method = m; complete = c; }
+        final jq_Method method; final boolean complete;
+        public SingleCallTarget(jq_Method m, boolean c) { method = m; complete = c; }
         public Iterator iterator() { return Collections.singleton(method).iterator(); }
         public boolean isComplete() { return complete; }
         public CallTargets union(CallTargets s) {
