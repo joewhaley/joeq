@@ -890,6 +890,19 @@ public class BootImage implements ObjectLayout, ELFConstants {
         //out.flush();
     }
 
+    static class UnknownObjectException extends RuntimeException {
+        Object o; String message;
+        UnknownObjectException(Object o) {
+            this.o = o;
+            this.message = "type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" ";
+        }
+        void setObject(Object o) { this.o = o; }
+        Object getObject() { return o; }
+        void prependMessage(String s) { this.message = s + this.message; }
+        void appendMessage(String s) { this.message += s; }
+        public String toString() { return this.message; }
+    }
+
     private jq_StaticField searchStaticVariables(Object p) {
         Iterator i = PrimordialClassLoader.loader.getAllTypes().iterator();
         while (i.hasNext()) {
@@ -1352,17 +1365,4 @@ public class BootImage implements ObjectLayout, ELFConstants {
         _DEFAULT = k.getOrCreateStaticField("DEFAULT", "LBootstrap/BootImage;");
     }
 
-}
-
-class UnknownObjectException extends RuntimeException {
-    Object o; String message;
-    UnknownObjectException(Object o) {
-        this.o = o;
-        this.message = "type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" ";
-    }
-    public void setObject(Object o) { this.o = o; }
-    public Object getObject() { return o; }
-    public void prependMessage(String s) { this.message = s + this.message; }
-    public void appendMessage(String s) { this.message += s; }
-    public String toString() { return this.message; }
 }
