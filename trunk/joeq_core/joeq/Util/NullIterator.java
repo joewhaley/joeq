@@ -12,7 +12,7 @@ package Util;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class NullIterator  extends UnmodifiableIterator implements Iterator {
+public class NullIterator extends UnmodifiableIterator implements Iterator {
     private NullIterator() { }
     public Object next() { throw new NoSuchElementException(); }
     public boolean hasNext() { return false; }
