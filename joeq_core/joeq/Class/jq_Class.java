@@ -22,7 +22,7 @@ import java.util.LinkedList;
 
 import jq;
 import Allocator.ObjectLayout;
-import Allocator.SimpleAllocator;
+import Allocator.DefaultAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -529,7 +529,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
     public final Object newInstance() {
         load(); verify(); prepare(); sf_initialize(); cls_initialize();
-        return SimpleAllocator.allocateObject(instance_size, vtable);
+        return DefaultAllocator.allocateObject(instance_size, vtable);
     }
     
     //// Implementation garbage.
@@ -607,7 +607,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             if ((state == STATE_LOADING1) || (state == STATE_LOADING2))
                 throw new ClassCircularityError(this.toString()); // recursively called load (?)
             state = STATE_LOADING1;
-            if (TRACE) System.out.println("Beginning loading "+this+"...");
+            if (TRACE) SystemInterface.debugmsg("Beginning loading "+this+"...");
             try {
                 int magicNum = in.readInt(); // 0xCAFEBABE
                 if (magicNum != 0xCAFEBABE)
@@ -933,9 +933,18 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (mirrorclass != null) {
                     this.merge(mirrorclass);
                 }
+                
+                // make sure that all member references from other classes point to actual members.
+                Iterator it = members.values().iterator();
+                while (it.hasNext()) {
+                    jq_Member m = (jq_Member)it.next();
+                    if (m.getState() < STATE_LOADED) {
+                        throw new ClassFormatError("no such member "+m);
+                    }
+                }
 
                 // all done!
-                if (TRACE) System.out.println("Finished loading "+this);
+                if (TRACE) SystemInterface.debugmsg("Finished loading "+this);
                 state = STATE_LOADED;
             }
             catch (UTFDataFormatError x) {
@@ -1148,7 +1157,7 @@ uphere1:
                         }
                         jq_NameAndDesc nd = f.getNameAndDesc();
                         jq_StaticMethod stub = generateStaticMethodStub(nd, sm, access_flags, (char)classfield_index, (char)method_idx);
-                        if (TRACE) System.out.println("Replacing static method: "+stub);
+                        if (TRACE) SystemInterface.debugmsg("Replacing static method: "+stub);
                         this.static_methods[j] = stub;
                         break;
                     }
@@ -1184,7 +1193,7 @@ uphere2:
                         }
                         jq_NameAndDesc nd = f.getNameAndDesc();
                         jq_InstanceMethod stub = generateInstanceMethodStub(nd, sm, access_flags, (char)method_idx);
-                        if (TRACE) System.out.println("Replacing instance method: "+stub);
+                        if (TRACE) SystemInterface.debugmsg("Replacing instance method: "+stub);
                         this.declared_instance_methods[j] = stub;
                         break;
                     }
@@ -1198,7 +1207,7 @@ uphere2:
             Iterator it = toadd_static.iterator();
             while (it.hasNext()) {
                 jq_StaticMethod stub = (jq_StaticMethod)it.next();
-                if (TRACE) System.out.println("Adding static method stub: "+stub);
+                if (TRACE) SystemInterface.debugmsg("Adding static method stub: "+stub);
                 sms[++i] = stub;
             }
             this.static_methods = sms;
@@ -1210,7 +1219,7 @@ uphere2:
             Iterator it = toadd_instance.iterator();
             while (it.hasNext()) {
                 jq_InstanceMethod stub = (jq_InstanceMethod)it.next();
-                if (TRACE) System.out.println("Adding instance method stub: "+stub);
+                if (TRACE) SystemInterface.debugmsg("Adding instance method stub: "+stub);
                 ims[++i] = stub;
             }
             this.declared_instance_methods = ims;
@@ -1225,7 +1234,7 @@ uphere2:
                 jq_InstanceField this_f = getOrCreateInstanceField(that_f.getNameAndDesc());
                 jq.assert(this_f.getState() == STATE_UNLOADED, "conflict in field names in merged class: "+this_f);
                 this_f.load(that_f.getAccessFlags(), that_f.getAttributes());
-                if (TRACE) System.out.println("Adding instance field: "+this_f);
+                if (TRACE) SystemInterface.debugmsg("Adding instance field: "+this_f);
                 ifs[++i] = this_f;
             }
             this.declared_instance_fields = ifs;
@@ -1267,13 +1276,13 @@ uphere2:
             if (state == STATE_VERIFYING)
                 throw new ClassCircularityError(this.toString()); // recursively called verify
             state = STATE_VERIFYING;
-            if (TRACE) System.out.println("Beginning verifying "+this+"...");
+            if (TRACE) SystemInterface.debugmsg("Beginning verifying "+this+"...");
             if (super_class != null) {
                 super_class.load();
                 super_class.verify();
             }
             // TODO: classfile verification
-            if (TRACE) System.out.println("Finished verifying "+this);
+            if (TRACE) SystemInterface.debugmsg("Finished verifying "+this);
             state = STATE_VERIFIED;
         }
     }
@@ -1292,7 +1301,7 @@ uphere2:
             if (state == STATE_PREPARING)
                 throw new ClassCircularityError(this.toString()); // recursively called prepare (?)
             state = STATE_PREPARING;
-            if (TRACE) System.out.println("Beginning preparing "+this+"...");
+            if (TRACE) SystemInterface.debugmsg("Beginning preparing "+this+"...");
 
             // TODO: check for inheritance cycles in interfaces
 
@@ -1418,7 +1427,7 @@ uphere2:
                 m.prepare();
             }
             
-            if (TRACE) System.out.println("Finished preparing "+this);
+            if (TRACE) SystemInterface.debugmsg("Finished preparing "+this);
             state = STATE_PREPARED;
         }
     }
@@ -1437,7 +1446,7 @@ uphere2:
             if (state == STATE_SFINITIALIZING)
                 throw new ClassCircularityError(this.toString()); // recursively called sf_initialize (?)
             state = STATE_SFINITIALIZING;
-            if (TRACE) System.out.println("Beginning SF init "+this+"...");
+            if (TRACE) SystemInterface.debugmsg("Beginning SF init "+this+"...");
             if (super_class != null) {
                 super_class.sf_initialize();
             }
@@ -1472,7 +1481,7 @@ uphere2:
                     j += f.getWidth() >> 2;
                 }
             }
-            if (TRACE) System.out.println("Finished SF init "+this);
+            if (TRACE) SystemInterface.debugmsg("Finished SF init "+this);
             state = STATE_SFINITIALIZED;
         }
     }
@@ -1485,39 +1494,37 @@ uphere2:
             if (state == STATE_CLSINITIALIZING)
                 throw new ClassCircularityError(this.toString()); // recursively called cls_initialize (?)
             state = STATE_CLSINITIALIZING;
-            if (TRACE) System.out.println("Beginning class init "+this+"...");
+            if (TRACE) SystemInterface.debugmsg("Beginning class init "+this+"...");
             if (super_class != null) {
                 super_class.cls_initialize();
             }
             // generate compile stubs for each declared method
-            if (!jq.Bootstrapping)
-                x86ReferenceCompiler.initCallPatches();
             for (int i=0; i<static_methods.length; ++i) {
                 jq_StaticMethod m = static_methods[i];
                 if (m.getState() == STATE_PREPARED) {
-                    if (TRACE) System.out.println("Compiling stub for: "+m);
+                    if (TRACE) SystemInterface.debugmsg("Compiling stub for: "+m);
                     jq_CompiledCode cc = m.compile_stub();
+                    if (!jq.Bootstrapping) cc.patchDirectBindCalls();
                 }
             }
             for (int i=0; i<declared_instance_methods.length; ++i) {
                 jq_InstanceMethod m = declared_instance_methods[i];
                 if (m.getState() == STATE_PREPARED) {
-                    if (TRACE) System.out.println("Compiling stub for: "+m);
+                    if (TRACE) SystemInterface.debugmsg("Compiling stub for: "+m);
                     jq_CompiledCode cc = m.compile_stub();
+                    if (!jq.Bootstrapping) cc.patchDirectBindCalls();
                 }
             }
-            if (!jq.Bootstrapping)
-                x86ReferenceCompiler.patchCalls();
             int[] vt = (int[])vtable;
             // 0th entry of vtable is class pointer
             vt[0] = Unsafe.addressOf(this);
             for (int i=0; i<virtual_methods.length; ++i) {
                 vt[i+1] = virtual_methods[i].getDefaultCompiledVersion().getEntrypoint();
             }
-            if (TRACE) System.out.println(this+": "+jq.hex8(vt[0])+" vtable "+jq.hex8(Unsafe.addressOf(vt)));
+            if (TRACE) SystemInterface.debugmsg(this+": "+jq.hex8(vt[0])+" vtable "+jq.hex8(Unsafe.addressOf(vt)));
             if (!jq.Bootstrapping)
                 invokeclinit();
-            if (TRACE) System.out.println("Finished class init "+this);
+            if (TRACE) SystemInterface.debugmsg("Finished class init "+this);
             state = STATE_CLSINITIALIZED;
         }
     }
