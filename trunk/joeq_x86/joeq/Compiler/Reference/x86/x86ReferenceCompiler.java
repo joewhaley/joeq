@@ -2714,7 +2714,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
                    f.getName() == to32BitValue) {
             asm.emit1(x86.NOP);
         } else if (f.getName() == stringRep) {
-            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Util/Strings;");
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljwutil/strings/Strings;");
             jq_StaticMethod sm = k.getOrCreateStaticMethod("hex8", "(I)Ljava/lang/String;");
             emitCallRelative(sm);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
