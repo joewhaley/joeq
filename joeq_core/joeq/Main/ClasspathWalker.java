@@ -30,12 +30,13 @@ public class ClasspathWalker {
     private static int classCount = 0;
     static boolean SKIP_ABSTRACT = !System.getProperty("skipabstract", "no").equals("no");
     static boolean GC = !System.getProperty("gc", "no").equals("no");
+    static boolean AUTOFLUSH = !System.getProperty("autoflush", "no").equals("no");
        
     public static void main(String[] args) throws FileNotFoundException {
         HostedVM.initialize();
         
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
-        pw = new PrintWriter(new FileOutputStream("subclasses.txt"));
+        pw = new PrintWriter(new FileOutputStream("subclasses.txt"), AUTOFLUSH);
         processPackages();
         pw.close();
     }
@@ -51,7 +52,7 @@ public class ClasspathWalker {
                 String className = (String) classIter.next();
                 String canonicalClassName = canonicalizeClassName(className);
                 if (loaded.contains(canonicalClassName)){
-                    if(TRACE) System.err.println("Skipping " + canonicalClassName);
+                    if(TRACE) System.err.println("Skipping " + className);
                     continue;
                 }
                 loaded.add(canonicalClassName);
