@@ -109,77 +109,97 @@ astore("ASTORE_S").
 
 
 # def, use
-ipEdgeV(def,use) :- IE(I,M), actual(I,n,def), formal(M,n,use).
-ipEdgeV(def,use) :- IE(I,M), Iret(I,use), Mret(M,def).
-ipEdgeV(def,use) :- IE(I,M), Ithr(I,use), Mthr(M,def).
-ipEdgeMR(defm,defr,usem,user) :- ipEdgeV(def,use), vReg(def,defm,defr), vReg(use,usem,user).
+ipEdgeV(Ic,def,Mc,use) :- IE(Ic,I,Mc,M), \
+                          actual(I,n,def), \
+                          formal(M,n,use).
+ipEdgeV(Ic,def,Mc,use) :- IE(Ic,I,Mc,M), \
+                          Iret(I,use), \
+                          Mret(M,def).
+ipEdgeV(Ic,def,Mc,use) :- IE(Ic,I,Mc,M), \
+                          Ithr(I,use), \
+                          Mthr(M,def).
+#ipEdgeMR(defc,defm,defr,usec,usem,user) :- vReg(use,usem,user), \
+#                                           ipEdgeV(defc,def,usec,use), \
+#                                           vReg(def,defm,defr). split
 
 
 # strip down ssa rep for convenience.
 sources(quad, method, reg) :- ssa(quad,_,_,_,_,_,reg), m2q(method, quad), vReg(_,_,reg).
 dests(quad, method, reg) :- ssa(quad,_,reg,_,_,_,_), m2q(method, quad), vReg(_,_,reg).
+sourcesV(quad, v) :- sources(quad, method, reg), vReg(v,method,reg).
+destsV(quad, v) :- dests(quad, method, reg), vReg(v,method,reg).
 
 # intraprocedural def-use pairs
-dd(def,use) :- sources(use, m, r), dests(def, m, r).
+dd(defc,def,usec,use) :- sources(use, m, r), \
+                         dests(def, m, r), \
+                         defc=usec.
 
 # interprocedural (call/return) def-use pairs
-dd(def,use) :- dests(def,defm,defr), \
-               ipEdgeMR(usem,user,defm,defr), \
-               sources(use,usem,user).
+dd(defc,def,usec,use) :- destsV(def,defv), \
+                         ipEdgeV(usec,usev,defc,defv), \
+                         sourcesV(use,usev).
 
 # data dep through static load/stores
 #ssa(quad,op,dest,constant,member,srcNum,srcs)
-dd(def,use) :- putstatic(putstatic), \
-               ssa(def,putstatic,_,_,static,_,_), \
-               getstatic(getstatic), \
-               ssa(use,getstatic,_,_,static,_,_).
+dd(_,def,_,use) :- getstatic(getstatic), \
+                   ssa(use,getstatic,_,_,static,_,_), \
+                   putstatic(putstatic), \
+                   ssa(def,putstatic,_,_,static,_,_).
 
 # data dep through heap object
-dd(def,use) :- putfield(putfield), \
+putfieldheap(putc,put,field,heap) :- putfield(putfield), \
+                                     ssa(def,putfield,_,_,field,1,putbase), \
+                                     m2q(putm,def), \
+                                     vReg(putr,putm,putbase), \
+                                     vP(putc,putr,heap).                                     
+getfieldheap(getc,get,field,heap) :- getfield(getfield), \
+                                     ssa(use,getfield,_,_,field,1,getbase), \
+                                     m2q(getm,use), \
+                                     vReg(getr,getm,getbase), \
+                                     vP(getc,getr,heap).
+                                                                      
+dd(defc,def,usec,use) :- getfieldheap(usec,use,field,heap), \
+                         putfieldheap(defc,def,field,heap).
+
+
+dd(putc,def,getc,use) :- putfield(putfield), \
                ssa(def,putfield,_,_,field,1,putbase), \
                getfield(getfield), \
                ssa(use,getfield,_,_,field,1,getbase), \
                m2q(putm,def), \
                vReg(putr,putm,putbase), \
-               vP(putr,heap), \
+               vP(putc,putr,heap), \
                m2q(getm,use), \
                vReg(getr,getm,getbase), \
-               vP(getr,heap).
-
-astoreheap(def,heap) :- astore(astore), \
-                        ssa(def,astore,_,_,_,2,storebase), \
-                        m2q(storem,def), \
-                        vReg(storer,storem,storebase), \
-                        vP(storer,heap).
-
-aloadheap(use,heap) :- aload(aload), \
-                       ssa(use,aload,_,_,_,1,loadbase), \
-                       m2q(loadm,use), \
-                       vReg(loadr,loadm,loadbase), \
-                       vP(loadr,heap).                   
-                            
-dd(def,use) :- astoreheap(def,heap), aloadheap(use,heap).
-
-# data dep through array
-#dd(def,use) :- astore(astore), \
-#               ssa(def,astore,_,_,_,2,storebase), \
-#               aload(aload), \
-#               ssa(use,aload,_,_,_,1,loadbase), \
-#               m2q(storem,def), \
-#               vReg(storer,storem,storebase), \
-#               vP(storer,heap), \
-#               m2q(loadm,load), \
-#               vReg(loadr,loadm,loadbase), \
-#               vP(loadr,heap). split
+               vP(getc,getr,heap).
 
 # data dep through heap array
+astoreheap(defc,def,heap) :- astore(astore), \
+                             ssa(def,astore,_,_,_,2,storebase), \
+                             m2q(storem,def), \
+                             vReg(storer,storem,storebase), \
+                             vP(defc,storer,heap).
+
+aloadheap(usec,use,heap) :- aload(aload), \
+                            ssa(use,aload,_,_,_,1,loadbase), \
+                            m2q(loadm,use), \
+                            vReg(loadr,loadm,loadbase), \
+                            vP(usec,loadr,heap).                   
+                            
+dd(defc,def,usec,use) :- aloadheap(usec,use,heap), \
+                         astoreheap(defc,def,heap).
 
 #slice(use,use1) :- dd(_,use), use = use1.
 #slice(def,def1) :- dd(def,_), def = def1.
 
-slice(def,use) :- dd(def,use).
+slice(defc,def,usec,use) :- dd(defc,def,usec,use).
 
-# choose one:
-slice(def,use) :- slice(def,int), dd(int,use).
+slice(defc,def,usec,use) :- slice(defc,def,intc,int), dd(intc,int,usec,use).
 
-#slice(use,def) :- slice(def,int), slice(int,use).
+#slice(c1,16973,c2,16973) :- c1=c2.
+
+#need(quadc,quad) :- slice(quadc,quad,_,_).
+#need(quadc,quad) :- slice(_,_,quadc,quad).
+#needMR(c,m,r) :- need(c,quad), sources(quad,m,r).
+
+cislice(def,use) :- slice(_,def,_,use).
