@@ -195,7 +195,7 @@ public interface Bytecodes {
                     name = "ICONST";
             } catch(StringIndexOutOfBoundsException e) { System.err.println(e); }
             
-            return "Compil3r.BytecodeAnalysis.Bytecodes$" + name;
+            return "joeq.Compil3r.BytecodeAnalysis.Bytecodes$" + name;
         }
         
         /**

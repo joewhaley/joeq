@@ -73,7 +73,7 @@ public abstract class jq_Field extends jq_Member {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Clazz.Delegates$Field");
+            _delegate = attemptDelegate("joeq.Clazz.Delegates$Field");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.Field();

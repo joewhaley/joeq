@@ -204,7 +204,7 @@ public class jq_CompiledCode implements Comparable {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Clazz.Delegates$CompiledCode");
+            _delegate = attemptDelegate("joeq.Clazz.Delegates$CompiledCode");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.CompiledCode();

@@ -348,7 +348,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Clazz.Delegates$Array");
+            _delegate = attemptDelegate("joeq.Clazz.Delegates$Array");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.Array();
