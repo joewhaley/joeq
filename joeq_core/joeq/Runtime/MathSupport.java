@@ -78,21 +78,21 @@ public abstract class MathSupport {
     
     public static long imul(int u, int v) {
         /*unsigned*/int u1, u0, v1, v0, udiff, vdiff, high, mid, low;
-	/*unsigned*/int prodh, prodl, was;
-	long prod;
-	boolean neg;
+        /*unsigned*/int prodh, prodl, was;
+        long prod;
+        boolean neg;
 
-	u1 = HHALF(u);
-	u0 = LHALF(u);
-	v1 = HHALF(v);
-	v0 = LHALF(v);
+        u1 = HHALF(u);
+        u0 = LHALF(u);
+        v1 = HHALF(v);
+        v0 = LHALF(v);
 
-	low = u0 * v0;
+        low = u0 * v0;
 
-	/* This is the same small-number optimization as before. */
-	if (u1 == 0 && v1 == 0) return ((long)low)&0xFFFFFFFF;
+        /* This is the same small-number optimization as before. */
+        if (u1 == 0 && v1 == 0) return ((long)low)&0xFFFFFFFF;
 
-	if (!ucmp(u1, u0)) {
+        if (!ucmp(u1, u0)) {
             udiff = u1 - u0; neg = false;
         } else {
             udiff = u0 - u1; neg = true;
@@ -102,54 +102,54 @@ public abstract class MathSupport {
         } else {
             vdiff = v1 - v0; neg = !neg;
         }
-	mid = udiff * vdiff;
+        mid = udiff * vdiff;
 
-	high = u1 * v1;
+        high = u1 * v1;
 
-	/* prod = (high << 2N) + (high << N); */
-	prodh = high + HHALF(high);
-	prodl = LHUP(high);
+        /* prod = (high << 2N) + (high << N); */
+        prodh = high + HHALF(high);
+        prodl = LHUP(high);
 
-	/* if (neg) prod -= mid << N; else prod += mid << N; */
-	if (neg) {
+        /* if (neg) prod -= mid << N; else prod += mid << N; */
+        if (neg) {
             was = prodl;
             prodl -= LHUP(mid);
             prodh -= HHALF(mid) + (ucmp(was, prodl)?1:0);
-	} else {
+        } else {
             was = prodl;
             prodl += LHUP(mid);
             prodh += HHALF(mid) + (ucmp(prodl, was)?1:0);
-	}
+        }
 
-	/* prod += low << N */
-	was = prodl;
-	prodl += LHUP(low);
-	prodh += HHALF(low) + (ucmp(prodl, was)?1:0);
-	/* ... + low; */
-	if (ucmp((prodl += low), low))
+        /* prod += low << N */
+        was = prodl;
+        prodl += LHUP(low);
+        prodh += HHALF(low) + (ucmp(prodl, was)?1:0);
+        /* ... + low; */
+        if (ucmp((prodl += low), low))
             prodh++;
 
-	/* return 4N-bit product */
+        /* return 4N-bit product */
         return COMBINEQ(prodh, prodl);
     }
     
     public static long lmul(long a, long b) {
         long u, v, low, prod;
-	/*unsigned*/int high, mid, udiff, vdiff;
-	boolean negall, negmid;
+        /*unsigned*/int high, mid, udiff, vdiff;
+        boolean negall, negmid;
         if (a >= 0) { u = a; negall = false; }
         else { u = -a; negall = true; }
         if (b >= 0) { v = b; }
         else { v = -b; negall = !negall; }
 
-	/*unsigned*/int u1, u0, v1, v0;
+        /*unsigned*/int u1, u0, v1, v0;
         u1 = HHALFQ(u);
         u0 = LHALFQ(u);
         v1 = HHALFQ(v);
         v0 = LHALFQ(v);
-	if (u1 == 0 && v1 == 0) {
+        if (u1 == 0 && v1 == 0) {
             prod = imul(u0, v0);
-	} else {
+        } else {
             /*
              * Compute the three intermediate products, remembering
              * whether the middle term is negative.  We can discard
@@ -175,8 +175,8 @@ public abstract class MathSupport {
              * Assemble the final product.
              */
             prod = COMBINEQ(high + (negmid ? -mid : mid) + LHALFQ(low) + HHALFQ(low), HHALFQ(low));
-	}
-	return (negall ? -prod : prod);
+        }
+        return (negall ? -prod : prod);
     }
     
     public static long ulmul(long a, long b) {
@@ -214,21 +214,21 @@ public abstract class MathSupport {
     }
     
     public static long ldiv(long uq, long vq) {
-	boolean neg = false;
+        boolean neg = false;
         if (uq < 0L) { uq = -uq; neg = !neg; }
         if (vq < 0L) { vq = -vq; neg = !neg; }
-	uq = uldivrem(uq, vq, false);
-	if (neg) uq = -uq;
-	return uq;
+        uq = uldivrem(uq, vq, false);
+        if (neg) uq = -uq;
+        return uq;
     }
 
     public static long lrem(long uq, long vq) {
-	boolean neg = false;
+        boolean neg = false;
         if (uq < 0L) { uq = -uq; neg = !neg; }
         if (vq < 0L) { vq = -vq; /*neg = !neg;*/ }
-	uq = uldivrem(uq, vq, true);
-	if (neg) uq = -uq;
-	return uq;
+        uq = uldivrem(uq, vq, true);
+        if (neg) uq = -uq;
+        return uq;
     }
 
     private static int HHALFQ(long v) { return (int)(v>>32); }
@@ -256,50 +256,50 @@ public abstract class MathSupport {
         /*unsigned*/int qhat, rhat, t;
         int m, n, d, j, i;
         int ui=0, vi=0, qi=0;
-	if (vq == 0) throw new ArithmeticException();
-	if (ulcmp(uq, vq)) {
+        if (vq == 0) throw new ArithmeticException();
+        if (ulcmp(uq, vq)) {
             if (rem) return uq;
             return 0L;
-	}
+        }
         u = new char[5];
         v = new char[5];
         q = new char[5];
-	/*
-	 * Break dividend and divisor into digits in base B, then
-	 * count leading zeros to determine m and n.  When done, we
-	 * will have:
-	 *	u = (u[1]u[2]...u[m+n]) sub B
-	 *	v = (v[1]v[2]...v[n]) sub B
-	 *	v[1] != 0
-	 *	1 < n <= 4 (if n = 1, we use a different division algorithm)
-	 *	m >= 0 (otherwise u < v, which we already checked)
-	 *	m + n = 4
-	 * and thus
-	 *	m = 4 - n <= 2
-	 */
-	u[0] = 0;
-	u[1] = HHALF(HHALFQ(uq));
-	u[2] = LHALF(HHALFQ(uq));
-	u[3] = HHALF(LHALFQ(uq));
-	u[4] = LHALF(LHALFQ(uq));
-	v[1] = HHALF(HHALFQ(vq));
-	v[2] = LHALF(HHALFQ(vq));
-	v[3] = HHALF(LHALFQ(vq));
-	v[4] = LHALF(LHALFQ(vq));
-	for (n = 4; v[vi+1] == 0; vi++) {
+        /*
+         * Break dividend and divisor into digits in base B, then
+         * count leading zeros to determine m and n.  When done, we
+         * will have:
+         *      u = (u[1]u[2]...u[m+n]) sub B
+         *      v = (v[1]v[2]...v[n]) sub B
+         *      v[1] != 0
+         *      1 < n <= 4 (if n = 1, we use a different division algorithm)
+         *      m >= 0 (otherwise u < v, which we already checked)
+         *      m + n = 4
+         * and thus
+         *      m = 4 - n <= 2
+         */
+        u[0] = 0;
+        u[1] = HHALF(HHALFQ(uq));
+        u[2] = LHALF(HHALFQ(uq));
+        u[3] = HHALF(LHALFQ(uq));
+        u[4] = LHALF(LHALFQ(uq));
+        v[1] = HHALF(HHALFQ(vq));
+        v[2] = LHALF(HHALFQ(vq));
+        v[3] = HHALF(LHALFQ(vq));
+        v[4] = LHALF(LHALFQ(vq));
+        for (n = 4; v[vi+1] == 0; vi++) {
             if (--n == 1) {
-                /*unsigned*/int rbj;	/* r*B+u[j] (not root boy jim) */
+                /*unsigned*/int rbj;    /* r*B+u[j] (not root boy jim) */
                 char q1, q2, q3, q4;
 
                 /*
                  * Change of plan, per exercise 16.
-                 *	r = 0;
-                 *	for j = 1..4:
-                 *		q[j] = floor((r*B + u[j]) / v),
-                 *		r = (r*B + u[j]) % v;
+                 *      r = 0;
+                 *      for j = 1..4:
+                 *              q[j] = floor((r*B + u[j]) / v),
+                 *              r = (r*B + u[j]) % v;
                  * We unroll this completely here.
                  */
-                t = v[vi+2];	/* nonzero, by definition */
+                t = v[vi+2];    /* nonzero, by definition */
                 q1 = (char)udiv(u[ui+1], t);
                 rbj = COMBINE((char)urem(u[ui+1], t), u[ui+2]);
                 q2 = (char)udiv(rbj, t);
@@ -310,41 +310,41 @@ public abstract class MathSupport {
                 if (rem) return (long)urem(rbj, t);
                 return COMBINEQ(COMBINE(q1, q2), COMBINE(q3, q4));
             }
-	}
+        }
 
-	/*
-	 * By adjusting q once we determine m, we can guarantee that
-	 * there is a complete four-digit quotient at &qspace[1] when
-	 * we finally stop.
-	 */
-	for (m = 4 - n; u[ui+1] == 0; ++ui)
+        /*
+         * By adjusting q once we determine m, we can guarantee that
+         * there is a complete four-digit quotient at &qspace[1] when
+         * we finally stop.
+         */
+        for (m = 4 - n; u[ui+1] == 0; ++ui)
             m--;
-	for (i = 4 - m; --i >= 0;)
+        for (i = 4 - m; --i >= 0;)
             q[qi+i] = 0;
-	qi += 4 - m;
+        qi += 4 - m;
 
-	/*
-	 * Here we run Program D, translated from MIX to C and acquiring
-	 * a few minor changes.
-	 *
-	 * D1: choose multiplier 1 << d to ensure v[1] >= B/2.
-	 */
-	d = 0;
-	for (t = v[vi+1]; ucmp(t, B/2); t <<= 1)
+        /*
+         * Here we run Program D, translated from MIX to C and acquiring
+         * a few minor changes.
+         *
+         * D1: choose multiplier 1 << d to ensure v[1] >= B/2.
+         */
+        d = 0;
+        for (t = v[vi+1]; ucmp(t, B/2); t <<= 1)
             d++;
-	if (d > 0) {
-            shl(u, ui, m + n, d);		/* u <<= d */
-            shl(v, vi+1, n - 1, d);		/* v <<= d */
-	}
-	/*
-	 * D2: j = 0.
-	 */
-	j = 0;
-	v1 = v[vi+1];	/* for D3 -- note that v[1..n] are constant */
-	v2 = v[vi+2];	/* for D3 */
-	do {
+        if (d > 0) {
+            shl(u, ui, m + n, d);               /* u <<= d */
+            shl(v, vi+1, n - 1, d);             /* v <<= d */
+        }
+        /*
+         * D2: j = 0.
+         */
+        j = 0;
+        v1 = v[vi+1];   /* for D3 -- note that v[1..n] are constant */
+        v2 = v[vi+2];   /* for D3 */
+        do {
             char uj0, uj1, uj2;
-		
+                
             /*
              * D3: Calculate qhat (\^q, in TeX notation).
              * Let qhat = min((u[j]*B + u[j+1])/v[1], B-1), and
@@ -353,9 +353,9 @@ public abstract class MathSupport {
              * decrement qhat and increase rhat correspondingly.
              * Note that if rhat >= B, v[2]*qhat < rhat*B.
              */
-            uj0 = u[ui+j + 0];	/* for D3 only -- note that u[j+...] change */
-            uj1 = u[ui+j + 1];	/* for D3 only */
-            uj2 = u[ui+j + 2];	/* for D3 only */
+            uj0 = u[ui+j + 0];  /* for D3 only -- note that u[j+...] change */
+            uj1 = u[ui+j + 1];  /* for D3 only */
+            uj2 = u[ui+j + 2];  /* for D3 only */
             boolean sim_goto = false;
             if (uj0 == v1) {
                 qhat = B;
@@ -368,7 +368,7 @@ public abstract class MathSupport {
                 rhat = urem(n2, v1);
             }
             while (sim_goto || (ucmp(COMBINE((char)rhat, uj2), (int)umul(v2, qhat)))) {
-	//qhat_too_big:
+        //qhat_too_big:
                 sim_goto = false;
                 qhat--;
                 if ((rhat += v1) >= B)
@@ -403,14 +403,14 @@ public abstract class MathSupport {
                 u[ui+j] = LHALF(u[ui+j] + t);
             }
             q[qi+j] = (char)qhat;
-	} while (++j <= m);		/* D7: loop on j. */
+        } while (++j <= m);             /* D7: loop on j. */
 
-	/*
-	 * If caller wants the remainder, we have to calculate it as
-	 * u[m..m+n] >>> d (this is at most n digits and thus fits in
-	 * u[m+1..m+n], but we may need more source digits).
-	 */
-	if (rem) {
+        /*
+         * If caller wants the remainder, we have to calculate it as
+         * u[m..m+n] >>> d (this is at most n digits and thus fits in
+         * u[m+1..m+n], but we may need more source digits).
+         */
+        if (rem) {
             if (d != 0) {
                 for (i = m + n; i > m; --i)
                     u[ui+i] = (char)((u[ui+i] >>> d) |
@@ -418,16 +418,16 @@ public abstract class MathSupport {
                 u[ui+i] = 0;
             }
             return COMBINEQ(COMBINE(u[1], u[2]), COMBINE(u[3], u[4]));
-	}
+        }
         return COMBINEQ(COMBINE(q[1], q[2]), COMBINE(q[3], q[4]));
     }
     private static void shl(char[] p, int off, int len, int sh)
     {
-	int i;
+        int i;
         final int HALF_BITS = 16;
-	for (i = 0; i < len; i++)
-		p[off+i] = (char) (LHALF(p[off+i] << sh) | (p[off+i + 1] >>> (HALF_BITS - sh)));
-	p[off+i] = LHALF(p[off+i] << sh);
+        for (i = 0; i < len; i++)
+                p[off+i] = (char) (LHALF(p[off+i] << sh) | (p[off+i + 1] >>> (HALF_BITS - sh)));
+        p[off+i] = LHALF(p[off+i] << sh);
     }
 
     // greatest double that can be rounded to an int

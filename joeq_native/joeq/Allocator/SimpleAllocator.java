@@ -84,8 +84,8 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public final Object allocateObject(int size, Object vtable)
     throws OutOfMemoryError {
-	if (size < OBJ_HEADER_SIZE) // size overflow!
-	    HeapAllocator.outOfMemory();
+        if (size < OBJ_HEADER_SIZE) // size overflow!
+            HeapAllocator.outOfMemory();
         jq.Assert((size & 0x3) == 0);
         int/*HeapAddress*/ addr = heapCurrent + OBJ_HEADER_SIZE;
         heapCurrent += size;
@@ -133,8 +133,8 @@ public class SimpleAllocator extends HeapAllocator {
     public final Object allocateArray(int length, int size, Object vtable)
     throws OutOfMemoryError, NegativeArraySizeException {
         if (length < 0) throw new NegativeArraySizeException(length+" < 0");
-	if (size < ARRAY_HEADER_SIZE) // size overflow!
-	    HeapAllocator.outOfMemory();
+        if (size < ARRAY_HEADER_SIZE) // size overflow!
+            HeapAllocator.outOfMemory();
         size = (size+3)&~3; // align size
         int/*HeapAddress*/ addr = heapCurrent + ARRAY_HEADER_SIZE;
         heapCurrent += size;

@@ -160,7 +160,7 @@ public class Monitor implements ObjectLayout {
             }
             int status_flags = oldlockword & STATUS_FLAGS_MASK;
             if ((Unsafe.addressOf(m) & STATUS_FLAGS_MASK) != 0 ||
-		(Unsafe.addressOf(m) & LOCK_EXPANDED) != 0) {
+                (Unsafe.addressOf(m) & LOCK_EXPANDED) != 0) {
                 jq.UNREACHABLE("Monitor object has address "+jq.hex8(Unsafe.addressOf(m)));
             }
             int newlockword = Unsafe.addressOf(m) | LOCK_EXPANDED | status_flags;
@@ -171,7 +171,7 @@ public class Monitor implements ObjectLayout {
                 return;
             } else {
                 if (TRACE) SystemInterface.debugmsg("Failed to obtain inflated lock, lockword was "+jq.hex8(oldlockword));
-	    }
+            }
             // another thread has a thin lock on this object.  yield to scheduler.
             Thread.yield();
         }
@@ -189,7 +189,7 @@ public class Monitor implements ObjectLayout {
             if (TRACE) SystemInterface.debugmsg("We ("+t+") own lock "+this+", incrementing entry count: "+this.entry_count);
             return;
         }
-	if (TRACE) SystemInterface.debugmsg("We ("+t+") are attempting to obtain lock "+this);
+        if (TRACE) SystemInterface.debugmsg("We ("+t+") are attempting to obtain lock "+this);
         // another thread or no thread owns the lock. increase atomic count.
         Unsafe.atomicAdd(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
         if (!Unsafe.isEQ()) {
@@ -203,7 +203,7 @@ public class Monitor implements ObjectLayout {
         }
         jq.Assert(this.monitor_owner == null);
         jq.Assert(this.entry_count == 0);
-	jq.Assert(this.atomic_count >= 0);
+        jq.Assert(this.atomic_count >= 0);
         if (TRACE) SystemInterface.debugmsg("We ("+t+") obtained lock "+this);
         this.monitor_owner = t;
         this.entry_count = 1;
@@ -224,9 +224,9 @@ public class Monitor implements ObjectLayout {
             if (TRACE) SystemInterface.debugmsg("Decrementing lock "+this+" entry count "+this.entry_count);
             return;
         }
-	if (TRACE) SystemInterface.debugmsg("We ("+t+") are unlocking lock "+this+", current waiters="+this.atomic_count);
+        if (TRACE) SystemInterface.debugmsg("We ("+t+") are unlocking lock "+this+", current waiters="+this.atomic_count);
         this.monitor_owner = null;
-	Unsafe.atomicSub(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
+        Unsafe.atomicSub(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
         if (Unsafe.isGE()) {
             // threads are waiting on us, release the semaphore.
             if (TRACE) SystemInterface.debugmsg((this.atomic_count+1)+" threads are waiting on released lock "+this+", releasing semaphore.");

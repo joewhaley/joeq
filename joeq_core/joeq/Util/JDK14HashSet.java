@@ -1,5 +1,5 @@
 /*
- * @(#)JDK14HashSet.java	1.25 01/12/03
+ * @(#)JDK14HashSet.java        1.25 01/12/03
  *
  * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -55,16 +55,16 @@ import java.util.*;
  *
  * @author  Josh Bloch
  * @version 1.25, 12/03/01
- * @see	    Collection
- * @see	    Set
- * @see	    TreeSet
- * @see	    Collections#synchronizedSet(Set)
- * @see	    JDK14HashMap
+ * @see     Collection
+ * @see     Set
+ * @see     TreeSet
+ * @see     Collections#synchronizedSet(Set)
+ * @see     JDK14HashMap
  * @since   1.2
  */
 
 public class JDK14HashSet extends AbstractSet
-		     implements Set, Cloneable, java.io.Serializable
+                     implements Set, Cloneable, java.io.Serializable
 {
     static final long serialVersionUID = -5024744406713321676L;
 
@@ -78,7 +78,7 @@ public class JDK14HashSet extends AbstractSet
      * default initial capacity (16) and load factor (0.75).
      */
     public JDK14HashSet() {
-	map = new JDK14HashMap();
+        map = new JDK14HashMap();
     }
 
     /**
@@ -91,8 +91,8 @@ public class JDK14HashSet extends AbstractSet
      * @throws NullPointerException   if the specified collection is null.
      */
     public JDK14HashSet(Collection c) {
-	map = new JDK14HashMap(Math.max((int) (c.size()/.75f) + 1, 16));
-	addAll(c);
+        map = new JDK14HashMap(Math.max((int) (c.size()/.75f) + 1, 16));
+        addAll(c);
     }
 
     /**
@@ -105,7 +105,7 @@ public class JDK14HashSet extends AbstractSet
      *             than zero, or if the load factor is nonpositive.
      */
     public JDK14HashSet(int initialCapacity, float loadFactor) {
-	map = new JDK14HashMap(initialCapacity, loadFactor);
+        map = new JDK14HashMap(initialCapacity, loadFactor);
     }
 
     /**
@@ -118,7 +118,7 @@ public class JDK14HashSet extends AbstractSet
      *             than zero.
      */
     public JDK14HashSet(int initialCapacity) {
-	map = new JDK14HashMap(initialCapacity);
+        map = new JDK14HashMap(initialCapacity);
     }
 
     /**
@@ -135,7 +135,7 @@ public class JDK14HashSet extends AbstractSet
      *             than zero, or if the load factor is nonpositive.
      */
     JDK14HashSet(int initialCapacity, float loadFactor, boolean dummy) {
-	map = new LinkedHashMap(initialCapacity, loadFactor);
+        map = new LinkedHashMap(initialCapacity, loadFactor);
     }
 
     /**
@@ -146,7 +146,7 @@ public class JDK14HashSet extends AbstractSet
      * @see ConcurrentModificationException
      */
     public Iterator iterator() {
-	return map.keySet().iterator();
+        return map.keySet().iterator();
     }
 
     /**
@@ -155,7 +155,7 @@ public class JDK14HashSet extends AbstractSet
      * @return the number of elements in this set (its cardinality).
      */
     public int size() {
-	return map.size();
+        return map.size();
     }
 
     /**
@@ -164,7 +164,7 @@ public class JDK14HashSet extends AbstractSet
      * @return <tt>true</tt> if this set contains no elements.
      */
     public boolean isEmpty() {
-	return map.isEmpty();
+        return map.isEmpty();
     }
 
     /**
@@ -174,7 +174,7 @@ public class JDK14HashSet extends AbstractSet
      * @return <tt>true</tt> if this set contains the specified element.
      */
     public boolean contains(Object o) {
-	return map.containsKey(o);
+        return map.containsKey(o);
     }
 
     /**
@@ -186,7 +186,7 @@ public class JDK14HashSet extends AbstractSet
      * element.
      */
     public boolean add(Object o) {
-	return map.put(o, PRESENT)==null;
+        return map.put(o, PRESENT)==null;
     }
 
     /**
@@ -196,14 +196,14 @@ public class JDK14HashSet extends AbstractSet
      * @return <tt>true</tt> if the set contained the specified element.
      */
     public boolean remove(Object o) {
-	return map.remove(o)==PRESENT;
+        return map.remove(o)==PRESENT;
     }
 
     /**
      * Removes all of the elements from this set.
      */
     public void clear() {
-	map.clear();
+        map.clear();
     }
 
     /**
@@ -213,13 +213,13 @@ public class JDK14HashSet extends AbstractSet
      * @return a shallow copy of this set.
      */
     public Object clone() {
-	try { 
-	    JDK14HashSet newSet = (JDK14HashSet)super.clone();
-	    newSet.map = (JDK14HashMap)map.clone();
-	    return newSet;
-	} catch (CloneNotSupportedException e) { 
-	    throw new InternalError();
-	}
+        try { 
+            JDK14HashSet newSet = (JDK14HashSet)super.clone();
+            newSet.map = (JDK14HashMap)map.clone();
+            return newSet;
+        } catch (CloneNotSupportedException e) { 
+            throw new InternalError();
+        }
     }
 
     /**
@@ -227,15 +227,15 @@ public class JDK14HashSet extends AbstractSet
      * serialize this set).
      *
      * @serialData The capacity of the backing <tt>JDK14HashMap</tt> instance
-     *		   (int), and its load factor (float) are emitted, followed by
-     *		   the size of the set (the number of elements it contains)
-     *		   (int), followed by all of its elements (each an Object) in
+     *             (int), and its load factor (float) are emitted, followed by
+     *             the size of the set (the number of elements it contains)
+     *             (int), followed by all of its elements (each an Object) in
      *             no particular order.
      */
     private synchronized void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
-	// Write out any hidden serialization magic
-	s.defaultWriteObject();
+        // Write out any hidden serialization magic
+        s.defaultWriteObject();
 
         // Write out JDK14HashMap capacity and load factor
         s.writeInt(map.capacity());
@@ -244,8 +244,8 @@ public class JDK14HashSet extends AbstractSet
         // Write out size
         s.writeInt(map.size());
 
-	// Write out all elements in the proper order.
-	for (Iterator i=map.keySet().iterator(); i.hasNext(); )
+        // Write out all elements in the proper order.
+        for (Iterator i=map.keySet().iterator(); i.hasNext(); )
             s.writeObject(i.next());
     }
 
@@ -255,8 +255,8 @@ public class JDK14HashSet extends AbstractSet
      */
     private synchronized void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-	// Read in any hidden serialization magic
-	s.defaultReadObject();
+        // Read in any hidden serialization magic
+        s.defaultReadObject();
 
         // Read in JDK14HashMap capacity and load factor and create backing JDK14HashMap
         int capacity = s.readInt();
@@ -268,8 +268,8 @@ public class JDK14HashSet extends AbstractSet
         // Read in size
         int size = s.readInt();
 
-	// Read in all elements in the proper order.
-	for (int i=0; i<size; i++) {
+        // Read in all elements in the proper order.
+        for (int i=0; i<size; i++) {
             Object e = s.readObject();
             map.put(e, PRESENT);
         }

@@ -223,11 +223,11 @@ public class BootstrapRootSet {
         addNecessaryMethod(i_m);
         
         // an instance of this class is created via reflection during VM initialization.
-	try {
-	    c = (jq_Class)Reflection.getJQType(sun.io.ByteToCharConverter.getConverter("ISO-8859-1").getClass());
-	    i_m = c.getOrCreateInstanceMethod("<init>", "()V");
-	    addNecessaryMethod(i_m);
-	} catch (java.io.UnsupportedEncodingException x) { }
+        try {
+            c = (jq_Class)Reflection.getJQType(sun.io.ByteToCharConverter.getConverter("ISO-8859-1").getClass());
+            i_m = c.getOrCreateInstanceMethod("<init>", "()V");
+            addNecessaryMethod(i_m);
+        } catch (java.io.UnsupportedEncodingException x) { }
 
         // created via reflection when loading from a zip file
         //c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile$ZipFileInputStream;");

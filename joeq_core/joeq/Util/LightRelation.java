@@ -27,49 +27,49 @@ public class LightRelation extends AbstrRelationMapBased
 
 
     protected Relation getEmptyRelation() {
-	return new LightRelation();
+        return new LightRelation();
     }
     
 
     public boolean add(Object key, Object value) {
-	hashCode = 0;
-	Collection vals = getValues2(key);
-	if(vals == null)
-	    map.put(key, vals = new LinearSet());
-	return vals.add(value);
+        hashCode = 0;
+        Collection vals = getValues2(key);
+        if(vals == null)
+            map.put(key, vals = new LinearSet());
+        return vals.add(value);
     }
 
 
     public boolean addAll(Object key, Collection values) {
-	hashCode = 0;
-	if((values == null) || values.isEmpty())
-	    return false;
-	Collection vals = getValues2(key);
-	if(vals == null)
-	    map.put(key, vals = new LinearSet());
-	return vals.addAll(values);
+        hashCode = 0;
+        if((values == null) || values.isEmpty())
+            return false;
+        Collection vals = getValues2(key);
+        if(vals == null)
+            map.put(key, vals = new LinearSet());
+        return vals.addAll(values);
     }
 
 
     public void removeAll(Object key, Collection values) {
-	hashCode = 0;
-	Collection vals = getValues2(key);
-	if((vals == null) || vals.isEmpty()) return;
+        hashCode = 0;
+        Collection vals = getValues2(key);
+        if((vals == null) || vals.isEmpty()) return;
 
-	for(Iterator it = values.iterator(); it.hasNext(); )
-	    vals.remove(it.next());
+        for(Iterator it = values.iterator(); it.hasNext(); )
+            vals.remove(it.next());
     }
     
     public Object clone() {
-	LightRelation newrel = (LightRelation) super.clone();
-	newrel.map = (Map) ((LightMap) map).clone();
-	for(Iterator it = newrel.map.entrySet().iterator(); it.hasNext(); ) {
-	    Map.Entry entry = (Map.Entry) it.next();
-	    LinearSet newvals = 
-		(LinearSet) ((LinearSet) entry.getValue()).clone();
-	    entry.setValue(newvals);
-	}
-	return newrel;
+        LightRelation newrel = (LightRelation) super.clone();
+        newrel.map = (Map) ((LightMap) map).clone();
+        for(Iterator it = newrel.map.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            LinearSet newvals = 
+                (LinearSet) ((LinearSet) entry.getValue()).clone();
+            entry.setValue(newvals);
+        }
+        return newrel;
     }
 
 }

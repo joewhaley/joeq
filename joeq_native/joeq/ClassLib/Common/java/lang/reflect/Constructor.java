@@ -31,7 +31,7 @@ public class Constructor extends AccessibleObject {
     }
     
     public java.lang.Object newInstance(java.lang.Object[] initargs)
-	throws java.lang.InstantiationException, java.lang.IllegalAccessException,
+        throws java.lang.InstantiationException, java.lang.IllegalAccessException,
                java.lang.IllegalArgumentException, java.lang.reflect.InvocationTargetException
     {
         jq_Initializer jq_i = this.jq_init;
@@ -39,9 +39,9 @@ public class Constructor extends AccessibleObject {
         if (k.isAbstract()) throw new InstantiationException();
         if (!this.isAccessible()) jq_i.checkCallerAccess(2);
         jq_Type[] argtypes = jq_i.getParamTypes();
-	int nargs = initargs == null ? 0 : initargs.length;
-	if (nargs != argtypes.length-1)
-	    throw new java.lang.IllegalArgumentException("Constructor takes "+(argtypes.length-1)+" arguments, but "+nargs+" arguments passed in");
+        int nargs = initargs == null ? 0 : initargs.length;
+        if (nargs != argtypes.length-1)
+            throw new java.lang.IllegalArgumentException("Constructor takes "+(argtypes.length-1)+" arguments, but "+nargs+" arguments passed in");
         Object o = k.newInstance();
         Reflection.invoke(jq_i, o, initargs);
         return o;
@@ -55,19 +55,19 @@ public class Constructor extends AccessibleObject {
     }
     
     public static void initNewConstructor(Constructor o, jq_Initializer jq_init) {
-	if (jq.Bootstrapping) return;
-	java.lang.Class clazz = jq_init.getDeclaringClass().getJavaLangClassObject();
+        if (jq.Bootstrapping) return;
+        java.lang.Class clazz = jq_init.getDeclaringClass().getJavaLangClassObject();
         o.clazz = clazz;
-	jq_Type[] paramTypes = jq_init.getParamTypes();
-	java.lang.Class[] parameterTypes = new java.lang.Class[paramTypes.length-1];
-	for (int i=1; i<paramTypes.length; ++i) {
-	    parameterTypes[i-1] = Reflection.getJDKType(paramTypes[i]);
-	}
+        jq_Type[] paramTypes = jq_init.getParamTypes();
+        java.lang.Class[] parameterTypes = new java.lang.Class[paramTypes.length-1];
+        for (int i=1; i<paramTypes.length; ++i) {
+            parameterTypes[i-1] = Reflection.getJDKType(paramTypes[i]);
+        }
         o.parameterTypes = parameterTypes;
-	// TODO: exception types
-	java.lang.Class[] exceptionTypes = new java.lang.Class[0];
+        // TODO: exception types
+        java.lang.Class[] exceptionTypes = new java.lang.Class[0];
         o.exceptionTypes = exceptionTypes;
-	int modifiers = jq_init.getAccessFlags();
+        int modifiers = jq_init.getAccessFlags();
         o.modifiers = modifiers;
     }
 }

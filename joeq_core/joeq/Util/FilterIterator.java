@@ -34,36 +34,36 @@ public class FilterIterator extends UnmodifiableIterator implements Iterator {
     private boolean done = false;
 
     private void advance() {
-	while (i.hasNext()) {
-	    next = i.next();
-	    if (f.isElement(next))
-		return; // found next element.
-	}
-	done = true; // found end of enumeration.
+        while (i.hasNext()) {
+            next = i.next();
+            if (f.isElement(next))
+                return; // found next element.
+        }
+        done = true; // found end of enumeration.
     }
 
     public Object next() {
-	if (done) throw new NoSuchElementException();
-	Object o = next; advance(); return f.map(o);
+        if (done) throw new NoSuchElementException();
+        Object o = next; advance(); return f.map(o);
     }
     public boolean hasNext() {
-	return !done;
+        return !done;
     }
 
     public static class Filter { // default is an identity mapping.
-	/** Return <code>true</code> if the specified element should be
-	    included in the filtered enumeration. 
-	 
-	    <BR> Default implementation returns true for all
-	    <code>Object</code>s (no filter).   
-	 */
-	public boolean isElement(Object o) { return true; }
+        /** Return <code>true</code> if the specified element should be
+            included in the filtered enumeration. 
+         
+            <BR> Default implementation returns true for all
+            <code>Object</code>s (no filter).   
+         */
+        public boolean isElement(Object o) { return true; }
 
-	/** Perform a mapping on elements from the source enumeration. 
+        /** Perform a mapping on elements from the source enumeration. 
 
-	    <BR> Default implementation returns <code>o</code>
-	    (identity mapping). 
-	 */
-	public Object map(Object o) { return o; }
+            <BR> Default implementation returns <code>o</code>
+            (identity mapping). 
+         */
+        public Object map(Object o) { return o; }
     }
 }

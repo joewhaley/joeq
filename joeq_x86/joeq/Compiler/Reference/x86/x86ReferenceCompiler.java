@@ -306,8 +306,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         // generate code for each bytecode in order
         this.forwardTraversal();
 
-	// record the end of the code as a branch target --- it may
-	// be referenced by an exception handler.
+        // record the end of the code as a branch target --- it may
+        // be referenced by an exception handler.
         Integer loc = new Integer(bcs.length);
         asm.recordBranchTarget(loc);
 

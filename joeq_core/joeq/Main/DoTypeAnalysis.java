@@ -49,66 +49,66 @@ public abstract class DoTypeAnalysis {
         
         Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
         Iterator i = null; String memberName = null;
-	jq_Class interfaceCheck = null;
-	for (int x=0; x<args.length; ++x) {
-	    if (args[x].equals("-trace")) {
-		Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.ALWAYS_TRACE = true;
-		//Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.PRINT_MODEL = true;
-		Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_MAIN = true;
-		Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_ITERATION = true;
-		Compil3r.BytecodeAnalysis.TypeAnalysis.AnalysisSummary.TRACE_TRIM = true;
-	    } else
-	    if (args[x].equals("-dumpsummaries")) {
-		Compil3r.BytecodeAnalysis.TypeAnalysis.DUMP_SUMMARY = true;
-	    } else
-	    if (args[x].equals("-i")) {
-		String interfaceName = args[++x];
-		if (interfaceName.endsWith(".class")) interfaceName = interfaceName.substring(0, interfaceName.length()-6);
-		String interfaceDesc = "L"+interfaceName+";";
-		interfaceCheck = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(interfaceDesc);
-		interfaceCheck.load(); interfaceCheck.verify(); interfaceCheck.prepare();
-	    } else
-	    if (args[x].equals("-bypackage")) {
-		Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.BY_PACKAGE = true;
-	    } else
-	    if (args[x].equals("-maxdepth")) {
-		Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.MAX_DEPTH = Integer.parseInt(args[++x]);
-	    } else
-	    if (args[x].equals("-full")) {
-		Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = null;
-	    } else
-	    if (args[x].equals("-printmodel")) {
+        jq_Class interfaceCheck = null;
+        for (int x=0; x<args.length; ++x) {
+            if (args[x].equals("-trace")) {
+                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.ALWAYS_TRACE = true;
+                //Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.PRINT_MODEL = true;
+                Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_MAIN = true;
+                Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_ITERATION = true;
+                Compil3r.BytecodeAnalysis.TypeAnalysis.AnalysisSummary.TRACE_TRIM = true;
+            } else
+            if (args[x].equals("-dumpsummaries")) {
+                Compil3r.BytecodeAnalysis.TypeAnalysis.DUMP_SUMMARY = true;
+            } else
+            if (args[x].equals("-i")) {
+                String interfaceName = args[++x];
+                if (interfaceName.endsWith(".class")) interfaceName = interfaceName.substring(0, interfaceName.length()-6);
+                String interfaceDesc = "L"+interfaceName+";";
+                interfaceCheck = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(interfaceDesc);
+                interfaceCheck.load(); interfaceCheck.verify(); interfaceCheck.prepare();
+            } else
+            if (args[x].equals("-bypackage")) {
+                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.BY_PACKAGE = true;
+            } else
+            if (args[x].equals("-maxdepth")) {
+                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.MAX_DEPTH = Integer.parseInt(args[++x]);
+            } else
+            if (args[x].equals("-full")) {
+                Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = null;
+            } else
+            if (args[x].equals("-printmodel")) {
                 /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
-		Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker.PRINT_MODEL = true;
+                Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker.PRINT_MODEL = true;
                  *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
-	    } else
-	    if (args[x].equals("-tracemethod")) {
-		Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.trace_method_names.add(args[++x]);
-	    } else
-	    if (args[x].equals("-buildmodel")) {
+            } else
+            if (args[x].equals("-tracemethod")) {
+                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.trace_method_names.add(args[++x]);
+            } else
+            if (args[x].equals("-buildmodel")) {
                 /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
-		Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
+                Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
                     new Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelBuilder();
                  *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
-	    } else
-	    if (args[x].equals("-checkmodel")) {
+            } else
+            if (args[x].equals("-checkmodel")) {
                 /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
-		Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
+                Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
                     new Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker();
                  *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
-	    } else
-	    if (args[x].equals("-file")) {
-		BufferedReader br = new BufferedReader(new FileReader(args[++x]));
-		LinkedList list = new LinkedList();
-		for (;;) {
-		    String s = br.readLine();
-		    if (s == null) break;
-		    if (s.length() == 0) continue;
-		    if (s.startsWith("%")) continue;
-		    list.add(s);
-		}
+            } else
+            if (args[x].equals("-file")) {
+                BufferedReader br = new BufferedReader(new FileReader(args[++x]));
+                LinkedList list = new LinkedList();
+                for (;;) {
+                    String s = br.readLine();
+                    if (s == null) break;
+                    if (s.length() == 0) continue;
+                    if (s.startsWith("%")) continue;
+                    list.add(s);
+                }
                 i = new AppendIterator(list.iterator(), i);
-	    } else
+            } else
             if (args[x].endsWith("*")) {
                 i = new AppendIterator(PrimordialClassLoader.loader.listPackage(args[x].substring(0, args[x].length()-1)), i);
             } else {
@@ -132,7 +132,7 @@ public abstract class DoTypeAnalysis {
             if (classname.endsWith(".class")) classname = classname.substring(0, classname.length()-6);
             String classdesc = "L"+classname+";";
             jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classdesc);
-	    c.load(); c.verify(); c.prepare();
+            c.load(); c.verify(); c.prepare();
             classes.add(c);
         }
         
@@ -145,12 +145,12 @@ public abstract class DoTypeAnalysis {
         i = classes.iterator();
         while (i.hasNext()) {
             jq_Class c = (jq_Class)i.next();
-	    if (interfaceCheck != null) {
-		if (!TypeCheck.isAssignable(c, interfaceCheck)) {
-		    System.out.println(c+" does not implement "+interfaceCheck+", skipping.");
-		    continue;
-		}
-	    }
+            if (interfaceCheck != null) {
+                if (!TypeCheck.isAssignable(c, interfaceCheck)) {
+                    System.out.println(c+" does not implement "+interfaceCheck+", skipping.");
+                    continue;
+                }
+            }
             doClass(System.out, c, memberName);
         }
         try {

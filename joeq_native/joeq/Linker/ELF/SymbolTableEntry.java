@@ -65,10 +65,10 @@ public class SymbolTableEntry implements ELFConstants {
     }
     
     public static class EmptySymbolTableEntry extends SymbolTableEntry {
-	private EmptySymbolTableEntry() { super("", 0, 0, STB_LOCAL, STT_NOTYPE, Section.NullSection.INSTANCE); }
-	public final int getIndex() { return 0; }
-	public final void setIndex(int index) { jq.Assert(index == 0); }
-	public static final EmptySymbolTableEntry INSTANCE = new EmptySymbolTableEntry();
+        private EmptySymbolTableEntry() { super("", 0, 0, STB_LOCAL, STT_NOTYPE, Section.NullSection.INSTANCE); }
+        public final int getIndex() { return 0; }
+        public final void setIndex(int index) { jq.Assert(index == 0); }
+        public static final EmptySymbolTableEntry INSTANCE = new EmptySymbolTableEntry();
     }
 
     public static int getEntrySize() { return 16; }

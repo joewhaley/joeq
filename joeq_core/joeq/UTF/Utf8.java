@@ -270,9 +270,9 @@ here:
 
     // Helper function.
     private static int addToTable_helper(byte[] b, int hash, int[] chain, int index) {
-	if (NO_NEW) {
-	    jq.UNREACHABLE("Trying to add Utf8 "+fromUtf8(b));
-	}
+        if (NO_NEW) {
+            jq.UNREACHABLE("Trying to add Utf8 "+fromUtf8(b));
+        }
         if (++size == table.length) growTable_helper();
         if (!checkUtf8(b)) {
             fromUtf8(b); // fromUtf8 has more informative error messages.
@@ -334,9 +334,9 @@ here:
     }
 
     public void dump(DataOutput out) throws IOException {
-	jq.Assert(data.length <= Character.MAX_VALUE);
-	out.writeChar(data.length);
-	out.write(data);
+        jq.Assert(data.length <= Character.MAX_VALUE);
+        out.writeChar(data.length);
+        out.write(data);
     }
     
     //// Utf8 conversion routines
@@ -375,55 +375,55 @@ here:
      */
     public static String fromUtf8(byte[] utf8)
     throws UTFDataFormatError {
-	char[] result = new char[utf8.length];
-	int result_index = 0;
-	for (int i=0, n=utf8.length; i<n; ) {
-	    byte b = utf8[i++];
-	    if (STRICTLY_CHECK_FORMAT && !ALLOW_NORMAL_UTF8)
-		if (b == 0)
-		    throw new UTFDataFormatError("0 byte encountered at location "+(i-1));
-	    if (b >= 0) {  // < 0x80 unsigned
-		// in the range '\001' to '\177'
-		result[result_index++] = (char)b;
-		continue;
-	    }
-	    try {
-		byte nb = utf8[i++];
-		if (b < -32) {  // < 0xe0 unsigned
-		    // '\000' or in the range '\200' to '\u07FF'
-		    char c = result[result_index++] =
-			(char)(((b & 0x1f) << 6) | (nb & 0x3f));
-		    if (STRICTLY_CHECK_FORMAT) {
-			if (((b & 0xe0) != 0xc0) ||
-			    ((nb & 0xc0) != 0x80))
-			    throw new UTFDataFormatError("invalid marker bits for double byte char at location "+(i-2));
-			if (c < '\200') {
-			    if (!ALLOW_PSEUDO_UTF8 || (c != '\000'))
-				throw new UTFDataFormatError("encountered double byte char that should have been single byte at location "+(i-2));
-			} else if (c > '\u07FF')
-			    throw new UTFDataFormatError("encountered double byte char that should have been triple byte at location "+(i-2));
-		    }
-		} else {
-		    byte nnb = utf8[i++];
-		    // in the range '\u0800' to '\uFFFF'
-		    char c = result[result_index++] =
-			(char)(((b & 0x0f) << 12) |
-			       ((nb & 0x3f) << 6) |
-			       (nnb & 0x3f));
-		    if (STRICTLY_CHECK_FORMAT) {
-			if (((b & 0xf0) != 0xe0) ||
-			    ((nb & 0xc0) != 0x80) ||
-			    ((nnb & 0xc0) != 0x80))
-			    throw new UTFDataFormatError("invalid marker bits for triple byte char at location "+(i-3));
-			if (c < '\u0800')
-			    throw new UTFDataFormatError("encountered triple byte char that should have been fewer bytes at location "+(i-3));
-		    }
-		}
-	    } catch (ArrayIndexOutOfBoundsException e) {
-		throw new UTFDataFormatError("unexpected end at location "+i);
-	    }
-	}
-	return new String(result, 0, result_index);
+        char[] result = new char[utf8.length];
+        int result_index = 0;
+        for (int i=0, n=utf8.length; i<n; ) {
+            byte b = utf8[i++];
+            if (STRICTLY_CHECK_FORMAT && !ALLOW_NORMAL_UTF8)
+                if (b == 0)
+                    throw new UTFDataFormatError("0 byte encountered at location "+(i-1));
+            if (b >= 0) {  // < 0x80 unsigned
+                // in the range '\001' to '\177'
+                result[result_index++] = (char)b;
+                continue;
+            }
+            try {
+                byte nb = utf8[i++];
+                if (b < -32) {  // < 0xe0 unsigned
+                    // '\000' or in the range '\200' to '\u07FF'
+                    char c = result[result_index++] =
+                        (char)(((b & 0x1f) << 6) | (nb & 0x3f));
+                    if (STRICTLY_CHECK_FORMAT) {
+                        if (((b & 0xe0) != 0xc0) ||
+                            ((nb & 0xc0) != 0x80))
+                            throw new UTFDataFormatError("invalid marker bits for double byte char at location "+(i-2));
+                        if (c < '\200') {
+                            if (!ALLOW_PSEUDO_UTF8 || (c != '\000'))
+                                throw new UTFDataFormatError("encountered double byte char that should have been single byte at location "+(i-2));
+                        } else if (c > '\u07FF')
+                            throw new UTFDataFormatError("encountered double byte char that should have been triple byte at location "+(i-2));
+                    }
+                } else {
+                    byte nnb = utf8[i++];
+                    // in the range '\u0800' to '\uFFFF'
+                    char c = result[result_index++] =
+                        (char)(((b & 0x0f) << 12) |
+                               ((nb & 0x3f) << 6) |
+                               (nnb & 0x3f));
+                    if (STRICTLY_CHECK_FORMAT) {
+                        if (((b & 0xf0) != 0xe0) ||
+                            ((nb & 0xc0) != 0x80) ||
+                            ((nnb & 0xc0) != 0x80))
+                            throw new UTFDataFormatError("invalid marker bits for triple byte char at location "+(i-3));
+                        if (c < '\u0800')
+                            throw new UTFDataFormatError("encountered triple byte char that should have been fewer bytes at location "+(i-3));
+                    }
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                throw new UTFDataFormatError("unexpected end at location "+i);
+            }
+        }
+        return new String(result, 0, result_index);
     }
 
     /**
@@ -436,41 +436,41 @@ here:
      * @return array containing sequence of (pseudo-)utf8 formatted bytes
      */
     public static byte[] toUtf8(String s) {
-	byte[] result = new byte[lengthUtf8(s)];
-	int result_index = 0;
-	for (int i = 0, n = s.length(); i < n; ++i) {
-	    char c = (char)s.charAt(i);
-	    // in all shifts below, c is an (unsigned) char,
-	    // so either >>> or >> is ok
-	    if (((!WRITE_PSEUDO_UTF8) || (c >= 0x0001)) && (c <= 0x007F))
-		result[result_index++] = (byte)c;
-	    else if (c > 0x07FF) {
-		result[result_index++] = (byte)(0xe0 | (byte)(c >> 12));
-		result[result_index++] = (byte)(0x80 | ((c & 0xfc0) >> 6));
-		result[result_index++] = (byte)(0x80 | (c & 0x3f));
-	    } else {
-		result[result_index++] = (byte)(0xc0 | (byte)(c >> 6));
-		result[result_index++] = (byte)(0x80 | (c & 0x3f));
-	    }
-	}
-	return result;
+        byte[] result = new byte[lengthUtf8(s)];
+        int result_index = 0;
+        for (int i = 0, n = s.length(); i < n; ++i) {
+            char c = (char)s.charAt(i);
+            // in all shifts below, c is an (unsigned) char,
+            // so either >>> or >> is ok
+            if (((!WRITE_PSEUDO_UTF8) || (c >= 0x0001)) && (c <= 0x007F))
+                result[result_index++] = (byte)c;
+            else if (c > 0x07FF) {
+                result[result_index++] = (byte)(0xe0 | (byte)(c >> 12));
+                result[result_index++] = (byte)(0x80 | ((c & 0xfc0) >> 6));
+                result[result_index++] = (byte)(0x80 | (c & 0x3f));
+            } else {
+                result[result_index++] = (byte)(0xc0 | (byte)(c >> 6));
+                result[result_index++] = (byte)(0x80 | (c & 0x3f));
+            }
+        }
+        return result;
     }
 
     /**
      * Returns the length of a string's utf8 encoded form.
      */
     public static int lengthUtf8(String s) {
-	int utflen = 0;
-	for (int i = 0, n = s.length(); i < n; ++i) {
-	    int c = s.charAt(i);
-	    if (((!WRITE_PSEUDO_UTF8) || (c >= 0x0001)) && (c <= 0x007F))
-		++utflen;
-	    else if (c > 0x07FF)
-		utflen += 3;
-	    else
-		utflen += 2;
-	}
-	return utflen;
+        int utflen = 0;
+        for (int i = 0, n = s.length(); i < n; ++i) {
+            int c = s.charAt(i);
+            if (((!WRITE_PSEUDO_UTF8) || (c >= 0x0001)) && (c <= 0x007F))
+                ++utflen;
+            else if (c > 0x07FF)
+                utflen += 3;
+            else
+                utflen += 2;
+        }
+        return utflen;
     }
 
     /**
@@ -480,20 +480,20 @@ here:
      * @return true iff the given sequence is valid (pseudo-)utf8.
      */
     public static boolean checkUtf8(byte[] bytes) {
-	for (int i=0, n=bytes.length; i<n; ) {
-	    byte b = bytes[i++];
-	    if (STRICTLY_CHECK_FORMAT && !ALLOW_NORMAL_UTF8)
-		if (b == 0) return false;
-	    if (b >= 0) {  // < 0x80 unsigned
-		// in the range '\001' to '\177'
-		continue;
-	    }
-	    try {
-		byte nb = bytes[i++];
-		if (b < -32) {  // < 0xe0 unsigned
-		    // '\000' or in the range '\200' to '\u07FF'
-		    char c = (char)(((b & 0x1f) << 6) | (nb & 0x3f));
-		    if (STRICTLY_CHECK_FORMAT) {
+        for (int i=0, n=bytes.length; i<n; ) {
+            byte b = bytes[i++];
+            if (STRICTLY_CHECK_FORMAT && !ALLOW_NORMAL_UTF8)
+                if (b == 0) return false;
+            if (b >= 0) {  // < 0x80 unsigned
+                // in the range '\001' to '\177'
+                continue;
+            }
+            try {
+                byte nb = bytes[i++];
+                if (b < -32) {  // < 0xe0 unsigned
+                    // '\000' or in the range '\200' to '\u07FF'
+                    char c = (char)(((b & 0x1f) << 6) | (nb & 0x3f));
+                    if (STRICTLY_CHECK_FORMAT) {
                         if (((b & 0xe0) != 0xc0) ||
                             ((nb & 0xc0) != 0x80))
                             return false;
@@ -503,13 +503,13 @@ here:
                             } else if (c > '\u07FF')
                                 return false;
                     }
-		} else {
-		    byte nnb = bytes[i++];
-		    // in the range '\u0800' to '\uFFFF'
-		    char c = (char)(((b & 0x0f) << 12) |
-				    ((nb & 0x3f) << 6) |
-				    (nnb & 0x3f));
-		    if (STRICTLY_CHECK_FORMAT) {
+                } else {
+                    byte nnb = bytes[i++];
+                    // in the range '\u0800' to '\uFFFF'
+                    char c = (char)(((b & 0x0f) << 12) |
+                                    ((nb & 0x3f) << 6) |
+                                    (nnb & 0x3f));
+                    if (STRICTLY_CHECK_FORMAT) {
                         if (((b & 0xf0) != 0xe0) ||
                             ((nb & 0xc0) != 0x80) ||
                             ((nnb & 0xc0) != 0x80))
@@ -517,12 +517,12 @@ here:
                         if (c < '\u0800')
                             return false;
                     }
-		}
-	    } catch (ArrayIndexOutOfBoundsException e) {
-		return false;
-	    }
-	}
-	return true;
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

@@ -40,25 +40,25 @@ public abstract class Bootstrapper implements ObjectLayout {
         String classList = null;
         String addToClassList = null;
         boolean TrimAllTypes = false;
-	boolean DUMP_COFF = false;
+        boolean DUMP_COFF = false;
         boolean USE_BYTECODE_TRIMMER = true;
 
-	// set bootstrapping flag first - lots of code depends on this flag.
+        // set bootstrapping flag first - lots of code depends on this flag.
         jq.Bootstrapping = true;
         // initialize list of methods to invoke on joeq startup
         jq.on_vm_startup = new LinkedList();
         
         ClassLibInterface.i.useJoeqClasslib(true);
         
-	if (ClassLibInterface.i.getClass().toString().indexOf("win32") != -1) {
-	    DUMP_COFF = true;
-	    x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_FS;
-	    x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x14;
-	} else {
-	    DUMP_COFF = false;
-	    //x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_GS;
-	    //x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
-	}
+        if (ClassLibInterface.i.getClass().toString().indexOf("win32") != -1) {
+            DUMP_COFF = true;
+            x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_FS;
+            x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x14;
+        } else {
+            DUMP_COFF = false;
+            //x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_GS;
+            //x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
+        }
 
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
@@ -103,10 +103,10 @@ public abstract class Bootstrapper implements ObjectLayout {
             err("unknown command line argument: "+args[i]);
         }
         
-	rootMethodClassName = rootMethodClassName.replace('.','/');
+        rootMethodClassName = rootMethodClassName.replace('.','/');
 
-	System.out.println("Bootstrapping into "+imageName+", "+(DUMP_COFF?"COFF":"ELF")+" format, root method "+rootMethodClassName+"."+rootMethodName+(TrimAllTypes?", trimming all types.":"."));
-	
+        System.out.println("Bootstrapping into "+imageName+", "+(DUMP_COFF?"COFF":"ELF")+" format, root method "+rootMethodClassName+"."+rootMethodName+(TrimAllTypes?", trimming all types.":"."));
+        
         for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
             String s = (String)it.next();
             PrimordialClassLoader.loader.addToClasspath(s);
@@ -372,7 +372,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         }
 
         //Object xxx = Assembler.x86.ExternalReference._heap_from;
-	//Object yyy = ClassLib.sun13.java.io.Win32FileSystem._class;
+        //Object yyy = ClassLib.sun13.java.io.Win32FileSystem._class;
         
         // get the set of compiled methods, because it is used during bootstrapping.
         CodeAllocator.getCompiledMethods();
@@ -380,8 +380,8 @@ public abstract class Bootstrapper implements ObjectLayout {
         System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getAllTypes().size());
         System.out.println("number of classes in image = "+jq.boot_types.size());
         
-	// we shouldn't encounter any new Utf8 from this point
-	Utf8.NO_NEW = true;
+        // we shouldn't encounter any new Utf8 from this point
+        Utf8.NO_NEW = true;
 
         // add all reachable members.
         System.out.println("Finding all reachable objects...");
@@ -414,10 +414,10 @@ public abstract class Bootstrapper implements ObjectLayout {
         // dump it!
         FileOutputStream fos = new FileOutputStream(imageName);
         starttime = System.currentTimeMillis();
-	if (DUMP_COFF)
-	    objmap.dumpCOFF(fos, rootm);
-	else
-	    objmap.dumpELF(fos, rootm);
+        if (DUMP_COFF)
+            objmap.dumpCOFF(fos, rootm);
+        else
+            objmap.dumpELF(fos, rootm);
         long dumptime = System.currentTimeMillis() - starttime;
         System.out.println("Dump time: "+dumptime);
         

@@ -46,7 +46,7 @@ public class Class {
     // native method implementations.
     private static void registerNatives() { }
     private static Class forName0(java.lang.String name, boolean initialize,
-				  ClassLoader loader)
+                                  ClassLoader loader)
         throws ClassNotFoundException
     {
         Class k = loader.loadClass(name);

@@ -53,7 +53,7 @@ public class System {
         props.setProperty("user.region", "US");
         props.setProperty("user.timezone", "");
 
-	// must be at end: classpathToString() uses some properties from above.
+        // must be at end: classpathToString() uses some properties from above.
         props.setProperty("java.class.path", PrimordialClassLoader.loader.classpathToString());
 
         return props;

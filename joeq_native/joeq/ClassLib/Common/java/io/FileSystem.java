@@ -41,9 +41,9 @@ abstract class FileSystem {
             }
             DEFAULT_FS = o;
         } else {
-	    Object o = null;
-	    jq.UNREACHABLE();
-	    DEFAULT_FS = o;
+            Object o = null;
+            jq.UNREACHABLE();
+            DEFAULT_FS = o;
         }
     }
 }

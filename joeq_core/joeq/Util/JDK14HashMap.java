@@ -1,5 +1,5 @@
 /*
- * @(#)JDK14HashMap.java	1.51 02/01/24
+ * @(#)JDK14HashMap.java        1.51 02/01/24
  *
  * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -88,9 +88,9 @@ import  java.io.*;
  * @version 1.51, 01/24/02
  * @see     Object#hashCode()
  * @see     Collection
- * @see	    Map
- * @see	    TreeMap
- * @see	    Hashtable
+ * @see     Map
+ * @see     TreeMap
+ * @see     Hashtable
  * @since   1.2
  */
 
@@ -355,9 +355,9 @@ public class JDK14HashMap extends JDK14AbstractMap implements Map, Cloneable,
      * @param key key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *	       if there was no mapping for key.  A <tt>null</tt> return can
-     *	       also indicate that the JDK14HashMap previously associated
-     *	       <tt>null</tt> with the specified key.
+     *         if there was no mapping for key.  A <tt>null</tt> return can
+     *         also indicate that the JDK14HashMap previously associated
+     *         <tt>null</tt> with the specified key.
      */
     public Object put(Object key, Object value) {
         Object k = maskNull(key);
@@ -488,9 +488,9 @@ public class JDK14HashMap extends JDK14AbstractMap implements Map, Cloneable,
      *
      * @param  key key whose mapping is to be removed from the map.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *	       if there was no mapping for key.  A <tt>null</tt> return can
-     *	       also indicate that the map previously associated <tt>null</tt>
-     *	       with the specified key.
+     *         if there was no mapping for key.  A <tt>null</tt> return can
+     *         also indicate that the map previously associated <tt>null</tt>
+     *         with the specified key.
      */
     public Object remove(Object key) {
         Entry e = removeEntryForKey(key);
@@ -581,27 +581,27 @@ public class JDK14HashMap extends JDK14AbstractMap implements Map, Cloneable,
      *         specified value.
      */
     public boolean containsValue(Object value) {
-	if (value == null) 
+        if (value == null) 
             return containsNullValue();
 
-	Entry tab[] = table;
+        Entry tab[] = table;
         for (int i = 0; i < tab.length ; i++)
             for (Entry e = tab[i] ; e != null ; e = e.next)
                 if (value.equals(e.value))
                     return true;
-	return false;
+        return false;
     }
 
     /**
      * Special-case code for containsValue with null argument
      **/
     private boolean containsNullValue() {
-	Entry tab[] = table;
+        Entry tab[] = table;
         for (int i = 0; i < tab.length ; i++)
             for (Entry e = tab[i] ; e != null ; e = e.next)
                 if (e.value == null)
                     return true;
-	return false;
+        return false;
     }
 
     /**
@@ -612,11 +612,11 @@ public class JDK14HashMap extends JDK14AbstractMap implements Map, Cloneable,
      */
     public Object clone() {
         JDK14HashMap result = null;
-	try { 
-	    result = (JDK14HashMap)super.clone();
-	} catch (CloneNotSupportedException e) { 
-	    // assert false;
-	}
+        try { 
+            result = (JDK14HashMap)super.clone();
+        } catch (CloneNotSupportedException e) { 
+            // assert false;
+        }
         result.table = new Entry[table.length];
         result.entrySet = null;
         result.modCount = 0;
@@ -920,10 +920,10 @@ public class JDK14HashMap extends JDK14AbstractMap implements Map, Cloneable,
      * serialize it).
      *
      * @serialData The <i>capacity</i> of the JDK14HashMap (the length of the
-     *		   bucket array) is emitted (int), followed  by the
-     *		   <i>size</i> of the JDK14HashMap (the number of key-value
-     *		   mappings), followed by the key (Object) and value (Object)
-     *		   for each key-value mapping represented by the JDK14HashMap
+     *             bucket array) is emitted (int), followed  by the
+     *             <i>size</i> of the JDK14HashMap (the number of key-value
+     *             mappings), followed by the key (Object) and value (Object)
+     *             for each key-value mapping represented by the JDK14HashMap
      *             The key-value mappings are emitted in the order that they
      *             are returned by <tt>entrySet().iterator()</tt>.
      * 
@@ -931,14 +931,14 @@ public class JDK14HashMap extends JDK14AbstractMap implements Map, Cloneable,
     private void writeObject(java.io.ObjectOutputStream s)
         throws IOException
     {
-	// Write out the threshold, loadfactor, and any hidden stuff
-	s.defaultWriteObject();
+        // Write out the threshold, loadfactor, and any hidden stuff
+        s.defaultWriteObject();
 
-	// Write out number of buckets
-	s.writeInt(table.length);
+        // Write out number of buckets
+        s.writeInt(table.length);
 
-	// Write out size (number of Mappings)
-	s.writeInt(size);
+        // Write out size (number of Mappings)
+        s.writeInt(size);
 
         // Write out keys and values (alternating)
         for (Iterator i = entrySet().iterator(); i.hasNext(); ) {
@@ -957,24 +957,24 @@ public class JDK14HashMap extends JDK14AbstractMap implements Map, Cloneable,
     private void readObject(java.io.ObjectInputStream s)
          throws IOException, ClassNotFoundException
     {
-	// Read in the threshold, loadfactor, and any hidden stuff
-	s.defaultReadObject();
+        // Read in the threshold, loadfactor, and any hidden stuff
+        s.defaultReadObject();
 
-	// Read in number of buckets and allocate the bucket array;
-	int numBuckets = s.readInt();
-	table = new Entry[numBuckets];
+        // Read in number of buckets and allocate the bucket array;
+        int numBuckets = s.readInt();
+        table = new Entry[numBuckets];
 
         init();  // Give subclass a chance to do its thing.
 
-	// Read in size (number of Mappings)
-	int size = s.readInt();
+        // Read in size (number of Mappings)
+        int size = s.readInt();
 
-	// Read the keys and values, and put the mappings in the JDK14HashMap
-	for (int i=0; i<size; i++) {
-	    Object key = s.readObject();
-	    Object value = s.readObject();
-	    putForCreate(key, value);
-	}
+        // Read the keys and values, and put the mappings in the JDK14HashMap
+        for (int i=0; i<size; i++) {
+            Object key = s.readObject();
+            Object value = s.readObject();
+            putForCreate(key, value);
+        }
     }
 
     // These methods are used when serializing HashSets

@@ -53,7 +53,7 @@ public class Field extends AccessibleObject {
     
     // native method implementations.
     public java.lang.Object get(java.lang.Object obj)
-	throws java.lang.IllegalArgumentException, java.lang.IllegalAccessException
+        throws java.lang.IllegalArgumentException, java.lang.IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -91,7 +91,7 @@ public class Field extends AccessibleObject {
     }
 
     public boolean getBoolean(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -113,7 +113,7 @@ public class Field extends AccessibleObject {
     }
     
     public byte getByte(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -135,7 +135,7 @@ public class Field extends AccessibleObject {
     }
     
     public char getChar(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -158,7 +158,7 @@ public class Field extends AccessibleObject {
     
     // byte -> short
     public short getShort(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -185,7 +185,7 @@ public class Field extends AccessibleObject {
     // char -> int
     // short -> int
     public int getInt(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -217,7 +217,7 @@ public class Field extends AccessibleObject {
     // short -> long
     // int -> long
     public long getLong(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -252,7 +252,7 @@ public class Field extends AccessibleObject {
     // int -> float
     // long -> float
     public float getFloat(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -290,7 +290,7 @@ public class Field extends AccessibleObject {
     // long -> double
     // float -> double
     public double getDouble(java.lang.Object obj)
-	throws IllegalArgumentException, IllegalAccessException
+        throws IllegalArgumentException, IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -324,7 +324,7 @@ public class Field extends AccessibleObject {
     }
     
     public void set(java.lang.Object obj, java.lang.Object value)
-	throws java.lang.IllegalArgumentException, java.lang.IllegalAccessException
+        throws java.lang.IllegalArgumentException, java.lang.IllegalAccessException
     {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
@@ -787,16 +787,16 @@ public class Field extends AccessibleObject {
     }
     
     public static void initNewField(Field o, jq_Field jq_field) {
-	if (jq.Bootstrapping) return;
-	java.lang.String name = jq_field.getName().toString();
+        if (jq.Bootstrapping) return;
+        java.lang.String name = jq_field.getName().toString();
         o.name = name;
-	java.lang.Class clazz = jq_field.getDeclaringClass().getJavaLangClassObject();
-	jq.Assert(clazz != null);
+        java.lang.Class clazz = jq_field.getDeclaringClass().getJavaLangClassObject();
+        jq.Assert(clazz != null);
         o.clazz = clazz;
-	java.lang.Class type = Reflection.getJDKType(jq_field.getType());
-	jq.Assert(type != null);
+        java.lang.Class type = Reflection.getJDKType(jq_field.getType());
+        jq.Assert(type != null);
         o.type = type;
-	int modifiers = jq_field.getAccessFlags();
+        int modifiers = jq_field.getAccessFlags();
         o.modifiers = modifiers;
     }
 }

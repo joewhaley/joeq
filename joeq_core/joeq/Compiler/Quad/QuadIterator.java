@@ -148,7 +148,7 @@ public class QuadIterator implements ListIterator.Quad {
         for (;;) {
             if (bb.isEntry()) return null;
             if (bb.size() > 0) return bb.getLastQuad();
-	    if (bb.getPredecessors().isEmpty()) return null; // block is unreachable.
+            if (bb.getPredecessors().isEmpty()) return null; // block is unreachable.
             bb = bb.getFallthroughPredecessor();
         }
     }
@@ -169,7 +169,7 @@ public class QuadIterator implements ListIterator.Quad {
             this.quadsInCurrentBasicBlock = this.currentBasicBlock.iterator();
             // go to end of iterator
             while (this.quadsInCurrentBasicBlock.hasNext())
-        	this.quadsInCurrentBasicBlock.nextQuad();
+                this.quadsInCurrentBasicBlock.nextQuad();
             // update previousBasicBlock
             updatePreviousBB();
         }

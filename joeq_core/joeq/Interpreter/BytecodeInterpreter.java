@@ -848,7 +848,7 @@ public abstract class BytecodeInterpreter {
             super.visitLCMP2();
             long v1 = state.pop_L();
             long v2 = state.pop_L();
-	    state.push_I((v2>v1)?1:((v2==v1)?0:-1));
+            state.push_I((v2>v1)?1:((v2==v1)?0:-1));
         }
         public void visitFCMP2(byte op) {
             super.visitFCMP2(op);
@@ -1263,8 +1263,8 @@ public abstract class BytecodeInterpreter {
         public void visitMULTINEWARRAY(jq_Type f, char dim) {
             super.visitMULTINEWARRAY(f, dim);
             int[] dims = new int[dim];
-	    //for (int i=0; i<dim; ++i) f = ((jq_Array)f).getElementType();
-	    for (int i=0; i<dim; ++i) dims[dim-i-1] = state.pop_I();
+            //for (int i=0; i<dim; ++i) f = ((jq_Array)f).getElementType();
+            for (int i=0; i<dim; ++i) dims[dim-i-1] = state.pop_I();
             state.push_A(vm.multinewarray(dims, f));
         }
     }

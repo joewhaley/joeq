@@ -49,9 +49,9 @@ public interface Operand {
             this.register = reg; this.type = type; this.flags = flags;
         }
         public Register getRegister() { return register; }
-	public void setRegister(Register r) { this.register = r; }
+        public void setRegister(Register r) { this.register = r; }
         public jq_Type getType() { return type; }
-	public void setType(jq_Type t) { this.type = t; }
+        public void setType(jq_Type t) { this.type = t; }
         public int getFlags() { return flags; }
         public void setFlags(int f) { flags = f; }
         public void meetFlags(int f) { flags &= f; }
@@ -232,7 +232,7 @@ public interface Operand {
         public IntValueTableOperand(int[] t) { table = t; }
         public void set(int i, int b) { table[i] = b; }
         public int get(int i) { return table[i]; }
-	public int size() { return table.length; }
+        public int size() { return table.length; }
         public String toString() {
             StringBuffer sb = new StringBuffer("{ ");
             if (table.length > 0) {
@@ -260,7 +260,7 @@ public interface Operand {
         public BasicBlockTableOperand(BasicBlock[] t) { table = t; }
         public void set(int i, BasicBlock b) { table[i] = b; }
         public BasicBlock get(int i) { return table[i]; }
-	public int size() { return table.length; }
+        public int size() { return table.length; }
         public String toString() {
             StringBuffer sb = new StringBuffer("{ ");
             if (table.length > 0) {
@@ -303,9 +303,9 @@ public interface Operand {
         }
         public Operand copy() {
             RegisterOperand[] t2 = new RegisterOperand[this.params.length];
-	    for (int i=0; i<t2.length; ++i) {
-		t2[i] = (RegisterOperand)this.params[i].copy();
-	    }
+            for (int i=0; i<t2.length; ++i) {
+                t2[i] = (RegisterOperand)this.params[i].copy();
+            }
             return new ParamListOperand(t2);
         }
         public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }

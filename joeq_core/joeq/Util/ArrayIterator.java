@@ -24,9 +24,9 @@ public class ArrayIterator extends UnmodifiableIterator implements Iterator {
     }
     public boolean hasNext() { return ( i < oa.length ); }
     public Object  next() {
-	if (i < oa.length)
-	    return oa[i++];
-	else
-	    throw new NoSuchElementException();
+        if (i < oa.length)
+            return oa[i++];
+        else
+            throw new NoSuchElementException();
     }
 }

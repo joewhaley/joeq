@@ -20,7 +20,7 @@ import Main.jq;
 public abstract class ObjectInputStream {
 
     private static java.lang.ClassLoader latestUserDefinedLoader()
-	throws java.lang.ClassNotFoundException
+        throws java.lang.ClassNotFoundException
     {
         // TODO.
         return null;
@@ -46,7 +46,7 @@ public abstract class ObjectInputStream {
         jq.TODO();
     }
     private static java.lang.Object allocateNewObject(java.lang.Class aclass, java.lang.Class initclass)
-	throws java.lang.InstantiationException, java.lang.IllegalAccessException
+        throws java.lang.InstantiationException, java.lang.IllegalAccessException
     {
         jq_Type t1 = Reflection.getJQType(aclass);
         if (!(t1 instanceof jq_Class))

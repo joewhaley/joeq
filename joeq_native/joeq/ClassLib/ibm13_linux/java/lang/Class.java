@@ -15,7 +15,7 @@ import Bootstrap.PrimordialClassLoader;
 public class Class {
 
     private native static Class forName0(java.lang.String name, boolean initialize,
-				         java.lang.ClassLoader loader)
+                                         java.lang.ClassLoader loader)
         throws ClassNotFoundException;
     private native java.lang.Object newInstance0()
         throws InstantiationException, IllegalAccessException;

@@ -23,27 +23,27 @@ public abstract class CollectionFactory {
     
     /** Creates a <code>CollectionFactory</code>. */
     public CollectionFactory() {
-	
+        
     }
     
     /** Generates a new, mutable, empty <code>Collection</code>. */
     public final Collection makeCollection() {
-	return makeCollection(java.util.Collections.EMPTY_SET);
+        return makeCollection(java.util.Collections.EMPTY_SET);
     }
 
     /** Generates a new, mutable, empty <code>Collection</code>, using
-	<code>initialCapacity</code> as a hint to use for the capacity
-	for the produced <code>Collection</code>. */
+        <code>initialCapacity</code> as a hint to use for the capacity
+        for the produced <code>Collection</code>. */
     public Collection makeCollection(int initialCapacity) {
-	return makeCollection();
+        return makeCollection();
     }
 
     /** Generates a new, mutable <code>Collection</code>, using the
-	elements of <code>c</code> as a template for its initial
-	contents.  Note that the <code>Collection</code> returned is
-	not a <i>view</i> of <code>c</code>, but rather a snapshot;
-	changes to <code>c</code> are not reflected in the returned
-	<code>Collection</code>. 
+        elements of <code>c</code> as a template for its initial
+        contents.  Note that the <code>Collection</code> returned is
+        not a <i>view</i> of <code>c</code>, but rather a snapshot;
+        changes to <code>c</code> are not reflected in the returned
+        <code>Collection</code>. 
     */  
     public abstract Collection makeCollection(Collection c);
 

@@ -123,26 +123,26 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             File f = new File(path, pathname);
             if (TRACE) out.println("Attempting to list "+pathname+" in path "+path);
             if (!f.exists() || !f.isDirectory()) return Default.nullIterator;
-	    Iterator result = new FilterIterator(new ArrayIterator(f.list()),
+            Iterator result = new FilterIterator(new ArrayIterator(f.list()),
                 new FilterIterator.Filter() {
                     public boolean isElement(Object o) {
                         return ((String)o).endsWith(".class");
                     }
                     public Object map(Object o) { return pathn + ((String)o); }
                 });
-	    if (recursive) {
-		Iterator dirs = new FilterIterator(new ArrayIterator(f.list()),
-		    new FilterIterator.Filter() {
-			public boolean isElement(Object o) {
-			    return new File((String)map(o)).isDirectory();
-			}
-			public Object map(Object o) { return pathn + ((String)o) + filesep; }
-		});
-		while (dirs.hasNext()) {
-		    result = new AppendIterator(result, listPackage((String)dirs.next(), recursive));
-		}
-	    }
-	    return result;
+            if (recursive) {
+                Iterator dirs = new FilterIterator(new ArrayIterator(f.list()),
+                    new FilterIterator.Filter() {
+                        public boolean isElement(Object o) {
+                            return new File((String)map(o)).isDirectory();
+                        }
+                        public Object map(Object o) { return pathn + ((String)o) + filesep; }
+                });
+                while (dirs.hasNext()) {
+                    result = new AppendIterator(result, listPackage((String)dirs.next(), recursive));
+                }
+            }
+            return result;
         }
     }
 
@@ -197,7 +197,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
 
     public Iterator listPackage(final String pathname) {
-	return listPackage(pathname, false);
+        return listPackage(pathname, false);
     }
 
     public Iterator listPackage(final String pathname, boolean recursive) {
@@ -357,9 +357,9 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     
     public final jq_Class getOrCreateClass(String desc, DataInput in) {
-	jq_Class t = (jq_Class)getOrCreateBSType(Utf8.get(desc));
-	t.load(in);
-	return t;
+        jq_Class t = (jq_Class)getOrCreateBSType(Utf8.get(desc));
+        t.load(in);
+        return t;
     }
 
     public final jq_Type getBSType(String desc) { return getBSType(Utf8.get(desc)); }

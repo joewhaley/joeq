@@ -182,14 +182,14 @@ public class BasicBlock {
      * @param index  the index to add the quad
      * @param q  quad to add */
     public void addQuad(int index, Quad q) {
-	jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
+        jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
         instructions.add(index, q);
     }
     /** Append a quad to the end of this basic block.
      * Cannot add quads to the entry or exit basic blocks.
      * @param q  quad to add */
     public void appendQuad(Quad q) {
-	jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
+        jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
         instructions.add(q);
     }
     
@@ -197,57 +197,57 @@ public class BasicBlock {
      * Cannot add predecessors to the entry basic block.
      * @param b  basic block to add as a predecessor */
     public void addPredecessor(BasicBlock b) {
-	jq.Assert(predecessors != null, "Cannot add predecessor to entry basic block");
-	predecessors.add(b);
+        jq.Assert(predecessors != null, "Cannot add predecessor to entry basic block");
+        predecessors.add(b);
     }
     /** Add a successor basic block to this basic block.
      * Cannot add successors to the exit basic block.
      * @param b  basic block to add as a successor */
     public void addSuccessor(BasicBlock b) {
-	jq.Assert(successors != null, "Cannot add successor to exit basic block");
-	successors.add(b);
+        jq.Assert(successors != null, "Cannot add successor to exit basic block");
+        successors.add(b);
     }
     
     public boolean removePredecessor(BasicBlock bb) {
-	jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+        jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         return predecessors.remove(bb);
     }
     public void removePredecessor(int i) {
-	jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+        jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         predecessors.remove(i);
     }
     public boolean removeSuccessor(BasicBlock bb) {
-	jq.Assert(successors != null, "Cannot remove successor from exit basic block");
+        jq.Assert(successors != null, "Cannot remove successor from exit basic block");
         return successors.remove(bb);
     }
     public void removeSuccessor(int i) {
-	jq.Assert(successors != null, "Cannot remove successor from exit basic block");
+        jq.Assert(successors != null, "Cannot remove successor from exit basic block");
         successors.remove(i);
     }
     public void removeAllPredecessors() {
-	jq.Assert(predecessors != null, "Cannot remove predecessors from entry basic block");
+        jq.Assert(predecessors != null, "Cannot remove predecessors from entry basic block");
         predecessors.clear();
     }
     public void removeAllSuccessors() {
-	jq.Assert(successors != null, "Cannot remove successors from exit basic block");
+        jq.Assert(successors != null, "Cannot remove successors from exit basic block");
         successors.clear();
     }
         
     public int getNumberOfSuccessors() {
-	if (successors == null) return 0;
-	return successors.size();
+        if (successors == null) return 0;
+        return successors.size();
     }
 
     public int getNumberOfPredecessors() {
-	if (predecessors == null) return 0;
-	return predecessors.size();
+        if (predecessors == null) return 0;
+        return predecessors.size();
     }
 
     /** Returns the fallthrough successor to this basic block, if it exists.
      * If there is none, returns null.
      * @return  the fallthrough successor, or null if there is none. */
     public BasicBlock getFallthroughSuccessor() {
-	if (successors == null) return null;
+        if (successors == null) return null;
         return (BasicBlock)successors.get(0);
     }
 
@@ -255,21 +255,21 @@ public class BasicBlock {
      * If there is none, returns null.
      * @return  the fallthrough predecessor, or null if there is none. */
     public BasicBlock getFallthroughPredecessor() {
-	if (predecessors == null) return null;
+        if (predecessors == null) return null;
         return (BasicBlock)predecessors.get(0);
     }
 
     /** Returns a list of the successors of this basic block.
      * @return  a list of the successors of this basic block. */
     public List.BasicBlock getSuccessors() {
-	if (successors == null) return UnmodifiableList.BasicBlock.getEmptyList();
+        if (successors == null) return UnmodifiableList.BasicBlock.getEmptyList();
         return new ListWrapper.BasicBlock(successors);
     }
     
     /** Returns an list of the predecessors of this basic block.
      * @return  an iterator of the predecessors of this basic block. */
     public List.BasicBlock getPredecessors() {
-	if (predecessors == null) return UnmodifiableList.BasicBlock.getEmptyList();
+        if (predecessors == null) return UnmodifiableList.BasicBlock.getEmptyList();
         return new ListWrapper.BasicBlock(predecessors);
     }
     

@@ -34,7 +34,7 @@ public class Method extends AccessibleObject {
     
     public java.lang.Object invoke(java.lang.Object obj,
                                    java.lang.Object[] initargs)
-	throws java.lang.InstantiationException, java.lang.IllegalAccessException,
+        throws java.lang.InstantiationException, java.lang.IllegalAccessException,
                java.lang.IllegalArgumentException, java.lang.reflect.InvocationTargetException
     {
         jq_Method jq_m = this.jq_method;
@@ -85,31 +85,31 @@ public class Method extends AccessibleObject {
     }
     
     public static void initNewMethod(Method o, jq_Method jq_method) {
-	if (jq.Bootstrapping) return;
-	java.lang.String name = jq_method.getName().toString();
+        if (jq.Bootstrapping) return;
+        java.lang.String name = jq_method.getName().toString();
         o.name = name;
-	java.lang.Class clazz = jq_method.getDeclaringClass().getJavaLangClassObject();
-	jq.Assert(clazz != null);
+        java.lang.Class clazz = jq_method.getDeclaringClass().getJavaLangClassObject();
+        jq.Assert(clazz != null);
         o.clazz = clazz;
-	java.lang.Class returnType = jq_method.getReturnType().getJavaLangClassObject();
-	jq.Assert(returnType != null);
+        java.lang.Class returnType = jq_method.getReturnType().getJavaLangClassObject();
+        jq.Assert(returnType != null);
         o.returnType = returnType;
-	jq_Type[] paramTypes = jq_method.getParamTypes();
-	int offset;
-	if (jq_method instanceof jq_InstanceMethod)
-	    offset = 1;
-	else
-	    offset = 0;
-	java.lang.Class[] parameterTypes = new java.lang.Class[paramTypes.length-offset];
-	for (int i=offset; i<paramTypes.length; ++i) {
-	    parameterTypes[i-offset] = Reflection.getJDKType(paramTypes[i]);
-	    jq.Assert(parameterTypes[i-offset] != null);
-	}
+        jq_Type[] paramTypes = jq_method.getParamTypes();
+        int offset;
+        if (jq_method instanceof jq_InstanceMethod)
+            offset = 1;
+        else
+            offset = 0;
+        java.lang.Class[] parameterTypes = new java.lang.Class[paramTypes.length-offset];
+        for (int i=offset; i<paramTypes.length; ++i) {
+            parameterTypes[i-offset] = Reflection.getJDKType(paramTypes[i]);
+            jq.Assert(parameterTypes[i-offset] != null);
+        }
         o.parameterTypes = parameterTypes;
-	// TODO: exception types
-	java.lang.Class[] exceptionTypes = new java.lang.Class[0];
+        // TODO: exception types
+        java.lang.Class[] exceptionTypes = new java.lang.Class[0];
         o.exceptionTypes = exceptionTypes;
-	int modifiers = jq_method.getAccessFlags();
+        int modifiers = jq_method.getAccessFlags();
         o.modifiers = modifiers;
     }
 }

@@ -96,10 +96,10 @@ public class LiveRefAnalysis {
         // Pass 2 (backward): Perform live variable analysis
         SecondPassVisitor spv = new SecondPassVisitor(method, fpv.getBytecodeStart());
         // traverse post-order over basic blocks
-	for (;;) {
+        for (;;) {
             spv.go_again = false;
             Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
-	    rpo.jumpToEnd();
+            rpo.jumpToEnd();
             while (rpo.hasPrevious()) {
                 if (ALWAYS_TRACE)
                     System.out.println("Iteration : "+rpo.toString());
@@ -115,15 +115,15 @@ public class LiveRefAnalysis {
     }
 
     public void dump() {
-	for(int i=0; i<start_states.length; ++i) {
-	    if (start_states[i] != null) {
-		System.out.println("BB"+i+" start: "+start_states[i].toString());
-	    }
-	    if (end_states[i] != null) {
-		System.out.println("BB"+i+" end: "+end_states[i].toString());
-	    }
-	}
-	System.out.println();
+        for(int i=0; i<start_states.length; ++i) {
+            if (start_states[i] != null) {
+                System.out.println("BB"+i+" start: "+start_states[i].toString());
+            }
+            if (end_states[i] != null) {
+                System.out.println("BB"+i+" end: "+end_states[i].toString());
+            }
+        }
+        System.out.println();
     }
     
     /*
@@ -202,10 +202,10 @@ public class LiveRefAnalysis {
         void pop(jq_Type t) {
             if (t.isReferenceType()) pop_A();
             else if (t.isIntLike()) {
-	        byte t2 = pop();
-		if (t2 != LIVE_DERIVED_REF)
-		    System.err.println("WARNING: method takes derived ref as an argument");
-	    }
+                byte t2 = pop();
+                if (t2 != LIVE_DERIVED_REF)
+                    System.err.println("WARNING: method takes derived ref as an argument");
+            }
             else if (t == jq_Primitive.FLOAT) pop_F();
             else if (t == jq_Primitive.LONG) pop_L();
             else if (t == jq_Primitive.DOUBLE) pop_D();
@@ -238,16 +238,16 @@ public class LiveRefAnalysis {
                 if (i < locals.length-1) sb.append(',');
             }
             sb.append(" }");
-	    if (stackDepth > 0) {
-		sb.append("\nStack: {");
-		for (int i=0; i<stackDepth; ++i) {
-		    sb.append(i);
-		    sb.append('=');
-		    sb.append(stack[i]==null?"null":stack[i].toString());
-		    if (i < stackDepth-1) sb.append(',');
-		}
-		sb.append(" }");
-	    }
+            if (stackDepth > 0) {
+                sb.append("\nStack: {");
+                for (int i=0; i<stackDepth; ++i) {
+                    sb.append(i);
+                    sb.append('=');
+                    sb.append(stack[i]==null?"null":stack[i].toString());
+                    if (i < stackDepth-1) sb.append(',');
+                }
+                sb.append(" }");
+            }
             return sb.toString();
         }
     }
@@ -369,10 +369,10 @@ public class LiveRefAnalysis {
             return that;
         }
         public ExactJSRState copyAsJSR() {
-	    // nested jsr's!
-	    // we need a fresh changeLocals for the nested jsr
-	    return super.copyAsJSR();
-	}
+            // nested jsr's!
+            // we need a fresh changeLocals for the nested jsr
+            return super.copyAsJSR();
+        }
         public ExactState copyHandler(jq_Type t) {
             ExactJSRState that = new ExactJSRState(this.stack.length, this.locals.length);
             System.arraycopy(this.locals, 0, that.locals, 0, this.locals.length);
@@ -407,7 +407,7 @@ public class LiveRefAnalysis {
                             change = true;
                         }
                     }
-		    if (!that2.mustChangeLocals[i]) {
+                    if (!that2.mustChangeLocals[i]) {
                         if (this.mustChangeLocals[i]) {
                             this.mustChangeLocals[i] = false;
                             change = true;
@@ -465,20 +465,20 @@ public class LiveRefAnalysis {
                 if (i < locals.length-1) sb.append(',');
             }
             sb.append(" }");
-	    if (stackDepth > 0) {
-		sb.append("\nStack: {");
-		for (int i=0; i<stackDepth; ++i) {
-		    sb.append(i);
-		    sb.append('=');
-		    sb.append(stack[i]==null?"null":stack[i].toString());
-		    if (i < stackDepth-1) sb.append(',');
-		}
-		sb.append(" }");
-	    }
+            if (stackDepth > 0) {
+                sb.append("\nStack: {");
+                for (int i=0; i<stackDepth; ++i) {
+                    sb.append(i);
+                    sb.append('=');
+                    sb.append(stack[i]==null?"null":stack[i].toString());
+                    if (i < stackDepth-1) sb.append(',');
+                }
+                sb.append(" }");
+            }
             return sb.toString();
         }
         public String toString() {
-	    if (liveness != null) return toString_live();
+            if (liveness != null) return toString_live();
             StringBuffer sb = new StringBuffer("Locals: { ");
             for (int i=0; i<locals.length; ++i) {
                 if (locals[i] == null) continue;
@@ -490,16 +490,16 @@ public class LiveRefAnalysis {
                 if (i < locals.length-1) sb.append(',');
             }
             sb.append(" }");
-	    if (stackDepth > 0) {
-		sb.append("\nStack: {");
-		for (int i=0; i<stackDepth; ++i) {
-		    sb.append(i);
-		    sb.append('=');
-		    sb.append(stack[i]==null?"null":stack[i].toString());
-		    if (i < stackDepth-1) sb.append(',');
-		}
-		sb.append(" }");
-	    }
+            if (stackDepth > 0) {
+                sb.append("\nStack: {");
+                for (int i=0; i<stackDepth; ++i) {
+                    sb.append(i);
+                    sb.append('=');
+                    sb.append(stack[i]==null?"null":stack[i].toString());
+                    if (i < stackDepth-1) sb.append(',');
+                }
+                sb.append(" }");
+            }
             return sb.toString();
         }
     }
@@ -507,8 +507,8 @@ public class LiveRefAnalysis {
     public static class ExactState {
         protected int stackDepth;
         protected Type[] stack; protected Type[] locals;
-	protected boolean[] liveness;
-	protected Set last_uses;
+        protected boolean[] liveness;
+        protected Set last_uses;
         public static ExactState allocateEmptyState(jq_Method m) {
             return new ExactState(m.getMaxStack(), m.getMaxLocals());
         }
@@ -527,28 +527,28 @@ public class LiveRefAnalysis {
             stack = new Type[stacksize]; locals = new Type[localsize];
             stackDepth = 0;
         }
-	public void allocateLiveness() {
-	    if (liveness == null)
-		liveness = new boolean[locals.length];
-	}
-	public void initializeLastUses() {
-	    last_uses = new LinearSet();
-	}
-	public boolean compareLiveness(ExactState that) {
-	    if (that.liveness == null) return true;
+        public void allocateLiveness() {
+            if (liveness == null)
+                liveness = new boolean[locals.length];
+        }
+        public void initializeLastUses() {
+            last_uses = new LinearSet();
+        }
+        public boolean compareLiveness(ExactState that) {
+            if (that.liveness == null) return true;
             for (int i=0; i<this.liveness.length; ++i) {
-		if (this.liveness[i] != that.liveness[i]) return true;
+                if (this.liveness[i] != that.liveness[i]) return true;
             }
-	    return false;
-	}
+            return false;
+        }
         public ExactState copy() {
             ExactState that = new ExactState(this.stack.length, this.locals.length);
             System.arraycopy(this.stack, 0, that.stack, 0, this.stackDepth);
             System.arraycopy(this.locals, 0, that.locals, 0, this.locals.length);
             if (this.liveness != null) {
-		that.liveness = new boolean[this.liveness.length];
-		System.arraycopy(this.liveness, 0, that.liveness, 0, this.liveness.length);
-	    }
+                that.liveness = new boolean[this.liveness.length];
+                System.arraycopy(this.liveness, 0, that.liveness, 0, this.liveness.length);
+            }
             that.stackDepth = this.stackDepth;
             return that;
         }
@@ -578,44 +578,44 @@ public class LiveRefAnalysis {
             return that;
         }
         public boolean mergeLiveness(ExactState that) {
-	    if (that.liveness == null) return false;
-	    if (this.liveness == null) {
-		this.liveness = new boolean[this.locals.length];
-		System.arraycopy(that.liveness, 0, this.liveness, 0, this.liveness.length);
-		return true;
-	    }
+            if (that.liveness == null) return false;
+            if (this.liveness == null) {
+                this.liveness = new boolean[this.locals.length];
+                System.arraycopy(that.liveness, 0, this.liveness, 0, this.liveness.length);
+                return true;
+            }
             boolean change = false;
             for (int i=0; i<this.liveness.length; ++i) {
-		if (this.liveness[i]) continue;
-		if (that.liveness[i]) {
-		    this.liveness[i] = true;
-		    change = true;
-		    continue;
-		}
+                if (this.liveness[i]) continue;
+                if (that.liveness[i]) {
+                    this.liveness[i] = true;
+                    change = true;
+                    continue;
+                }
             }
             return change;
         }
-	// Conservative approximation!  we union the two live sets
-	// this == at JSR call, that == after JSR call
-	/*
+        // Conservative approximation!  we union the two live sets
+        // this == at JSR call, that == after JSR call
+        /*
         public boolean mergeLivenessJSR(ExactState that, ExactJSRState jsr_start) {
-	    if (that.liveness == null) return false;
-	    if (jsr_state.liveness == null) return false;
-	    if (this.liveness == null) {
-		this.liveness = new boolean[this.locals.length];
-	    }
+            if (that.liveness == null) return false;
+            if (jsr_state.liveness == null) return false;
+            if (this.liveness == null) {
+                this.liveness = new boolean[this.locals.length];
+            }
             boolean change = false;
             for (int i=0; i<this.liveness.length; ++i) {
-		if (this.liveness[i]) continue;
-		if (jsr_start.liveness[i] || that.liveness[i]) {
-		    this.liveness[i] = true;
-		    change = true;
-		    continue;
-		}
+                if (this.liveness[i]) continue;
+                if (jsr_start.liveness[i] || that.liveness[i]) {
+                    this.liveness[i] = true;
+                    change = true;
+                    continue;
+                }
             }
             return change;
-	}
-	*/
+        }
+        */
 
         public boolean merge(ExactState that) {
             jq.Assert(this.stackDepth == that.stackDepth);
@@ -628,21 +628,21 @@ public class LiveRefAnalysis {
                 this.stack[i] = t;
             }
             for (int i=0; i<this.locals.length; ++i) {
-		if (this.locals[i] == null) {
-		    continue;
-		}
-		if (that.locals[i] == null) {
-		    this.locals[i] = null;
-		    change = true;
-		    continue;
-		}
+                if (this.locals[i] == null) {
+                    continue;
+                }
+                if (that.locals[i] == null) {
+                    this.locals[i] = null;
+                    change = true;
+                    continue;
+                }
                 Type t = this.locals[i].findCommonSuperclass(that.locals[i]);
                 if (t != this.locals[i]) change = true;
                 this.locals[i] = t;
             }
             return change;
         }
-	// this == after JSR call, that == before JSR call, jsr_state == end of JSR body
+        // this == after JSR call, that == before JSR call, jsr_state == end of JSR body
         public boolean mergeJSR(ExactState that, ExactJSRState jsr_state) {
             jq.Assert(this.stackDepth == jsr_state.stackDepth);
             boolean change = false;
@@ -654,20 +654,20 @@ public class LiveRefAnalysis {
                 this.stack[i] = t;
             }
             for (int i=0; i<this.locals.length; ++i) {
-		if (this.locals[i] == null) {
-		    continue;
-		}
+                if (this.locals[i] == null) {
+                    continue;
+                }
                 Type that_type;
                 if (jsr_state.mayChangeLocals[i]) {
-		    that_type = jsr_state.locals[i];
+                    that_type = jsr_state.locals[i];
                 } else {
-		    that_type = that.locals[i];
-		}
+                    that_type = that.locals[i];
+                }
                 if (that_type == null) {
-		    this.locals[i] = null;
-		    change = true;
-		    continue;
-		}
+                    this.locals[i] = null;
+                    change = true;
+                    continue;
+                }
                 Type t = this.locals[i].findCommonSuperclass(that_type);
                 if (t != this.locals[i]) change = true;
                 this.locals[i] = t;
@@ -678,14 +678,14 @@ public class LiveRefAnalysis {
             jq.Assert(this.stackDepth == 1);
             boolean change = false;
             for (int i=0; i<this.locals.length; ++i) {
-		if (this.locals[i] == null) {
-		    continue;
-		}
-		if (that.locals[i] == null) {
-		    this.locals[i] = null;
-		    change = true;
-		    continue;
-		}
+                if (this.locals[i] == null) {
+                    continue;
+                }
+                if (that.locals[i] == null) {
+                    this.locals[i] = null;
+                    change = true;
+                    continue;
+                }
                 Type t = this.locals[i].findCommonSuperclass(that.locals[i]);
                 if (t != this.locals[i]) change = true;
                 this.locals[i] = t;
@@ -713,11 +713,11 @@ public class LiveRefAnalysis {
         void pop(jq_Type t) {
             if (t.isReferenceType()) pop_A();
             else if (t.isIntLike()) {
-		Type t2 = pop();
-		if (t2 instanceof DerivedRef)
-		    System.err.println("WARNING: method takes derived ref as an argument");
+                Type t2 = pop();
+                if (t2 instanceof DerivedRef)
+                    System.err.println("WARNING: method takes derived ref as an argument");
                 else jq.Assert(t2.equals(SystemType.INT));
-	    }
+            }
             else if (t.isIntLike()) pop_I();
             else if (t == jq_Primitive.FLOAT) pop_F();
             else if (t == jq_Primitive.LONG) pop_L();
@@ -739,47 +739,47 @@ public class LiveRefAnalysis {
         public Type getLocal(int i) { return locals[i]; }
 
         public Type getLiveLocal(int i) {
-	    if (liveness[i]) return locals[i];
-	    else return null;
-	}
-	void liveLocal_I(int bci, int i) {
-	    checkLastUse(bci, i); liveness[i] = true;
-	}
-	void liveLocal_F(int bci, int i) {
-	    checkLastUse(bci, i); liveness[i] = true;
-	}
-	void liveLocal_L(int bci, int i) {
-	    checkLastUse(bci, i); liveness[i] = true;
-	    checkLastUse(bci, i+1); liveness[i+1] = true;
-	}
-	void liveLocal_D(int bci, int i) {
-	    checkLastUse(bci, i); liveness[i] = true;
-	    checkLastUse(bci, i+1); liveness[i+1] = true;
-	}
-	void liveLocal_A(int bci, int i) {
-	    checkLastUse(bci, i); liveness[i] = true;
-	}
-	void deadLocal_I(int i) { liveness[i] = false; }
-	void deadLocal_F(int i) { liveness[i] = false; }
-	void deadLocal_L(int i) { liveness[i] = false; liveness[i+1] = false; }
-	void deadLocal_D(int i) { liveness[i] = false; liveness[i+1] = false; }
-	void deadLocal_A(int i) { liveness[i] = false; }
+            if (liveness[i]) return locals[i];
+            else return null;
+        }
+        void liveLocal_I(int bci, int i) {
+            checkLastUse(bci, i); liveness[i] = true;
+        }
+        void liveLocal_F(int bci, int i) {
+            checkLastUse(bci, i); liveness[i] = true;
+        }
+        void liveLocal_L(int bci, int i) {
+            checkLastUse(bci, i); liveness[i] = true;
+            checkLastUse(bci, i+1); liveness[i+1] = true;
+        }
+        void liveLocal_D(int bci, int i) {
+            checkLastUse(bci, i); liveness[i] = true;
+            checkLastUse(bci, i+1); liveness[i+1] = true;
+        }
+        void liveLocal_A(int bci, int i) {
+            checkLastUse(bci, i); liveness[i] = true;
+        }
+        void deadLocal_I(int i) { liveness[i] = false; }
+        void deadLocal_F(int i) { liveness[i] = false; }
+        void deadLocal_L(int i) { liveness[i] = false; liveness[i+1] = false; }
+        void deadLocal_D(int i) { liveness[i] = false; liveness[i+1] = false; }
+        void deadLocal_A(int i) { liveness[i] = false; }
 
-	void checkLastUse(int bci, int i) {
-	    if (liveness[i] == false) {
-		if (ALWAYS_TRACE)
-		    System.out.println(bci+": Last use of local "+i);
-		last_uses.add(new LastUse(bci, i));
-	    }
-	}
+        void checkLastUse(int bci, int i) {
+            if (liveness[i] == false) {
+                if (ALWAYS_TRACE)
+                    System.out.println(bci+": Last use of local "+i);
+                last_uses.add(new LastUse(bci, i));
+            }
+        }
 
-	static class LastUse {
-	    int bci, i;
-	    LastUse(int bci, int i) { this.bci = bci; this.i = i; }
-	}
+        static class LastUse {
+            int bci, i;
+            LastUse(int bci, int i) { this.bci = bci; this.i = i; }
+        }
 
         public int getNumberOfLocals() { return locals.length; }
-	
+        
         public String toString_live() {
             StringBuffer sb = new StringBuffer("Live Locals: { ");
             for (int i=0; i<locals.length; ++i) {
@@ -790,20 +790,20 @@ public class LiveRefAnalysis {
                 if (i < locals.length-1) sb.append(',');
             }
             sb.append(" }");
-	    if (stackDepth > 0) {
-		sb.append("\nStack: {");
-		for (int i=0; i<stackDepth; ++i) {
-		    sb.append(i);
-		    sb.append('=');
-		    sb.append(stack[i]==null?"null":stack[i].toString());
-		    if (i < stackDepth-1) sb.append(',');
-		}
-		sb.append(" }");
-	    }
+            if (stackDepth > 0) {
+                sb.append("\nStack: {");
+                for (int i=0; i<stackDepth; ++i) {
+                    sb.append(i);
+                    sb.append('=');
+                    sb.append(stack[i]==null?"null":stack[i].toString());
+                    if (i < stackDepth-1) sb.append(',');
+                }
+                sb.append(" }");
+            }
             return sb.toString();
-	}
+        }
         public String toString() {
-	    if (liveness != null) return toString_live();
+            if (liveness != null) return toString_live();
             StringBuffer sb = new StringBuffer("Locals: { ");
             for (int i=0; i<locals.length; ++i) {
                 if (getLocal(i) == null) continue;
@@ -813,16 +813,16 @@ public class LiveRefAnalysis {
                 if (i < locals.length-1) sb.append(',');
             }
             sb.append(" }");
-	    if (stackDepth > 0) {
-		sb.append("\nStack: {");
-		for (int i=0; i<stackDepth; ++i) {
-		    sb.append(i);
-		    sb.append('=');
-		    sb.append(stack[i]==null?"null":stack[i].toString());
-		    if (i < stackDepth-1) sb.append(',');
-		}
-		sb.append(" }");
-	    }
+            if (stackDepth > 0) {
+                sb.append("\nStack: {");
+                for (int i=0; i<stackDepth; ++i) {
+                    sb.append(i);
+                    sb.append('=');
+                    sb.append(stack[i]==null?"null":stack[i].toString());
+                    if (i < stackDepth-1) sb.append(',');
+                }
+                sb.append(" }");
+            }
             return sb.toString();
         }
     }
@@ -883,11 +883,11 @@ public class LiveRefAnalysis {
                 for (int i=0; i<bb.getNumberOfSuccessors(); ++i) {
                     BasicBlock jsr_caller = cfg.getBasicBlock(bb.getSuccessor(i).id-1);
                     if (TRACE) out.println("Merging with jsr successor "+bb.getSuccessor(i)+" from jsr call at "+jsr_caller);
-		    if (start_states[jsr_caller.id] != null) {
-			if (this.mergeJSRStateWith(jsr_caller, bb.getSuccessor(i))) go_again = true;
-		    } else {
-			if (TRACE) out.println("jsr "+jsr_caller+" is not yet reached (or is unreachable");
-		    }
+                    if (start_states[jsr_caller.id] != null) {
+                        if (this.mergeJSRStateWith(jsr_caller, bb.getSuccessor(i))) go_again = true;
+                    } else {
+                        if (TRACE) out.println("jsr "+jsr_caller+" is not yet reached (or is unreachable");
+                    }
                 }
             } else {
                 for (int i=0; i<bb.getNumberOfSuccessors(); ++i) {
@@ -915,7 +915,7 @@ public class LiveRefAnalysis {
                 }
             }
             if (change) go_again = true;
-	    return change;
+            return change;
         }
         
         private boolean mergeStateWith(BasicBlock bb2, boolean jsr) {
@@ -1062,8 +1062,8 @@ public class LiveRefAnalysis {
         public void visitIASTORE() {
             super.visitIASTORE();
             Type t1 = current_state.pop(); // may be storing a derived ref
-	    Type t2 = current_state.pop(); // may be using address as index
-	    current_state.pop_A();
+            Type t2 = current_state.pop(); // may be using address as index
+            current_state.pop_A();
             mergeWithExceptionHandlers();
         }
         public void visitLASTORE() {
@@ -1145,11 +1145,11 @@ public class LiveRefAnalysis {
         }
         public void visitIBINOP(byte op) {
             super.visitIBINOP(op);
-	    Type t1 = current_state.pop(); Type t2 = current_state.pop();
-	    if ((t1 instanceof DerivedRef) || (t2 instanceof DerivedRef))
-		current_state.push_R();
-	    else
-		current_state.push_I();
+            Type t1 = current_state.pop(); Type t2 = current_state.pop();
+            if ((t1 instanceof DerivedRef) || (t2 instanceof DerivedRef))
+                current_state.push_R();
+            else
+                current_state.push_I();
         }
         public void visitLBINOP(byte op) {
             super.visitLBINOP(op);
@@ -1444,7 +1444,7 @@ public class LiveRefAnalysis {
         public void visitIPUTFIELD(jq_InstanceField f) {
             super.visitIPUTFIELD(f);
             current_state.pop(); // field may be address field
-	    current_state.pop_A();
+            current_state.pop_A();
             mergeWithExceptionHandlers();
         }
         public void visitLPUTFIELD(jq_InstanceField f) {
@@ -1587,61 +1587,61 @@ public class LiveRefAnalysis {
         public String toString() { return "LR2/"+this.method.getName(); }
         
         public void traverseBB(Compil3r.BytecodeAnalysis.BasicBlock bb) {
-	    if ((end_states[bb.id] == null) || (start_states[bb.id] == null)) {
-		// unreachable block!
-		if (TRACE) out.println("Basic block "+bb+" is unreachable!");
-		return;
-	    }
+            if ((end_states[bb.id] == null) || (start_states[bb.id] == null)) {
+                // unreachable block!
+                if (TRACE) out.println("Basic block "+bb+" is unreachable!");
+                return;
+            }
             if (bb.getStart() == -1) {
-		return;
-	    }
-	    if (TRACE) out.println("Visiting "+bb);
-	    current_state = end_states[bb.id].copy();
-	    current_state.allocateLiveness();
-	    current_state.initializeLastUses();
-	    current_bb = bb;
-	    i_end = bb.getEnd();
-	    BitStringIterator it = bytecode_start.backwardsIterator(i_end);
-	    while (it.hasNext()) {
-		i_start = it.nextIndex(); i_end = i_start-1;
-		this.visitBytecode();
-		if (i_start <= bb.getStart()) break;
-	    }
-	    if (current_state.compareLiveness(start_states[bb.id]))
-		go_again = true;
-	    start_states[bb.id] = current_state;
+                return;
+            }
+            if (TRACE) out.println("Visiting "+bb);
+            current_state = end_states[bb.id].copy();
+            current_state.allocateLiveness();
+            current_state.initializeLastUses();
+            current_bb = bb;
+            i_end = bb.getEnd();
+            BitStringIterator it = bytecode_start.backwardsIterator(i_end);
+            while (it.hasNext()) {
+                i_start = it.nextIndex(); i_end = i_start-1;
+                this.visitBytecode();
+                if (i_start <= bb.getStart()) break;
+            }
+            if (current_state.compareLiveness(start_states[bb.id]))
+                go_again = true;
+            start_states[bb.id] = current_state;
             for (int i=0; i<bb.getNumberOfPredecessors(); ++i) {
                 this.mergeStateWith(bb.getPredecessor(i));
             }
         }
-	
+        
         private boolean mergeStateWith(BasicBlock bb2) {
             if (end_states[bb2.id] == null) {
                 end_states[bb2.id] = current_state.copy();
                 return true;
             } else return end_states[bb2.id].mergeLiveness(current_state);
         }
-	
-	public void visitPEI() {
-	    boolean change = false;
+        
+        public void visitPEI() {
+            boolean change = false;
             ExceptionHandlerIterator ehi = current_bb.getExceptionHandlers();
             while (ehi.hasNext()) {
                 ExceptionHandler eh = ehi.nextEH();
                 BasicBlock bb2 = eh.getEntry();
-		if (start_states[bb2.id] == null) {
-		    if (TRACE) out.println("No live var info for handler "+bb2+" yet");
-		    //change = true;
-		    continue;
-		}
+                if (start_states[bb2.id] == null) {
+                    if (TRACE) out.println("No live var info for handler "+bb2+" yet");
+                    //change = true;
+                    continue;
+                }
                 if (TRACE) out.println("Merging current state "+current_state+" with live var info from handler "+bb2+": "+start_states[bb2.id]);
-		// merge call is the same as the normal one
-		if (current_state.mergeLiveness(start_states[bb2.id])) {
-		    if (TRACE) out.println("Change in current state: "+current_state);
-		    change = true;
-		}
+                // merge call is the same as the normal one
+                if (current_state.mergeLiveness(start_states[bb2.id])) {
+                    if (TRACE) out.println("Change in current state: "+current_state);
+                    change = true;
+                }
             }
             //if (change) go_again = true;
-	}
+        }
 
         public void visitILOAD(int i) {
             super.visitILOAD(i);

@@ -40,18 +40,18 @@ public abstract class UnmodifiableListIterator implements ListIterator {
      * @exception UnsupportedOperationException always.
      */
     public final void remove() {
-	throw new UnsupportedOperationException("Unmodifiable Iterator");
+        throw new UnsupportedOperationException("Unmodifiable Iterator");
     }
     /** Always throws an <code>UnsupportedOperationException</code>.
      * @exception UnsupportedOperationException always.
      */
     public final void set(Object o) {
-	throw new UnsupportedOperationException("Unmodifiable Iterator");
+        throw new UnsupportedOperationException("Unmodifiable Iterator");
     }
     /** Always throws an <code>UnsupportedOperationException</code>.
      * @exception UnsupportedOperationException always.
      */
     public final void add(Object o) {
-	throw new UnsupportedOperationException("Unmodifiable Iterator");
+        throw new UnsupportedOperationException("Unmodifiable Iterator");
     }
 }

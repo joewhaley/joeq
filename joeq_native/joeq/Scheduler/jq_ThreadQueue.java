@@ -33,7 +33,7 @@ public class jq_ThreadQueue {
         jq.Assert(t.next == null);
         if (head == null) tail = t;
         else head.next = t;
-	head = t;
+        head = t;
     }
     
     public jq_Thread dequeue() {
@@ -47,26 +47,26 @@ public class jq_ThreadQueue {
     
     public boolean remove(jq_Thread t2) {
         jq_Thread p = head, q = null;
-	while (p != t2) {
-	    if (p == null) return false;
-	    q = p;
-	    p = p.next;
-	}
-	if (q == null) {
-	    jq.Assert(head == t2);
-	    head = t2.next;
-	    if (head == null) tail = null;
-	    else t2.next = null;
-	} else {
-	    q.next = p.next;
-	    if (p.next == null) {
-		jq.Assert(p == tail);
-		tail = q;
-	    } else {
-		p.next = null;
-	    }
-	}
-	return true;
+        while (p != t2) {
+            if (p == null) return false;
+            q = p;
+            p = p.next;
+        }
+        if (q == null) {
+            jq.Assert(head == t2);
+            head = t2.next;
+            if (head == null) tail = null;
+            else t2.next = null;
+        } else {
+            q.next = p.next;
+            if (p.next == null) {
+                jq.Assert(p == tail);
+                tail = q;
+            } else {
+                p.next = null;
+            }
+        }
+        return true;
     }
 
     public Iterator threads() {

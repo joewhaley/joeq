@@ -122,7 +122,7 @@ public class ControlFlowGraph {
         public void remove() { throw new UnsupportedOperationException(); }
         public void add(Object o) { throw new UnsupportedOperationException(); }
         public void set(Object o) { throw new UnsupportedOperationException(); }
-	public void jumpToEnd() { index = rpo.length-1; }
+        public void jumpToEnd() { index = rpo.length-1; }
         public String toString() {
             StringBuffer sb = new StringBuffer();
             for (int i=0; i<rpo.length; ++i) {

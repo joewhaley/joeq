@@ -57,11 +57,11 @@ public class Quad {
     public void setOp4(Operand op) { operand4 = op; }
 
     public Quad copy(int id_number) {
-	Operand op1 = (operand1!=null)?operand1.copy():null;
-	Operand op2 = (operand2!=null)?operand2.copy():null;
-	Operand op3 = (operand3!=null)?operand3.copy():null;
-	Operand op4 = (operand4!=null)?operand4.copy():null;
-	return new Quad(id_number, operator, op1, op2, op3, op4);
+        Operand op1 = (operand1!=null)?operand1.copy():null;
+        Operand op2 = (operand2!=null)?operand2.copy():null;
+        Operand op3 = (operand3!=null)?operand3.copy():null;
+        Operand op4 = (operand4!=null)?operand4.copy():null;
+        return new Quad(id_number, operator, op1, op2, op3, op4);
     }
     
     /** Return the operator for this quad. */
@@ -77,14 +77,14 @@ public class Quad {
      * Note that types in this list are not exact, therefore subtypes of the
      * returned types may also be thrown. */
     public List.jq_Class getThrownExceptions() {
-	if (operator == Return.THROW_A.INSTANCE) {
-	    Operand op = Return.getSrc(this);
-	    if (op instanceof RegisterOperand) {
-		// use the operand type.
-		return new UnmodifiableList.jq_Class((jq_Class)((RegisterOperand)op).getType());
-	    }
-	}
-	return this.operator.getThrownExceptions();
+        if (operator == Return.THROW_A.INSTANCE) {
+            Operand op = Return.getSrc(this);
+            if (op instanceof RegisterOperand) {
+                // use the operand type.
+                return new UnmodifiableList.jq_Class((jq_Class)((RegisterOperand)op).getType());
+            }
+        }
+        return this.operator.getThrownExceptions();
     }
 
     /** Returns a list of the registers defined by this quad. */

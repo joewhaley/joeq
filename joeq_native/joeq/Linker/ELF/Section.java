@@ -208,7 +208,7 @@ public abstract class Section implements ELFConstants {
     }
         
     public static class NullSection extends Section {
-	public static final NullSection INSTANCE = new NullSection();
+        public static final NullSection INSTANCE = new NullSection();
         private NullSection() { super("", 0, 0); }
         public int getIndex() { return 0; }
         public int getType() { return SHT_NULL; }
@@ -284,7 +284,7 @@ public abstract class Section implements ELFConstants {
             super(name, flags, addr);
             this.stringTable = stringTable;
             this.localSymbols = new LinkedList(); this.globalSymbols = new LinkedList();
-	    addSymbol(SymbolTableEntry.EmptySymbolTableEntry.INSTANCE);
+            addSymbol(SymbolTableEntry.EmptySymbolTableEntry.INSTANCE);
         }
         protected SymTabSection(int flags, int addr) {
             super(flags, addr);
@@ -300,14 +300,14 @@ public abstract class Section implements ELFConstants {
         public final int getLink() { return stringTable.getIndex(); }
         public final int getInfo() { return localSymbols.size(); }
         public final int getEntSize() { return SymbolTableEntry.getEntrySize(); }
-	public void setIndices() {
+        public void setIndices() {
             Iterator i = new AppendIterator(localSymbols.iterator(), globalSymbols.iterator());
-	    int j=-1;
+            int j=-1;
             while (i.hasNext()) {
                 SymbolTableEntry e = (SymbolTableEntry)i.next();
-		e.setIndex(++j);
+                e.setIndex(++j);
             }
-	}
+        }
         public SymbolTableEntry getSymbolTableEntry(int i) {
             if (i < localSymbols.size()) return (SymbolTableEntry)localSymbols.get(i);
             i -= localSymbols.size();
@@ -421,7 +421,7 @@ public abstract class Section implements ELFConstants {
         public final int getInfo() { return 0; }
         public final int getEntSize() { return 0; }
 
-	public final int getNumberOfEntries() { return string_map.size(); }
+        public final int getNumberOfEntries() { return string_map.size(); }
 
         public void addString(String s) { string_map.put(s, null); }
 
@@ -482,7 +482,7 @@ public abstract class Section implements ELFConstants {
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
-		if (e.getValue() == null) continue;
+                if (e.getValue() == null) continue;
                 index = ((Integer)e.getValue()).intValue();
                 //System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
                 

@@ -454,46 +454,46 @@ uphere:
             offset = 0;
         }
         if (args != null) {
-	    jq.Assert(params.length == args.length+offset);
-	    for (int i=0; i<args.length; ++i) {
-		jq_Type c = params[i+offset];
-		if (c.isReferenceType()) {
-		    if (args[i] != null && !TypeCheck.isAssignable(Unsafe.getTypeOf(args[i]), c))
-			throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
-		    Unsafe.pushArg(Unsafe.addressOf(args[i]));
-		} else {
-		    if (c == jq_Primitive.BYTE) {
-			int v = (int)unwrapToByte(args[i]);
-			Unsafe.pushArg(v);
-		    } else if (c == jq_Primitive.CHAR) {
-			int v = (int)unwrapToChar(args[i]);
-			Unsafe.pushArg(v);
-		    } else if (c == jq_Primitive.DOUBLE) {
-			long v = Double.doubleToRawLongBits(unwrapToDouble(args[i]));
-			Unsafe.pushArg((int)(v >> 32)); // hi
-			Unsafe.pushArg((int)v);         // lo
-		    } else if (c == jq_Primitive.FLOAT) {
-			int v = Float.floatToRawIntBits(unwrapToFloat(args[i]));
-			Unsafe.pushArg(v);
-		    } else if (c == jq_Primitive.INT) {
-			int v = unwrapToInt(args[i]);
-			Unsafe.pushArg(v);
-		    } else if (c == jq_Primitive.LONG) {
-			long v = unwrapToLong(args[i]);
-			Unsafe.pushArg((int)(v >> 32)); // hi
-			Unsafe.pushArg((int)v);         // lo
-		    } else if (c == jq_Primitive.SHORT) {
-			int v = (int)unwrapToShort(args[i]);
-			Unsafe.pushArg(v);
-		    } else if (c == jq_Primitive.BOOLEAN) {
-			int v = unwrapToBoolean(args[i])?1:0;
-			Unsafe.pushArg(v);
-		    } else jq.UNREACHABLE(c.toString());
-		}
-	    }
-	} else {
-	    jq.Assert(params.length == offset);
-	}
+            jq.Assert(params.length == args.length+offset);
+            for (int i=0; i<args.length; ++i) {
+                jq_Type c = params[i+offset];
+                if (c.isReferenceType()) {
+                    if (args[i] != null && !TypeCheck.isAssignable(Unsafe.getTypeOf(args[i]), c))
+                        throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
+                    Unsafe.pushArg(Unsafe.addressOf(args[i]));
+                } else {
+                    if (c == jq_Primitive.BYTE) {
+                        int v = (int)unwrapToByte(args[i]);
+                        Unsafe.pushArg(v);
+                    } else if (c == jq_Primitive.CHAR) {
+                        int v = (int)unwrapToChar(args[i]);
+                        Unsafe.pushArg(v);
+                    } else if (c == jq_Primitive.DOUBLE) {
+                        long v = Double.doubleToRawLongBits(unwrapToDouble(args[i]));
+                        Unsafe.pushArg((int)(v >> 32)); // hi
+                        Unsafe.pushArg((int)v);         // lo
+                    } else if (c == jq_Primitive.FLOAT) {
+                        int v = Float.floatToRawIntBits(unwrapToFloat(args[i]));
+                        Unsafe.pushArg(v);
+                    } else if (c == jq_Primitive.INT) {
+                        int v = unwrapToInt(args[i]);
+                        Unsafe.pushArg(v);
+                    } else if (c == jq_Primitive.LONG) {
+                        long v = unwrapToLong(args[i]);
+                        Unsafe.pushArg((int)(v >> 32)); // hi
+                        Unsafe.pushArg((int)v);         // lo
+                    } else if (c == jq_Primitive.SHORT) {
+                        int v = (int)unwrapToShort(args[i]);
+                        Unsafe.pushArg(v);
+                    } else if (c == jq_Primitive.BOOLEAN) {
+                        int v = unwrapToBoolean(args[i])?1:0;
+                        Unsafe.pushArg(v);
+                    } else jq.UNREACHABLE(c.toString());
+                }
+            }
+        } else {
+            jq.Assert(params.length == offset);
+        }
         try {
             return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
         } catch (Throwable t) {

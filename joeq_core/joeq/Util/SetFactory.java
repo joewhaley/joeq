@@ -22,27 +22,27 @@ public abstract class SetFactory extends CollectionFactory {
     }
     
     public final Collection makeCollection(Collection c) {
-	return makeSet(c);
+        return makeSet(c);
     }
 
     public final Collection makeCollection(int initCapacity) {
-	return makeSet(initCapacity);
+        return makeSet(initCapacity);
     }
 
     /** Generates a new, mutable, empty <code>Set</code>. */
     public final java.util.Set makeSet() {
-	return makeSet(Collections.EMPTY_SET);
+        return makeSet(Collections.EMPTY_SET);
     }
 
     /** Generates a new, mutable, empty <code>Set</code>, using
-	<code>initialCapacity</code> as a hint to use for the capacity
-	for the produced <code>Set</code>. */
+        <code>initialCapacity</code> as a hint to use for the capacity
+        for the produced <code>Set</code>. */
     public java.util.Set makeSet(int initialCapacity) {
-	return makeSet();
+        return makeSet();
     }
 
     /** Generates a new mutable <code>Set</code>, using the elements
-	of <code>c</code> as a template for its initial contents. 
+        of <code>c</code> as a template for its initial contents. 
     */ 
     public abstract Set makeSet(Collection c);
     
