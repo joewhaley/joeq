@@ -3514,6 +3514,9 @@ public abstract class Operator {
         public static Quad create(int id, ATOMICCAS4 operator, RegisterOperand res, Operand loc, Operand val1, Operand val2) {
             return new Quad(id, operator, res, loc, val1, val2);
         }
+        public static Quad create(int id, ATOMICCAS8 operator, RegisterOperand res, Operand loc, Operand val1, Operand val2) {
+            return new Quad(id, operator, res, loc, val1, val2);
+        }
         public static Quad create(int id, LONG_JUMP operator, Operand ip, Operand fp, Operand sp, Operand eax) {
             return new Quad(id, operator, ip, fp, sp, eax);
         }
@@ -3655,6 +3658,20 @@ public abstract class Operator {
                 int v2 = getIntOpValue(getOp4(q), s);
                 int r = o.atomicCas4(v1, v2);
                 s.putReg_I(((RegisterOperand) getOp1(q)).getRegister(), r);
+            }
+        }
+        public static class ATOMICCAS8 extends Special {
+            public static final ATOMICCAS8 INSTANCE = new ATOMICCAS8();
+            private ATOMICCAS8() { }
+            public String toString() { return "ATOMICCAS8"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg234(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                HeapAddress o = (HeapAddress) getAddressOpValue(getOp2(q), s);
+                long v1 = getLongOpValue(getOp3(q), s);
+                long v2 = getLongOpValue(getOp4(q), s);
+                long r = o.atomicCas8(v1, v2);
+                s.putReg_L(((RegisterOperand) getOp1(q)).getRegister(), r);
             }
         }
         public static class ALLOCA extends Special {

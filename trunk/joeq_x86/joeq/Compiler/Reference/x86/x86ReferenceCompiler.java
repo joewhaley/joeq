@@ -2622,6 +2622,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
     public static final Utf8 atomicAdd = Utf8.get("atomicAdd");
     public static final Utf8 atomicSub = Utf8.get("atomicSub");
     public static final Utf8 atomicCas4 = Utf8.get("atomicCas4");
+    public static final Utf8 atomicCas8 = Utf8.get("atomicCas4");
     public static final Utf8 atomicAnd = Utf8.get("atomicAnd");
     public static final Utf8 min = Utf8.get("min");
     public static final Utf8 max = Utf8.get("max");
@@ -2736,6 +2737,17 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
             if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
             asm.emit3_Reg_Mem(x86.CMPXCHG_32, EBX, 0, ECX);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
+        } else if (f.getName() == atomicCas8) {
+            // untested.
+            asm.emitShort_Reg(x86.POP_r, EBX); // lo after
+            asm.emitShort_Reg(x86.POP_r, ECX); // hi after
+            asm.emitShort_Reg(x86.POP_r, EAX); // lo before
+            asm.emitShort_Reg(x86.POP_r, EDX); // hi before
+            asm.emitShort_Reg(x86.POP_r, EDI); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emit3_Reg_Mem(x86.CMPXCHG8B, EAX, 0, EDI);
+            asm.emitShort_Reg(x86.PUSH_r, EDX); // hi result
+            asm.emitShort_Reg(x86.PUSH_r, EAX); // lo result
         } else if (f.getName() == atomicAnd) {
             asm.emitShort_Reg(x86.POP_r, EBX); // value
             asm.emitShort_Reg(x86.POP_r, EAX); // address
