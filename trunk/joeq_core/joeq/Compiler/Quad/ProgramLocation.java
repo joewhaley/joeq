@@ -119,6 +119,14 @@ public abstract class ProgramLocation {
             target.getDeclaringClass().load();
             if (target.getDeclaringClass().isFinal()) return true;
             target.getDeclaringClass().prepare();
+            if (!target.isLoaded()) {
+                target = target.resolve1();
+                if (!target.isLoaded()) {
+                    // bad target method!
+                    return false;
+                }
+                Invoke.getMethod(q).setMethod(target);
+            }
             if (!target.isVirtual()) return true;
             return false;
         }
