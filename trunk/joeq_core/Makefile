@@ -1,5 +1,5 @@
 PACKAGES = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Debugger GC Interpreter Linker Main Memory Run_Time Scheduler Support Synchronization UTF Util
-SUPPORT_LIBS = Support/javabdd_0.5.jar
+SUPPORT_LIBS = Support/javabdd_0.6.jar
 JDK14SUPPORT_LIB = Support/java14.jar
 
 ifeq (${OS},Windows_NT)
