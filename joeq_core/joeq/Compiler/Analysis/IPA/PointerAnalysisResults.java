@@ -57,7 +57,7 @@ public interface PointerAnalysisResults {
      * aliased with the given location, along with the set of contexts under
      * which each alias can occur.
      */
-    Set/*<Pair<SSALocation, ContextSet> >*/ getAliases(jq_Method method, SSALocation loc);
+    Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc);
     
     /**
      * Returns whether the given location may have aliases in the given set of
@@ -71,6 +71,3 @@ public interface PointerAnalysisResults {
     boolean hasAliases(jq_Method method, SSALocation loc);
 }
 
-class ContextSet {
-    // TODO: fill in the details of the representation
-}
