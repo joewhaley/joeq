@@ -1,0 +1,174 @@
+// Helper.java, created Thu Jan 16 10:53:32 2003 by mcmartin
+// Copyright (C) 2001-3 mcmartin
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
+package joeq.Main;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Type;
+
+public class ClasspathWalker {
+    private static final boolean TRACE = true;
+    
+    public static void main(String[] args){
+        for(Iterator iter = PrimordialClassLoader.loader.listPackages(); iter.hasNext();){
+            //System.out.println("\t" + iter.next());
+            String packageName = (String) iter.next();
+            HashSet loaded = new HashSet();
+            if(TRACE) System.out.println("Processing package " + packageName);
+            
+            for(Iterator classIter = PrimordialClassLoader.loader.listPackage(packageName, true); classIter.hasNext();){
+                String className = (String) classIter.next();
+                String canonicalClassName = canonicalizeClassName(className);
+                if (loaded.contains(canonicalClassName))
+                    continue;
+                loaded.add(canonicalClassName);
+                try {
+                    jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
+                    c.load();
+                    c.prepare();
+//                    if(c.isSubtypeOf(clazz)){                        
+//                        System.out.println("Initialized a subclass of " + clazz + ", class: " + c);
+//                        result.add(c);
+//                    }
+                } catch (NoClassDefFoundError x) {
+                    if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + ").");
+                } catch (LinkageError le) {
+                    if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):" + le.getMessage());
+                    //le.printStackTrace(System.err);
+                } catch (RuntimeException e){
+                    if(TRACE) System.err.println("Security error occured: " + e.getMessage());
+                }
+            }            
+        }
+    }
+    
+    public static String canonicalizeClassName(String s) {
+        if (s.endsWith(".class")) s = s.substring(0, s.length() - 6);
+        s = s.replace('.', '/');
+        String desc = "L" + s + ";";
+        return desc;
+    }
+
+    static {
+        HostedVM.initialize();
+    }
+
+    public static jq_Type load(String classname) {
+        try {
+            jq_Type c = jq_Type.parseType(classname);
+            c.load();
+            c.prepare();
+            return c;
+        } catch (NoClassDefFoundError e) {
+            System.err.println("Could not find class " + classname
+                + ", skipping.");
+        }
+        return null;
+    }
+
+    public static jq_Type[] loadPackage(String packagename) {
+        return loadPackages(packagename, false);
+    }
+
+    public static jq_Type[] loadPackages(String packagename) {
+        return loadPackages(packagename, true);
+    }
+
+    public static jq_Type[] loadPackages(String packagename, boolean recursive) {
+        String canonicalPackageName = packagename.replace('.', '/');
+        if (!canonicalPackageName.equals("")
+            && !canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
+        Iterator i = joeq.Class.PrimordialClassLoader.loader.listPackage(
+            canonicalPackageName, recursive);
+        if (!i.hasNext()) {
+            System.err.println("Package " + canonicalPackageName
+                + " not found.");
+        }
+        LinkedList ll = new LinkedList();
+        while (i.hasNext()) {
+            String c = (String) i.next();
+            c = c.substring(0, c.length() - 6);
+            jq_Type t = ClasspathWalker.load(c);
+            if (t != null) ll.add(t);
+        }
+        return (jq_Class[]) ll.toArray(new jq_Class[0]);
+    }
+
+    /**
+     * Add paths contained in file fileName. 
+     *  @param fileName -- name of the file with class paths
+     * */
+    public static void addToClassPath(String fileName) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(fileName));
+            for (;;) {
+                String s = br.readLine();
+                if (s == null) break;
+                if (s.length() == 0) continue;
+                if (s.startsWith("%")) continue;
+                if (s.startsWith("#")) continue;
+                PrimordialClassLoader.loader.addToClasspath(s);
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(2);
+        }
+    }
+
+    public static void addJarDir(String dir) {
+        List jars = new LinkedList();
+
+        addJarDir_aux(new File(dir), jars);
+
+        for (Iterator i = jars.iterator(); i.hasNext();) {
+            PrimordialClassLoader.loader.addToClasspath(i.next().toString());
+        }
+    }
+    
+    public static void addClassDir(String dir, boolean recurse) {
+        List classes = new LinkedList();
+
+        addClassDir_aux(new File(dir), classes, recurse);
+
+        for (Iterator i = classes.iterator(); i.hasNext();) {
+            String className = i.next().toString();
+            if(TRACE) System.out.println("Adding class " + className);
+            PrimordialClassLoader.loader.addToClasspath(className);
+        }
+    }
+
+    static private void addJarDir_aux(File f, List results) {
+        if (f.getPath().endsWith(".jar")) {
+            results.add(f.getPath());
+        } else if (f.list() != null) {
+            String[] contents=f.list();
+            for (int i = 0; i<contents.length; i++) {
+                addJarDir_aux(new File(f.getPath(), contents[i]), results);
+            }
+        }
+    }
+    
+    static private void addClassDir_aux(File f, List results, boolean recurse) {
+        if (f.getPath().endsWith(".class")) {
+            results.add(f.getPath());
+        } else if (f.list() != null && recurse) {
+            // directory 
+            String[] contents = f.list();
+            for (int i = 0; i<contents.length; i++) {
+                addClassDir_aux(new File(f.getPath(), contents[i]), results, recurse);
+            }
+        }
+    }
+
+  
+}
