@@ -12,6 +12,8 @@ package GC;
 
 import Util.BitString;
 import Allocator.SimpleAllocator;
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Class;
 import Memory.HeapAddress;
 
 public class GCBits {
@@ -35,10 +37,12 @@ public class GCBits {
      */
     private final BitString markbits = new BitString(bitLength);
 
-    public GCBits(HeapAddress blockHead, HeapAddress blockEnd) {
+    // Never created normally.  Always created with allocateObject_nogc.
+    private GCBits() {}
+
+    public void init(HeapAddress blockHead, HeapAddress blockEnd) {
         this.blockHead = blockHead;
         this.blockEnd = blockEnd;
-        GCBitsManager.register(this);
     }
 
     public void set(HeapAddress addr) {
@@ -65,4 +69,5 @@ public class GCBits {
         return markbits.get((addr.difference(blockHead)) / 8);
     }
 
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LGC/GCBits;");
 }

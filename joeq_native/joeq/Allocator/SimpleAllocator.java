@@ -16,6 +16,7 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Util.BitString;
 import GC.GCBits;
+import GC.GCBitsManager;
 
 /*
  * @author  John Whaley
@@ -56,7 +57,21 @@ public class SimpleAllocator extends HeapAllocator {
         if (heapCurrent.isNull())
             HeapAllocator.outOfMemory();
         heapEnd = (HeapAddress) heapFirst.offset(BLOCK_SIZE - 2 * HeapAddress.size());
-        heapEnd.poke(HeapAddress.addressOf(new GCBits(heapCurrent, heapEnd)));
+        installGCBits();
+    }
+
+    void installGCBits() {
+        final int size = GCBits._class.getInstanceSize();
+        final Object vtable = GCBits._class.getVTable();
+        GCBits gcb = (GCBits) allocateObject_nogc(size, vtable);
+        gcb.init(heapCurrent, heapEnd);
+        heapEnd.poke(HeapAddress.addressOf(gcb));
+        gcb.set(HeapAddress.addressOf(gcb));
+        GCBitsManager.register(gcb);
+    }
+
+    GCBits getGCBits() {
+        return (GCBits) ((HeapAddress) heapEnd.peek()).asObject();
     }
 
     /**
@@ -93,6 +108,13 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateObject(int size, Object vtable) throws OutOfMemoryError {
+        Object o = allocateObject_nogc(size, vtable);
+        GCBits gcBits = getGCBits();
+        gcBits.set((HeapAddress) HeapAddress.addressOf(o).offset(-OBJ_HEADER_SIZE));
+        return o;
+    }
+    
+    private final Object allocateObject_nogc(int size, Object vtable) throws OutOfMemoryError {
         if (size < OBJ_HEADER_SIZE) // size overflow! become minus!
             HeapAllocator.outOfMemory();
         //jq.Assert((size & 0x3) == 0);
@@ -106,17 +128,15 @@ public class SimpleAllocator extends HeapAllocator {
             heapCurrent = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
             if (heapCurrent.isNull())
                 HeapAllocator.outOfMemory();
-            // GCBits address already filled at allocation
+            // GCBits address of current block already filled
             heapEnd.offset(HeapAddress.size()).poke(heapCurrent);
             // address for per block GCBits plus address for next block
             heapEnd = (HeapAddress) heapCurrent.offset(BLOCK_SIZE - 2 * HeapAddress.size());
-            heapEnd.poke(HeapAddress.addressOf(new GCBits(heapCurrent, heapEnd)));
+            installGCBits();
             addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
             heapCurrent = (HeapAddress) heapCurrent.offset(size);
         }
         // fast path
-        GCBits gcBits = (GCBits) ((HeapAddress) heapEnd.peek()).asObject();
-        gcBits.set((HeapAddress) addr.offset(-OBJ_HEADER_SIZE));
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         return addr.asObject();
     }
@@ -169,20 +189,20 @@ public class SimpleAllocator extends HeapAllocator {
                 heapCurrent = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
                 if (heapCurrent.isNull())
                     outOfMemory();
-                // GCBits address already filled at allocation
+                // GCBits address of current block already filled
                 heapEnd.offset(HeapAddress.size()).poke(heapCurrent);
                 // address for per block GCBits plus address for next block
                 heapEnd = (HeapAddress) heapCurrent.offset(BLOCK_SIZE - 2 * HeapAddress.size());
-                heapEnd.poke(HeapAddress.addressOf(new GCBits(heapCurrent, heapEnd)));
+                installGCBits();
                 addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);
                 heapCurrent = (HeapAddress) heapCurrent.offset(size);
             }
         }
         // fast path
-        GCBits gcBits = (GCBits) ((HeapAddress) heapEnd.peek()).asObject();
-        gcBits.set((HeapAddress) addr.offset(-ARRAY_HEADER_SIZE));
         addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
+        GCBits gcBits = getGCBits();
+        gcBits.set((HeapAddress) addr.offset(-ARRAY_HEADER_SIZE));
         return addr.asObject();
     }
 
