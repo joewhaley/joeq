@@ -173,17 +173,17 @@ public class Monitor implements ObjectLayout {
             if (TRACE) SystemInterface.debugmsg("We ("+t+") own lock "+this+", incrementing entry count: "+this.entry_count);
             return;
         }
+	if (TRACE) SystemInterface.debugmsg("We ("+t+") are attempting to obtain lock "+this);
         // another thread or no thread owns the lock. increase atomic count.
         Unsafe.atomicAdd(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
         if (!Unsafe.isEQ()) {
             // someone else already owns the lock.
-            if (TRACE) SystemInterface.debugmsg("Someone else ("+m_t+") owns lock "+this+", waiting on semaphore ("+this.atomic_count+" waiters)");
+            if (TRACE) SystemInterface.debugmsg("Lock "+this+" cannot be obtained (owned by "+m_t+", or there are other waiters); waiting on semaphore ("+this.atomic_count+" waiters)");
             // create a semaphore if there isn't one already, and wait on it.
             this.waitOnSemaphore();
             if (TRACE) SystemInterface.debugmsg("We ("+t+") finished waiting on "+this);
         } else {
             if (TRACE) SystemInterface.debugmsg(this+" is unlocked, we ("+t+") obtain it.");
-	    jq.assert(this.atomic_count == 0);
         }
         jq.assert(this.monitor_owner == null);
         jq.assert(this.entry_count == 0);
@@ -208,6 +208,7 @@ public class Monitor implements ObjectLayout {
             if (TRACE) SystemInterface.debugmsg("Decrementing lock "+this+" entry count "+this.entry_count);
             return;
         }
+	if (TRACE) SystemInterface.debugmsg("We ("+t+") are unlocking lock "+this+", current waiters="+this.atomic_count);
         this.monitor_owner = null;
 	Unsafe.atomicSub(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
         if (Unsafe.isGE()) {

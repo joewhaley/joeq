@@ -211,8 +211,10 @@ public class jq_NativeThread implements x86Constants {
     public static void endCurrentJavaThread() {
         jq_Thread t = Unsafe.getThreadBlock();
         if (TRACE) SystemInterface.debugmsg("Ending Java thread "+t);
+	t.disableThreadSwitch();
         Unsafe.atomicSub(_num_of_java_threads.getAddress(), 1);
         jq_NativeThread nt = t.getNativeThread();
+	Unsafe.setThreadBlock(nt.schedulerThread);
         nt.currentThread = nt.schedulerThread;
         // long jump back to entry of schedulerLoop
         int ip = _schedulerLoop.getDefaultCompiledVersion().getEntrypoint();
@@ -255,6 +257,7 @@ public class jq_NativeThread implements x86Constants {
     public void schedulerLoop() {
         // preemption cannot occur in the scheduler loop because the
         // schedulerThread has thread switching disabled.
+	jq.assert(Unsafe.getThreadBlock() == this.schedulerThread);
         while (num_of_daemon_threads != num_of_java_threads) {
             jq.assert(currentThread == schedulerThread);
             jq_Thread t = getNextReadyThread();
@@ -311,6 +314,44 @@ public class jq_NativeThread implements x86Constants {
         jq.UNREACHABLE();
     }
     
+    /** Performs a thread switch to a specific thread in our local queue. */
+    public void threadSwitch(jq_Thread t2) {
+        // thread switching for the current thread is disabled on entry.
+        jq_Thread t1 = this.currentThread;
+	
+        Unsafe.setThreadBlock(this.schedulerThread);
+        this.currentThread = this.schedulerThread;
+        int/*CodeAddress*/ ip = Unsafe.peek(Unsafe.EBP()+4);
+        if (TRACE) SystemInterface.debugmsg("Thread switch in native thread: "+this+" Java thread: "+t1+" ip: "+jq.hex8(ip)+" cc: "+CodeAllocator.getCodeContaining(ip));
+        if (t1.isThreadSwitchEnabled()) {
+            SystemInterface.debugmsg("Java thread "+t1+" has thread switching enabled on threadSwitch entry!");
+            SystemInterface.die(-1);
+        }
+        jq.assert(t1 != this.schedulerThread);
+        
+        // simulate a return in the current register state, so when the thread gets swapped back
+        // in, it will continue where it left off.
+        jq_RegisterState state = t1.getRegisterState();
+        state.Eip = Unsafe.peek(state.Esp);
+        state.Esp += 8;
+        
+	if (t1 != t2) {
+	    // find given thread in our queue.
+	    boolean exists = readyQueue.remove(t2);
+	    jq.assert(exists);
+	    transferExtraWork();
+	    ip = t2.getRegisterState().Eip;
+	    if (TRACE) SystemInterface.debugmsg("New ready Java thread: "+t2+" ip: "+jq.hex8(ip)+" cc: "+CodeAllocator.getCodeContaining(ip));
+	    readyQueue.enqueue(t1);
+	    jq.assert(!t2.isThreadSwitchEnabled());
+	} else {
+	    transferExtraWork();
+	}
+	currentThread = t2;
+	SystemInterface.set_current_context(t2, t2.getRegisterState());
+        jq.UNREACHABLE();
+    }
+
     /** Transfer a Java thread from our ready queue to an idle native thread. */
     private void transferExtraWork() {
         // if we have extra work, transfer it to an idle thread
