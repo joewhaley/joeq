@@ -27,17 +27,25 @@ import Run_Time.Unsafe;
 import Util.Assert;
 import Util.Strings;
 
-/*
+/**
+ * A jq_NativeThread corresponds to a virtual CPU in the scheduler.  There is one
+ * jq_NativeThread object for each underlying (heavyweight) kernel thread.
+ * The Java (lightweight) threads are multiplexed across the jq_NativeThreads.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 
 public class jq_NativeThread implements x86Constants {
 
-    /** Trace flag. */
+    /** Trace flag.  When this is true, prints out debugging information about
+     * what is going on in the scheduler.
+     */
     public static /*final*/ boolean TRACE = false;
 
-    /** Data structure to represent the native thread that exists at virtual machine startup. */
+    /** Data structure to represent the native thread that exists at virtual
+     * machine startup.
+     */
     public static final jq_NativeThread initial_native_thread = new jq_NativeThread(0);
 
     /**
@@ -113,6 +121,9 @@ public class jq_NativeThread implements x86Constants {
     private static boolean all_native_threads_started;
 
     /** Initialize the extra native threads.
+     * 
+     * @param nt initial native thread
+     * @param num number of native threads to initialize
      */
     public static void initNativeThreads(jq_NativeThread nt, int num) {
         Assert._assert(num <= MAX_NATIVE_THREADS);
