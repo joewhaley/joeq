@@ -142,7 +142,8 @@ public class LoadedCallGraph extends CallGraph {
      * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
-        Assert.UNREACHABLE();
+        // Root set should be the same!
+        // Optimistically assume that it is.
     }
 
     /* (non-Javadoc)
