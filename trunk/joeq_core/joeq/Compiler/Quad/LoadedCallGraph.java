@@ -45,7 +45,9 @@ public class LoadedCallGraph extends CallGraph {
             out.println("CLASS "+klass.getJDKName().replace('.', '/'));
             for (Iterator j = classesToMethods.getValues(klass).iterator(); j.hasNext(); ) {
                 jq_Method m = (jq_Method) j.next();
-                out.println(" METHOD "+m.getName()+" "+m.getDesc());
+                out.print(" METHOD "+m.getName()+" "+m.getDesc());
+                if (cg.getRoots().contains(m)) out.println(" ROOT");
+                else out.println();
                 for (Iterator k = cg.getCallSites(m).iterator(); k.hasNext(); ) {
                     ProgramLocation pl = (ProgramLocation) k.next();
                     out.println("  CALLSITE "+pl.getBytecodeIndex());
@@ -59,11 +61,13 @@ public class LoadedCallGraph extends CallGraph {
     }
 
     protected Set/*<jq_Method>*/ methods;
+    protected Set/*<jq_Method>*/ roots;
     protected MultiMap/*<jq_Method,Integer>*/ callSites;
     protected InvertibleMultiMap/*<ProgramLocation,jq_Method>*/ edges;
 
     public LoadedCallGraph(String filename) throws IOException {
         this.methods = new LinkedHashSet();
+        this.roots = new LinkedHashSet();
         this.callSites = new GenericMultiMap();
         this.edges = new GenericInvertibleMultiMap();
         BufferedReader in = new BufferedReader(new FileReader(filename));
@@ -102,6 +106,10 @@ public class LoadedCallGraph extends CallGraph {
                 m = (jq_Method) k.getDeclaredMember(methodName, methodDesc);
                 Assert._assert(m != null);
                 methods.add(m);
+                if (st.hasMoreTokens()) {
+                    String arg = st.nextToken();
+                    if (arg.equals("ROOT")) roots.add(m);
+                }
                 continue;
             }
             if (id.equals("CALLSITE")) {
@@ -143,15 +151,14 @@ public class LoadedCallGraph extends CallGraph {
      */
     public void setRoots(Collection roots) {
         // Root set should be the same!
-        // Optimistically assume that it is.
+        Assert._assert(this.roots.equals(roots));
     }
 
     /* (non-Javadoc)
      * @see Compil3r.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
-        Assert.UNREACHABLE();
-        return null;
+        return roots;
     }
 
     /* (non-Javadoc)
