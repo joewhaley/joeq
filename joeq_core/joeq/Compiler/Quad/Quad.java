@@ -42,6 +42,9 @@ public class Quad {
     void accept(QuadVisitor qv) { this.operator.accept(this, qv); }
     
     public List.jq_Class getThrownExceptions() { return this.operator.getThrownExceptions(); }
+
+    public List.RegisterOperand getDefinedRegisters() { return this.operator.getDefinedRegisters(this); }
+    public List.RegisterOperand getUsedRegisters() { return this.operator.getUsedRegisters(this); }
     
     public String toString() {
         StringBuffer s = new StringBuffer();
