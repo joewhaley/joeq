@@ -211,6 +211,14 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         return (status & ObjectLayout.GC_BIT) != 0;
     }
     
+    public static void setGCBit(Object o, boolean b) {
+        HeapAddress a = (HeapAddress) HeapAddress.addressOf(o).offset(ObjectLayout.STATUS_WORD_OFFSET);
+        int status = a.peek4();
+        if (b) status |= ObjectLayout.GC_BIT;
+        else status &= ~ObjectLayout.GC_BIT;
+        a.poke4(status);
+    }
+    
     public static int[] getScalarObjectReferenceOffsets(Object o) {
         jq_Class t = (jq_Class) jq_Reference.getTypeOf(o);
         return t.getReferenceOffsets();

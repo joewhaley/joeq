@@ -59,7 +59,7 @@ public class CircularAddressQueue implements AddressQueue {
      */
     public void growQueue(int words) {
         // todo: use realloc here.
-        if (TRACE) Debug.writeln("Growing work queue to size ", words * HeapAddress.size());
+        if (true) Debug.writeln("Growing work queue to size ", words * HeapAddress.size());
         HeapAddress new_queue = (HeapAddress) SystemInterface.syscalloc(words * HeapAddress.size());
         if (TRACE) Debug.writeln("New Queue start: ", new_queue);
         if (new_queue.isNull())
@@ -88,8 +88,8 @@ public class CircularAddressQueue implements AddressQueue {
         queueStart = blockStart = new_queue;
         blockEnd = (HeapAddress) blockStart.offset(words * HeapAddress.size());
         queueEnd = (HeapAddress) queueStart.offset(size);
-        if (TRACE) Debug.writeln("New Block end:", blockEnd);
-        if (TRACE) Debug.writeln("New Queue end:", queueEnd);
+        if (true) Debug.writeln("New Block end:", blockEnd);
+        if (true) Debug.writeln("New Queue end:", queueEnd);
     }
     
     /* (non-Javadoc)
@@ -123,7 +123,7 @@ public class CircularAddressQueue implements AddressQueue {
      * @see joeq.Allocator.AddressQueue#push(joeq.Memory.Address)
      */
     public void push(Address a) {
-        if (TRACE) Debug.writeln("Adding object to queue: ", a);
+        if (TRACE) Debug.writeln("Adding to queue: ", a);
         if (space() <= HeapAddress.size()) {
             // need a bigger work queue!
             int size = blockEnd.difference(blockStart);
@@ -155,6 +155,7 @@ public class CircularAddressQueue implements AddressQueue {
             queueStart = blockStart;
             if (TRACE) Debug.writeln("Queue start pointer wrapped around to: ", queueStart);
         }
+        if (TRACE) Debug.writeln("Pulled from queue: ", a);
         return a;
     }
     
@@ -166,6 +167,7 @@ public class CircularAddressQueue implements AddressQueue {
             return HeapAddress.getNull();
         }
         Address a = (Address) queueStart.peek();
+        if (TRACE) Debug.writeln("Peeked from queue: ", a);
         return a;
     }
 }

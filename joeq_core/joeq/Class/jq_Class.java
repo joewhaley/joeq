@@ -2115,7 +2115,7 @@ uphere2:
                                 instance_fields[++currentInstanceField] = f;
                                 if (TRACE) Debug.writeln("Filling in field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - ObjectLayout.OBJ_HEADER_SIZE));
                                 f.prepare(size - ObjectLayout.OBJ_HEADER_SIZE);
-                                if (f.getType().isReferenceType())
+                                if (f.getType().isReferenceType() && !f.getType().isAddressType())
                                     ++numOfReferenceFields;
                                 size += fsize;
                                 align += fsize;
@@ -2135,7 +2135,7 @@ uphere2:
                         instance_fields[++currentInstanceField] = f;
                         if (TRACE) Debug.writeln("Laying out field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - ObjectLayout.OBJ_HEADER_SIZE));
                         f.prepare(size - ObjectLayout.OBJ_HEADER_SIZE);
-                        if (f.getType().isReferenceType())
+                        if (f.getType().isReferenceType() && !f.getType().isAddressType())
                             ++numOfReferenceFields;
                         size += f.getSize();
                     }
@@ -2147,7 +2147,7 @@ uphere2:
             int k = -1;
             for (int i=0; i < instance_fields.length; ++i) {
                 jq_InstanceField f = instance_fields[i];
-                if (f.getType().isReferenceType()) {
+                if (f.getType().isReferenceType() && !f.getType().isAddressType()) {
                     reference_offsets[++k] = f.getOffset(); 
                 }
             }
