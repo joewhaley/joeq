@@ -2907,7 +2907,7 @@ public class PA {
             M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
             if (CONTEXT_SENSITIVE) {
                 System.out.println("Thread runs="+thread_runs);
-                Map initialCounts = new ThreadRootMap(thread_runs);
+                Map initialCounts = null; //new ThreadRootMap(thread_runs);
                 BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
                 VC_BITS = paths.bitLength();
                 if (VC_BITS > MAX_VC_BITS)
@@ -3093,7 +3093,7 @@ public class PA {
         PathNumbering pn;
 	if (THREAD_SENSITIVE) pn = new RootPathNumbering();
         else pn = new SCCPathNumbering(heapPathSelector);
-        Map initialCounts = new ThreadRootMap(thread_runs);
+        Map initialCounts = null;//new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Number of paths for heap context sensitivity: "+paths);
         if (updateBits) {
