@@ -1,14 +1,12 @@
-# rules format:
-#(v1,_,v3) in r1, (v1,v3) in r2 / (v3,v1) in r3
-(v,h) in vP0, (h,t) in hT / (_,v,t) in vTc
-(i,m) in IE0, (vc2,i,vc1,m) in IEfilter / (vc2,i,vc1,m) in IE
-(v,t1) in vT, (t1,t2) in aT / (v,t2) in vTfilter
-(vc1,v1,vc2,v2) in A, (vc2,v2,t) in vTc, (v1,t) in vTfilter / (vc1,v1,t) in vTc
-(vc1,v1,t1) in vTc, (v1,f,v2) in S, (vc1,v2,t2) in vTc / (t1,f,t2) in tP split
-(vc1,v1,t1) in vTc, (v1,f,v2) in L, (t1,f,t2) in tP, (v2,t2) in vTfilter / (vc1,v2,t2) in vTc split
-(m,z,v1) in formal, (vc2,i,vc1,m) in IE, (i,z,v2) in actual / (vc1,v1,vc2,v2) in A
-(m,v1) in Mret, (vc2,i,vc1,m) in IE, (i,v2) in Iret / (vc2,v2,vc1,v1) in A
-(m,v1) in Mthr, (vc2,i,vc1,m) in IE, (i,v2) in Ithr / (vc2,v2,vc1,v1) in A
+vTc(_,v,t) :- vP0(v,h), hT(h,t).
+IE(vc2,i,vc1,m) :- IE0(i,m), IEfilter(vc2,i,vc1,m).
+vTfilter(v,t2) :- vT(v,t1), aT(t1,t2).
+vTc(vc1,v1,t) :- A(vc1,v1,vc2,v2), vTc(vc2,v2,t), vTfilter(v1,t).
+tP(t1,f,t2) :- vTc(vc1,v1,t1), S(v1,f,v2), vTc(vc1,v2,t2). split
+vP(vc1,v2,h2) :- vTc(vc1,v1,t1), L(v1,f,v2), tP(t1,f,t2), vTfilter(v2,t2). split
+A(vc1,v1,vc2,v2) :- formal(m,z,v1), IE(vc2,i,vc1,m), actual(i,z,v2).
+A(vc2,v2,vc1,v1) :- Mret(m,v1), IE(vc2,i,vc1,m), Iret(i,v2).
+A(vc2,v2,vc1,v1) :- Mthr(m,v1), IE(vc2,i,vc1,m), Iret(i,v2).
 
-# uncomment the next line to discover call graph edges
-# (m1,i,n) in mI, (i,0,v) in actual, (vc2,v,t) in vTc, (t,n,m2) in cha, (vc2,i,vc1,m2) in IEfilter / (vc2,i,vc1,m2) in IE
+# uncomment these lines to discover call graph edges.
+# IE(vc2,i,vc1,m2) :- mI(m1,i,n), actual(i,0,v), vTc(vc2,v,t), cha(t,n,m2), IEfilter(vc2,i,vc1,m2). split
