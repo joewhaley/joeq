@@ -2004,7 +2004,7 @@ public class MethodSummary {
         Node n;
         if (s.equals("Global")) {
             jq_Method m = (jq_Method) jq_Member.read(st);
-            if (m == null) return null;
+            //if (m == null) return null;
             n = new GlobalNode(m);
         } else if (s.equals("Concrete")) {
             jq_Reference r = (jq_Reference) jq_Type.read(st);

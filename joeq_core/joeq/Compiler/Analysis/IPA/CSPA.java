@@ -2228,7 +2228,7 @@ public class CSPA {
                 }
                 if (bad) {
                     int v_i = getVariableIndex((Variable) o);
-                    bms.vars.and(V1o.ithVar(v_i).not());
+                    bms.vars.andWith(V1o.ithVar(v_i).not());
                 }
             }
             if (TRACE_ESCAPE) System.out.println("Non-escaping locations for "+m+" = "+bms.vars.toStringWithDomains());
