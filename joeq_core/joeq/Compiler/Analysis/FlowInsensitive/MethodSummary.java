@@ -160,7 +160,7 @@ public class MethodSummary {
         summary_cache.clear();
         ConcreteTypeNode.FACTORY.clear();
         UnknownTypeNode.FACTORY.clear();
-        GlobalNode.GLOBAL = new GlobalNode();
+        GlobalNode.GLOBAL = new GlobalNode((jq_Method) null);
     }
     
     /** Cache of cloned method summaries. */
@@ -301,7 +301,7 @@ public class MethodSummary {
                     setLocal(j, param_nodes[i] = new ParamNode(method, i, (jq_Reference)params[i]));
                 } else if (params[i].getReferenceSize() == 8) ++j;
             }
-            this.my_global = new GlobalNode();
+            this.my_global = new GlobalNode(this.method);
             this.returned = NodeSet.FACTORY.makeSet(); this.thrown = NodeSet.FACTORY.makeSet();
             
             if (TRACE_INTRA) out.println("Building summary for "+this.method);
@@ -575,7 +575,7 @@ public class MethodSummary {
                         Register src_r = ((RegisterOperand)val).getRegister();
                         heapStore(base_r, src_r, null);
                     } else if (val instanceof AConstOperand) {
-                        jq_Reference type = ((AConstOperand)val).getType();
+                        //jq_Reference type = ((AConstOperand)val).getType();
                         Object value = ((AConstOperand)val).getValue();
                         Object key = value;
                         ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -602,7 +602,7 @@ public class MethodSummary {
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
-                    jq_Reference type = ((AConstOperand)src).getType();
+                    //jq_Reference type = ((AConstOperand)src).getType();
                     Object value = ((AConstOperand)src).getValue();
                     Object key = value;
                     ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -626,7 +626,7 @@ public class MethodSummary {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 setRegister(dest_r, getRegister(src_r));
             } else if (src instanceof AConstOperand) {
-                jq_Reference type = ((AConstOperand)src).getType();
+                //jq_Reference type = ((AConstOperand)src).getType();
                 Object value = ((AConstOperand)src).getValue();
                 Object key = value;
                 ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -754,7 +754,7 @@ public class MethodSummary {
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
-                    jq_Reference type = ((AConstOperand)src).getType();
+                    //jq_Reference type = ((AConstOperand)src).getType();
                     Object value = ((AConstOperand)src).getValue();
                     Object key = value;
                     ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -807,7 +807,7 @@ public class MethodSummary {
                         Register src_r = ((RegisterOperand)val).getRegister();
                         heapStore(base_r, src_r, f);
                     } else if (val instanceof AConstOperand) {
-                        jq_Reference type = ((AConstOperand)val).getType();
+                        //jq_Reference type = ((AConstOperand)val).getType();
                         Object value = ((AConstOperand)val).getValue();
                         Object key = value;
                         ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -838,7 +838,7 @@ public class MethodSummary {
                     Register src_r = ((RegisterOperand)val).getRegister();
                     heapStore(my_global, src_r, f);
                 } else if (val instanceof AConstOperand) {
-                    jq_Reference type = ((AConstOperand)val).getType();
+                    //jq_Reference type = ((AConstOperand)val).getType();
                     Object value = ((AConstOperand)val).getValue();
                     Object key = value;
                     ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -872,7 +872,7 @@ public class MethodSummary {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 addToSet(r, getRegister(src_r));
             } else if (src instanceof AConstOperand) {
-                jq_Reference type = ((AConstOperand)src).getType();
+                //jq_Reference type = ((AConstOperand)src).getType();
                 Object value = ((AConstOperand)src).getValue();
                 Object key = value;
                 ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -932,7 +932,7 @@ public class MethodSummary {
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
-                    jq_Reference type = ((AConstOperand)src).getType();
+                    //jq_Reference type = ((AConstOperand)src).getType();
                     Object value = ((AConstOperand)src).getValue();
                     Object key = value;
                     ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
@@ -955,7 +955,7 @@ public class MethodSummary {
             // special case for method invocation.
             if (obj.getOperator() instanceof Invoke) {
                 Invoke.getMethod(obj).resolve();
-                jq_Method m = Invoke.getMethod(obj).getMethod();
+                //jq_Method m = Invoke.getMethod(obj).getMethod();
                 ProgramLocation mc = new ProgramLocation.QuadProgramLocation(method, obj);
                 ThrownExceptionNode n = (ThrownExceptionNode) callToTEN.get(mc);
                 if (n == null) {
@@ -2003,7 +2003,9 @@ public class MethodSummary {
         String s = st.nextToken();
         Node n;
         if (s.equals("Global")) {
-            n = new GlobalNode();
+            jq_Method m = (jq_Method) jq_Member.read(st);
+            if (m == null) return null;
+            n = new GlobalNode(m);
         } else if (s.equals("Concrete")) {
             jq_Reference r = (jq_Reference) jq_Type.read(st);
             ProgramLocation q = ProgramLocation.read(st);
@@ -2362,21 +2364,26 @@ public class MethodSummary {
      *  It has no predecessors, and there is a global copy stored in GLOBAL.
      */
     public static final class GlobalNode extends OutsideNode {
-        public GlobalNode() {
+        jq_Method method;
+        public GlobalNode(jq_Method m) {
+            this.method = m;
             if (TRACE_INTRA) out.println("Created "+this.toString_long());
         }
         private GlobalNode(GlobalNode that) {
             super(that);
+            this.method = that.method;
         }
         public jq_Reference getDeclaredType() { Assert.UNREACHABLE(); return null; }
-        public jq_Method getDefiningMethod() { return null; }
+        public jq_Method getDefiningMethod() { return method; }
         public final Node copy() {
             Assert._assert(this != GLOBAL);
             return new GlobalNode(this);
         }
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "global@"+Integer.toHexString(this.hashCode()); }
-        public static GlobalNode GLOBAL = new GlobalNode();
+        public String toString_short() {
+            return "global("+(method==null?null:method.getName())+")";
+        }
+        public static GlobalNode GLOBAL = new GlobalNode((jq_Method) null);
         
         public void addDefaultStatics() {
             jq_Class c;
@@ -2402,7 +2409,8 @@ public class MethodSummary {
         }
         
         public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("Global");
+            out.writeBytes("Global ");
+            writeMember(out, method);
             super.write(map, out);
         }
         
@@ -4183,9 +4191,9 @@ outer:
             }
         }
         if (n.accessPathEdges != null) {
-            for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
+            for (Iterator i = n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                jq_Field f = (jq_Field)e.getKey();
+                //jq_Field f = (jq_Field)e.getKey();
                 Object o = e.getValue();
                 if (o instanceof Node) {
                     if (addIfUseful(visited, path, (Node)o)) {
@@ -4427,9 +4435,9 @@ outer:
                 }
             }
             if (n.accessPathEdges != null) {
-                for (Iterator j=n.accessPathEdges.entrySet().iterator(); j.hasNext(); ) {
+                for (Iterator j = n.accessPathEdges.entrySet().iterator(); j.hasNext(); ) {
                     Map.Entry e = (Map.Entry) j.next();
-                    jq_Field f = (jq_Field) e.getKey();
+                    //jq_Field f = (jq_Field) e.getKey();
                     Object o = e.getValue();
                     if (o instanceof FieldNode) {
                         FieldNode n2 = (FieldNode) o;
