@@ -193,6 +193,7 @@ public class BDDSolver extends Solver {
                 List key = (List) e.getKey();
                 if (doesOrderMatch(doms, key)) {
                     System.out.println("Order "+doms+" invalidated by "+key);
+                    orderingConstraints.put(doms, MAX);
                     return Long.MAX_VALUE;
                 }
             }
