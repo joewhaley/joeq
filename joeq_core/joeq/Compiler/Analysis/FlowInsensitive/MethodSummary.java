@@ -30,6 +30,7 @@ import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
+import Compil3r.Analysis.IPA.LoopAnalysis;
 import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Quad.BasicBlock;
@@ -101,6 +102,8 @@ public class MethodSummary {
 
     public static final boolean USE_IDENTITY_HASHCODE = false;
     public static final boolean DETERMINISTIC = !USE_IDENTITY_HASHCODE && true;
+    
+    public static final boolean SPLIT_THREADS = true;
     
     /**
      * Helper class to output method summary in dot graph format.
@@ -811,11 +814,34 @@ public class MethodSummary {
                 }
             }
         }
+        LoopAnalysis la;
         /** Visit an object allocation instruction. */
         public void visitNew(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Register dest_r = New.getDest(obj).getRegister();
             jq_Reference type = (jq_Reference)New.getType(obj).getType();
+            if (SPLIT_THREADS && type != null) {
+                type.prepare();
+                jq_Class jlt = PrimordialClassLoader.getJavaLangThread();
+                jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
+                jlt.prepare(); jlr.prepare();
+                if (type.isSubtypeOf(jlt) ||
+                    type.isSubtypeOf(jlr)) {
+                    if (la == null) la = new LoopAnalysis();
+                    if (la.isInLoop(method, bb)) {
+                        System.out.println("Found thread creation in loop: "+obj);
+                        Object key = obj;
+                        Pair p = (Pair) quadsToNodes.get(key);
+                        if (p == null) {
+                            p = new Pair(new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)),
+                                         new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                            quadsToNodes.put(key, p);
+                        }
+                        setRegister(dest_r, p);
+                        return;
+                    }
+                }
+            }
             Object key = obj;
             ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
             if (n == null)
