@@ -39,20 +39,20 @@ public interface Operand {
         private Register register; private jq_Type type; private int flags;
         public static final int PRECISE_TYPE = 0x1;
         public Object scratchObject;
-        RegisterOperand(Register reg, jq_Type type) {
+        public RegisterOperand(Register reg, jq_Type type) {
             this(reg, type, 0);
         }
-        RegisterOperand(Register reg, jq_Type type, int flags) {
+        public RegisterOperand(Register reg, jq_Type type, int flags) {
             this.register = reg; this.type = type; this.flags = flags;
         }
         public Register getRegister() { return register; }
-        jq_Type getType() { return type; }
-        int getFlags() { return flags; }
-        void setFlags(int f) { flags = f; }
-        void meetFlags(int f) { flags &= f; }
-        boolean isExactType() { return (flags & PRECISE_TYPE) != 0; }
-        void clearExactType() { flags &= ~PRECISE_TYPE; }
-        boolean hasMoreConservativeFlags(RegisterOperand that) { return that.getFlags() == (getFlags() | that.getFlags()); }
+        public jq_Type getType() { return type; }
+        public int getFlags() { return flags; }
+        public void setFlags(int f) { flags = f; }
+        public void meetFlags(int f) { flags &= f; }
+        public boolean isExactType() { return (flags & PRECISE_TYPE) != 0; }
+        public void clearExactType() { flags &= ~PRECISE_TYPE; }
+        public boolean hasMoreConservativeFlags(RegisterOperand that) { return that.getFlags() == (getFlags() | that.getFlags()); }
         public Operand copy() { return new RegisterOperand(this.register, this.type, this.flags); }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
@@ -63,7 +63,7 @@ public interface Operand {
     public static class AConstOperand implements Operand {
         private Quad instruction;
         private final Object value;
-        AConstOperand(Object v) { this.value = v; }
+        public AConstOperand(Object v) { this.value = v; }
         //public int hashCode() { return System.identityHashCode(value); }
         //public boolean equals(Object that) { return equals((AConstOperand)that); }
         //public boolean equals(AConstOperand that) { return this.value == that.value; }
@@ -81,7 +81,7 @@ public interface Operand {
     public static class IConstOperand implements Operand {
         private Quad instruction;
         private final int value;
-        IConstOperand(int v) { this.value = v; }
+        public IConstOperand(int v) { this.value = v; }
         //public int hashCode() { return value; }
         //public boolean equals(Object that) { return equals((IConstOperand)that); }
         //public boolean equals(IConstOperand that) { return this.value == that.value; }
@@ -96,7 +96,7 @@ public interface Operand {
     public static class FConstOperand implements Operand {
         private Quad instruction;
         private final float value;
-        FConstOperand(float v) { this.value = v; }
+        public FConstOperand(float v) { this.value = v; }
         //public int hashCode() { return Float.floatToRawIntBits(value); }
         //public boolean equals(Object that) { return equals((FConstOperand)that); }
         //public boolean equals(FConstOperand that) { return this.value == that.value; }
@@ -111,7 +111,7 @@ public interface Operand {
     public static class LConstOperand implements Operand {
         private Quad instruction;
         private final long value;
-        LConstOperand(long v) { this.value = v; }
+        public LConstOperand(long v) { this.value = v; }
         //public int hashCode() { return (int)(value>>32) ^ (int)value; }
         //public boolean equals(Object that) { return equals((LConstOperand)that); }
         //public boolean equals(DConstOperand that) { return this.value == that.value; }
@@ -126,7 +126,7 @@ public interface Operand {
     public static class DConstOperand implements Operand {
         private Quad instruction;
         private final double value;
-        DConstOperand(double v) { this.value = v; }
+        public DConstOperand(double v) { this.value = v; }
         //public int hashCode() { long v = Double.doubleToRawLongBits(value); return (int)(v>>32) ^ (int)v; }
         //public boolean equals(Object that) { return equals((DConstOperand)that); }
         //public boolean equals(DConstOperand that) { return this.value == that.value; }
@@ -140,7 +140,7 @@ public interface Operand {
 
     public static class UnnecessaryGuardOperand implements Operand {
         private Quad instruction;
-        UnnecessaryGuardOperand() {}
+        public UnnecessaryGuardOperand() {}
         //public int hashCode() { return 67; }
         //public boolean equals(Object that) { return that instanceof UnnecessaryGuardOperand; }
         public String toString() { return "<no guard>"; }
@@ -152,7 +152,7 @@ public interface Operand {
     
     public static class ConditionOperand implements Operand {
         private Quad instruction; byte condition;
-        ConditionOperand(byte c) { condition = c; }
+        public ConditionOperand(byte c) { condition = c; }
         //public int hashCode() { return condition; }
         //public boolean equals(Object that) { return this.equals((ConditionOperand)that); }
         //public boolean equals(ConditionOperand that) { return this.condition == that.condition; }
@@ -166,7 +166,7 @@ public interface Operand {
 
     public static class FieldOperand implements Operand {
         private Quad instruction; jq_Field field;
-        FieldOperand(jq_Field f) { field = f; }
+        public FieldOperand(jq_Field f) { field = f; }
         public jq_Field getField() { return field; }
         public String toString() { return "."+field.getName(); }
         public Operand copy() { return new FieldOperand(field); }
@@ -188,7 +188,7 @@ public interface Operand {
     
     public static class TargetOperand implements Operand {
         private Quad instruction; BasicBlock target;
-        TargetOperand(BasicBlock t) { target = t; }
+        public TargetOperand(BasicBlock t) { target = t; }
         public BasicBlock getTarget() { return target; }
         public String toString() { return target.toString(); }
         public Operand copy() { return new TargetOperand(target); }
@@ -199,7 +199,7 @@ public interface Operand {
     
     public static class MethodOperand implements Operand {
         private Quad instruction; jq_Method target;
-        MethodOperand(jq_Method t) { target = t; }
+        public MethodOperand(jq_Method t) { target = t; }
         public jq_Method getMethod() { return target; }
         public String toString() { return target.toString(); }
         public Operand copy() { return new MethodOperand(target); }
@@ -210,7 +210,7 @@ public interface Operand {
     
     public static class IntValueTableOperand implements Operand {
         private Quad instruction; int[] table;
-        IntValueTableOperand(int[] t) { table = t; }
+        public IntValueTableOperand(int[] t) { table = t; }
         public void set(int i, int b) { table[i] = b; }
         public int get(int i) { return table[i]; }
 	public int size() { return table.length; }
@@ -238,7 +238,7 @@ public interface Operand {
     
     public static class BasicBlockTableOperand implements Operand {
         private Quad instruction; BasicBlock[] table;
-        BasicBlockTableOperand(BasicBlock[] t) { table = t; }
+        public BasicBlockTableOperand(BasicBlock[] t) { table = t; }
         public void set(int i, BasicBlock b) { table[i] = b; }
         public BasicBlock get(int i) { return table[i]; }
 	public int size() { return table.length; }
@@ -266,7 +266,7 @@ public interface Operand {
     
     public static class ParamListOperand implements Operand {
         private Quad instruction; RegisterOperand[] params;
-        ParamListOperand(RegisterOperand[] t) { params = t; }
+        public ParamListOperand(RegisterOperand[] t) { params = t; }
         public void set(int i, RegisterOperand b) { params[i] = b; }
         public RegisterOperand get(int i) { return params[i]; }
         public int length() { return params.length; }
