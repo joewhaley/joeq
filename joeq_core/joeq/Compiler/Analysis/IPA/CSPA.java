@@ -104,6 +104,9 @@ public class CSPA {
     public static final boolean CONTEXT_SENSITIVE = true;
     public static final boolean CONTEXT_SENSITIVE_HEAP = true;
     
+    public static boolean NUKE_OLD_FILES = false; // if true, will ignore
+                                                  // existing files and always create new ones.
+    
     public static void main(String[] args) throws IOException {
     	runAnalysis(args);
     }
@@ -124,11 +127,22 @@ public class CSPA {
                     break;
                 }
             }
+            if (args[1].equals("--nukefiles")) {
+                NUKE_OLD_FILES = true;
+            }
+        }
+        if (args.length > 2 && args[2].equals("--nukefiles")) {
+            NUKE_OLD_FILES = true;
         }
         
         String callgraphfilename = System.getProperty("callgraph", "callgraph");
         
         CallGraph cg = null;
+        
+        if (NUKE_OLD_FILES) {
+            (new File(callgraphfilename)).delete();
+        }
+        
         if (new File(callgraphfilename).exists()) {
             try {
                 System.out.print("Loading initial call graph...");
