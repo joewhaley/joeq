@@ -803,15 +803,16 @@ public class CSPAResults {
         int HEAPBITS = Integer.parseInt(st.nextToken());
         int FIELDBITS = Integer.parseInt(st.nextToken());
         int CLASSBITS = Integer.parseInt(st.nextToken());
-        int CONTEXTBITS = Integer.parseInt(st.nextToken());
+        int VARCONTEXTBITS = Integer.parseInt(st.nextToken());
+        int HEAPCONTEXTBITS = Integer.parseInt(st.nextToken());
         int[] domainBits;
         int[] domainSpos;
         BDDDomain[] bdd_domains;
-        domainBits = new int[] {VARBITS, CONTEXTBITS,
-                                VARBITS, CONTEXTBITS,
+        domainBits = new int[] {VARBITS, VARCONTEXTBITS,
+                                VARBITS, VARCONTEXTBITS,
                                 FIELDBITS,
-                                HEAPBITS, CONTEXTBITS,
-                                HEAPBITS, CONTEXTBITS};
+                                HEAPBITS, HEAPCONTEXTBITS,
+                                HEAPBITS, HEAPCONTEXTBITS};
         domainSpos = new int[domainBits.length];
         
         long[] domains = new long[domainBits.length];
@@ -841,7 +842,7 @@ public class CSPAResults {
         
         long[] domains2 = new long[2];
         domains2[0] = 1L << HEAPBITS;
-        domains2[1] = 1L << CONTEXTBITS;
+        domains2[1] = 1L << HEAPCONTEXTBITS;
         BDDDomain[] bdd_domains2 = bdd.extDomain(domains2);
         
         H3o = bdd_domains2[0];
