@@ -100,7 +100,8 @@ public abstract class Operator {
         if (op instanceof RegisterOperand)
             return (Address)s.getReg(((RegisterOperand)op).getRegister());
         else
-            return HeapAddress.addressOf(((PConstOperand)op).getValue());
+            return ((PConstOperand)op).getValue();
+            //return HeapAddress.addressOf(((PConstOperand)op).getValue());
     }
     
     static Object getWrappedOpValue(Operand op, QuadInterpreter s) {
