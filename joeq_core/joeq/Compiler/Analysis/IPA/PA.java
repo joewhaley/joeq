@@ -153,7 +153,7 @@ public class PA {
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDDPairing V1ctoV2c, V1cV2ctoV2cV1c;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
-    BDD V1V2set, V1H1set, IMset, H1Fset, H2Fset, H1FH2set, T2Nset, MZset;
+    BDD V1V2set, V1Fset, V1H1set, IMset, H1Fset, H2Fset, H1FH2set, T2Nset, MZset;
     BDD V1cV2cset;
     
     Set visitedMethods = new HashSet();
@@ -202,6 +202,9 @@ public class PA {
             V2toV1 = bdd.makePair();
             V2toV1.set(new BDDDomain[] {V2,V2c},
                        new BDDDomain[] {V1,V1c});
+            H2toH1 = bdd.makePair();
+            H2toH1.set(new BDDDomain[] {H2,H2c},
+                       new BDDDomain[] {H1,H1c});
             V1H1toV2H2 = bdd.makePair();
             V1H1toV2H2.set(new BDDDomain[] {V1,H1,V1c,H1c},
                            new BDDDomain[] {V2,H2,V2c,H2c});
@@ -220,6 +223,7 @@ public class PA {
         } else {
             V1toV2 = bdd.makePair(V1, V2);
             V2toV1 = bdd.makePair(V2, V1);
+            H2toH1 = bdd.makePair(H2, H1);
             V1H1toV2H2 = bdd.makePair();
             V1H1toV2H2.set(new BDDDomain[] {V1,H1},
                            new BDDDomain[] {V2,H2});
@@ -251,6 +255,7 @@ public class PA {
         }
         V1V2set = V1set.and(V2set);
         V1H1set = V1set.and(H1set);
+        V1Fset = V1set.and(Fset);
         IMset = Iset.and(Mset);
         H1Fset = H1set.and(Fset);
         H2Fset = H2set.and(Fset);
@@ -1509,21 +1514,21 @@ public class PA {
         public String elementName(int i, long j) {
             switch (i) {
                 case 0: // fallthrough
-                case 1: return Vmap.get((int)j).toString();
-                case 2: return Imap.get((int)j).toString();
+                case 1: return "("+j+")"+Vmap.get((int)j).toString();
+                case 2: return "("+j+")"+Imap.get((int)j).toString();
                 case 3: // fallthrough
-                case 4: return Hmap.get((int)j).toString();
+                case 4: return "("+j+")"+Hmap.get((int)j).toString();
                 case 5: return Long.toString(j);
-                case 6: return ""+Fmap.get((int)j);
+                case 6: return "("+j+")"+Fmap.get((int)j);
                 case 7: // fallthrough
-                case 8: return ""+Tmap.get((int)j);
-                case 9: return Nmap.get((int)j).toString();
-                case 10: return Mmap.get((int)j).toString();
+                case 8: return "("+j+")"+Tmap.get((int)j);
+                case 9: return "("+j+")"+Nmap.get((int)j).toString();
+                case 10: return "("+j+")"+Mmap.get((int)j).toString();
                 case 11: return Long.toString(j);
                 case 12: return Long.toString(j);
                 case 13: return Long.toString(j);
                 case 14: return Long.toString(j);
-                default: return "??";
+                default: return "("+j+")"+"??";
             }
         }
     }
