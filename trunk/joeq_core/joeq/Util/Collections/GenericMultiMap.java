@@ -379,7 +379,7 @@ public class GenericMultiMap/*<K,V>*/ implements MultiMap/*<K,V>*/ {
                 public boolean hasNext() { return it.hasNext(); }
                 public Object/*K*/ next() { return (lastKey=it.next()); }
                 public void remove() {
-                    Collection/*<V>*/ c = (Collection)internMap.get(lastKey);
+                    internMap.get(lastKey);
                     it.remove();
                 }
             };

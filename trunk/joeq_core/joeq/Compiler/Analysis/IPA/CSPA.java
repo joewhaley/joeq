@@ -1057,7 +1057,7 @@ public class CSPA {
             localOrders[i] = new int[bdd.getDomain(i).varNum()];
         }
         
-        for (int i=0, pos=0; i<nDomains; ++i) {
+        for (int i=0; i<nDomains; ++i) {
             BDDDomain d = bdd.getDomain(i);
             int nVars = d.varNum();
             for (int j=0; j<nVars; ++j) {
@@ -1197,7 +1197,6 @@ public class CSPA {
     public void addClassType(jq_Reference type) {
         if (type == null) return;
         if (typeIndexMap.contains(type)) return;
-        int type_i = getTypeIndex(type);
         if (type instanceof jq_Class) {
             jq_Class k = (jq_Class) type;
             k.prepare();
@@ -1448,8 +1447,6 @@ public class CSPA {
     public void bindParameters(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
         if (TRACE_CALLGRAPH)
             System.out.println("Adding call graph edge "+caller.getMethod()+"->"+callee.getMethod());
-        BDDMethodSummary caller_s = this.getBDDSummary(caller);
-        BDDMethodSummary callee_s = this.getBDDSummary(callee);
         Pair p = new Pair(mapCall(mc), callee.getMethod());
         Range r_edge = pn_vars.getEdge(p);
         Range r_caller = pn_vars.getRange(caller.getMethod());
@@ -2067,11 +2064,11 @@ public class CSPA {
         }
         
         public void addUpwardEscapeNode(Variable n) {
-            int n_i = getVariableIndex(n);
+            //int n_i = getVariableIndex(n);
         }
         
         public void addDownwardEscapeNode(Variable n) {
-            int n_i = getVariableIndex(n);
+            //int n_i = getVariableIndex(n);
         }
         
         public String toString() {
@@ -2184,7 +2181,6 @@ public class CSPA {
             jq_Method m = (jq_Method) i.next();
             BDDMethodSummary bms = getOrCreateBDDSummary(m);
             if (bms == null) continue;
-            BDD range;
             SCComponent scc = (SCComponent) pn_vars.getSCC(m);
             if (scc.isLoop()) {
                 bms.vars = bdd.zero();
@@ -2288,7 +2284,7 @@ public class CSPA {
                 else
                     continue;
                 BDD bdd = capturedHeap.and(H1o.ithVar(ndex));
-                if (capturedHeap.and(H1o.ithVar(ndex)).isZero()) {
+                if (bdd.isZero()) {
                     // not captured.
                     if (TRACE_ESCAPE) System.out.println("Escaped: "+n);
                     escapedSites ++;

@@ -273,7 +273,6 @@ uphere2:
         } else {
             Set s = node.getNonEscapingEdges(f);
             if (s.size() > 0) {
-                boolean yes = all;
                 System.out.println(indent+s.size()+" write edges match field "+((f==null)?"[]":f.getName().toString()));
                 for (Iterator i=s.iterator(); i.hasNext(); ) {
                     MethodSummary.Node node2 = (MethodSummary.Node)i.next();

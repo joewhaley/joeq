@@ -1144,7 +1144,6 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // If the currently loading class is a Replacing one, do the replacement.
                 // Old below refers to the class being replaced.
                 String thisDesc = this.getDesc().toString();
-                String thisName = this.getName();
                 if (thisDesc.startsWith("LREPLACE")) {
                     Utf8 oldDesc = Utf8.get("L" + thisDesc.substring( 8 , thisDesc.length() )); // remove the 'LREPLACE' in name and restore 'L'
                     Clazz.jq_Type old = PrimordialClassLoader.getOrCreateType(class_loader , oldDesc) ;

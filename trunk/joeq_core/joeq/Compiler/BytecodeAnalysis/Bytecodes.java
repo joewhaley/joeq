@@ -4484,8 +4484,9 @@ public interface Bytecodes {
         }
         
         private final void setWide() {
-            if(wide = ((n > Short.MAX_VALUE) ||
-                       (Math.abs(c) > Byte.MAX_VALUE)))
+            wide = (n > Short.MAX_VALUE) ||
+                   (Math.abs(c) > Byte.MAX_VALUE);
+            if (wide)
                 length = 6; // wide byte included
             else
                 length = 3;
@@ -6690,7 +6691,8 @@ public interface Bytecodes {
         }
         
         private final void setWide() {
-            if(wide = index > Byte.MAX_VALUE)
+            wide = index > Byte.MAX_VALUE;
+            if (wide)
                 length = 4; // Including the wide byte
             else
                 length = 2;

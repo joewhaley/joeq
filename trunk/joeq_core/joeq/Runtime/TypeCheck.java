@@ -202,7 +202,6 @@ public abstract class TypeCheck implements jq_ClassFileConstants, CompilationCon
     public static jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2, boolean load) {
         if (t1 == t2) return t1;
         if (t1.isPrimitiveType() && t2.isPrimitiveType()) {
-            jq_Type result = null;
             if (t1.isIntLike() && t2.isIntLike()) {
                 if (t1 == jq_Primitive.INT || t2 == jq_Primitive.INT) return jq_Primitive.INT;
                 if (t1 == jq_Primitive.CHAR) {

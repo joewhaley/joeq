@@ -278,7 +278,7 @@ public class AndersenPointerAnalysis {
                     t.prepare();
                 }
                 s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
-                //if (s.size() == size)
+                if (false && s.size() == size)
                     break;
             }
             System.out.println("Number of RTA classes: "+s.size());
@@ -975,7 +975,6 @@ public class AndersenPointerAnalysis {
                 // TODO: add edges to escape.
             }
         }
-        Set rvn_s;
         ReturnValueNode rvn = caller.getRVN(mc);
         if (rvn != null) {
             UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)targetMethod.getReturnType());
@@ -1296,7 +1295,6 @@ public class AndersenPointerAnalysis {
         if (TRACE) out.println("Edges from "+base+((f==null)?"[]":("."+f.getName()))+" : "+result);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
             OutsideNode n2 = (OutsideNode)j.next();
-            FieldNode fn = (FieldNode)n2;
             while (n2.skip != null) n2 = n2.skip;
             addInclusionEdges(n2, result, base);
         }
@@ -1312,7 +1310,6 @@ public class AndersenPointerAnalysis {
             n2.getEdges(f, result);
         }
         if (TRACE) out.println("Edges from "+base+((f==null)?"[]":("."+f.getName()))+" : "+result);
-        FieldNode fn = (FieldNode)from;
         while (from.skip != null) from = from.skip;
         addInclusionEdges(from, result, base);
     }
@@ -1349,11 +1346,9 @@ public class AndersenPointerAnalysis {
             from = from.skip;
         }
         if (from.visited) {
-            Path p2 = p;
             if (TRACE_CYCLES) out.println("cycle detected! node="+from+" path="+p);
             Set s = (Set)nodeToInclusionEdges.get(from);
             if (VerifyAssertions) Assert._assert(s != null);
-            OutsideNode last = from;
             for (;; p = p.cdr()) {
                 OutsideNode n = p.car();
                 if (TRACK_CHANGES) markCollapsedNode(n);
@@ -1362,15 +1357,12 @@ public class AndersenPointerAnalysis {
                 if (VerifyAssertions) Assert._assert(n.skip == null);
                 n.skip = from;
                 Set s2 = (Set)nodeToInclusionEdges.get(n);
-                //s2.remove(last);
                 if (TRACE) out.println("Set of inclusion edges from node "+n+": "+s2);
                 s.addAll(s2);
                 nodeToInclusionEdges.put(n, s);
                 if (INCLUSION_BACK_EDGES)
                     addInclusionBackEdges(n, s);
-                last = n;
             }
-            //s.remove(last);
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 if (o instanceof OutsideNode) {

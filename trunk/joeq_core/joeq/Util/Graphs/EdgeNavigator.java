@@ -36,7 +36,7 @@ public class EdgeNavigator implements Navigator {
         public Object map(Object o) {
             return new Pair(left, o);
         }
-    };
+    }
 
     public static class AddRightFilter extends Filter {
         Object right;
@@ -44,7 +44,7 @@ public class EdgeNavigator implements Navigator {
         public Object map(Object o) {
             return new Pair(o, right);
         }
-    };
+    }
 
     /* (non-Javadoc)
      * @see Util.Graphs.Navigator#next(java.lang.Object)

@@ -362,7 +362,6 @@ public class CSPAResults implements PointerAnalysisResults {
             for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
                 Object o = j.next();
                 if (!(o instanceof jq_Method)) {
-                    ProgramLocation pl = (ProgramLocation) o;
                     continue;
                 }
                 anyMethods = true;
@@ -473,7 +472,6 @@ public class CSPAResults implements PointerAnalysisResults {
         BDDPairing V1ToV2 = bdd.makePair();
         V1ToV2.set(new BDDDomain[] {V1c, V1o}, new BDDDomain[] {V2c, V2o} );
         BDDPairing V3cToV1c = bdd.makePair(V3c, V1c);
-        BDDPairing V2cToV1c = bdd.makePair(V2c, V1c);
         BDDPairing V2oToV1o = bdd.makePair(V2o, V1o);
         BDD V1cset = V1c.set();
         
@@ -513,7 +511,6 @@ public class CSPAResults implements PointerAnalysisResults {
             if (TRACE_ACC_LOC) System.out.println("With context="+contextVars.toStringWithDomains());
             for (int j = 0; j < scc.nextLength(); ++j) {
                 SCComponent callee = scc.next(j);
-                Number npaths2 = pn.numberOfPathsToSCC(callee);
                 Collection edges = pn.getSCCEdges(scc, callee);
                 if (TRACE_ACC_LOC) System.out.println("SCC"+scc.getId()+" -> SCC"+callee.getId()+": "+edges.size()+" edges");
                 BDD contextVars_callee = (BDD) sccToVars.get(callee);
@@ -747,7 +744,6 @@ public class CSPAResults implements PointerAnalysisResults {
         BDDPairing H3toH1 = bdd.makePair();
         H3toH1.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H1c, H1o } );
         BDD H1set = H1c.set().and(H1o.set());
-        BDD H2set = H2c.set().and(H2o.set());
         BDD H1andFDset = H1set.and(FD.set());
         
         BDD fieldPt2 = fieldPt.replace(H2toH3);
@@ -874,6 +870,10 @@ public class CSPAResults implements PointerAnalysisResults {
 
     static final boolean FILTER_NULL = true;
 
+    public static final byte DOT = 1;
+    public static final byte HYPVIEW = 2;
+    public static byte format = DOT;
+
     public void dumpObjectConnectivityGraph(int heapnum, DataOutput out) throws IOException {
         BDD context = H1c.set();
         context.andWith(H2c.set());
@@ -885,7 +885,8 @@ public class CSPAResults implements PointerAnalysisResults {
         reachable.orWith(H1o.ithVar(heapnum));
 
         out.writeBytes("digraph \"ObjectConnectivity\" {\n");
-        BDD iter = reachable.id();
+        BDD iter;
+        iter = reachable.id();
         while (!iter.isZero()) {
             BDD s = iter.satOne();
             int[] val = s.scanAllVar();
@@ -1030,7 +1031,7 @@ public class CSPAResults implements PointerAnalysisResults {
             if (scc.isLoop()) {
                 m_vars = bdd.zero();
             } else {
-                Collection m_nodes = methodToVariables.getValues(m);
+                //Collection m_nodes = methodToVariables.getValues(m);
                 m_vars = bdd.zero();
                 for (Iterator j = cg.getCallees(m).iterator(); j.hasNext(); ) {
                     jq_Method callee = (jq_Method) j.next();
@@ -1186,10 +1187,9 @@ public class CSPAResults implements PointerAnalysisResults {
     /** Load points-to results from the given file name prefix.
      */
     public void load(String fn) throws IOException {
-        FileInputStream fis;
         DataInputStream di;
         
-        di = new DataInputStream(fis = new FileInputStream(fn+".config"));
+        di = new DataInputStream(new FileInputStream(fn+".config"));
         readConfig(di);
         di.close();
         
@@ -1295,17 +1295,6 @@ public class CSPAResults implements PointerAnalysisResults {
         domains2[3] = 1 << HEAPCONTEXTBITS;
         BDDDomain[] bdd_domains2 = bdd.extDomain(domains2);
         
-        int[] domainBits;
-        int[] domainSpos;
-        domainBits = new int[] {VARBITS, VARCONTEXTBITS,
-                                VARBITS, VARCONTEXTBITS,
-                                FIELDBITS,
-                                HEAPBITS, HEAPCONTEXTBITS,
-                                HEAPBITS, HEAPCONTEXTBITS,
-                                VARBITS, VARCONTEXTBITS,
-                                HEAPBITS, HEAPCONTEXTBITS};
-        domainSpos = new int[domainBits.length];
-        
         V3o = bdd_domains2[0];
         V3c = bdd_domains2[1];
         H3o = bdd_domains2[2];
@@ -1327,7 +1316,7 @@ public class CSPAResults implements PointerAnalysisResults {
             Node n = MethodSummary.readNode(st);
             if (n == null && i != 0) {
                 System.out.println("Cannot find node: "+s);
-                n = new GlobalNode();
+                n = new GlobalNode((jq_Method) null);
             }
             int j = m.get(n);
             //System.out.println(i+" = "+n);

@@ -226,7 +226,6 @@ public class PathNumbering implements Externalizable {
     /** Record the outgoing edges between nodes in the given SCC. */
     private void recordEdgesFromSCC(SCComponent scc1) {
         Object[] nodes = scc1.nodes();
-        int total = 0;
         for (int i=0; i<nodes.length; ++i) {
             Object exit = nodes[i];
             Collection targets = navigator.next(exit);
@@ -244,7 +243,6 @@ public class PathNumbering implements Externalizable {
     
     private void addEdges(SCComponent scc1) {
         if (TRACE_NUMBERING) System.out.println("Adding edges SCC"+scc1.getId());
-        Object[] nodes1 = scc1.nodes();
         Range r1 = (Range) sccNumbering.get(scc1);
         if (scc1.prevLength() == 0) {
             if (TRACE_NUMBERING) System.out.println("SCC"+scc1.getId()+" is in the root set");
@@ -468,11 +466,9 @@ public class PathNumbering implements Externalizable {
             c = (BigInteger) contexts.get(callee);
             result = (Path) results.get(callee);
             if (TRACE_PATH) System.out.println("Getting context "+c+" at "+callee);
-            boolean found = false, any = false;
             for (Iterator i=navigator.prev(callee).iterator(); i.hasNext(); ) {
                 Object caller = i.next();
                 Range r = getEdge(caller, callee);
-                any = true;
                 if (TRACE_PATH) System.out.println("Edge "+caller+" to "+callee+": "+r);
                 if (c.compareTo(toBigInt(r.high)) > 0) {
                     if (TRACE_PATH) System.out.println("Out of range (high)");
@@ -491,7 +487,6 @@ public class PathNumbering implements Externalizable {
                     worklist.add(caller);
                     contexts.put(caller, c2);
                     results.put(caller, new Path(caller, result));
-                    found = true;
                 }
             }
         }

@@ -125,7 +125,6 @@ public class Dominators {
     }
     
     private int setLabels(Object d) {
-        int n = 0;
         HashWorklist wl = new HashWorklist(true);
 
         wl.add(d);

@@ -47,8 +47,8 @@ public abstract class ClassLibInterface {
         if (f == null) {
             String classlibrary = System.getProperty("classlibrary");
             if (classlibrary == null) {
-                String javaversion = System.getProperty("java.version");
-                String javavmversion = System.getProperty("java.vm.version");
+                //String javaversion = System.getProperty("java.version");
+                //String javavmversion = System.getProperty("java.vm.version");
                 String javavmvendor = System.getProperty("java.vm.vendor");
                 String javaruntimeversion = System.getProperty("java.runtime.version");
                 String osarch = System.getProperty("os.arch");

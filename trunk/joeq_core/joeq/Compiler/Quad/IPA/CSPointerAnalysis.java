@@ -83,8 +83,6 @@ public class CSPointerAnalysis extends Solver {
         
         CodeCache.AlwaysMap = true;
         
-        boolean DUMP = System.getProperty("bdddump") != null;
-        
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
@@ -438,7 +436,6 @@ public class CSPointerAnalysis extends Solver {
     public void addClassType(jq_Reference type) {
         if (type == null) return;
         if (typeIndexMap.contains(type)) return;
-        int type_i = getTypeIndex(type);
         if (type instanceof jq_Class) {
             jq_Class k = (jq_Class) type;
             k.prepare();

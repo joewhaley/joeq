@@ -81,7 +81,6 @@ public class LoadedCallGraph extends CallGraph {
         jq_Class k = null;
         jq_Method m = null;
         int bcIndex = -1;
-        Set targets = null;
         for (;;) {
             String s = in.readLine();
             if (s == null)

@@ -37,6 +37,7 @@ abstract class FileInputStream {
         int fdnum = fd.fd;
         // check for index out of bounds/null pointer
         if (len < 0) throw new IndexOutOfBoundsException();
+        // do bounds check
         byte b2 = b[off+len-1];
         // BUG in Sun's implementation, which we mimic here.  off=b.length and len=0 doesn't throw an error (?)
         if (off < 0) throw new IndexOutOfBoundsException();
@@ -81,8 +82,8 @@ abstract class FileInputStream {
         int fdnum = this.fd.fd;
         int result = SystemInterface.file_close(fdnum);
         // Sun's "implementation" ignores errors on file close, allowing files to be closed multiple times.
-        //if (result != 0)
-        //    throw new java.io.IOException();
+        if (false && result != 0)
+            throw new java.io.IOException();
     }
     private static void initIDs() { }
     

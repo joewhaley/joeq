@@ -1394,7 +1394,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
      */
     public void visitMove(Quad obj) {
         if (TRACE) System.out.println(this+" Move: "+obj);
-        Move o = (Move) obj.getOperator();
+        //Move o = (Move) obj.getOperator();
         RegisterOperand dest_o = Move.getDest(obj);
         Operand src_o = Move.getSrc(obj);
         loadOperand(src_o, EAX);
@@ -1738,7 +1738,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         if (TRACE) System.out.println(this+" TableSwitch: "+obj);
         int low = TableSwitch.getLow(obj).getValue();
         BasicBlockTableOperand targets = TableSwitch.getTargetTable(obj);
-        int high = low+targets.size()-1;
+        //int high = low+targets.size()-1;
         loadOperand(TableSwitch.getSrc(obj), EAX);
         if (low != 0)
             asm.emitARITH_Reg_Imm(x86.SUB_r_i32, EAX, low);

@@ -1658,24 +1658,20 @@ public class LiveRefAnalysis {
         }
         
         public void visitPEI() {
-            boolean change = false;
             ExceptionHandlerIterator ehi = current_bb.getExceptionHandlers();
             while (ehi.hasNext()) {
                 ExceptionHandler eh = ehi.nextEH();
                 BasicBlock bb2 = eh.getEntry();
                 if (start_states[bb2.id] == null) {
                     if (TRACE) out.println("No live var info for handler "+bb2+" yet");
-                    //change = true;
                     continue;
                 }
                 if (TRACE) out.println("Merging current state "+current_state+" with live var info from handler "+bb2+": "+start_states[bb2.id]);
                 // merge call is the same as the normal one
                 if (current_state.mergeLiveness(start_states[bb2.id])) {
                     if (TRACE) out.println("Change in current state: "+current_state);
-                    change = true;
                 }
             }
-            //if (change) go_again = true;
         }
 
         public void visitILOAD(int i) {

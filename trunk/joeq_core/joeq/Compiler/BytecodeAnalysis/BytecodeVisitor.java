@@ -1121,7 +1121,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants, CompilationConsta
                 this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_InstanceMethod f = clazz.getCPasInstanceMethod(cpi);
-                char nargs = getUnsignedByte();
+                getUnsignedByte(); // nargs
                 getSignedByte(); // superfluous 0
                 jq_Type t = f.getReturnType();
                 if (t == jq_Primitive.VOID)

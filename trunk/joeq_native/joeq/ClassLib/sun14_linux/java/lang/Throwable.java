@@ -43,7 +43,7 @@ public abstract class Throwable {
             if (m != null) {
                 declaringClass = m.getDeclaringClass().getJDKName();
                 methodName = m.getName().toString();
-                int code_offset = ip.difference(cc.getStart());
+                //int code_offset = ip.difference(cc.getStart());
                 if (m != null) {
                     Utf8 fn = m.getDeclaringClass().getSourceFile();
                     if (fn != null) fileName = fn.toString();

@@ -215,8 +215,7 @@ public final class SCComponent implements Comparable, Serializable {
     // there is at least one pair of nodes n1 in scc1 and n2 in scc2 such that
     // there exists an edge from n1 to n2.
     private static final void put_the_edges(final Navigator navigator){
-        int nb_scc = scc_vector.size();
-        for(int i = 0; i < scc_vector.size(); i++){
+        for (int i = 0; i < scc_vector.size(); i++){
             SCComponentInt compi = (SCComponentInt) scc_vector.get(i);
             for(Iterator it = compi.nodes.iterator(); it.hasNext(); ) {
                 Object node = it.next();

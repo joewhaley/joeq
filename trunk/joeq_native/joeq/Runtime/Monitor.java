@@ -266,7 +266,7 @@ public class Monitor {
         if (this.semaphore == 0) {
             this.semaphore = SystemInterface.init_semaphore();
         }
-        int rc = SystemInterface.release_semaphore(this.semaphore, 1);
+        SystemInterface.release_semaphore(this.semaphore, 1);
     }
     
     public static final jq_Class _class;

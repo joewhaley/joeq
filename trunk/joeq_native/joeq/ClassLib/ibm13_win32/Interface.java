@@ -44,7 +44,7 @@ public final class Interface extends ClassLib.Common.InterfaceImpl {
             
             // access the ISO-8859-1 character encoding, as it is used during bootstrapping
             try {
-                String s = new String(new byte[0], 0, 0, "ISO-8859-1");
+                new String(new byte[0], 0, 0, "ISO-8859-1");
             } catch (java.io.UnsupportedEncodingException x) {}
             PrimordialClassLoader.loader.getOrCreateBSType("Lsun/io/CharToByteISO8859_1;");
     
