@@ -77,7 +77,7 @@ public class TypeCheckTest extends TestCase implements CompilationConstants {
     Object ao_jus; // [Ljava/util/Stack;
     
     /*
-     * @see TestCase#setUp()
+     * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
