@@ -234,7 +234,10 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
                 Convert.charToTwoBytes(exception_table[i].getStartPC(), code, idx);
                 Convert.charToTwoBytes(exception_table[i].getEndPC(), code, idx+2);
                 Convert.charToTwoBytes(exception_table[i].getHandlerPC(), code, idx+4);
-                Convert.charToTwoBytes(cpr.get(exception_table[i].getExceptionType()), code, idx+6);
+                char c;
+                if (exception_table[i].getExceptionType() == null) c = (char) 0;
+                else c = cpr.get(exception_table[i].getExceptionType());
+                Convert.charToTwoBytes(c, code, idx+6);
                 idx += 8;
             }
             char attrib_count = (char)0; // TODO: code attributes

@@ -623,9 +623,13 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
         
         public void addExceptions(jq_Method m) {
+            byte[] bc = m.getBytecode();
+            if (bc == null) return;
             jq_TryCatchBC[] t = m.getExceptionTable();
             for (int i=0; i<t.length; ++i) {
-                addType(t[i].getExceptionType());
+                jq_Class type = t[i].getExceptionType();
+                if (type != null)
+                    addType(type);
             }
         }
 
@@ -733,6 +737,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             new_entries.put(o, null);
         }
         public void addOther(Object o) {
+            Assert._assert(!(o instanceof String));
             if (o == null) return;
             if (TRACE) Debug.writeln("Adding other "+o);
             new_entries.put(o, null);
