@@ -266,7 +266,7 @@ public class PA {
             V2c = new BDDDomain[1];
             V1c[0] = makeDomain("V1c", VC_BITS);
             V2c[0] = makeDomain("V2c", VC_BITS);
-        } else if (CARTESIAN_PRODUCT) {
+        } else if (CARTESIAN_PRODUCT && false) {
             V1c = new BDDDomain[MAX_PARAMS];
             V2c = new BDDDomain[MAX_PARAMS];
             for (int i = 0; i < V1c.length; ++i) {
@@ -297,7 +297,7 @@ public class PA {
                     //varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2_T2_H1";
                     varorder = "N_F_I_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
                 }
-            } else if (CARTESIAN_PRODUCT) {
+            } else if (CARTESIAN_PRODUCT && false) {
                 varorder = "N_F_Z_I_M2_M_T1_V2xV1_T2_H2xH1";
                 for (int i = 0; i < V1c.length; ++i) {
                     varorder += "xV1c"+i+"xV2c"+i;
@@ -469,7 +469,7 @@ public class PA {
             }
         }
         
-        if (CARTESIAN_PRODUCT) {
+        if (CARTESIAN_PRODUCT && false) {
             H1toV1c = new BDDPairing[MAX_PARAMS];
             V1ctoH1 = new BDDPairing[MAX_PARAMS];
             V1csets = new BDD[MAX_PARAMS];
@@ -862,7 +862,7 @@ public class PA {
             V1V2context = V1c[0].buildAdd(V2c[0], bits, 0L);
             V1V2context.andWith(V1c[0].varRange(r.low.longValue(), r.high.longValue()));
             return V1V2context;
-        } else if (CARTESIAN_PRODUCT) {
+        } else if (CARTESIAN_PRODUCT && false) {
             BDD V1V2context = bdd.one();
             for (int i = 0; i < MAX_PARAMS; ++i) {
                 V1V2context.andWith(V1c[i].buildEquals(V2c[i]));
@@ -2108,7 +2108,7 @@ public class PA {
             numberPaths(cg, ocg, true);
         }
         
-        if (CARTESIAN_PRODUCT) {
+        if (CARTESIAN_PRODUCT && false) {
             VC_BITS = (HC_BITS + H_BITS) * MAX_PARAMS;
             System.out.println("Variable context bits = ("+HC_BITS+"+"+H_BITS+")*"+MAX_PARAMS+"="+VC_BITS);
         }
@@ -2192,7 +2192,8 @@ public class PA {
         
         System.out.println("Time spent initializing: "+(System.currentTimeMillis()-time)/1000.);
         
-        if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE || CARTESIAN_PRODUCT) {
+        if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE || CARTESIAN_PRODUCT && false) {
+            Assert._assert(!SKIP_SOLVE);
             time = System.currentTimeMillis();
             iterate();
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
@@ -3170,7 +3171,7 @@ public class PA {
                 return result;
             }
             return result.id();
-        } else if (CARTESIAN_PRODUCT) {
+        } else if (CARTESIAN_PRODUCT && false) {
             // todo! heap context sensitivity for cartesian product.
             BDD context;
             if (USE_HCONTEXT) context = V1cdomain.and(H1cdomain);
