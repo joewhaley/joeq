@@ -163,15 +163,15 @@ public class BDDPointerAnalysis {
         for (int i=0; i<domainBits.length; ++i) {
             Assert._assert(bdd_domains[i].varNum() == domainBits[i], "Domain "+i+" bits "+bdd_domains[i].varNum());
         }
-        V1 = bdd_domains[0];
-        V1c = bdd_domains[1];
-        V2 = bdd_domains[2];
-        V2c = bdd_domains[3];
-        FD = bdd_domains[4];
-        H1 = bdd_domains[5];
-        H1c = bdd_domains[6];
-        H2 = bdd_domains[7];
-        H2c = bdd_domains[8];
+        V1 = bdd_domains[0]; V1.setName("V1");
+        V1c = bdd_domains[1]; V1c.setName("V1c");
+        V2 = bdd_domains[2]; V2.setName("V2");
+        V2c = bdd_domains[3]; V2c.setName("V2c");
+        FD = bdd_domains[4]; FD.setName("FD");
+        H1 = bdd_domains[5]; H1.setName("H1");
+        H1c = bdd_domains[6]; H1c.setName("H1c");
+        H2 = bdd_domains[7]; H2.setName("H2");
+        H2c = bdd_domains[8]; H2c.setName("H2c");
         T1 = V2;
         T2 = V1;
         T3 = H2;
