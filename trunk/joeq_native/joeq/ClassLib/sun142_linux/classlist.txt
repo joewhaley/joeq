@@ -1,4 +1,5 @@
 Ljoeq/Allocator/*
+Ljoeq/Assembler/*
 Ljoeq/Assembler/x86/*
 Ljoeq/Bootstrap/MethodInvocation;
 Ljoeq/ClassLib/*
