@@ -62,6 +62,11 @@ public abstract class Bootstrapper {
     
     public static void main(String[] args) throws IOException {
         
+        if (jq.RunningNative) {
+            System.err.println("Error: self-bootstrapping not supported (yet)");
+            System.exit(-1);
+        }
+        
         String imageName = "jq.obj";
         //int startAddress = 0x00890000;
         String rootMethodClassName = "Main.JoeqVM";
@@ -72,8 +77,6 @@ public abstract class Bootstrapper {
         boolean DUMP_COFF = false;
         boolean USE_BYTECODE_TRIMMER = true;
 
-        // set bootstrapping flag first - lots of code depends on this flag.
-        jq.RunningNative = false;
         // initialize list of methods to invoke on joeq startup
         jq.on_vm_startup = new LinkedList();
         
