@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import Util.Assert;
+
 /**
  * @author John Whaley
  * @version $Id$
@@ -17,19 +19,24 @@ public class HashWorklist extends AbstractList implements Worklist, Set {
 
     private final Set set;
     private final List list;
+    private final boolean once;
 
-    public HashWorklist(SetFactory sf, ListFactory lf) {
+    public HashWorklist(boolean once, SetFactory sf, ListFactory lf) {
         set = sf.makeSet();
         list = lf.makeList();
+        this.once = once;
     }
-    public HashWorklist(ListFactory lf) {
-        this(Factories.hashSetFactory(), lf);
+    public HashWorklist(boolean once, ListFactory lf) {
+        this(once, Factories.hashSetFactory(), lf);
     }
-    public HashWorklist(SetFactory sf) {
-        this(sf, Factories.linkedListFactory());
+    public HashWorklist(boolean once, SetFactory sf) {
+        this(once, sf, Factories.linkedListFactory());
+    }
+    public HashWorklist(boolean once) {
+        this(once, Factories.hashSetFactory());
     }
     public HashWorklist() {
-        this(Factories.hashSetFactory());
+        this(false);
     }
 
     /* (non-Javadoc)
@@ -43,7 +50,9 @@ public class HashWorklist extends AbstractList implements Worklist, Set {
      * @see Util.Collections.Worklist#pull()
      */
     public Object pull() {
-        return list.remove(0);
+        Object o = list.remove(0);
+        if (!once) set.remove(o);
+        return o;
     }
 
     /* (non-Javadoc)
@@ -78,6 +87,7 @@ public class HashWorklist extends AbstractList implements Worklist, Set {
     }
 
     public Set getVisitedSet() {
+        Assert._assert(once);
         if (false) {
             return Collections.unmodifiableSet(set);
         } else {
