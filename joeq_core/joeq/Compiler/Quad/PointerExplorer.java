@@ -9,6 +9,7 @@ package Compil3r.Quad;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -189,6 +190,9 @@ uphere2:
             if (input.equalsIgnoreCase("a")) {
                 which = -1;
                 break;
+            } else if (input.equalsIgnoreCase("q")) {
+                which = -2;
+                break;
             } else {
                 try {
                     which = Integer.parseInt(input);
@@ -281,6 +285,41 @@ uphere2:
         }
     }
     
+    public static class InlineSet extends java.util.AbstractSet {
+        final Set backing_set;
+        boolean is_complete;
+        
+        public InlineSet(Set s, boolean c) {
+            this.backing_set = s;
+            this.is_complete = c;
+        }
+        
+        public boolean isComplete() { return is_complete; }
+        
+        public Iterator iterator() { return backing_set.iterator(); }
+        public int size() { return backing_set.size(); }
+        public boolean containsAll(Collection arg0) {
+            return backing_set.containsAll(arg0);
+        }
+
+    }
+    
+    public static void recalculateInliningCompleteness() {
+        int total = 0;
+        for (Iterator it = toInline.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry e = (Map.Entry) it.next();
+            CallSite cs = (CallSite) e.getKey();
+            InlineSet is = (InlineSet) e.getValue();
+            
+            Set targets = (Set) callGraph.get(cs);
+            if (targets != null && is.containsAll(targets)) {
+                total++;
+                is.is_complete = true;
+            }
+        }
+        System.out.println(total+" inlining sites are complete.");
+    }
+    
     public static void doInlining(Set inline) {
         for (Iterator it = inline.iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
@@ -288,14 +327,14 @@ uphere2:
             MethodSummary caller = MethodSummary.getSummary(CodeCache.getCode(cs.caller.method));
             ProgramLocation mc = cs.m;
             cs = new CallSite(caller, mc);
-            Set targets = (Set)e.getValue();
+            InlineSet targets = (InlineSet)e.getValue();
             Iterator it2 = targets.iterator();
             if (!it2.hasNext()) {
                 System.out.println("No targets to inline for "+cs);
             } else {
                 for (;;) {
                     jq_Method target_m = (jq_Method)it2.next();
-                    boolean removeCall = !it2.hasNext();
+                    boolean removeCall = !it2.hasNext() && targets.isComplete();
                     if (target_m.getBytecode() == null) {
                         //System.out.println("Cannot inline target "+target_m+": target has no bytecode");
                     } else {
@@ -339,7 +378,7 @@ uphere2:
 uphere:
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 CallSite cs = (CallSite)i.next();
-                Set t = (Set)toInline.get(cs);
+                InlineSet t = (InlineSet)toInline.get(cs);
                 for (Iterator j=t.iterator(); j.hasNext(); ) {
                     jq_Method m2 = (jq_Method)j.next();
                     int r = setDepth(path, visited, m2);
@@ -399,7 +438,7 @@ uphere:
             if (s != null) {
                 for (Iterator k = s.iterator(); k.hasNext(); ) {
                     final CallSite cs = (CallSite)k.next();
-                    final Set targets = (Set)toInline.get(cs);
+                    final InlineSet targets = (InlineSet)toInline.get(cs);
                     result[j.intValue()].add(new Map.Entry() {
                         public Object getKey() { return cs; }
                         public Object getValue() { return targets; }
@@ -475,6 +514,7 @@ uphere:
             if (s.startsWith("trace inline ")) {
                 boolean b = s.substring(13).equals("on");
                 MethodSummary.TRACE_INTER = b;
+                MethodSummary.TRACE_INST = b;
                 System.out.println("Trace inline: "+b);
                 continue;
             }
@@ -493,7 +533,8 @@ uphere:
                     if (set == null) {
                         System.out.println("Error: call site "+cs+" not found in call graph.");
                     } else {
-                        toInline.put(cs, set);
+                        InlineSet is = new InlineSet(set, true);
+                        toInline.put(cs, is);
                         size += set.size();
                     }
                 }
@@ -636,6 +677,12 @@ uphere:
                 continue;
             }
             if (s.startsWith("selectivecloning")) {
+                SelectiveCloning.pa = apa;
+                SelectiveCloning.searchForCloningOpportunities(toInline, selectedCallSites);
+                System.out.println(toInline.size()+" inlining candidates found");
+                recalculateInliningCompleteness();
+                
+                /*
                 for (Iterator it = selectedCallSites.iterator(); it.hasNext(); ) {
                     CallSite cs = (CallSite)it.next();
                     System.out.println("For call site: "+cs);
@@ -653,6 +700,8 @@ uphere:
                     }
                 }
                 System.out.println(toInline.size()+" inlining candidates found");
+                */
+                
                 continue;
             }
             if (s.startsWith("exit") || s.startsWith("quit")) {
