@@ -26,15 +26,11 @@ public class BootstrapCodeAddress extends CodeAddress implements BootstrapAddres
             this.bca = bca;
         }
         public int size() { return 4; }
-        public CodeAddress min() { return MIN; }
-        public CodeAddress max() { return MAX; }
-        public static final BootstrapCodeAddress MIN = new BootstrapCodeAddress(0);
-        public static final BootstrapCodeAddress MAX = new BootstrapCodeAddress(Integer.MAX_VALUE);
     }
     
     public final int value;
     
-    BootstrapCodeAddress(int value) { this.value = value; }
+    public BootstrapCodeAddress(int value) { this.value = value; }
     
     public Address peek() { return FACTORY.bca.peek(this); }
     public byte    peek1() { return FACTORY.bca.peek1(this); }
