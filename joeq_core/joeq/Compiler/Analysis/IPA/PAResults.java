@@ -3,24 +3,24 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
 
-import java.io.PrintStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Collection;
 import java.util.StringTokenizer;
 
 import org.sf.javabdd.BDD;
@@ -38,9 +38,14 @@ import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
+import Compil3r.Quad.Operator;
+import Compil3r.Quad.Quad;
+import Compil3r.Quad.Operand.RegisterOperand;
+import Compil3r.Quad.RegisterFactory.Register;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
@@ -1195,6 +1200,32 @@ public class PAResults implements PointerAnalysisResults {
         BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
         BDD s = getTransitiveModSet(m_c);
         BDD q = s.exist(r.H1c.set());
+        return new HeapLocationSet(q);
+    }
+    
+    public Set mod(jq_Method m, BasicBlock bb, Quad quad) {
+        MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
+        Register reg;
+        jq_Field f;
+        if (quad.getOperator() instanceof Operator.AStore) {
+            reg = ((RegisterOperand) Operator.AStore.getBase(quad)).getRegister();
+            f = null;
+        } else {
+            Assert._assert(quad.getOperator() instanceof Operator.Putfield);
+            reg = ((RegisterOperand) Operator.Putfield.getBase(quad)).getRegister();
+            f = Operator.Putfield.getField(quad).getField();
+        }
+        Collection c = ms.getRegisterAtLocation(bb, quad, reg);
+        BDD b = r.bdd.zero();
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            Node n = (Node) i.next();
+            int V_i = r.Vmap.get(n);
+            b.orWith(r.V1.ithVar(V_i));
+        }
+        b.andWith(r.V1c.domain());
+        BDD s = r.vP.relprod(b, r.V1set);
+        BDD q = s.exist(r.H1c.set());
+        q.andWith(r.F.ithVar(r.Fmap.get(f)));
         return new HeapLocationSet(q);
     }
     
