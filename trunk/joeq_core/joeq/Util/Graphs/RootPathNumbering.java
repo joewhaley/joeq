@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class RootPathNumbering extends PathNumbering {
     
-    public static final boolean TRACE_NUMBERING = true;
+    public static final boolean TRACE_NUMBERING = false;
 
     Range global;
     Map iMap;
