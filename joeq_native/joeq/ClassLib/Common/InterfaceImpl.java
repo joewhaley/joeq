@@ -95,9 +95,9 @@ public abstract class InterfaceImpl implements Interface {
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Hashtable;"));
             nullInstanceFields.add(k.getOrCreateInstanceField("cenpos", "J"));
             nullInstanceFields.add(k.getOrCreateInstanceField("pos", "J"));
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClazz.PrimordialClassLoader$ZipFileElement;");
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/PrimordialClassLoader$ZipFileElement;");
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Map;"));
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClazz.PrimordialClassLoader$PathElement;");
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/PrimordialClassLoader$PathElement;");
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Set;"));
         }
 

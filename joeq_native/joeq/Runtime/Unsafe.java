@@ -77,11 +77,11 @@ public abstract class Unsafe {
         _pushFP32 = _class.getOrCreateStaticMethod("pushFP32", "(F)V");
         _pushFP64 = _class.getOrCreateStaticMethod("pushFP64", "(D)V");
         _invoke = _class.getOrCreateStaticMethod("invoke", "(Ljoeq/Memory/CodeAddress;)J");
-        _invokeA = _class.getOrCreateStaticMethod("invokeA", "(Ljoeq/Memory/CodeAddress;)LMemory/Address;");
+        _invokeA = _class.getOrCreateStaticMethod("invokeA", "(Ljoeq/Memory/CodeAddress;)Ljoeq/Memory/Address;");
         _EAX = _class.getOrCreateStaticMethod("EAX", "()I");
         _getThreadBlock = _class.getOrCreateStaticMethod("getThreadBlock", "()Ljoeq/Scheduler/jq_Thread;");
         _setThreadBlock = _class.getOrCreateStaticMethod("setThreadBlock", "(Ljoeq/Scheduler/jq_Thread;)V");
-        _longJump = _class.getOrCreateStaticMethod("longJump", "(Ljoeq/Memory/CodeAddress;LMemory/StackAddress;LMemory/StackAddress;I)V");
+        _longJump = _class.getOrCreateStaticMethod("longJump", "(Ljoeq/Memory/CodeAddress;Ljoeq/Memory/StackAddress;Ljoeq/Memory/StackAddress;I)V");
         _isEQ = _class.getOrCreateStaticMethod("isEQ", "()Z");
         _isGE = _class.getOrCreateStaticMethod("isGE", "()Z");
     }

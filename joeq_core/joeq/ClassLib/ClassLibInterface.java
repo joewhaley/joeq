@@ -159,12 +159,12 @@ public abstract class ClassLibInterface {
     }
     
     public static String convertClassLibDesc(String desc) {
-        int i = desc.indexOf("ClassLib/");
+        int i = desc.indexOf("joeq/ClassLib/");
         if (i != -1) {
             for (;;) {
-                int m = desc.indexOf(';', i+10);
+                int m = desc.indexOf(';', i+15);
                 if (m == -1) break;
-                int j = desc.indexOf('/', i+10);
+                int j = desc.indexOf('/', i+15);
                 if (j == -1 || j > m) break;
                 int k = desc.indexOf(';', j);
                 String t = desc.substring(j+1, k).replace('/','.');
@@ -173,7 +173,7 @@ public abstract class ClassLibInterface {
                     desc = desc.substring(0, i) + desc.substring(j+1);
                 } catch (ClassNotFoundException x) {
                 }
-                i = desc.indexOf("ClassLib/", i+1);
+                i = desc.indexOf("joeq/ClassLib/", i+1);
                 if (i == -1) break;
             }
         }
