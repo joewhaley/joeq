@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
 
+import java.io.PrintStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -33,6 +34,7 @@ import Clazz.jq_Method;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
@@ -140,13 +142,19 @@ public class PAResults {
                     results.add(r);
                 } else if (command.equals("restrict")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
-                    TypedBDD bdd2 = parseBDD(results, st.nextToken());
-                    TypedBDD r = (TypedBDD) bdd1.restrict(bdd2);
+		    TypedBDD r = bdd1;
+		    while (st.hasMoreTokens()) {
+			TypedBDD bdd2 = parseBDD(results, st.nextToken());
+			r = (TypedBDD) r.restrict(bdd2);
+		    }
                     results.add(r);
                 } else if (command.equals("exist")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
-                    TypedBDD set = parseBDDset(results, st.nextToken());
-                    TypedBDD r = (TypedBDD) bdd1.exist(set);
+		    TypedBDD r = bdd1;
+		    while (st.hasMoreTokens()) {
+			TypedBDD set = parseBDDset(results, st.nextToken());
+			r = (TypedBDD) r.exist(set);
+		    }
                     results.add(r);
                 } else if (command.equals("and")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
@@ -158,6 +166,11 @@ public class PAResults {
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
                     TypedBDD r = (TypedBDD) bdd1.or(bdd2);
                     results.add(r);
+                } else if (command.equals("satcount")) {
+                    TypedBDD r = parseBDDWithCheck(results, st.nextToken());
+                    System.out.println("Domains:  " + r.getDomainSet());
+                    System.out.println("satCount: " + r.satCount(getDomains(r)));
+                    increaseCount = false;
                 } else if (command.equals("showdomains")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
 		    System.out.println("Domains: " + r.getDomainSet());
@@ -167,7 +180,7 @@ public class PAResults {
 		    results.add(r);
 		    listAll = true;
 		    System.out.println("Domains: " + r.getDomainSet());
-                } else if (command.equals("contextvar")) {
+                } else if (command.equals("contextvar") || command.equals("stacktracevar")) {
                     int varNum = Integer.parseInt(st.nextToken());
                     Node n = getVariableNode(varNum);
                     if (n == null) {
@@ -179,7 +192,11 @@ public class PAResults {
                             System.out.println("No method for node "+n);
                         } else {
                             Path trace = r.vCnumbering.getPath(m, c);
-                            System.out.println(m+" context "+c+":\n"+trace);
+			    if (command.equals("stacktracevar"))
+				printTrace(System.out, m, c, trace);
+			    else
+				System.out.println(m+" context "+c+":\n"+trace);
+			    
                         }
                     }
                     increaseCount = false;
@@ -209,7 +226,7 @@ public class PAResults {
                         int k = getTypeIndex(c);
                         results.add(r.T1.ithVar(k));
                     }
-                } else if (command.equals("method")) {
+                } else if (command.equals("method") || command.equals("callsin") || command.equals("summary")) {
                     jq_Class c = parseClassName(st.nextToken());
                     if (c == null || !c.isLoaded()) {
                         System.out.println("Cannot find class");
@@ -223,9 +240,24 @@ public class PAResults {
                             System.out.println("Cannot find method");
                             increaseCount = false;
                         } else {
-                            System.out.println("Method: "+m);
-                            int k = getMethodIndex(m);
-                            results.add(r.M.ithVar(k));
+                            if (command.equals("method")) {
+                                int n = getNameIndex(m);
+                                System.out.println("Method: "+m+" N("+n+")");
+                                int k = getMethodIndex(m);
+                                results.add(r.M.ithVar(k));
+                            } else {
+                                MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
+                                increaseCount = false;
+                                if (command.equals("callsin")) {
+                                    System.out.println("Calls in "+m+"\n");
+                                    for (Iterator j=ms.getCalls().iterator(); j.hasNext(); ) {
+                                        ProgramLocation mc = (ProgramLocation) j.next();
+                                        System.out.println("I("+getInvokeIndex(mc)+") "+mc.toStringLong());
+                                    }
+                                } else {
+                                    System.out.println(ms);
+                                }
+                            }
                         }
                     }
                 } else if (command.equals("field")) {
@@ -317,13 +349,21 @@ public class PAResults {
     }
     
     public void printHelp(List results) {
-        System.out.println("dumpconnect # <fn>:   dump heap connectivity graph for heap object # to file fn");
-        System.out.println("dumpallconnect <fn>:  dump entire heap connectivity graph to file fn");
-        System.out.println("escape:               run escape analysis");
-        System.out.println("findequiv:            find equivalent objects");
-        System.out.println("relprod b1 b2 bs:     relational product of b1 and b2 w.r.t. set bs");
-        System.out.println("list b1:              list elements of bdd b1");
-        System.out.println("showdomains b1:       show domains of bdd b1");
+        System.out.println("dumpconnect # <fn>:               dump heap connectivity graph for heap object # to file fn");
+        System.out.println("dumpallconnect <fn>:              dump entire heap connectivity graph to file fn");
+        System.out.println("escape:                           run escape analysis");
+        System.out.println("findequiv:                        find equivalent objects");
+        System.out.println("relprod b1 b2 bs:                 relational product of b1 and b2 w.r.t. set bs");
+        System.out.println("restrict b1 b2 (bi)*:             restrict b2 to bi in b1");
+        System.out.println("exist b1 bs1 (bsi)*:              exist bs2 to bsi in b1");
+        System.out.println("contextvar #vidx #cidx:           show path in vCnumbering for var #vidx in context #");
+        System.out.println("stacktracevar #vidx #cidx:        like contextvar, except print as stacktrace");
+        System.out.println("list b1:                          list elements of bdd b1");
+        System.out.println("showdomains b1:                   show domains of bdd b1");
+        System.out.println("satcount b1:                      print satcount (restricted by domain)");
+        System.out.println("method  class name [signature]:   lookup method in class, shows M and N indices");
+        System.out.println("callsin class name [signature]:   list all call sites in a given method");
+        System.out.println("summary class name [signature]:   list method summary for a given method");
 
 	printAvailableBDDs(results);
     }
@@ -342,6 +382,17 @@ public class PAResults {
 	if (results.size() >= 1)
 	    allbdds.add("and previous results 1.." + (results.size()));
 	System.out.println("\ncurrently known BDDs are " + allbdds);
+    }
+
+    /** Print a Path as if it were a stacktrace. */
+    public void printTrace(PrintStream out, jq_Method m, Number c, Path trace) {
+        out.println(m + " called in context #" + c);
+        for (int i = trace.size() - 1; i >= 0; --i) {
+            Object o = trace.get(i);
+            if (o instanceof ProgramLocation) {
+                out.println(" at " + ((ProgramLocation)o).toStringLong());
+            }
+        }
     }
 
     public jq_Class parseClassName(String className) {
@@ -450,6 +501,19 @@ public class PAResults {
         return v;
     }
  
+    /** For a given TypedBDD, return its domains.
+     * This duplicates TypedBDD.getDomains() which for unknown reasons is not public.
+     */
+    TypedBDD getDomains(TypedBDD b) {
+        TypedBDD dset = (TypedBDD) b.getFactory().one();
+        Set domains = b.getDomainSet();
+        for (Iterator i = domains.iterator(); i.hasNext(); ) {
+            BDDDomain d = (BDDDomain) i.next();
+            dset.andWith(d.set());
+        }
+        return dset;
+    }
+
     BDDDomain parseDomain(String dom) {
         for (int i = 0; i < r.bdd.numberOfDomains(); ++i) {
             if (dom.equals(r.bdd.getDomain(i).getName()))
