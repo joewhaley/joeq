@@ -14,7 +14,7 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
-import jq;
+import Main.jq;
 import UTF.Utf8;
 import java.util.Iterator;
 import java.util.NoSuchElementException;

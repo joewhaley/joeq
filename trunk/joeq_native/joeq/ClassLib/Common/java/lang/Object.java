@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 11:07 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
@@ -15,6 +13,10 @@ import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class Object {
 
     // native method implementations.

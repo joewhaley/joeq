@@ -3,16 +3,18 @@
  *
  * Created on January 29, 2001, 2:29 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.sun14_win32.java.io;
 
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class Win32FileSystem {
 
     public native java.lang.String canonicalize(java.lang.String s) throws java.io.IOException;

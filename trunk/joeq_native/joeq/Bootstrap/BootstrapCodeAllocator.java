@@ -3,8 +3,6 @@
  *
  * Created on February 8, 2001, 11:23 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Bootstrap;
@@ -16,13 +14,17 @@ import Clazz.jq_BytecodeMap;
 import Clazz.jq_CompiledCode;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.Unsafe;
-import jq;
+import Main.jq;
 import java.util.Vector;
 import java.util.List;
 import java.util.LinkedList;
 import java.io.OutputStream;
 import java.io.IOException;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class BootstrapCodeAllocator extends CodeAllocator {
 
     /** Creates new BootstrapCodeAllocator */

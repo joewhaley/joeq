@@ -3,8 +3,6 @@
  *
  * Created on February 13, 2001, 9:58 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Assembler.x86;
@@ -13,11 +11,15 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Util.LittleEndianOutputStream;
-import jq;
+import Main.jq;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class Code2HeapReference extends Reloc {
 
     private int/*CodeAddress*/ from_codeloc;

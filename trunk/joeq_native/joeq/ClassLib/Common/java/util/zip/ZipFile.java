@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 3:20 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.util.zip;
@@ -13,13 +11,17 @@ import Bootstrap.PrimordialClassLoader;
 import java.io.RandomAccessFile;
 import java.util.Hashtable;
 import java.util.Enumeration;
-import jq;
+import Main.jq;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
 import Run_Time.Reflection;
 import ClassLib.Common.java.util.zip.InflaterInputStreamWrapper;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class ZipFile implements ZipConstants {
     public static final boolean TRACE = false;
     
@@ -56,7 +58,7 @@ public abstract class ZipFile implements ZipConstants {
     public ZipFile(java.io.File file, int mode) throws java.io.IOException {
         this(file.getPath());
         // delete mode not yet supported.
-        jq.assert(mode == java.util.zip.ZipFile.OPEN_READ);
+        jq.Assert(mode == java.util.zip.ZipFile.OPEN_READ);
     }
     public java.util.zip.ZipEntry getEntry(String name) {
         if (TRACE) System.out.println(this+": getting entry "+name);

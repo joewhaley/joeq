@@ -9,7 +9,7 @@
 
 package Clazz;
 
-import jq;
+import Main.jq;
 import UTF.Utf8;
 import Bootstrap.PrimordialClassLoader;
 
@@ -44,7 +44,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
 
     protected jq_Reference(Utf8 desc, ClassLoader class_loader) {
         super(desc);
-        jq.assert(class_loader != null);
+        jq.Assert(class_loader != null);
         this.class_loader = class_loader;
     }
     protected final ClassLoader class_loader;

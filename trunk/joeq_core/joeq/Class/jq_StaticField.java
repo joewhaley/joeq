@@ -20,7 +20,7 @@ import java.util.HashMap;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 public final class jq_StaticField extends jq_Field {
 
@@ -116,7 +116,7 @@ public final class jq_StaticField extends jq_Field {
 	super.dumpAttributes(out, cpr);
     }
 
-    public final void sf_initialize(int[] static_data, int offset) { jq.assert(state == STATE_PREPARED); state = STATE_SFINITIALIZED; this.address = Unsafe.addressOf(static_data) + offset; }
+    public final void sf_initialize(int[] static_data, int offset) { jq.Assert(state == STATE_PREPARED); state = STATE_SFINITIALIZED; this.address = Unsafe.addressOf(static_data) + offset; }
     public final int getAddress() { chkState(STATE_SFINITIALIZED); return address; }
     public final void setValue(int v) { getDeclaringClass().setStaticData(this, v); }
     public final void setValue(float v) { getDeclaringClass().setStaticData(this, v); }
@@ -131,8 +131,8 @@ public final class jq_StaticField extends jq_Field {
     public final Object getConstantValue() { return constantValue; }
     public final boolean isStatic() { return true; }
 
-    public final void prepare() { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; }
-    public final void unprepare() { jq.assert(state == STATE_PREPARED); state = STATE_LOADED; }
+    public final void prepare() { jq.Assert(state == STATE_LOADED); state = STATE_PREPARED; }
+    public final void unprepare() { jq.Assert(state == STATE_PREPARED); state = STATE_LOADED; }
     
     public void accept(jq_FieldVisitor mv) {
         mv.visitStaticField(this);

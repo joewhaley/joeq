@@ -14,7 +14,7 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 
-import jq;
+import Main.jq;
 
 import java.util.List;
 import java.util.Iterator;
@@ -72,12 +72,12 @@ public class jq_CompiledCode implements Comparable {
     }
     
     public void deliverException(int/*CodeAddress*/ entry, int/*StackAddress*/ fp, Throwable x) {
-        jq.assert(ed != null);
+        jq.Assert(ed != null);
         ed.deliverToStackFrame(this, x, entry, fp);
     }
     
     public Object getThisPointer(int/*CodeAddress*/ ip, int/*StackAddress*/ fp) {
-        jq.assert(ed != null);
+        jq.Assert(ed != null);
         return ed.getThisPointer(this, ip, fp);
     }
     
@@ -93,7 +93,7 @@ public class jq_CompiledCode implements Comparable {
     }
     
     public void patchDirectBindCalls() {
-        jq.assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         if (code_reloc != null) {
             Iterator i = code_reloc.iterator();
             while (i.hasNext()) {

@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 2:27 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.io;
@@ -13,8 +11,12 @@ import Clazz.jq_Class;
 import Run_Time.Reflection;
 import Bootstrap.PrimordialClassLoader;
 import java.lang.reflect.Method;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class FileSystem {
 
     public static Object getFileSystem() { return DEFAULT_FS; }

@@ -3,8 +3,6 @@
  *
  * Created on February 13, 2001, 11:22 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Assembler.x86;
@@ -14,11 +12,15 @@ import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Util.LittleEndianOutputStream;
 
-import jq;
+import Main.jq;
 
 import java.io.OutputStream;
 import java.io.IOException;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class ExternalReference extends Reloc {
 
     private int/*HeapAddress*/ heap_from;
@@ -31,10 +33,10 @@ public class ExternalReference extends Reloc {
         this.external_name = external_name;
     }
 
-    public void setSymbolIndex(int ndx) { jq.assert(ndx != 0); this.symbol_ndx = ndx; }
+    public void setSymbolIndex(int ndx) { jq.Assert(ndx != 0); this.symbol_ndx = ndx; }
     
     public void dumpCOFF(OutputStream out) throws IOException {
-        jq.assert(symbol_ndx != 0);
+        jq.Assert(symbol_ndx != 0);
         LittleEndianOutputStream.write_s32(out, heap_from);         // r_vaddr
         LittleEndianOutputStream.write_s32(out, symbol_ndx);        // r_symndx
         LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type

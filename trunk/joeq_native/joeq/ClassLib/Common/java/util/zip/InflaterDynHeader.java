@@ -9,7 +9,7 @@ import java.util.zip.DataFormatException;
 
 /**
  *
- * @author  SUIF User
+ * @author  John Whaley
  * @version 
  */
 class InflaterDynHeader {

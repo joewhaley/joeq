@@ -3,8 +3,6 @@
  *
  * Created on February 26, 2001, 12:01 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.io;
@@ -16,8 +14,12 @@ import Clazz.jq_InstanceMethod;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class RandomAccessFile {
 
     private FileDescriptor fd;

@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 2:29 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.io;
@@ -15,8 +13,12 @@ import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Clazz.jq_Class;
 import Clazz.jq_Initializer;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class Win32FileSystem {
 
     public java.lang.String canonicalize(java.lang.String s) throws java.io.IOException {

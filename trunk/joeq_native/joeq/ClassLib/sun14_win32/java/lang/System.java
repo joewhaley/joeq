@@ -3,13 +3,16 @@
  *
  * Created on January 29, 2001, 10:26 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.sun14_win32.java.lang;
+
 import Bootstrap.PrimordialClassLoader;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class System {
     
     private static java.util.Properties props;

@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 1:37 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.io;
@@ -15,8 +13,12 @@ import Clazz.jq_InstanceField;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class FileInputStream {
     
     private FileDescriptor fd;

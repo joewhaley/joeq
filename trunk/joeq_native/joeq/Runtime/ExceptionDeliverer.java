@@ -17,7 +17,7 @@ import Clazz.jq_Method;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 public abstract class ExceptionDeliverer {
 

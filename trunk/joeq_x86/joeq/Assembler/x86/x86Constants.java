@@ -3,12 +3,14 @@
  *
  * Created on December 22, 2000, 7:13 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Assembler.x86;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public interface x86Constants {
 
     static final int CACHE_LINE_SIZE = 256;

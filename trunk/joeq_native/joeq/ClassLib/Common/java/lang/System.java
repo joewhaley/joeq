@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 10:26 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
@@ -20,11 +18,15 @@ import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Bootstrap.PrimordialClassLoader;
-import jq;
+import Main.jq;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Properties;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class System {
     
     private static void registerNatives() { }

@@ -11,7 +11,7 @@ package UTF;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import jq;
+import Main.jq;
 import Util.UnmodifiableIterator;
 import Clazz.jq_ClassFileConstants;
 
@@ -179,12 +179,12 @@ here:
     }
 
     public Utf8 getArrayElementDescriptor() {
-        jq.assert(isDescriptor(TC_ARRAY));
+        jq.Assert(isDescriptor(TC_ARRAY));
         return get(data, 1, data.length);
     }
     
     public Utf8 getAsArrayDescriptor() {
-        jq.assert(isValidTypeDescriptor());
+        jq.Assert(isValidTypeDescriptor());
         // todo: might need to reevaluate making a new array on every query.
         byte[] b = new byte[data.length+1];
         b[0] = TC_ARRAY;
@@ -193,7 +193,7 @@ here:
     }
     
     public Utf8 getAsClassDescriptor() {
-        jq.assert(data[0] != TC_ARRAY);
+        jq.Assert(data[0] != TC_ARRAY);
         // todo: might need to reevaluate making a new array on every query.
         byte[] b = new byte[data.length+2];
         b[0] = TC_CLASS;
@@ -209,7 +209,7 @@ here:
     public class MethodDescriptorIterator extends UnmodifiableIterator {
         int currentIndex;
         MethodDescriptorIterator() {
-            jq.assert(isDescriptor(TC_PARAM));
+            jq.Assert(isDescriptor(TC_PARAM));
             currentIndex = 0;
         }
         public boolean hasNext() {
@@ -241,7 +241,7 @@ here:
             return get(data, startIndex, currentIndex+1);
         }
         public Utf8 getReturnDescriptor() {
-            jq.assert(!hasNext());
+            jq.Assert(!hasNext());
             return get(data, currentIndex+2, data.length);
         }
     }
@@ -332,7 +332,7 @@ here:
     }
 
     public void dump(DataOutput out) throws IOException {
-	jq.assert(data.length <= Character.MAX_VALUE);
+	jq.Assert(data.length <= Character.MAX_VALUE);
 	out.writeChar(data.length);
 	out.write(data);
     }

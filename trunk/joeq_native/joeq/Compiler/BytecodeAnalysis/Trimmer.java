@@ -9,7 +9,7 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import jq;
+import Main.jq;
 import Allocator.HeapAllocator;
 import Allocator.DefaultHeapAllocator;
 import Clazz.*;
@@ -194,7 +194,7 @@ public class Trimmer {
                 //addClassInitializer(c);
                 //if (!m.isStatic()) {
                 //    if (c.isInterface()) {
-                //        jq.assert(m.isAbstract());
+                //        jq.Assert(m.isAbstract());
                 //        addAllInterfaceMethodImplementations((jq_InstanceMethod)m);
                 //        continue;
                 //    } else {
@@ -478,7 +478,7 @@ public class Trimmer {
                 break;
             }
             // class initializer added when method is visited.
-            //jq.assert(f.getDeclaringClass() != Unsafe._class);
+            //jq.Assert(f.getDeclaringClass() != Unsafe._class);
         }
         private void reflective_invoke(byte op, jq_Method f) {
             if (f.getDeclaringClass() == Reflection._class) {
@@ -572,7 +572,7 @@ public class Trimmer {
 
     public void addNecessaryInterfaceMethodImplementations(jq_Class c, jq_Class inter) {
         inter.load(); inter.verify(); inter.prepare();
-        jq.assert(inter.isInterface());
+        jq.Assert(inter.isInterface());
         jq_InstanceMethod[] ms = inter.getVirtualMethods();
         for (int i=0; i<ms.length; ++i) {
             jq_InstanceMethod m = ms[i];

@@ -13,9 +13,9 @@ import Allocator.*;
 import Clazz.*;
 import Run_Time.*;
 import Compil3r.Reference.x86.x86ReferenceLinker;
-import jq;
+import Main.jq;
 
-public class DirectInterpreter extends Interpreter implements ObjectLayout {
+public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayout {
 
     /** Creates new DirectInterpreter */
     public DirectInterpreter(State initialState) {
@@ -73,7 +73,7 @@ public class DirectInterpreter extends Interpreter implements ObjectLayout {
         }
     }
         
-    public static class DirectState extends Interpreter.State {
+    public static class DirectState extends BytecodeInterpreter.State {
         final int/*StackAddress*/ fp;
         final int nlocals;
         int/*StackAddress*/ sp;
@@ -121,7 +121,7 @@ public class DirectInterpreter extends Interpreter implements ObjectLayout {
         public Object getReturnVal_A() { return Unsafe.asObject(loResult); }
     }
     
-    public static class DirectVMInterface extends Interpreter.VMInterface {
+    public static class DirectVMInterface extends BytecodeInterpreter.VMInterface {
         public int getstatic_I(jq_StaticField f) { return Unsafe.peek(f.getAddress()); }
         public long getstatic_L(jq_StaticField f) { int lo=Unsafe.peek(f.getAddress()); int hi=Unsafe.peek(f.getAddress()+4); return jq.twoIntsToLong(lo, hi); }
         public float getstatic_F(jq_StaticField f) { return Float.intBitsToFloat(getstatic_I(f)); }

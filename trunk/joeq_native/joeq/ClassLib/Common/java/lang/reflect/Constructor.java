@@ -3,8 +3,6 @@
  *
  * Created on April 14, 2001, 3:16 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang.reflect;
@@ -12,8 +10,12 @@ package ClassLib.Common.java.lang.reflect;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.*;
 import Run_Time.*;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class Constructor extends AccessibleObject {
 
     // additional instance field.

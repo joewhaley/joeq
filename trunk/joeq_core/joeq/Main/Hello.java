@@ -13,7 +13,7 @@ import java.io.*;
 import java.util.*;
 import Bootstrap.*;
 import Run_Time.*;
-import jq;
+import Main.jq;
 
 public abstract class Hello {
 
@@ -41,7 +41,7 @@ public abstract class Hello {
         Iterator i = PrimordialClassLoader.loader.listPackage(packageName);
         while (i.hasNext()) {
             String s = (String)i.next();
-            jq.assert(s.endsWith(".class"));
+            jq.Assert(s.endsWith(".class"));
             s = s.substring(0, s.length()-6);
             System.out.println("L"+s+";");
         }

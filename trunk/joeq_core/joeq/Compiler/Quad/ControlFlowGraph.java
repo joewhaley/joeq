@@ -15,13 +15,13 @@ import Util.Templates.List;
 import Util.Templates.ListWrapper;
 import Util.Templates.ListIterator;
 import Util.Templates.UnmodifiableList;
-import Operand.TargetOperand;
-import Operand.BasicBlockTableOperand;
-import Operand.RegisterOperand;
-import Operand.ParamListOperand;
-import RegisterFactory.Register;
+import Compil3r.Quad.Operand.TargetOperand;
+import Compil3r.Quad.Operand.BasicBlockTableOperand;
+import Compil3r.Quad.Operand.RegisterOperand;
+import Compil3r.Quad.Operand.ParamListOperand;
+import Compil3r.Quad.RegisterFactory.Register;
 import java.util.HashMap;
-import jq;
+import Main.jq;
 
 /**
  * Control flow graph for the Quad format.
@@ -349,12 +349,12 @@ public class ControlFlowGraph {
     static void addRegistersToMap(HashMap map, RegisterFactory from,
 				  RegisterFactory to, jq_Type type) {
 	int n = from.getLocalSize(type);
-	jq.assert(n == to.getLocalSize(type));
+	jq.Assert(n == to.getLocalSize(type));
 	for (int i=0; i<n; ++i) {
 	    map.put(from.getLocal(i, type), to.getLocal(i, type));
 	}
 	n = from.getStackSize(type);
-	jq.assert(n == to.getStackSize(type));
+	jq.Assert(n == to.getStackSize(type));
 	for (int i=0; i<n; ++i) {
 	    map.put(from.getStack(i, type), to.getStack(i, type));
 	}

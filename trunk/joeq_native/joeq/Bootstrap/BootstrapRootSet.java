@@ -8,7 +8,7 @@ package Bootstrap;
 import Clazz.*;
 import Run_Time.*;
 import Util.*;
-import jq;
+import Main.jq;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
@@ -89,7 +89,7 @@ public class BootstrapRootSet {
     }
     
     public boolean addInstantiatedType(jq_Type t) {
-        jq.assert(t != null);
+        jq.Assert(t != null);
         addNecessaryType(t);
         boolean b = instantiatedTypes.add(t);
         if (b) {
@@ -280,7 +280,7 @@ public class BootstrapRootSet {
                 }
             }
         } else {
-            jq.assert(jqType.isClassType());
+            jq.Assert(jqType.isClassType());
             jq_Class clazz = (jq_Class)jqType;
             jq_InstanceField[] fields = clazz.getInstanceFields();
             for (int k=0; k<fields.length; ++k) {
@@ -309,7 +309,7 @@ public class BootstrapRootSet {
                 Class objType = o.getClass();
                 jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
                 if (jqType.isArrayType()) continue;
-                jq.assert(jqType.isClassType());
+                jq.Assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
@@ -335,7 +335,7 @@ public class BootstrapRootSet {
     public void addAllInterfaceMethodImplementations(jq_InstanceMethod i_m) {
         addNecessaryMethod(i_m);
         jq_Class interf = i_m.getDeclaringClass();
-        jq.assert(interf.isInterface());
+        jq.Assert(interf.isInterface());
         Iterator i = necessaryTypes.iterator();
         while (i.hasNext()) {
             jq_Type t = (jq_Type)i.next();

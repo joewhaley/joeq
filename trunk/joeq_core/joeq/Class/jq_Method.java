@@ -24,7 +24,7 @@ import Compil3r.Reference.x86.x86ReferenceCompiler;
 import Compil3r.Reference.x86.x86ReferenceLinker;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.SystemInterface;
-import jq;
+import Main.jq;
 import UTF.Utf8;
 
 public abstract class jq_Method extends jq_Member {
@@ -272,7 +272,7 @@ public abstract class jq_Method extends jq_Member {
         if (state == STATE_CLSINITIALIZED) return default_compiled_version;
         synchronized (this) {
             //System.out.println("Compiling: "+this);
-            jq.assert(!jq.DontCompile);
+            jq.Assert(!jq.DontCompile);
             chkState(STATE_PREPARED);
             if (isNative() && getBytecode() == null) {
                 System.out.println("Unimplemented native method! "+this);
@@ -327,7 +327,7 @@ public abstract class jq_Method extends jq_Member {
     public final jq_CompiledCode getDefaultCompiledVersion() { chkState(STATE_SFINITIALIZED); return default_compiled_version; }
     public char getMaxStack() {
         chkState(STATE_LOADED);
-        jq.assert(getBytecode() != null);
+        jq.Assert(getBytecode() != null);
         return max_stack;
     }
     public void setMaxStack(char m) {
@@ -335,7 +335,7 @@ public abstract class jq_Method extends jq_Member {
     }
     public char getMaxLocals() {
         chkState(STATE_LOADED);
-        jq.assert(getBytecode() != null);
+        jq.Assert(getBytecode() != null);
         return max_locals;
     }
     public void setMaxLocals(char m) {
@@ -347,7 +347,7 @@ public abstract class jq_Method extends jq_Member {
     }
     public jq_TryCatchBC[] getExceptionTable() {
         chkState(STATE_LOADED);
-        jq.assert(getBytecode() != null);
+        jq.Assert(getBytecode() != null);
         return exception_table;
     }
     public jq_LocalVarTableEntry getLocalVarTableEntry(int bci, int index) {

@@ -12,7 +12,7 @@ package Clazz;
 import Allocator.CodeAllocator;
 import Allocator.HeapAllocator;
 import ClassLib.ClassLibInterface;
-import jq;
+import Main.jq;
 
 import java.io.DataInput;
 import java.io.IOException;

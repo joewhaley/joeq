@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 1:30 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.security;
@@ -12,6 +10,10 @@ package ClassLib.Common.java.security;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class AccessController {
 
     public static Object doPrivileged(java.security.PrivilegedAction action) {

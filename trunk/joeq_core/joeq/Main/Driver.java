@@ -13,7 +13,7 @@ import Clazz.*;
 import Compil3r.Quad.*;
 import java.io.*;
 import java.util.*;
-import jq;
+import Main.jq;
 import Run_Time.*;
 import Bootstrap.*;
 import UTF.*;
@@ -46,7 +46,7 @@ public abstract class Driver {
                     for (int i=0; i<size; ++i) {
                         commands[i] = st.nextToken();
                     }
-                    jq.assert(!st.hasMoreTokens());
+                    jq.Assert(!st.hasMoreTokens());
                 } catch (IOException x) {
                     System.err.println(x.toString());
                     return;

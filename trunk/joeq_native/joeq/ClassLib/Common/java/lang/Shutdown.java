@@ -3,8 +3,6 @@
  *
  * Created on February 26, 2001, 8:56 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
@@ -14,8 +12,12 @@ import Clazz.jq_Class;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class Shutdown {
     
     static void halt(int status) {

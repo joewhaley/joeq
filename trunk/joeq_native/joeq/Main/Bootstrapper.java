@@ -9,7 +9,7 @@
 
 package Main;
 
-import jq;
+import Main.jq;
 import Allocator.*;
 import ClassLib.ClassLibInterface;
 import Clazz.*;
@@ -33,7 +33,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         
         String imageName = "jq.obj";
         //int startAddress = 0x00890000;
-        String rootMethodClassName = "jq";
+        String rootMethodClassName = "Main.jq";
         String rootMethodName = "boot";
         String classList = null;
         String addToClassList = null;
@@ -101,6 +101,8 @@ public abstract class Bootstrapper implements ObjectLayout {
             err("unknown command line argument: "+args[i]);
         }
         
+	rootMethodClassName = rootMethodClassName.replace('.','/');
+
 	System.out.println("Bootstrapping into "+imageName+", "+(DUMP_COFF?"COFF":"ELF")+" format, root method "+rootMethodClassName+"."+rootMethodName+(TrimAllTypes?", trimming all types.":"."));
 	
         for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
@@ -149,7 +151,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         
         starttime = System.currentTimeMillis();
         if (addToClassList != null) {
-            DataInputStream dis = new DataInputStream(new FileInputStream(addToClassList));
+            BufferedReader dis = new BufferedReader(new FileReader(addToClassList));
             for (;;) {
                 String classname = dis.readLine();
                 if (classname == null) break;
@@ -160,17 +162,17 @@ public abstract class Bootstrapper implements ObjectLayout {
             }
         }
         if (classList != null) {
-            DataInputStream dis = new DataInputStream(new FileInputStream(classList));
+            BufferedReader dis = new BufferedReader(new FileReader(classList));
             for (;;) {
                 String classname = dis.readLine();
                 if (classname == null) break;
                 if (classname.charAt(0) == '#') continue;
                 if (classname.endsWith("*")) {
-                    jq.assert(classname.startsWith("L"));
+                    jq.Assert(classname.startsWith("L"));
                     Iterator i = PrimordialClassLoader.loader.listPackage(classname.substring(1, classname.length()-1));
                     while (i.hasNext()) {
                         String s = (String)i.next();
-                        jq.assert(s.endsWith(".class"));
+                        jq.Assert(s.endsWith(".class"));
                         s = "L"+s.substring(0, s.length()-6)+";";
                         jq_Type t = (jq_Type)PrimordialClassLoader.loader.getOrCreateBSType(s);
                         t.load(); t.verify(); t.prepare();
@@ -232,7 +234,7 @@ public abstract class Bootstrapper implements ObjectLayout {
                     while (it.hasNext()) {
                         jq_Type t = (jq_Type)it.next();
                         System.out.println("Trimming type: "+t.getName());
-                        jq.assert(t.isPrepared());
+                        jq.Assert(t.isPrepared());
                         if (t.isClassType()) {
                             ((jq_Class)t).trim(rs);
                         }
@@ -300,7 +302,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         SystemInterface._class.prepare();
         SystemInterface._class.sf_initialize();
 
-        //jq.assert(SystemInterface._entry.getAddress() == startAddress + ARRAY_HEADER_SIZE,
+        //jq.Assert(SystemInterface._entry.getAddress() == startAddress + ARRAY_HEADER_SIZE,
         //          "entrypoint is at "+jq.hex8(SystemInterface._entry.getAddress()));
         
         // initialize the static fields for all the necessary types
@@ -308,12 +310,12 @@ public abstract class Bootstrapper implements ObjectLayout {
         Iterator it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
-            jq.assert(t.isPrepared());
+            jq.Assert(t.isPrepared());
             t.sf_initialize();
             // initialize static field values, too.
             if (t.isClassType()) {
                 jq_Class k = (jq_Class)t;
-                jq.assert((k.getSuperclass() == null) || classset.contains(k.getSuperclass()),
+                jq.Assert((k.getSuperclass() == null) || classset.contains(k.getSuperclass()),
                           k.getSuperclass()+" (superclass of "+k+") is not in class set!");
                 jq_StaticField[] sfs = k.getDeclaredStaticFields();
                 for (int j=0; j<sfs.length; ++j) {
@@ -327,7 +329,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         System.out.println("SF init time: "+sfinittime);
         
         // turn off jq.Bootstrapping flag in image
-        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljq;");
+        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
         jq_class.setStaticData(jq_class.getOrCreateStaticField("Bootstrapping","Z"), 0);
 
         // compile versions of all necessary methods.
@@ -350,7 +352,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
-            jq.assert(t.isSFInitialized());
+            jq.Assert(t.isSFInitialized());
             
             if (t == Unsafe._class) continue;
             //System.out.println("Compiling type: "+t.getName());
@@ -389,7 +391,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         // now that we have visited all reachable objects, jq.on_vm_startup is built
         int index = objmap.numOfEntries();
         int addr = objmap.getOrAllocateObject(jq.on_vm_startup);
-        jq.assert(objmap.numOfEntries() > index);
+        jq.Assert(objmap.numOfEntries() > index);
         objmap.find_reachable(index);
         jq_StaticField _on_vm_startup = jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;");
         jq_class.setStaticData(_on_vm_startup, addr);
@@ -421,7 +423,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
             if (t == Unsafe._class) continue;
-            jq.assert(t.isClsInitialized());
+            jq.Assert(t.isClsInitialized());
             System.out.println(t+": "+jq.hex8(objmap.getAddressOf(t)));
             if (t.isReferenceType()) {
                 jq_Reference r = (jq_Reference)t;

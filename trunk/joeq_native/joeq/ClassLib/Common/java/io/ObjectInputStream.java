@@ -5,11 +5,12 @@
  */
 
 package ClassLib.Common.java.io;
+
 import Clazz.*;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 /**
  *

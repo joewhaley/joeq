@@ -9,7 +9,7 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import jq;
+import Main.jq;
 
 public class BasicBlock {
 
@@ -38,11 +38,11 @@ public class BasicBlock {
     public boolean isSubroutineRet() { return isSubroutineRet; }
     void setSubroutineRet(ControlFlowGraph cfg, BasicBlock jsub_bb) {
         isSubroutineRet = true;
-        jq.assert(this.successors.length == 0);
+        jq.Assert(this.successors.length == 0);
         this.successors = new BasicBlock[jsub_bb.predecessors.length];
         for (int i=0; i<this.successors.length; ++i) {
             int ret_target_index = jsub_bb.predecessors[i].id + 1;
-            jq.assert(ret_target_index < cfg.getNumberOfBasicBlocks());
+            jq.Assert(ret_target_index < cfg.getNumberOfBasicBlocks());
             BasicBlock ret_target = cfg.getBasicBlock(ret_target_index);
             this.successors[i] = ret_target;
             BasicBlock[] new_pred = new BasicBlock[ret_target.predecessors.length+1];
@@ -60,7 +60,7 @@ public class BasicBlock {
     }
     
     void addExceptionHandler_first(ExceptionHandlerSet eh) {
-        jq.assert(eh.parent == null);
+        jq.Assert(eh.parent == null);
         eh.parent = this.exception_handler_set;
         this.exception_handler_set = eh;
     }

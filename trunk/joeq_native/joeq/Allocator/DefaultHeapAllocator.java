@@ -3,8 +3,6 @@
  *
  * Created on February 8, 2001, 3:26 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Allocator;
@@ -15,6 +13,10 @@ import Clazz.jq_StaticMethod;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class DefaultHeapAllocator {
 
     public static final HeapAllocator def() {

@@ -6,7 +6,7 @@
 
 package Linker.ELF;
 import java.io.*;
-import jq;
+import Main.jq;
 
 /**
  *

@@ -9,7 +9,7 @@
 
 package Util;
 
-import jq;
+import Main.jq;
 
 public class IdentityHashCodeWrapper {
     
@@ -18,7 +18,7 @@ public class IdentityHashCodeWrapper {
         this.o = o;
     }
     public static IdentityHashCodeWrapper create(Object o) {
-        jq.assert(o != null);
+        jq.Assert(o != null);
         return new IdentityHashCodeWrapper(o);
     }
     public boolean equals(Object that) {

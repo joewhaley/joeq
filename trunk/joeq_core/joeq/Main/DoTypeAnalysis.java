@@ -23,7 +23,7 @@ import Bootstrap.*;
 import Run_Time.*;
 import Util.*;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 
 public abstract class DoTypeAnalysis {

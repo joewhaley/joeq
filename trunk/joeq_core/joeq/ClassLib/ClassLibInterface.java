@@ -20,7 +20,7 @@ import Clazz.jq_StaticMethod;
 import Clazz.jq_NameAndDesc;
 import Run_Time.SystemInterface;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 public abstract class ClassLibInterface {
 
@@ -51,7 +51,11 @@ public abstract class ClassLibInterface {
 		} else if (javaruntimeversion.equals("1.4.0-b92")) {
                     classlibrary = "sun14_";
 		} else {
-		    classlibrary = "sun13_";
+		    if (javaruntimeversion.startsWith("1.4")) {
+			classlibrary = "sun14_";
+		    } else {
+			classlibrary = "sun13_";
+		    }
 		    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
 		}
             } else if (javavmvendor.equals("IBM Corporation")) {

@@ -23,7 +23,7 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 import Util.AtomicCounter;
-import jq;
+import Main.jq;
 
 public class jq_Thread implements ObjectLayout {
 
@@ -47,8 +47,8 @@ public class jq_Thread implements ObjectLayout {
         this.thread_object = t;
         this.registers = new jq_RegisterState();
         this.thread_id = thread_id_factory.get() << THREAD_ID_SHIFT;
-        jq.assert(this.thread_id > 0);
-        jq.assert(this.thread_id < THREAD_ID_MASK);
+        jq.Assert(this.thread_id > 0);
+        jq.Assert(this.thread_id < THREAD_ID_MASK);
         this.isDead = true; // threads start as dead.
     }
 
@@ -117,7 +117,7 @@ public class jq_Thread implements ObjectLayout {
         this.getNativeThread().threadSwitch();
     }
     public void yieldTo(jq_Thread t) {
-	jq.assert(this == Unsafe.getThreadBlock());
+	jq.Assert(this == Unsafe.getThreadBlock());
 	// if that thread is in the thread queue for the current native
 	// thread, we can yield to him easily.
         this.disableThreadSwitch();

@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2000, 10:16 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package ClassLib.sun14_win32.java.lang;
@@ -13,8 +11,12 @@ import Run_Time.ExceptionDeliverer;
 import Allocator.CodeAllocator;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
-import jq;
+import Main.jq;
 
+/*
+ * @author  jwhaley
+ * @version 
+ */
 public abstract class Throwable {
     
     private java.lang.Object backtrace;

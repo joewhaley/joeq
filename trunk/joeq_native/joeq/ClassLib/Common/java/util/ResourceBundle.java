@@ -3,18 +3,20 @@
  *
  * Created on January 29, 2001, 3:00 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.util;
 
-import jq;
+import Main.jq;
 import Clazz.jq_CompiledCode;
 import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Run_Time.Unsafe;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class ResourceBundle {
     
     private static Class[] getClassContext() {
@@ -30,7 +32,7 @@ abstract class ResourceBundle {
             if (cc == null) classes[i] = null;
             else classes[i] = Reflection.getJDKType(cc.getMethod().getDeclaringClass());
         }
-        jq.assert(i == classes.length);
+        jq.Assert(i == classes.length);
         return classes;
     }
 

@@ -9,7 +9,7 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import jq;
+import Main.jq;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_Type;
 import Clazz.jq_Array;
@@ -38,7 +38,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         this.clazz = method.getDeclaringClass();
         this.method = method;
         this.bcs = method.getBytecode();
-        jq.assert(this.bcs != null, "Method "+this.method+" has no bytecode!");
+        jq.Assert(this.bcs != null, "Method "+this.method+" has no bytecode!");
     }
 
     public void forwardTraversal() throws VerifyError {
@@ -110,8 +110,8 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         switch (i_size) {
             case 1:
                 // ldc
-                jq.assert(op == 0x12);
-                jq.assert(index <= 127);
+                jq.Assert(op == 0x12);
+                jq.Assert(index <= 127);
                 bcs[i_end] = (byte)index;
                 break;
             case 2:
@@ -121,7 +121,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 // invokevirtual, invokespecial, invokestatic
                 // new, anewarray
                 // checkcast, instanceof
-                jq.assert(op == 0x13 || op == 0x14 ||
+                jq.Assert(op == 0x13 || op == 0x14 ||
                           op == 0xb2 || op == 0xb3 ||
                           op == 0xb4 || op == 0xb5 ||
                           op == 0xb6 || op == 0xb7 || op == 0xb8 ||
@@ -132,13 +132,13 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             case 3:
                 // multianewarray
-                jq.assert(op == 0xc5);
+                jq.Assert(op == 0xc5);
                 bcs[i_end-2] = (byte)(index >> 8);
                 bcs[i_end-1] = (byte)index;
                 break;
             case 4:
                 // invokeinterface
-                jq.assert(op == 0xb9);
+                jq.Assert(op == 0xb9);
                 bcs[i_end-3] = (byte)(index >> 8);
                 bcs[i_end-2] = (byte)index;
                 break;
@@ -155,7 +155,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         switch (i_size) {
             case 1:
                 // ldc
-                jq.assert(op == 0x12);
+                jq.Assert(op == 0x12);
                 --i_end; index = getUnsignedByte();
                 break;
             case 2:
@@ -165,7 +165,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 // invokevirtual, invokespecial, invokestatic
                 // new, anewarray
                 // checkcast, instanceof
-                jq.assert(op == 0x13 || op == 0x14 ||
+                jq.Assert(op == 0x13 || op == 0x14 ||
                           op == 0xb2 || op == 0xb3 ||
                           op == 0xb4 || op == 0xb5 ||
                           op == 0xb6 || op == 0xb7 || op == 0xb8 ||
@@ -175,12 +175,12 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             case 3:
                 // multianewarray
-                jq.assert(op == 0xc5);
+                jq.Assert(op == 0xc5);
                 i_end-=3; index = getUnsignedWord(); getUnsignedByte();
                 break;
             case 4:
                 // invokeinterface
-                jq.assert(op == 0xb9);
+                jq.Assert(op == 0xb9);
                 i_end-=4; index = getUnsignedWord(); getUnsignedByte(); getSignedByte();
                 break;
             default:
@@ -1544,7 +1544,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         if (TRACE) out.println(this+": "+i_start+" TABLESWITCH("+low+".."+high+",def:"+default_target+")");
     }
     public void visitLOOKUPSWITCH(int default_target, int[] values, int[] targets) {
-        jq.assert(values.length == targets.length);
+        jq.Assert(values.length == targets.length);
         if (TRACE) out.println(this+": "+i_start+" LOOKUPSWITCH("+values.length+" entries,def:"+default_target+")");
     }
     public void visitIRETURN() {

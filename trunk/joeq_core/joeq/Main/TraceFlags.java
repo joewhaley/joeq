@@ -71,7 +71,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceInterpreter")) {
-            Interpreter.Interpreter.ALWAYS_TRACE = true;
+            Interpreter.BytecodeInterpreter.ALWAYS_TRACE = true;
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceQuadInterpreter")) {

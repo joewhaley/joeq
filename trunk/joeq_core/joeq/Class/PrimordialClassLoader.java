@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 
-import jq;
+import Main.jq;
 import ClassLib.ClassLibInterface;
 import Clazz.*;
 import UTF.Utf8;
@@ -147,7 +147,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     /** Vector of ClasspathElements corresponding to CLASSPATH entries. */
     public void addToClasspath(String s) {
         final String pathsep = System.getProperty("path.separator");
-        jq.assert(s.indexOf(pathsep) == -1);
+        jq.Assert(s.indexOf(pathsep) == -1);
         Set duplicates = new HashSet(); // don't add duplicates.
         duplicates.addAll(classpathList);
         for (Iterator it = classpaths(s); it.hasNext(); ) {
@@ -222,9 +222,9 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     
     public static String descriptorToResource(String desc) {
-        jq.assert(desc.charAt(0)==TC_CLASS);
-        jq.assert(desc.charAt(desc.length()-1)==TC_CLASSEND);
-        jq.assert(desc.indexOf('.')==-1); // should have '/' separators.
+        jq.Assert(desc.charAt(0)==TC_CLASS);
+        jq.Assert(desc.charAt(desc.length()-1)==TC_CLASSEND);
+        jq.Assert(desc.indexOf('.')==-1); // should have '/' separators.
         return desc.substring(1, desc.length()-1) + ".class";
     }
     
@@ -232,7 +232,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
      * @param classname The class name to translate.
      */
     public static String classnameToResource(String classname) {
-        jq.assert(classname.indexOf('/')==-1); // should have '.' separators.
+        jq.Assert(classname.indexOf('/')==-1); // should have '.' separators.
         String filesep = System.getProperty("file.separator");
         // Swap all '.' for '/' & append ".class"
         return classname.replace('.', filesep.charAt(0)) + ".class";

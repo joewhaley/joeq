@@ -3,8 +3,6 @@
  *
  * Created on March 10, 2001, 11:49 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Bootstrap;
@@ -13,6 +11,10 @@ import Clazz.jq_Method;
 import Run_Time.Reflection;
 import java.lang.reflect.InvocationTargetException;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class MethodInvocation {
 
     jq_Method method;

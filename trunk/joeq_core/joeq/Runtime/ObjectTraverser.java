@@ -3,8 +3,6 @@
  *
  * Created on January 14, 2001, 11:38 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Bootstrap;
@@ -13,11 +11,15 @@ import ClassLib.ClassLibInterface;
 import Clazz.*;
 import Run_Time.*;
 import Scheduler.*;
-import jq;
+import Main.jq;
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 
+/*
+ * @author  jwhaley
+ * @version 
+ */
 public class ObjectTraverser {
 
     public static /*final*/ boolean TRACE = false;
@@ -57,7 +59,7 @@ public class ObjectTraverser {
                 UTF.Utf8 u = (UTF.Utf8)i.next();
                 if (TRACE) out.println("Checking mirror class "+u);
                 String s = u.toString();
-                jq.assert(s.charAt(0) == 'L');
+                jq.Assert(s.charAt(0) == 'L');
                 try {
                     c = Class.forName(s.substring(1, s.length()-1).replace('/', '.'));
                     f2 = Reflection.getJDKField(c, fieldName);
@@ -67,9 +69,9 @@ public class ObjectTraverser {
                 }
             }
         }
-        jq.assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
+        jq.Assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
         f2.setAccessible(true);
-        jq.assert((f2.getModifiers() & Modifier.STATIC) != 0);
+        jq.Assert((f2.getModifiers() & Modifier.STATIC) != 0);
         try {
             return mapValue(f2.get(null));
         } catch (IllegalAccessException x) {
@@ -85,7 +87,7 @@ public class ObjectTraverser {
                 Field f2 = fields[i];
                 if (f2.getName().equals(fieldName)) {
                     f2.setAccessible(true);
-                    jq.assert((f2.getModifiers() & Modifier.STATIC) != 0);
+                    jq.Assert((f2.getModifiers() & Modifier.STATIC) != 0);
                     try {
                         return mapValue(f2.get(null));
                     } catch (IllegalAccessException x) {
@@ -110,7 +112,7 @@ public class ObjectTraverser {
             if (TRACE) out.println("Skipping transient instance field "+f);
             return null;
         }
-        jq.assert(o != null);
+        jq.Assert(o != null);
         Class c = Reflection.getJDKType(f.getDeclaringClass());
         String fieldName = f.getName().toString();
         return getInstanceFieldValue(o, c, fieldName);
@@ -123,9 +125,9 @@ public class ObjectTraverser {
         }
         if (TRACE) out.println("Getting value of instance field "+c+"."+fieldName+" through reflection");
         Field f2 = Reflection.getJDKField(c, fieldName);
-        jq.assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+        jq.Assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
         f2.setAccessible(true);
-        jq.assert((f2.getModifiers() & Modifier.STATIC) == 0);
+        jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
             return mapValue(f2.get(o));
         } catch (IllegalAccessException x) {
@@ -140,7 +142,7 @@ public class ObjectTraverser {
                 Field f2 = fields[i];
                 if (f2.getName().equals(fieldName)) {
                     f2.setAccessible(true);
-                    jq.assert((f2.getModifiers() & Modifier.STATIC) == 0);
+                    jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);
                     try {
                         return mapValue(f2.get(o));
                     } catch (IllegalAccessException x) {
@@ -356,7 +358,7 @@ public class ObjectTraverser {
             if (TRACE) out.println("Skipping transient instance field "+f);
             return;
         }
-        jq.assert(o != null);
+        jq.Assert(o != null);
         Class c = Reflection.getJDKType(f.getDeclaringClass());
         String fieldName = f.getName().toString();
         putInstanceFieldValue(o, c, fieldName, v);
@@ -369,9 +371,9 @@ public class ObjectTraverser {
         }
         if (TRACE) out.println("Setting value of instance field "+c+"."+fieldName+" through reflection");
         Field f2 = Reflection.getJDKField(c, fieldName);
-        jq.assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+        jq.Assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
         f2.setAccessible(true);
-        jq.assert((f2.getModifiers() & Modifier.STATIC) == 0);
+        jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
             f2.set(o, v);
         } catch (IllegalAccessException x) {
@@ -385,7 +387,7 @@ public class ObjectTraverser {
                 Field f2 = fields[i];
                 if (f2.getName().equals(fieldName)) {
                     f2.setAccessible(true);
-                    jq.assert((f2.getModifiers() & Modifier.STATIC) == 0);
+                    jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);
                     try {
                         f2.set(o, v);
                     } catch (IllegalAccessException x) {
@@ -426,7 +428,7 @@ public class ObjectTraverser {
         }
         if (c == Thread.class) {
             if (fieldName.equals("jq_thread")) {
-                jq.assert(v instanceof jq_Thread);
+                jq.Assert(v instanceof jq_Thread);
                 mapped_objects.put(o, v);
                 return true;
             }
@@ -439,7 +441,7 @@ public class ObjectTraverser {
                     jq.UNREACHABLE();
             }
             if (fieldName.equals("desc2type")) {
-                jq.assert(v instanceof Map);
+                jq.Assert(v instanceof Map);
                 mapped_objects.put(o, v);
                 return true;
             }
@@ -449,7 +451,7 @@ public class ObjectTraverser {
         if (c == java.util.zip.ZipFile.class) {
             if (fieldName.equals("raf")) {
                 /*
-                jq.assert(v instanceof java.io.RandomAccessFile);
+                jq.Assert(v instanceof java.io.RandomAccessFile);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[0] = v;
                 return true;
@@ -458,7 +460,7 @@ public class ObjectTraverser {
             }
             if (fieldName.equals("entries")) {
                 /*
-                jq.assert(v instanceof Hashtable);
+                jq.Assert(v instanceof Hashtable);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[1] = v;
                 return true;
@@ -467,7 +469,7 @@ public class ObjectTraverser {
             }
             if (fieldName.equals("cenpos")) {
                 /*
-                jq.assert(v instanceof Long);
+                jq.Assert(v instanceof Long);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[2] = v;
                 return true;
@@ -476,7 +478,7 @@ public class ObjectTraverser {
             }
             if (fieldName.equals("pos")) {
                 /*
-                jq.assert(v instanceof Long);
+                jq.Assert(v instanceof Long);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[3] = v;
                 return true;

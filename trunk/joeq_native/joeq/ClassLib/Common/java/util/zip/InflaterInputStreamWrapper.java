@@ -1,18 +1,14 @@
 /*
  * InflaterInputStreamWrapper.java
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.util.zip;
 
-import Run_Time.Reflection;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
-import jq;
-
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class InflaterInputStreamWrapper extends java.util.zip.InflaterInputStream {
     private boolean isClosed;
     private boolean eof;

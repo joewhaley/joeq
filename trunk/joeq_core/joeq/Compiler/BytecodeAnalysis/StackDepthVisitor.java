@@ -11,7 +11,7 @@ package Compil3r.BytecodeAnalysis;
 
 import Clazz.*;
 import java.util.*;
-import jq;
+import Main.jq;
 
 public class StackDepthVisitor extends BytecodeVisitor {
 
@@ -46,7 +46,7 @@ public class StackDepthVisitor extends BytecodeVisitor {
                     bb2.startingStackDepth = currentStackDepth;
                     w.push(bb2);
                 } else {
-                    jq.assert(bb2.startingStackDepth == currentStackDepth);
+                    jq.Assert(bb2.startingStackDepth == currentStackDepth);
                 }
             }
             ExceptionHandlerIterator ei = bb.getExceptionHandlers();
@@ -57,7 +57,7 @@ public class StackDepthVisitor extends BytecodeVisitor {
                     bb2.startingStackDepth = 1;
                     w.push(bb2);
                 } else {
-                    jq.assert(bb2.startingStackDepth == 1);
+                    jq.Assert(bb2.startingStackDepth == 1);
                 }
             }
         }

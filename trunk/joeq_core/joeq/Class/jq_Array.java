@@ -9,7 +9,7 @@
 
 package Clazz;
 
-import jq;
+import Main.jq;
 import Run_Time.Unsafe;
 import Allocator.ObjectLayout;
 import Allocator.DefaultHeapAllocator;
@@ -87,8 +87,8 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     
     private jq_Array(Utf8 desc, ClassLoader class_loader, jq_Type element_type) {
         super(desc, class_loader);
-        jq.assert(desc.isDescriptor(TC_ARRAY));
-        jq.assert(element_type != null);
+        jq.Assert(desc.isDescriptor(TC_ARRAY));
+        jq.Assert(element_type != null);
         this.element_type = element_type;
     }
     // ONLY TO BE CALLED BY ClassLoader!!!

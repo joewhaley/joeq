@@ -12,7 +12,7 @@ package Compil3r.BytecodeAnalysis;
 import Clazz.*;
 import Util.BitString;
 import Util.BitString.BitStringIterator;
-import jq;
+import Main.jq;
 import java.util.ListIterator;
 
 public class ControlFlowGraph {
@@ -59,7 +59,7 @@ public class ControlFlowGraph {
             }
         }
         BasicBlock bb = basic_blocks[mid];
-        jq.assert(bb.start == index);
+        jq.Assert(bb.start == index);
         return bb;
     }
     
@@ -170,9 +170,9 @@ public class ControlFlowGraph {
         cfg.basic_blocks[2] = bb = new BasicBlock(2, 0);
         if (TRACE) System.out.println("Created "+bb+" at bytecode 0");
         BitStringIterator it = basic_block_start.iterator();
-        jq.assert(it.hasNext());
+        jq.Assert(it.hasNext());
         for (;;) {
-            jq.assert(it.hasNext());
+            jq.Assert(it.hasNext());
             int bc_i = it.nextIndex();
             cfg.basic_blocks[bb_i-1].end = bc_i-1;
             if (TRACE) System.out.println("Ending basic block #"+(bb_i-1)+" at bytecode "+(bc_i-1));
@@ -181,8 +181,8 @@ public class ControlFlowGraph {
             bb = cfg.basic_blocks[bb_i] = new BasicBlock(bb_i, bc_i);
             ++bb_i;
         }
-        jq.assert(!it.hasNext());
-        jq.assert(bb_i == n_bb);
+        jq.Assert(!it.hasNext());
+        jq.Assert(bb_i == n_bb);
         cfg.basic_blocks[0].end = -1;
         cfg.basic_blocks[0].successors = new BasicBlock[1];
         cfg.basic_blocks[0].successors[0] = cfg.basic_blocks[2];
@@ -215,7 +215,7 @@ public class ControlFlowGraph {
         }
         if (bb_i != n_bb) {
             // special case: code falls off end.
-            jq.assert(bb_i == n_bb-1);
+            jq.Assert(bb_i == n_bb-1);
             if (TRACE) System.out.println("Code falls off end!");
             cfg.basic_blocks[bb_i].successors = new BasicBlock[0];
         }
@@ -224,7 +224,7 @@ public class ControlFlowGraph {
             bb = cfg.basic_blocks[bb_i];
             bb.predecessors = new BasicBlock[n_pred[bb_i]];
             if (TRACE) System.out.println(bb+" has "+n_pred[bb_i]+" predecessors");
-            jq.assert(bb.successors != null);
+            jq.Assert(bb.successors != null);
             n_pred[bb_i] = -1;
         }
         // fill in predecessor arrays.

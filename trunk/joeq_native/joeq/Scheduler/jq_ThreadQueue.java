@@ -9,7 +9,7 @@
 
 package Scheduler;
 
-import jq;
+import Main.jq;
 import java.util.Iterator;
 
 public class jq_ThreadQueue {
@@ -21,14 +21,14 @@ public class jq_ThreadQueue {
     }
     
     public void enqueue(jq_Thread t) {
-        jq.assert(t.next == null);
+        jq.Assert(t.next == null);
         if (head == null) head = t;
         else tail.next = t;
         tail = t;
     }
     
     public void enqueueFront(jq_Thread t) {
-        jq.assert(t.next == null);
+        jq.Assert(t.next == null);
         if (head == null) tail = t;
         else head.next = t;
 	head = t;
@@ -51,14 +51,14 @@ public class jq_ThreadQueue {
 	    p = p.next;
 	}
 	if (q == null) {
-	    jq.assert(head == t2);
+	    jq.Assert(head == t2);
 	    head = t2.next;
 	    if (head == null) tail = null;
 	    else t2.next = null;
 	} else {
 	    q.next = p.next;
 	    if (p.next == null) {
-		jq.assert(p == tail);
+		jq.Assert(p == tail);
 		tail = q;
 	    } else {
 		p.next = null;

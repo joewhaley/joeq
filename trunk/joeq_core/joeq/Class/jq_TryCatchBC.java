@@ -11,7 +11,7 @@ package Clazz;
 
 import Clazz.jq_Class;
 import Run_Time.TypeCheck;
-import jq;
+import Main.jq;
 
 public class jq_TryCatchBC {
 

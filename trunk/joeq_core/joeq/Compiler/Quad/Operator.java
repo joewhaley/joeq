@@ -10,7 +10,7 @@
 package Compil3r.Quad;
 
 import Clazz.*;
-import jq;
+import Main.jq;
 import Bootstrap.PrimordialClassLoader;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operand.TargetOperand;

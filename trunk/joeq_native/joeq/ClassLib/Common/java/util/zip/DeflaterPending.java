@@ -8,7 +8,7 @@ package ClassLib.Common.java.util.zip;
 
 /**
  *
- * @author  SUIF User
+ * @author  John Whaley
  * @version 
  */
 class DeflaterPending extends PendingBuffer

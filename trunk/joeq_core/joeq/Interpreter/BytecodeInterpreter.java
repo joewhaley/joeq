@@ -13,14 +13,14 @@ import Clazz.*;
 import Run_Time.*;
 import Bootstrap.PrimordialClassLoader;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import jq;
+import Main.jq;
 
-public abstract class Interpreter {
+public abstract class BytecodeInterpreter {
 
     public static /*final*/ boolean ALWAYS_TRACE = false;
     
     /** Creates new Interpreter */
-    public Interpreter(VMInterface vm, State state) { this.vm = vm; this.state = state; }
+    public BytecodeInterpreter(VMInterface vm, State state) { this.vm = vm; this.state = state; }
 
     // create an Interpreter.State and call invokeMethod(m, state)
     public abstract Object invokeMethod(jq_Method m) throws Throwable;
@@ -29,8 +29,8 @@ public abstract class Interpreter {
     // callee == null -> call compiled version
     public Object invokeMethod(jq_Method m, State callee) throws Throwable {
         jq_Class k = m.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
-        jq.assert(m.getBytecode() != null);
+        jq.Assert(k.isClsInitialized());
+        jq.Assert(m.getBytecode() != null);
         jq_Type[] paramTypes = m.getParamTypes();
         Object[] params = new Object[paramTypes.length];
         for (int i=paramTypes.length-1; i>=0; --i) {
@@ -168,7 +168,7 @@ public abstract class Interpreter {
                 argVals[j] = Unsafe.addressOf(state.pop_A());
             }
         }
-        jq.assert(j==0);
+        jq.Assert(j==0);
         for (int i=0; i<argVals.length; ++i) {
             if (callee == null) Unsafe.pushArg(argVals[i]);
             else callee.push_I(argVals[i]);
@@ -724,22 +724,22 @@ public abstract class Interpreter {
         }
         public void visitIUNOP(byte op) {
             super.visitIUNOP(op);
-            jq.assert(op == UNOP_NEG);
+            jq.Assert(op == UNOP_NEG);
             state.push_I(-state.pop_I());
         }
         public void visitLUNOP(byte op) {
             super.visitLUNOP(op);
-            jq.assert(op == UNOP_NEG);
+            jq.Assert(op == UNOP_NEG);
             state.push_L(-state.pop_L());
         }
         public void visitFUNOP(byte op) {
             super.visitFUNOP(op);
-            jq.assert(op == UNOP_NEG);
+            jq.Assert(op == UNOP_NEG);
             state.push_F(-state.pop_F());
         }
         public void visitDUNOP(byte op) {
             super.visitDUNOP(op);
-            jq.assert(op == UNOP_NEG);
+            jq.Assert(op == UNOP_NEG);
             state.push_D(-state.pop_D());
         }
         public void visitISHIFT(byte op) {
@@ -1180,7 +1180,7 @@ public abstract class Interpreter {
                         throw new IncompatibleClassChangeError();
                     if (t.isArrayType()) t = PrimordialClassLoader.loader.getJavaLangObject();
                 } else {
-                    jq.assert(op == INVOKE_VIRTUAL);
+                    jq.Assert(op == INVOKE_VIRTUAL);
                 }
                 f = t.getVirtualMethod(f.getNameAndDesc());
                 if (this.TRACE) this.out.println(this+": virtual method target "+f);

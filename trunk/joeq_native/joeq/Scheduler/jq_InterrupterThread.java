@@ -17,7 +17,7 @@ import Clazz.jq_InstanceMethod;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import jq;
+import Main.jq;
 
 public class jq_InterrupterThread extends Thread {
 

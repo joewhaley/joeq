@@ -3,14 +3,16 @@
  *
  * Created on January 29, 2001, 11:04 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
 
 import com.imsl.math.JMath;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class StrictMath extends java.lang.Object {
 
     // native method implementations

@@ -20,7 +20,7 @@ import Clazz.jq_Array;
 import Clazz.jq_NameAndDesc;
 import UTF.Utf8;
 import Run_Time.Unsafe;
-import jq;
+import Main.jq;
 
 import java.util.Stack;
 

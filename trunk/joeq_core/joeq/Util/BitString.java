@@ -9,7 +9,7 @@
 
 package Util;
 
-import jq;
+import Main.jq;
 
 public final class BitString implements Cloneable, java.io.Serializable {
     /* There are 2^BITS_PER_UNIT bits in each unit (int) */
@@ -317,7 +317,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
 
     private static void shld(int[] bits, int i1, int i2, int amt) {
-        jq.assert(amt >= 0 && amt < BITS_PER_UNIT);
+        jq.Assert(amt >= 0 && amt < BITS_PER_UNIT);
         bits[i1] = (bits[i1] << amt) | ((bits[i2] << (BITS_PER_UNIT-amt)) >> (BITS_PER_UNIT-amt));
     }
     
@@ -325,7 +325,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
         final int div = amt >> BITS_PER_UNIT;
         final int mod = amt & MASK;
         final int size = bits.length;
-        jq.assert(amt >= 0);
+        jq.Assert(amt >= 0);
         // big moves
         if (div > 0) {
             int i;
@@ -347,7 +347,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
     
     private static void shrd(int[] bits, int i1, int i2, int amt) {
-        jq.assert(amt >= 0 && amt < BITS_PER_UNIT);
+        jq.Assert(amt >= 0 && amt < BITS_PER_UNIT);
         bits[i1] = (bits[i1] >>> amt) | ((bits[i2] >>> (BITS_PER_UNIT-amt)) << (BITS_PER_UNIT-amt));
     }
     
@@ -355,7 +355,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
         final int div = amt >> BITS_PER_UNIT;
         final int mod = amt & MASK;
         final int size = bits.length;
-        jq.assert(amt >= 0);
+        jq.Assert(amt >= 0);
         // big moves
         if (div > 0) {
             int i;

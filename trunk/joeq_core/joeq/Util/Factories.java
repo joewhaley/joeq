@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
-import jq;
+import Main.jq;
 
 /** <code>Factories</code> consists exclusively of static methods that
     operate on or return <code>CollectionFactory</code>s. 
@@ -161,15 +161,15 @@ public final class Factories {
 	noNullCollectionFactory(final CollectionFactory cf) {
 	return new SerialCollectionFactory() {
 	    public java.util.Collection makeCollection(final Collection c) {
-		jq.assert(noNull(c));
+		jq.Assert(noNull(c));
 		final Collection back = cf.makeCollection(c);
 		return new CollectionWrapper(back) {
 		    public boolean add(Object o) {
-			jq.assert(o != null);
+			jq.Assert(o != null);
 			return super.add(o);
 		    }
 		    public boolean addAll(Collection c2) {
-			jq.assert(Factories.noNull(c2));
+			jq.Assert(Factories.noNull(c2));
 			return super.addAll(c2);
 		    }
 		};

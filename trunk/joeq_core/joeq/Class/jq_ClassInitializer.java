@@ -12,7 +12,7 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import Bootstrap.PrimordialClassLoader;
-import jq;
+import Main.jq;
 import UTF.Utf8;
 
 public final class jq_ClassInitializer extends jq_StaticMethod {
@@ -24,8 +24,8 @@ public final class jq_ClassInitializer extends jq_StaticMethod {
     }
     // ONLY TO BE CALLED BY jq_ClassLoader!!!
     static jq_ClassInitializer newClassInitializer(jq_Class clazz, jq_NameAndDesc nd) {
-        jq.assert(nd.getName() == Utf8.get("<clinit>"));
-        jq.assert(nd.getDesc() == Utf8.get("()V"));
+        jq.Assert(nd.getName() == Utf8.get("<clinit>"));
+        jq.Assert(nd.getDesc() == Utf8.get("()V"));
         return new jq_ClassInitializer(clazz, nd);
     }
 
