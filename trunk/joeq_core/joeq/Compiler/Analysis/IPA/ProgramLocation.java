@@ -82,6 +82,19 @@ public abstract class ProgramLocation implements Textualizable {
     public abstract boolean isSingleTarget();
     public abstract boolean isInterfaceCall();
     public abstract byte getInvocationType();
+
+    public String getEmacsName() {
+        if (true) {
+            Utf8 source = getSourceFile();
+            if (source == null) return "";
+            return source+":"+getLineNumber();
+        } else {
+            String className = getContainingClass().getJDKName();
+            String method = m.getNameAndDesc().toString();
+            int id = getID();
+            return className+":"+method+":"+id;
+        }
+    }
     
     public static class QuadProgramLocation extends ProgramLocation {
         private final Quad q;
