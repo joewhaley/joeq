@@ -1,5 +1,8 @@
 # relations format:
 # name ( fname1:fdname1 , fname2:fdname2 )
+#
+# Best order seems to be: N0_F0_I0_M0_Z0_V1xV0_VC1xVC0_T0_H1_T1_H0
+#
 vP0 ( v:V bdd=V0, h:H bdd=H0 ) load
 vP ( vc:VC bdd=VC0, v:V bdd=V0, h:H bdd=H0 ) save
 A ( vcdest:VC bdd=VC0, dest:V bdd=V0 , vcsrc:VC bdd=VC1, source:V bdd=V1 ) load
