@@ -1,0 +1,14 @@
+# rules format:
+#(v1,_,v3) in r1, (v1,v3) in r2 / (v3,v1) in r3
+(v,h) in vP0, (h,t) in hT / (v,t) in vTc
+(i,m) in IE0 / (i,m) in IE
+(v,t1) in vT, (t1,t2) in aT / (v,t2) in vTfilter
+(v1,v2) in A, (v2,t) in vTc, (v1,t) in vTfilter / (v1,t) in vTc
+(v1,t1) in vTc, (v1,f,v2) in S, (v2,t2) in vTc / (t1,f,t2) in tP split
+(v1,t1) in vTc, (v1,f,v2) in L, (t1,f,t2) in tP, (v2,t2) in vTfilter / (v2,t2) in vTc split
+(m,z,v1) in formal, (i,m) in IE, (i,z,v2) in actual / (v1,v2) in A
+(m,v1) in Mret, (i,m) in IE, (i,v2) in Iret / (v2,v1) in A
+(m,v1) in Mthr, (i,m) in IE, (i,v2) in Ithr / (v2,v1) in A
+
+# uncomment the next line to discover call graph edges
+# (m1,i,n) in mI, (i,0,v) in actual, (v,t) in vTc, (t,n,m2) in cha / (i,m2) in IE
