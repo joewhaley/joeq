@@ -3,13 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -17,6 +12,13 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.StringTokenizer;
+
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * Solver
@@ -27,6 +29,7 @@ import java.util.StringTokenizer;
 public abstract class Solver {
     
     boolean NOISY = true;
+    boolean SPLIT_RULES = true;
     boolean TRACE = System.getProperty("tracesolve") != null;
     boolean TRACE_FULL = System.getProperty("fulltracesolve") != null;
     PrintStream out = System.out;
@@ -92,6 +95,12 @@ public abstract class Solver {
         dis.loadInitialRelations();
         time = System.currentTimeMillis() - time;
         if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
+        
+        if (dis.SPLIT_RULES) {
+            if (dis.NOISY) dis.out.println("Splitting rules...");
+            dis.splitRules();
+            if (dis.NOISY) dis.out.println("done.");
+        }
         
         if (dis.NOISY) dis.out.println("Solving...");
         time = System.currentTimeMillis();
@@ -211,7 +220,7 @@ public abstract class Solver {
             if (s.startsWith("#")) continue;
             StringTokenizer st = new StringTokenizer(s);
             InferenceRule r = parseRule(st);
-            if (TRACE) out.println("Loaded rule "+r);
+            if (TRACE) out.println("Loaded rule(s) "+r);
             rules.add(r);
         }
     }
@@ -298,6 +307,16 @@ public abstract class Solver {
             Relation r = (Relation) i.next();
             r.loadTuples();
         }
+    }
+    
+    void splitRules() {
+        List newRules = new LinkedList();
+        // rules list is changing, so don't use Iterator
+        for (int i = 0; i < rules.size(); ++i) {
+            InferenceRule r = (InferenceRule) rules.get(i);
+            newRules.addAll(r.split(this));
+        }
+        rules.addAll(newRules);
     }
     
     void saveResults() throws IOException {
