@@ -2,9 +2,11 @@
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 
 import Clazz.jq_Class;
+import Util.Graphs.Navigator;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.UnmodifiableList;
@@ -109,6 +111,8 @@ public class QuadIterator implements ListIterator.Quad {
     
     public BasicBlock getCurrentBasicBlock() { return this.currentBasicBlock; }
     
+    public Quad getCurrentQuad() { return lastQuad; }
+    
     /** Return the next quad in the iteration. */
     public Quad nextQuad() {
         if (!this.quadsInCurrentBasicBlock.hasNext()) {
@@ -199,6 +203,9 @@ public class QuadIterator implements ListIterator.Quad {
      * @throws IllegalStateException  if the nextQuad method has not yet been called.
      */
     public java.util.Iterator/*<Quad>*/ successors() {
+        return successors1().iterator();
+    }
+    public Collection/*<Quad>*/ successors1() {
         // if lastQuad is invalid, throw an exception.
         if (lastQuad == null) throw new IllegalStateException();
         // allocate the result set.
@@ -239,8 +246,7 @@ public class QuadIterator implements ListIterator.Quad {
                 //         quad in the basic block.
                 result.add(next); // add next quad.
                 this.quadsInCurrentBasicBlock.previousQuad(); // reset iterator position.
-                // return the result as an iterator.
-                return result.iterator();
+                return result;
             } else {
                 // We called previous() last.
                 if (this.quadsInCurrentBasicBlock.hasNext()) {
@@ -251,8 +257,7 @@ public class QuadIterator implements ListIterator.Quad {
                     // reset iterator position.
                     this.quadsInCurrentBasicBlock.previousQuad();
                     this.quadsInCurrentBasicBlock.previousQuad();
-                    // return the result as an iterator.
-                    return result.iterator();
+                    return result;
                 } else {
                     // this is the last quad in the basic block.
                     // reset iterator position and fallthrough to case 2, below.
@@ -266,11 +271,13 @@ public class QuadIterator implements ListIterator.Quad {
         while (succs.hasNext())
             result.add(getFirstQuad(succs.nextBasicBlock()));
         
-        // return the result as an iterator.
-        return result.iterator();
+        return result;
     }
 
     public java.util.Iterator/*<Quad>*/ predecessors() {
+        return predecessors1().iterator();
+    }
+    public Collection/*<Quad>*/ predecessors1() {
         // if lastQuad is invalid, throw an exception.
         if (lastQuad == null) throw new IllegalStateException();
 
@@ -283,7 +290,7 @@ public class QuadIterator implements ListIterator.Quad {
                 // Case 1: if this is not the beginning of the basic block, add the previous
                 //         quad in the basic block.
                 this.quadsInCurrentBasicBlock.nextQuad(); // reset iterator position.
-                return new UnmodifiableList.Quad(previous).quadIterator();
+                return new UnmodifiableList.Quad(previous);
             } else {
                 // we called next() last.
                 if (this.quadsInCurrentBasicBlock.hasPrevious()) {
@@ -292,8 +299,8 @@ public class QuadIterator implements ListIterator.Quad {
                     previous = this.quadsInCurrentBasicBlock.previousQuad();
                     // reset iterator position.
                     this.quadsInCurrentBasicBlock.nextQuad(); 
-                    this.quadsInCurrentBasicBlock.nextQuad(); 
-                    return new UnmodifiableList.Quad(previous).quadIterator();
+                    this.quadsInCurrentBasicBlock.nextQuad();
+                    return new UnmodifiableList.Quad(previous);
                 } else {
                     // this is the first quad in the basic block.
                     // reset iterator position and fallthrough to case 2 and 3, below.
@@ -323,8 +330,7 @@ public class QuadIterator implements ListIterator.Quad {
                 }
             }
         }
-        // return the result as an iterator.
-        return result.iterator();
+        return result;
     }
 
     private static void addQuadsThatReachHandler(BasicBlock bb, java.util.Set result, ExceptionHandler eh) {
@@ -341,4 +347,46 @@ public class QuadIterator implements ListIterator.Quad {
         }
     }
     
+    public Navigator getNavigator() {
+        return new Navigator() {
+            public Collection next(Object node) {
+                if (node == lastQuad) return successors1();
+                return search(node, true);
+            }
+            public Collection prev(Object node) {
+                if (node == lastQuad) return predecessors1();
+                return search(node, false);
+            }
+            private Collection search(Object node, boolean dir) {
+                Object oldLocation = lastQuad;
+                Collection result = null;
+                if (searchBackward(node)) {
+                    result = dir?successors1():predecessors1();
+                }
+                searchForward(oldLocation);
+                if (result == null) {
+                    if (searchForward(node)) {
+                        result = dir?successors1():predecessors1();
+                    }
+                    if (result == null) {
+                        throw new UnsupportedOperationException();
+                    }
+                    searchBackward(oldLocation);
+                }
+                return result;
+            }
+        };
+    }
+    public boolean searchForward(Object node) {
+        while (hasNext()) {
+            if (node == nextQuad()) return true;
+        }
+        return false;
+    }
+    public boolean searchBackward(Object node) {
+        while (hasPrevious()) {
+            if (node == previousQuad()) return true;
+        }
+        return false;
+    }
 }
