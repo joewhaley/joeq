@@ -2255,7 +2255,7 @@ public class PA {
                 int M_i = new_reflectiveCalls.relprod(i_bdd, Iset).scanVar(M).intValue();
                 jq_Method target = (jq_Method) Mmap.get(M_i);
                 jq_Initializer constructor = (jq_Initializer) target;                
-                jq_Type type = constructor.getDeclaringClass();
+                jq_Type type = constructor.getDeclaringClass();                
                 
                 visitMethod(target);
             
@@ -2987,6 +2987,24 @@ public class PA {
         
         if(FIX_NO_DEST){
             analyzeIE();
+        }
+        if(TRACE_REFLECTION){
+            BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
+            
+            for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext();){
+                BDD i = (BDD)iter.next();
+                
+                BDD callees = IE.relprod(i, Iset);
+                if(!callees.isZero()){
+                    System.out.println(i.toStringWithDomains(TS) + ": ");
+                    for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
+                        BDD callee = (BDD)iter2.next();
+                        
+                        System.out.println("\t" + callees.toStringWithDomains(TS));
+                    }
+                    System.out.println();
+                }
+            }
         }
         //initializeForNameMapEntries();
 
