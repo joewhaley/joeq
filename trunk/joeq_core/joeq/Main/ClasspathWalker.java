@@ -29,6 +29,7 @@ public class ClasspathWalker {
     private static PrintWriter pw;
     private static int classCount = 0;
     static boolean SKIP_ABSTRACT = !System.getProperty("skipabstract", "no").equals("no");
+    boolean GC = !System.getProperty("gc", "no").equals("no");
        
     public static void main(String[] args) throws FileNotFoundException {
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
@@ -88,7 +89,10 @@ public class ClasspathWalker {
                     if(TRACE) System.err.println("Security error occurred: " + e.getMessage());
                 }
             }            
-            System.gc();
+            if(GC){
+                System.gc();
+                if(TRACE) System.err.println("Done GCing.");
+            }            
         }        
     }
 
@@ -136,10 +140,6 @@ public class ClasspathWalker {
         s = s.replace('.', '/');
         String desc = "L" + s + ";";
         return desc;
-    }
-
-    static {
-        HostedVM.initialize();
     }
 
     public static jq_Type load(String classname) {
