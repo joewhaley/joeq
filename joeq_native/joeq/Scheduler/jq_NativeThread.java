@@ -4,6 +4,7 @@
 package joeq.Scheduler;
 
 import java.util.Iterator;
+import java.util.Random;
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Allocator.RuntimeCodeAllocator;
@@ -570,29 +571,45 @@ public class jq_NativeThread implements jq_DontAlign {
         }
     }
 
+    public boolean DETERMINISTIC = false;
+    
+    static final int[] DISTRIBUTION = {
+        5, 11, 18, 26, 35, 45, 56, 68, 81, 100
+    };
+    
     /**
      * GCD of relatively_prime_value and the maximum value in
      * DISTRIBUTION should be 1.
      */
     static final int relatively_prime_value = 37;
-    static final int[] DISTRIBUTION = {
-        5, 11, 18, 26, 35, 45, 56, 68, 81, 100
-    };
     /**
      * Keeps track of last value used, so we can compute the next value.
      */
     int distCounter;
     
+    Random rng = new Random();
+    
     private jq_ThreadQueue chooseNextQueue() {
-        distCounter += relatively_prime_value;
-        int max = DISTRIBUTION[DISTRIBUTION.length-1];
-        while (distCounter >= max) {
-            distCounter -= max;
+        if (DETERMINISTIC) {
+            distCounter += relatively_prime_value;
+            int max = DISTRIBUTION[DISTRIBUTION.length-1];
+            while (distCounter >= max) {
+                distCounter -= max;
+            }
+        } else {
+            // use monte carlo distribution.
+            int max = DISTRIBUTION[DISTRIBUTION.length-1];
+            distCounter = rng.nextInt(max);
         }
         for (int i = 0; ; ++i) {
             if (distCounter < DISTRIBUTION[i]) {
                 if (!readyQueue[i].isEmpty()) return readyQueue[i];
-                int c = ((distCounter&1)==1) ? 1 : -1;
+                int c;
+                if (DETERMINISTIC) {
+                    c = ((distCounter&1)==1) ? 1 : -1;
+                } else {
+                    c = rng.nextBoolean() ? 1 : -1;
+                }
                 for (int j = i + c; j < DISTRIBUTION.length && j >= 0; j += c) {
                     if (!readyQueue[j].isEmpty()) return readyQueue[j];
                 }
