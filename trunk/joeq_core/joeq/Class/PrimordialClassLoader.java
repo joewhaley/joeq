@@ -464,7 +464,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static jq_Class getJavaLangString() { return JavaLangString; }
     public static jq_Class getJavaLangSystem() { return JavaLangSystem; }
     public static jq_Class getJavaLangThrowable() { return JavaLangThrowable; }
-    public static jq_Class getAddressArray() { return JavaLangThrowable; }
+    public static jq_Array getAddressArray() { return AddressArray; }
     public static jq_Class getJavaLangException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/Exception;"); }
     public static jq_Class getJavaLangError() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/Error;"); }
     public static jq_Class getJavaLangRuntimeException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/RuntimeException;"); }

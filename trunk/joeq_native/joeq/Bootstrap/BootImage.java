@@ -208,13 +208,15 @@ public class BootImage implements ELFConstants {
         if (f.isCodeAddressType()) {
             CodeAddress addr = (CodeAddress)Reflection.getstatic_P(f);
             if (addr != null && !addr.isNull()) {
-                if (TRACE) out.println("Adding code reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
+                if (TRACE)
+                    out.println("Adding code reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
                 addCodeReloc(f.getAddress(), addr);
             }
         } else if (f.isHeapAddressType()) {
             HeapAddress addr = (HeapAddress)Reflection.getstatic_P(f);
             if (addr != null && !addr.isNull()) {
-                if (TRACE) out.println("Adding data reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
+                if (TRACE)
+                    out.println("Adding data reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
                 addDataReloc(f.getAddress(), addr);
             }
         } else if (ftype.isReferenceType()) {
@@ -516,8 +518,8 @@ public class BootImage implements ELFConstants {
         out.writeUInt(addr.to32BitValue());
         out.writeShort((short)1);
         out.writeUShort((char)DT_FCN);
-        out.writeUByte(C_EXT);
-        out.writeUByte(0);
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
         
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_trap_handler@4";
@@ -528,8 +530,8 @@ public class BootImage implements ELFConstants {
         out.writeUInt(addr.to32BitValue());
         out.writeShort((short)1);
         out.writeUShort((char)DT_FCN);
-        out.writeUByte(C_EXT);
-        out.writeUByte(0);
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
 
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_debug_trap_handler@4";
@@ -540,8 +542,8 @@ public class BootImage implements ELFConstants {
         out.writeUInt(addr.to32BitValue());
         out.writeShort((short)1);
         out.writeUShort((char)DT_FCN);
-        out.writeUByte(C_EXT);
-        out.writeUByte(0);
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
         
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_threadSwitch@4";
@@ -552,8 +554,8 @@ public class BootImage implements ELFConstants {
         out.writeUInt(addr.to32BitValue());
         out.writeShort((short)1);
         out.writeUShort((char)DT_FCN);
-        out.writeUByte(C_EXT);
-        out.writeUByte(0);
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
         
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_ctrl_break_handler@0";
@@ -564,8 +566,8 @@ public class BootImage implements ELFConstants {
         out.writeUInt(addr.to32BitValue()); // e_value
         out.writeShort((short)1);
         out.writeUShort((char)DT_FCN);
-        out.writeUByte(C_EXT);
-        out.writeUByte(0);
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
 
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_code_startaddress";
@@ -575,8 +577,8 @@ public class BootImage implements ELFConstants {
         out.writeUInt(0); // e_value
         out.writeShort((short)1);
         out.writeUShort((char)(DT_PTR | T_VOID));
-        out.writeUByte(C_EXT);
-        out.writeUByte(0);
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
 
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_code_endaddress";
@@ -586,8 +588,8 @@ public class BootImage implements ELFConstants {
         out.writeUInt(bca.size()); // e_value
         out.writeShort((short)1);
         out.writeUShort((char)(DT_PTR | T_VOID));
-        out.writeUByte(C_EXT);
-        out.writeUByte(0);
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
 
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_data_startaddress";

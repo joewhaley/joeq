@@ -7,7 +7,6 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_StaticMethod;
 import joeq.Memory.Address;
-import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
 
@@ -61,13 +60,8 @@ public abstract class DefaultHeapAllocator {
         Unsafe.getThreadBlock().enableThreadSwitch();
     }
     
-    public static final boolean isInDataSegment(Address a) {
-        return a.difference(SystemInterface.joeq_data_startaddress) >= 0 &&
-               a.difference(SystemInterface.joeq_data_endaddress) < 0;
-    }
-    
     public static final boolean isValidAddress(Address a) {
-        if (isInDataSegment(a)) return true;
+        if (HeapAllocator.isInDataSegment(a)) return true;
         if (jq_NativeThread.allNativeThreadsInitialized()) {
             for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
                 jq_NativeThread nt = jq_NativeThread.native_threads[i];

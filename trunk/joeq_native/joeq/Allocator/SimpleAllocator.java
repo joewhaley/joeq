@@ -157,7 +157,7 @@ public class SimpleAllocator extends HeapAllocator {
         firstFree = firstLarge = currLarge = HeapAddress.getNull();
     }
 
-    static final boolean TRACE = true;
+    static boolean TRACE = false;
     
     /**
      * Allocates a new block of memory from the OS, sets the current block to
@@ -314,6 +314,7 @@ public class SimpleAllocator extends HeapAllocator {
     }
 
     private HeapAddress allocFromFreeList(int size) {
+        TRACE = true;
         // Search free list to find if there is an area that will fit the object.
         HeapAddress prev_p = HeapAddress.getNull();
         HeapAddress curr_p = firstFree;
@@ -539,6 +540,7 @@ public class SimpleAllocator extends HeapAllocator {
     }
 
     public void collect() {
+        TRACE = true;
         if (inGC) {
             if (TRACE) Debug.writeln("BUG! Recursively calling GC!");
             //allocateNewBlock();
@@ -586,6 +588,7 @@ public class SimpleAllocator extends HeapAllocator {
     }
     
     void updateFreeList() {
+        if (TRACE) Debug.writeln("Updating free list.");
         // Scan forward through heap, finding unmarked objects and merging free spaces.
         HeapAddress currBlock = heapFirst;
         while (!currBlock.isNull()) {
@@ -601,14 +604,24 @@ public class SimpleAllocator extends HeapAllocator {
                 currFree = getFreeNext(currFree);
             }
             
+            if (TRACE) {
+                Debug.write("Visiting block ", currBlock);
+                Debug.write("-", currBlockEnd);
+                Debug.write(" free list ptr ", prevFree);
+                Debug.writeln(",", currFree);
+            }
+            
             // Walk over current block.
             while (currBlockEnd.difference(p) > 0) {
+                
+                if (TRACE) Debug.writeln("ptr: ", p);
                 
                 if (p.difference(currFree) == 0) {
                     // Skip over free chunk.
                     p = getFreeEnd(currFree);
                     prevFree = currFree;
                     currFree = getFreeNext(currFree);
+                    if (TRACE) Debug.writeln("Skipped over free, next free=", currFree);
                     continue;
                 }
                 
@@ -629,8 +642,10 @@ public class SimpleAllocator extends HeapAllocator {
                 
                 if (b1) {
                     // Looks like a scalar object at p1.
+                    if (TRACE) Debug.writeln("Looks like scalar object at ", p1);
                     if (b3) {
                         // p1 could also be status word of array at p3.
+                        if (TRACE) Debug.writeln("More likely array at ", p3);
                         obj = p3;
                         skipWord = false;
                     } else {
@@ -645,10 +660,12 @@ public class SimpleAllocator extends HeapAllocator {
                     if (b3) {
                         // Looks like array object at p3.
                         // todo: p3 could also possibly be status word of aligned array.
+                        if (TRACE) Debug.writeln("Looks like array at ", p3);
                         obj = p3;
                         skipWord = false;
                     } else if (b4) {
                         // Looks like aligned array at p4.
+                        if (TRACE) Debug.writeln("Looks like aligned array at ", p4);
                         obj = p4;
                         skipWord = true;
                     } else {
@@ -661,14 +678,17 @@ public class SimpleAllocator extends HeapAllocator {
                 int size = getObjectSize(o);
                 
                 HeapAddress next_p = (HeapAddress) p.offset(size + (skipWord?4:0)).align(2);
+                if (TRACE) Debug.writeln("Next ptr ", next_p);
                 
                 int status = obj.offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
                 if ((status & ObjectLayout.GC_BIT) == 0) {
+                    if (TRACE) Debug.writeln("Not marked, adding to free list.");
                     HeapAddress prevFreeEnd = getFreeEnd(prevFree);
                     if (p.difference(prevFreeEnd) == 0) {
                         // Just extend size of this free area.
                         int newSize = next_p.difference(prevFree);
                         setFreeSize(prevFree, newSize);
+                        if (TRACE) Debug.writeln("Free area extended to size ", newSize);
                     } else {
                         // Insert into free list.
                         setFreeNext(p, currFree);
@@ -676,8 +696,10 @@ public class SimpleAllocator extends HeapAllocator {
                         setFreeSize(p, newSize);
                         if (prevFree.isNull()) {
                             firstFree = p;
+                            if (TRACE) Debug.writeln("New first free area ", p);
                         } else {
                             setFreeNext(prevFree, p);
+                            if (TRACE) Debug.writeln("Inserted free area ", p);
                         }
                     }
                 }
@@ -718,8 +740,14 @@ public class SimpleAllocator extends HeapAllocator {
     }
     
     public void processPtrField(Address a, boolean b) {
+        if (!DefaultHeapAllocator.isValidAddress(a)) {
+            if (SimpleAllocator.TRACE) Debug.writeln("Address not valid, skipping: ", a);
+            return;
+        }
+        a = a.peek();
+        if (SimpleAllocator.TRACE) Debug.writeln("Checking if valid object ref::: ", a);
         if (!isValidObjectRef(a)) {
-            if (SimpleAllocator.TRACE) Debug.writeln("Address not a valid object, skipping: ", a);
+            if (SimpleAllocator.TRACE) Debug.writeln("Not a valid object, skipping: ", a);
             return;
         }
         if (SimpleAllocator.TRACE) Debug.writeln("Adding object to queue: ", a);

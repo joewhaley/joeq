@@ -701,6 +701,10 @@ public class jq_NativeThread implements jq_DontAlign {
     }
     
     public static void resumeAllThreads() {
+        if (!all_native_threads_started) {
+            if (TRACE) Debug.writeln("Native threads haven't started yet.");
+            return;
+        }
         if (TRACE) Debug.writeln("Resuming all native threads");
         jq_Thread t = Unsafe.getThreadBlock();
         Assert._assert(!t.isThreadSwitchEnabled());

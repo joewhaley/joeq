@@ -11,7 +11,9 @@ extern void installSignalHandler(void);
 extern void initSemaphoreLock(void);
 
 extern void* joeq_code_startaddress;
+extern void* joeq_code_endaddress;
 extern void* joeq_data_startaddress;
+extern void* joeq_data_endaddress;
 
 extern int trace_exceptions;
 extern int trap_on_exceptions;
@@ -64,7 +66,9 @@ int main(int argc, char* argv[])
     installSignalHandler();
     initSemaphoreLock();
 
-    printf("Code segment at 0x%p, Data segment at 0x%p\n", &joeq_code_startaddress, &joeq_data_startaddress);
+    printf("Code segment at 0x%p-0x%p, Data segment at 0x%p-0x%p\n",
+        &joeq_code_startaddress, &joeq_code_endaddress,
+        &joeq_data_startaddress, &joeq_data_endaddress);
     printf("branching to entrypoint at location 0x%p\n", entry);
     fflush(stdout);
 
