@@ -31,7 +31,9 @@ public abstract class Solver {
     
     abstract InferenceRule createInferenceRule(List/*<RuleTerm>*/ top, RuleTerm bottom);
     abstract Relation createRelation(String name, List/*<String>*/ names, List/*<FieldDomain>*/ fieldDomains);
+    public abstract void initialize();
     public abstract void solve();
+    public abstract void finish();
     
     public FieldDomain getFieldDomain(String name) {
         return (FieldDomain) nameToFieldDomain.get(name);
@@ -62,6 +64,8 @@ public abstract class Solver {
         in.close();
         if (dis.NOISY) dis.out.println("Done loading "+dis.nameToFieldDomain.size()+" field domains.");
         
+        dis.initialize();
+        
         if (dis.NOISY) dis.out.println("Loading relations from \""+relationsFilename+"\"");
         in = new BufferedReader(new FileReader(relationsFilename));
         dis.readRelations(in);
@@ -82,9 +86,12 @@ public abstract class Solver {
         dis.solve();
         if (dis.NOISY) dis.out.println("done.");
         
+        dis.finish();
+        
         if (dis.NOISY) dis.out.println("Saving results...");
         dis.saveResults();
         if (dis.NOISY) dis.out.println("done.");
+        
     }
     
     void readFieldDomains(BufferedReader in) throws IOException {

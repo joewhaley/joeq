@@ -3,12 +3,18 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import joeq.Util.Assert;
 import joeq.Util.Collections.GenericMultiMap;
@@ -28,12 +34,56 @@ import org.sf.javabdd.BDDFactory;
  */
 public class BDDSolver extends Solver {
     
+    public static String bddDomainInfoFileName = System.getProperty("bddinfo", "bddinfo");
+    
     BDDFactory bdd;
     MultiMap fielddomainsToBDDdomains;
     
     public BDDSolver() {
         bdd = BDDFactory.init(1000000, 10000);
         fielddomainsToBDDdomains = new GenericMultiMap();
+    }
+    
+    public void initialize() {
+        loadBDDDomainInfo();
+    }
+    
+    void loadBDDDomainInfo() {
+        try {
+            BufferedReader in = new BufferedReader(new FileReader(bddDomainInfoFileName));
+            for (;;) {
+                String s = in.readLine();
+                if (s == null) break;
+                if (s.length() == 0) continue;
+                if (s.startsWith("#")) continue;
+                StringTokenizer st = new StringTokenizer(s);
+                String fieldDomain = st.nextToken();
+                FieldDomain fd = (FieldDomain) nameToFieldDomain.get(fieldDomain);
+                BDDDomain d = allocateBDDDomain(fd);
+            }
+        } catch (IOException x) {
+        }
+    }
+    
+    public void finish() {
+        try {
+            saveBDDDomainInfo();
+        } catch (IOException x) {
+        }
+    }
+    
+    void saveBDDDomainInfo() throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream("r"+bddDomainInfoFileName));
+        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+            BDDDomain d = bdd.getDomain(i);
+            for (Iterator j = fielddomainsToBDDdomains.keySet().iterator(); j.hasNext(); ) {
+                FieldDomain fd = (FieldDomain) j.next();
+                if (fielddomainsToBDDdomains.getValues(fd).contains(d)) {
+                    dos.writeBytes(fd.toString()+"\n");
+                    break;
+                }
+            }
+        }
     }
     
     BDDDomain makeDomain(String name, int bits) {

@@ -410,7 +410,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             allQuads.orWith(currentQuad);
         }
         try {
-            print();
+            //print();
             dump();
         } catch (IOException x) {
         }
