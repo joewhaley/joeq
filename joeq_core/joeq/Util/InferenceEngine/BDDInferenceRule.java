@@ -43,7 +43,7 @@ public class BDDInferenceRule extends InferenceRule {
     BDD[] canQuantifyAfter;
     int updateCount;
     long totalTime;
-    boolean test_order = false;
+    boolean find_best_order = false;
     
     public BDDInferenceRule(BDDSolver solver, List/* <RuleTerm> */ top, RuleTerm bottom) {
         super(top, bottom);
@@ -246,7 +246,7 @@ public class BDDInferenceRule extends InferenceRule {
             BDD canNowQuantify = canQuantifyAfter[j];
             if (solver.TRACE) solver.out.print(" x " + rt.relation);
             BDD b = relationValues[j];
-            if (test_order && !result.isOne()) {
+            if (find_best_order && !result.isOne()) {
                 String varOrder = System.getProperty("bddvarorder");
                 findBestDomainOrder(solver.bdd, null, varOrder, result, b, canNowQuantify);
             }
@@ -440,6 +440,10 @@ public class BDDInferenceRule extends InferenceRule {
                     b = newRelationValues[i];
                     if (solver.TRACE) solver.out.print("'");
                 }
+                if (find_best_order && !results[i].isOne()) {
+                    String varOrder = System.getProperty("bddvarorder");
+                    findBestDomainOrder(solver.bdd, null, varOrder, results[i], b, canNowQuantify);
+                }
                 if (!canNowQuantify.isOne()) {
                     if (solver.TRACE) solver.out.print(" (relprod "+b.nodeCount()+"x"+canNowQuantify.nodeCount());
                     BDD topBdd = results[i].relprod(b, canNowQuantify);
@@ -559,25 +563,16 @@ public class BDDInferenceRule extends InferenceRule {
             }
             domains = new ArrayList(domainSet);
         }
-        System.out.println("Trying permutations of "+domains);
-        FindBestOrder fbo = null;
-        if (true) {
-            try {
-                fbo = new FindBestOrder(b1, b2, b3, BDDFactory.and,
-                        BDDSolver.BDDCACHE, BDDSolver.BDDNODES/2, Long.MAX_VALUE);
-            } catch (IOException x) {
-            }
-        }
-        PermutationGenerator g = new PermutationGenerator(domains.size());
-        int[] best = null;
-        String bestVarOrder = origVarOrder;
-        long bestTime = Long.MAX_VALUE;
         int[] indices = new int[domains.size()];
         for (int i = 0; i < indices.length; ++i) {
             BDDDomain d1 = (BDDDomain) domains.get(i);
             indices[i] = origVarOrder.indexOf(d1.getName());
             //System.out.println("Domain "+d1+" index "+indices[i]);
         }
+        List listOfDoms = new LinkedList();
+        List listOfOrders = new LinkedList();
+        PermutationGenerator g = new PermutationGenerator(domains.size());
+        String varOrder2 = origVarOrder;
         while (g.hasMore()) {
             String varOrder = origVarOrder;
             int[] p = g.getNext();
@@ -588,8 +583,34 @@ public class BDDInferenceRule extends InferenceRule {
                 int index = indices[i];
                 varOrder = varOrder.substring(0, index) + d2.getName() + varOrder.substring(index+d1.getName().length());
             }
+            List order = getDomainOrder(varOrder, domains, p);
+            long t = solver.getOrderConstraint(order);
+            if (t == Long.MAX_VALUE) continue;
+            listOfDoms.add(order);
+            listOfOrders.add(varOrder);
+            varOrder2 = varOrder;
+        }
+        if (listOfDoms.size() <= 1) return varOrder2;
+        FindBestOrder fbo = null;
+        System.out.println("Trying "+listOfDoms.size()+" permutations of "+domains);
+        if (true) {
+            try {
+                fbo = new FindBestOrder(b1, b2, b3, BDDFactory.and,
+                        BDDSolver.BDDCACHE, BDDSolver.BDDNODES/2, Long.MAX_VALUE);
+            } catch (IOException x) {
+            }
+        }
+        String bestVarOrder = origVarOrder;
+        List bestOrder = null;
+        long bestTime = Long.MAX_VALUE;
+        Iterator i = listOfDoms.iterator();
+        Iterator j = listOfOrders.iterator();
+        while (i.hasNext()) {
+            List order = (List) i.next();
+            String varOrder = (String) j.next();
             long time;
             if (fbo != null) {
+                System.out.println("Trying "+order);
                 time = fbo.tryOrder(true, varOrder);
             } else {
                 int[] varOrdering = bdd.makeVarOrdering(true, varOrder);
@@ -603,17 +624,15 @@ public class BDDInferenceRule extends InferenceRule {
                 System.out.println(result.nodeCount()+" ("+time+" ms)");
                 result.free();
             }
-            List order = getDomainOrder(varOrder, domains, p);
             solver.registerOrderConstraint(order, time);
             if (time < bestTime) {
                 bestTime = time;
-                best = new int[p.length];
-                System.arraycopy(p, 0, best, 0, p.length);
+                bestOrder = order;
                 bestVarOrder = varOrder;
-                System.out.println("New best order: "+bestVarOrder+" time: "+bestTime+" ms");
+                System.out.println("New best order: "+bestOrder+" time: "+bestTime+" ms");
             }
         }
-        System.out.println("Best relative order: "+getDomainOrder(bestVarOrder, domains, best));
+        System.out.println("Best relative order: "+bestOrder);
         System.out.println("Best variable ordering: "+bestVarOrder);
         return bestVarOrder;
     }
@@ -637,24 +656,6 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         return order;
-    }
-    
-    static String swap(String orig, String s1, String s2) {
-        int i = orig.indexOf(s1);
-        int j = orig.indexOf(s2);
-        if (i == -1 || j == -1) return null;
-        if (i == j) return orig;
-        if (i > j) {
-            int t = i; i = j; j = t;
-            String s = s1; s1 = s2; s2 = s;
-        }
-        StringBuffer sb = new StringBuffer();
-        sb.append(orig.substring(0, i));
-        sb.append(s2);
-        sb.append(orig.substring(i+s1.length(), j));
-        sb.append(s1);
-        sb.append(orig.substring(j+s2.length()));
-        return sb.toString();
     }
     
 }
