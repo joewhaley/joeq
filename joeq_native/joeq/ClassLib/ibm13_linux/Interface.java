@@ -47,11 +47,15 @@ public final class Interface extends ClassLib.ClassLibInterface {
         nullStaticFields.add(jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;"));
         jq_Class launcher_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/misc/Launcher;");
         nullStaticFields.add(launcher_class.getOrCreateStaticField("launcher", "Lsun/misc/Launcher;"));
+        //jq_Class urlclassloader_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader;");
+        //nullStaticFields.add(urlclassloader_class.getOrCreateStaticField("extLoader", "Ljava/net/URLClassLoader;"));
         return nullStaticFields;
     }
     
     public java.util.Set bootstrapNullInstanceFields() {
         java.util.Set nullInstanceFields = new java.util.HashSet();
+	jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader$ClassFinder;");
+	nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
         return nullInstanceFields;
     }
     
