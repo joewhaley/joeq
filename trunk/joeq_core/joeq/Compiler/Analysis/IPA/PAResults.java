@@ -62,7 +62,6 @@ import joeq.Util.Assert;
 import joeq.Util.Strings;
 import joeq.Util.SimpleInterpreter;
 import joeq.Util.Collections.HashWorklist;
-import joeq.Util.Collections.IndexMap;
 import joeq.Util.Collections.IndexedMap;
 import joeq.Util.Collections.LinearSet;
 import joeq.Util.Collections.Pair;
