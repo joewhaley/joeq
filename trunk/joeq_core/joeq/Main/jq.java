@@ -417,11 +417,10 @@ public abstract class jq {
                 try {
                     mi.invoke();
                 } catch (Throwable x) {
-                    SystemInterface.debugmsg("Exception occurred during virtual machine initialization");
-                    SystemInterface.debugmsg(mi.toString());
-                    SystemInterface.debugmsg("Exception: " + x);
+                    SystemInterface.debugmsg("Exception occurred while initializing the virtual machine");
+                    SystemInterface.debugmsg(x.toString());
                     x.printStackTrace(System.err);
-                    return;
+                    //return;
                 }
             }
         }
@@ -439,7 +438,6 @@ public abstract class jq {
 
         // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
         if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg("\nSTARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
-
         for (Iterator it = Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
             String newCName = (String) it.next();
             PrimordialClassLoader.loader.replaceClass(newCName);
@@ -479,7 +477,8 @@ public abstract class jq {
     }
 
     public static void initializeForHostJVMExecution() {
-        jq.Bootstrapping = true;
+        if (jq.RunningNative) return;
+        
         jq.DontCompile = true;
         jq.boot_types = new java.util.HashSet();
 
@@ -538,10 +537,32 @@ public abstract class jq {
         Reflection.obj_trav.initialize();
     }
 
+    /**
+     * Number of native threads in the system.
+     * This can be set with the "-nt" option at startup.
+     */
     public static int NumOfNativeThreads = 1;
-    public static boolean Bootstrapping;
-    public static boolean DontCompile;
+    
+    /**
+     * Whether joeq is running natively, or within another virtual machine.
+     * This flag is never set explicitly - this flag is flipped on in the output
+     * image during bootstrapping.
+     */
+    public static boolean RunningNative = false;
+    
+    /**
+     * Flag to disable method compilation.
+     */
+    public static boolean DontCompile = false;
+    
+    /**
+     * Set of boot types, used during bootstrapping.
+     */
     public static Set boot_types;
+    
+    /**
+     * List of method invocations to perform on joeq startup.
+     */
     public static List on_vm_startup;
 
     public static boolean isBootType(jq_Type t) {
@@ -554,8 +575,9 @@ public abstract class jq {
         if (!b) {
             SystemInterface.debugmsg("Assertion Failure!");
             SystemInterface.debugmsg(reason);
-            if (!jq.Bootstrapping) {
-                new InternalError().printStackTrace();
+            if (jq.RunningNative) {
+                Debug.OnlineDebugger.debuggerEntryPoint();
+                //new InternalError().printStackTrace();
             }
             SystemInterface.die(-1);
         }
@@ -567,32 +589,36 @@ public abstract class jq {
 
     public static void TODO(String s) {
         SystemInterface.debugmsg("TODO: " + s);
-        if (!jq.Bootstrapping) {
-            new InternalError().printStackTrace();
+        if (jq.RunningNative) {
+            Debug.OnlineDebugger.debuggerEntryPoint();
+            //new InternalError().printStackTrace();
         }
         SystemInterface.die(-1);
     }
 
     public static void TODO() {
         SystemInterface.debugmsg("TODO");
-        if (!jq.Bootstrapping) {
-            new InternalError().printStackTrace();
+        if (jq.RunningNative) {
+            Debug.OnlineDebugger.debuggerEntryPoint();
+            //new InternalError().printStackTrace();
         }
         SystemInterface.die(-1);
     }
 
     public static void UNREACHABLE(String s) {
         SystemInterface.debugmsg("UNREACHABLE: " + s);
-        if (!jq.Bootstrapping) {
-            new InternalError().printStackTrace();
+        if (jq.RunningNative) {
+            Debug.OnlineDebugger.debuggerEntryPoint();
+            //new InternalError().printStackTrace();
         }
         SystemInterface.die(-1);
     }
 
     public static void UNREACHABLE() {
         SystemInterface.debugmsg("BUG! unreachable code reached!");
-        if (!jq.Bootstrapping) {
-            new InternalError().printStackTrace();
+        if (jq.RunningNative) {
+            Debug.OnlineDebugger.debuggerEntryPoint();
+            //new InternalError().printStackTrace();
         }
         SystemInterface.die(-1);
     }
@@ -669,7 +695,7 @@ public abstract class jq {
     }
 
     public static String hex(Object o) {
-        if (jq.Bootstrapping)
+        if (!jq.RunningNative)
             return hex(System.identityHashCode(o));
         else
             return HeapAddress.addressOf(o).stringRep();

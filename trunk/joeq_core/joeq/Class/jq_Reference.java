@@ -21,7 +21,7 @@ import UTF.Utf8;
 public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants, ObjectLayout {
 
     public static final jq_Reference getTypeOf(Object o) {
-        if (jq.Bootstrapping) return Reflection.getTypeOf(o);
+        if (!jq.RunningNative) return Reflection.getTypeOf(o);
         return ((HeapAddress)HeapAddress.addressOf(o).offset(VTABLE_OFFSET).peek().peek()).asReferenceType();
     }
 

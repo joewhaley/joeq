@@ -4,7 +4,7 @@
  * Created on July 3, 2002, 3:15 PM
  */
 
-package ClassLib.ibm13_linux.java.util.zip;
+package ClassLib.sun13_win32.java.util.zip;
 
 /**
  *
@@ -13,13 +13,8 @@ package ClassLib.ibm13_linux.java.util.zip;
  */
 public abstract class ZipFile {
 
-    public static java.util.Vector inflaters;
-    
-    public static void init_inflaters() {
-        inflaters = new java.util.Vector();
-    }
-    
     private String name;
+    private java.util.Vector inflaters;
     private java.io.RandomAccessFile raf;
     private java.util.Hashtable entries;
     
@@ -27,7 +22,7 @@ public abstract class ZipFile {
         this.name = name;
         java.io.RandomAccessFile raf = new java.io.RandomAccessFile(name, "r");
         this.raf = raf;
-        //this.inflaters = new java.util.Vector();
+        this.inflaters = new java.util.Vector();
         this.readCEN();
     }
     

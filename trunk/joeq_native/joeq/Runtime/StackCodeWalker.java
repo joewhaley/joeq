@@ -42,6 +42,41 @@ public class StackCodeWalker implements Iterator {
         return CodeAllocator.getCodeContaining(ip);
     }
 
+    public jq_Method getMethod() {
+        jq_CompiledCode cc = this.getCode();
+        if (cc == null) return null;
+        return cc.getMethod();
+    }
+    
+    public int getCodeOffset() {
+        jq_CompiledCode cc = this.getCode();
+        if (cc == null) return 0;
+        CodeAddress ip = this.getIP();
+        int code_offset = ip.difference(cc.getStart());
+        return code_offset;
+    }
+    
+    public Utf8 getSourceFile() {
+        jq_Method m = getMethod();
+        if (m == null) return null;
+        Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
+        return sourcefile;
+    }
+    public int getBCIndex() {
+        jq_CompiledCode cc = this.getCode();
+        if (cc == null) return -1;
+        int bc_index = cc.getBytecodeIndex(ip);
+        return bc_index;
+    }
+    
+    public int getLineNum() {
+        jq_Method m = getMethod();
+        if (m == null) return -1;
+        int bc_index = getBCIndex();
+        int line_num = m.getLineNumber(bc_index);
+        return line_num;
+    }
+    
     public StackCodeWalker(CodeAddress ip, StackAddress fp) {
         this.ip = ip;
         this.fp = fp;
@@ -71,26 +106,31 @@ public class StackCodeWalker implements Iterator {
         throw new UnsupportedOperationException();
     }
 
+    public String toString() {
+        jq_CompiledCode cc = this.getCode();
+        CodeAddress ip = this.getIP();
+        String s;
+        if (cc != null) {
+            jq_Method m = cc.getMethod();
+            int code_offset = ip.difference(cc.getStart());
+            if (m != null) {
+                Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
+                int bc_index = cc.getBytecodeIndex(ip);
+                int line_num = m.getLineNumber(bc_index);
+                s = "\tat " + m + " (" + sourcefile + ":" + line_num + " bc:" + bc_index + " off:" + jq.hex(code_offset) + ")";
+            } else {
+                s = "\tat <unknown cc> (start:" + cc.getStart().stringRep() + " off:" + jq.hex(code_offset) + ")";
+            }
+        } else {
+            s = "\tat <unknown addr> (ip:" + ip.stringRep() + ")";
+        }
+        return s;
+    }
+    
     public static void stackDump(CodeAddress init_ip, StackAddress init_fp) {
         StackCodeWalker sw = new StackCodeWalker(init_ip, init_fp);
         while (sw.hasNext()) {
-            jq_CompiledCode cc = sw.getCode();
-            CodeAddress ip = sw.getIP();
-            String s;
-            if (cc != null) {
-                jq_Method m = cc.getMethod();
-                int code_offset = ip.difference(cc.getStart());
-                if (m != null) {
-                    Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
-                    int bc_index = cc.getBytecodeIndex(ip);
-                    int line_num = m.getLineNumber(bc_index);
-                    s = "\tat " + m + " (" + sourcefile + ":" + line_num + " bc:" + bc_index + " off:" + jq.hex(code_offset) + ")";
-                } else {
-                    s = "\tat <unknown cc> (start:" + cc.getStart().stringRep() + " off:" + jq.hex(code_offset) + ")";
-                }
-            } else {
-                s = "\tat <unknown addr> (ip:" + ip.stringRep() + ")";
-            }
+            String s = sw.toString();
             SystemInterface.debugmsg(s);
             sw.gotoNext();
         }

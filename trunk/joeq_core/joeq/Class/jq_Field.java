@@ -39,14 +39,14 @@ public abstract class jq_Field extends jq_Member {
     public void load(char access_flags, DataInput in) 
     throws IOException, ClassFormatError {
         super.load(access_flags, in);
-        if (!jq.Bootstrapping)
-            ClassLibInterface.DEFAULT.initNewField((java.lang.reflect.Field)this.member_object, this);
+        if (jq.RunningNative)
+            ClassLibInterface.DEFAULT.initNewField((java.lang.reflect.Field)this.getJavaLangReflectMemberObject(), this);
     }
 
     public void load(char access_flags, Map attributes) {
         super.load(access_flags, attributes);
-        if (!jq.Bootstrapping)
-            ClassLibInterface.DEFAULT.initNewField((java.lang.reflect.Field)this.member_object, this);
+        if (jq.RunningNative)
+            ClassLibInterface.DEFAULT.initNewField((java.lang.reflect.Field)this.getJavaLangReflectMemberObject(), this);
     }
 
     public final jq_Type getType() { return type; }

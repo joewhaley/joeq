@@ -79,7 +79,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         boolean USE_BYTECODE_TRIMMER = true;
 
         // set bootstrapping flag first - lots of code depends on this flag.
-        jq.Bootstrapping = true;
+        jq.RunningNative = false;
         // initialize list of methods to invoke on joeq startup
         jq.on_vm_startup = new LinkedList();
         
@@ -401,9 +401,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         long sfinittime = System.currentTimeMillis() - starttime;
         System.out.println("SF init time: "+sfinittime/1000f+"s");
         
-        // turn off jq.Bootstrapping flag in image
+        // turn on jq.RunningNative flag in image
         jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
-        jq_class.setStaticData(jq_class.getOrCreateStaticField("Bootstrapping","Z"), 0);
+        jq_class.setStaticData(jq_class.getOrCreateStaticField("RunningNative","Z"), 1);
 
         // compile versions of all necessary methods.
         starttime = System.currentTimeMillis();

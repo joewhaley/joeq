@@ -20,18 +20,20 @@ import UTF.Utf8;
 public abstract class jq_Type {
     
     protected final Utf8 desc;
-    protected final Class class_object;  // pointer to our associated java.lang.Class object
+    private /*final*/ Class class_object;  // pointer to our associated java.lang.Class object
 
     public static final boolean USE_CLASS_OBJECT_FIELD = true;
 
     protected jq_Type(Utf8 desc, ClassLoader class_loader) {
         this.desc = desc;
-        Class c = null;
-        if (!jq.Bootstrapping)
-            c = ClassLibInterface.DEFAULT.createNewClass(this);
+        initializeClassObject();
+    }
+    
+    private void initializeClassObject() {
+        if (jq.RunningNative)
+            this.class_object = ClassLibInterface.DEFAULT.createNewClass(this);
         else if (USE_CLASS_OBJECT_FIELD)
-            c = Reflection.getJDKType(this);
-        this.class_object = c;
+            this.class_object = Reflection.getJDKType(this);
     }
     
     public abstract String getName();
@@ -51,6 +53,8 @@ public abstract class jq_Type {
     }
     public boolean needsDynamicLink(jq_Method method) { return false; }
     public final Class getJavaLangClassObject() {
+        if (jq.RunningNative && this.class_object == null)
+            initializeClassObject();
         return class_object;
     }
 

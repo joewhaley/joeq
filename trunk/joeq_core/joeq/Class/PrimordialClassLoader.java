@@ -245,7 +245,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
      * @param name The filename of the resource to locate.
      */
     public InputStream getResourceAsStream(String name) {
-        //if (jq.Bootstrapping && name.startsWith("java/")) {
+        //if (!jq.RunningNative && name.startsWith("java/")) {
         //    // hijack loading of java/* to point to bootstrap versions
         //    char[] c = name.toCharArray();
         //    c[3] = '_';
@@ -371,7 +371,8 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     public final jq_Type getOrCreateBSType(String desc) { return getOrCreateBSType(Utf8.get(desc)); }
     public final jq_Type getOrCreateBSType(Utf8 desc) {
-        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getOrCreateType(this, desc);
+        if (jq.RunningNative)
+            return ClassLibInterface.DEFAULT.getOrCreateType(this, desc);
         jq_Type t = (jq_Type)bs_desc2type.get(desc);
         if (t == null) {
             if (desc.isDescriptor(jq_ClassFileConstants.TC_CLASS)) {
@@ -455,13 +456,14 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     
     public static final jq_Type getOrCreateType(ClassLoader cl, Utf8 desc) {
-        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getOrCreateType(cl, desc);
+        if (jq.RunningNative)
+            return ClassLibInterface.DEFAULT.getOrCreateType(cl, desc);
         jq.Assert(cl == PrimordialClassLoader.loader);
         return PrimordialClassLoader.loader.getOrCreateBSType(desc);
     }
     
     public static final void unloadType(ClassLoader cl, jq_Type t) {
-        if (!jq.Bootstrapping) {
+        if (jq.RunningNative) {
             ClassLibInterface.DEFAULT.unloadType(cl, t);
             return;
         }

@@ -156,7 +156,7 @@ public abstract class ClassLoader {
 
     // additional methods
     public jq_Type getType(Utf8 desc) {
-        jq.Assert(!jq.Bootstrapping);
+        jq.Assert(jq.RunningNative);
         Map desc2type = this.desc2type;
         jq_Type t = (jq_Type)desc2type.get(desc);
         return t;
@@ -166,7 +166,8 @@ public abstract class ClassLoader {
         return ((ClassLoader)o).getOrCreateType(desc);
     }
     public jq_Type getOrCreateType(Utf8 desc) {
-        if (jq.Bootstrapping) return PrimordialClassLoader.loader.getOrCreateBSType(desc);
+        if (!jq.RunningNative)
+            return PrimordialClassLoader.loader.getOrCreateBSType(desc);
         Map desc2type = this.desc2type;
         jq_Type t = (jq_Type)desc2type.get(desc);
         if (t == null) {
@@ -187,7 +188,7 @@ public abstract class ClassLoader {
         return t;
     }
     public void unloadType(jq_Type t) {
-        if (jq.Bootstrapping) {
+        if (!jq.RunningNative) {
             PrimordialClassLoader.loader.unloadBSType(t);
             return;
         }

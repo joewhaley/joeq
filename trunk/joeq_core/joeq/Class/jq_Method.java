@@ -75,11 +75,11 @@ public abstract class jq_Method extends jq_Member {
         this.codeattribMap = codeattribMap;
         this.attributes = new HashMap();
         state = STATE_LOADED;
-        if (!jq.Bootstrapping) {
+        if (jq.RunningNative) {
             if (this instanceof jq_Initializer) {
-                ClassLibInterface.DEFAULT.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
+                ClassLibInterface.DEFAULT.initNewConstructor((java.lang.reflect.Constructor)this.getJavaLangReflectMemberObject(), (jq_Initializer)this);
             } else {
-                ClassLibInterface.DEFAULT.initNewMethod((java.lang.reflect.Method)this.member_object, this);
+                ClassLibInterface.DEFAULT.initNewMethod((java.lang.reflect.Method)this.getJavaLangReflectMemberObject(), this);
             }
         }
     }
@@ -187,11 +187,11 @@ public abstract class jq_Method extends jq_Member {
         }
         // TODO: Exceptions
         state = STATE_LOADED;
-        if (!jq.Bootstrapping) {
+        if (jq.RunningNative) {
             if (this instanceof jq_Initializer) {
-                ClassLibInterface.DEFAULT.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
+                ClassLibInterface.DEFAULT.initNewConstructor((java.lang.reflect.Constructor)this.getJavaLangReflectMemberObject(), (jq_Initializer)this);
             } else {
-                ClassLibInterface.DEFAULT.initNewMethod((java.lang.reflect.Method)this.member_object, this);
+                ClassLibInterface.DEFAULT.initNewMethod((java.lang.reflect.Method)this.getJavaLangReflectMemberObject(), this);
             }
         }
     }
@@ -306,7 +306,8 @@ public abstract class jq_Method extends jq_Member {
                 //else
                 //    c = new x86OpenJITCompiler(this);
                 default_compiled_version = c.compile();
-                if (!jq.Bootstrapping) default_compiled_version.patchDirectBindCalls();
+                if (jq.RunningNative)
+                    default_compiled_version.patchDirectBindCalls();
             }
             state = STATE_CLSINITIALIZED;
         }

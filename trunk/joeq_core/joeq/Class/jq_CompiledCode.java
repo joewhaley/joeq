@@ -130,7 +130,7 @@ public class jq_CompiledCode implements Comparable {
     }
 
     public void patchDirectBindCalls() {
-        jq.Assert(!jq.Bootstrapping);
+        jq.Assert(jq.RunningNative);
         if (code_reloc != null) {
             Iterator i = code_reloc.iterator();
             while (i.hasNext()) {
@@ -141,7 +141,7 @@ public class jq_CompiledCode implements Comparable {
     }
 
     public void patchDirectBindCalls(jq_Method method, jq_CompiledCode cc) {
-        jq.Assert(!jq.Bootstrapping);
+        jq.Assert(jq.RunningNative);
         if (code_reloc != null) {
             Iterator i = code_reloc.iterator();
             while (i.hasNext()) {

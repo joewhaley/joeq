@@ -7,9 +7,11 @@
 
 package ClassLib.Common.java.lang.reflect;
 
+import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
+import Clazz.jq_NameAndDesc;
 import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
@@ -18,6 +20,7 @@ import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
+import UTF.Utf8;
 
 /*
  * @author  John Whaley
@@ -34,8 +37,43 @@ public class Method extends AccessibleObject {
     private java.lang.Class returnType;
     private java.lang.Class[] exceptionTypes;
     private int modifiers;
+    private int slot;
     
     private Method(jq_Method m) {
+        this.jq_method = m;
+    }
+    private Method(java.lang.Class clazz,
+                   java.lang.String name,
+                   java.lang.Class[] parameterTypes,
+                   java.lang.Class returnType,
+                   java.lang.Class[] exceptionTypes,
+                   int modifiers,
+                   int slot) {
+        this.clazz = clazz;
+        this.name = name;
+        this.parameterTypes = parameterTypes;
+        this.returnType = returnType;
+        this.exceptionTypes = exceptionTypes;
+        this.modifiers = modifiers;
+        this.slot = slot;
+        
+        jq_Class k = (jq_Class) ClassLibInterface.DEFAULT.getJQType(clazz);
+        StringBuffer desc = new StringBuffer();
+        desc.append('(');
+        for (int i=0; i<parameterTypes.length; ++i) {
+            desc.append(Reflection.getJQType(parameterTypes[i]).getDesc().toString());
+        }
+        desc.append(')');
+        desc.append(Reflection.getJQType(returnType).getDesc().toString());
+        jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(name), Utf8.get(desc.toString()));
+        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(k, nd);
+        jq_Method m = (jq_Method) k.getDeclaredMember(nd);
+        if (m == null) {
+            if (java.lang.reflect.Modifier.isStatic(modifiers))
+                m = k.getOrCreateStaticMethod(nd);
+            else
+                m = k.getOrCreateInstanceMethod(nd);
+        }
         this.jq_method = m;
     }
     
@@ -93,7 +131,7 @@ public class Method extends AccessibleObject {
     }
     
     public static void initNewMethod(Method o, jq_Method jq_method) {
-        if (jq.Bootstrapping) return;
+        if (!jq.RunningNative) return;
         java.lang.String name = jq_method.getName().toString();
         o.name = name;
         java.lang.Class clazz = jq_method.getDeclaringClass().getJavaLangClassObject();

@@ -90,7 +90,7 @@ public abstract class SystemInterface {
     }
 
     public static void debugmsg(String msg) {
-        if (jq.Bootstrapping) {
+        if (!jq.RunningNative) {
             System.err.println(msg);
             return;
         }
@@ -153,7 +153,7 @@ public abstract class SystemInterface {
     }
     
     public static long currentTimeMillis() {
-        //if (jq.Bootstrapping)
+        //if (!jq.RunningNative)
         //    return System.currentTimeMillis();
         //else
             try {

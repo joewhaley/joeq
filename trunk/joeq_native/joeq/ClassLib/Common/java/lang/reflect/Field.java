@@ -7,8 +7,10 @@
 
 package ClassLib.Common.java.lang.reflect;
 
+import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
+import Clazz.jq_NameAndDesc;
 import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
@@ -17,6 +19,7 @@ import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
+import UTF.Utf8;
 
 /*
  * @author  John Whaley
@@ -27,13 +30,39 @@ public class Field extends AccessibleObject {
     // additional instance field.
     public final jq_Field jq_field;
     
-    private java.lang.String name;
     private java.lang.Class clazz;
+    private java.lang.String name;
     private java.lang.Class type;
     private int modifiers;
+    private int slot;
     
     private Field(jq_Field f) {
         this.jq_field = f;
+    }
+    
+    private Field(java.lang.Class clazz,
+                  java.lang.String name,
+                  java.lang.Class type,
+                  int modifiers,
+                  int slot) {
+        this.clazz = clazz;
+        this.name = name;
+        this.type = type;
+        this.modifiers = modifiers;
+        this.slot = slot;
+        
+        jq_Class c = (jq_Class) Reflection.getJQType(clazz);
+        //if (c == null) return null;
+        jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(name), Reflection.getJQType(type).getDesc());
+        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
+        jq_Field m = (jq_Field)c.getDeclaredMember(nd);
+        if (m == null) {
+            if (java.lang.reflect.Modifier.isStatic(modifiers))
+                m = c.getOrCreateStaticField(nd);
+            else
+                m = c.getOrCreateInstanceField(nd);
+        }
+        this.jq_field = m;
     }
     
     // overridden implementations.
@@ -793,7 +822,7 @@ public class Field extends AccessibleObject {
     }
     
     public static void initNewField(Field o, jq_Field jq_field) {
-        if (jq.Bootstrapping) return;
+        if (!jq.RunningNative) return;
         java.lang.String name = jq_field.getName().toString();
         o.name = name;
         java.lang.Class clazz = jq_field.getDeclaringClass().getJavaLangClassObject();
