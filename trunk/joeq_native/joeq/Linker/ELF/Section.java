@@ -433,6 +433,7 @@ public abstract class Section implements ELFConstants {
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry)i.next();
                 int in = -((Integer)e.getKey()).intValue();
+                if (in == 0) break;
                 Set set = (Set)e.getValue();
                 for (Iterator j=set.iterator(); j.hasNext(); ) {
                     String s1 = (String)j.next();
@@ -453,7 +454,7 @@ public abstract class Section implements ELFConstants {
                             break;
                         }
                         if (s2.endsWith(s1)) {
-                            System.out.println("String \""+s1+"\" shares ending with \""+s2+"\"");
+                            //System.out.println("String \""+s1+"\" shares ending with \""+s2+"\"");
                             index2 = ((Integer)string_map.get(s2)).intValue();
                             index2 += s2.length();
                             index2 -= in;
@@ -470,7 +471,7 @@ public abstract class Section implements ELFConstants {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
                 index = ((Integer)e.getValue()).intValue();
-                System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
+                //System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
                 s.getBytes(0, s.length(), table, index);
             }
         }
@@ -496,7 +497,7 @@ public abstract class Section implements ELFConstants {
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
-                System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
+                //System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
                 s.getBytes(0, s.length(), table, index);
                 index += s.length() + 1;
             }
