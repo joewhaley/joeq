@@ -383,7 +383,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
                         }
                     }
                     dos.writeBytes(v[j]+" ");
-                    t.andWith(bdd.getDomain(j).ithVar(v[j]));
+                    t.andWith(d.ithVar(v[j]));
                 }
                 q.applyWith(t, BDDFactory.diff);
                 dos.writeBytes("\n");
@@ -395,18 +395,6 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("Done printing "+lines+" lines.");
     }
     
-    BDD quantifyOtherDomains(BDD q, BDDDomain d) {
-        BDD result = q.id();
-        BDD set = bdd.one();
-        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
-            if (i == d.getIndex()) continue;
-            set.andWith(bdd.getDomain(i).set());
-        }
-        BDD r2 = result.exist(set);
-        result.free(); set.free();
-        return r2;
-    }
-
     void print() {
         for (int i = 0; i < quadMap.size(); ++i) {
             BDD q = quad.ithVar(i).andWith(allQuads.id());
@@ -423,6 +411,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             BDD q = (BDD) i.next();
             q.andWith(allQuads.id());
             printQuad(q);
+            q.free();
         }
     }
     
