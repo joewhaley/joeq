@@ -20,8 +20,12 @@ public final class Interface extends ClassLib.ClassLibInterface {
     /** Creates new Interface */
     public Interface() {}
 
+    public static boolean USE_JOEQ_CLASSLIB = false;
+    
+    public void useJoeqClasslib(boolean b) { USE_JOEQ_CLASSLIB = b; }
+    
     public java.lang.String getImplementationClassDesc(UTF.Utf8 desc) {
-        if (desc.toString().startsWith("Ljava/")) {
+        if (USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
             return "LClassLib/sun14_win32/"+desc.toString().substring(1);
         }
         return null;

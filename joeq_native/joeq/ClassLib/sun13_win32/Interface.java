@@ -22,6 +22,8 @@ public final class Interface extends ClassLib.ClassLibInterface {
 
     public static boolean USE_JOEQ_CLASSLIB = false;
     
+    public void useJoeqClasslib(boolean b) { USE_JOEQ_CLASSLIB = b; }
+    
     public java.lang.String getImplementationClassDesc(UTF.Utf8 desc) {
         if (USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
             return "LClassLib/sun13_win32/"+desc.toString().substring(1);
