@@ -96,6 +96,8 @@ public abstract class InferenceRule {
     
     public abstract boolean update();
     
+    public abstract void reportStats();
+    
     public static MultiMap getRelationToUsingRule(List/*<InferenceRule>*/ rules) {
         MultiMap mm = new GenericMultiMap();
         for (Iterator i = rules.iterator(); i.hasNext(); ) {
@@ -128,29 +130,44 @@ public abstract class InferenceRule {
             newTop.add(rt2);
             // Make a new relation for the bottom.
             Map neededVariables = new HashMap();
+            Map variableOptions = new HashMap();
             Iterator i = rt1.variables.iterator();
             Iterator j = rt1.relation.fieldDomains.iterator();
+            Iterator k = rt1.relation.fieldOptions.iterator();
             while (i.hasNext()) {
                 Variable v = (Variable) i.next();
                 FieldDomain d = (FieldDomain) j.next();
+                String o = (String) k.next();
                 if (!myNewNecessaryVariables.contains(v)) continue;
                 FieldDomain d2 = (FieldDomain) neededVariables.get(v);
                 if (d2 != null && d != d2) {
                     throw new IllegalArgumentException(v+": "+d+" != "+d2);
                 }
                 neededVariables.put(v, d);
+                String o2 = (String) variableOptions.get(v);
+                if (o2 != null && !o.equals(o2)) {
+                    throw new IllegalArgumentException(v+": "+o+" != "+o2);
+                }
+                variableOptions.put(v, o);
             }
             i = rt2.variables.iterator();
             j = rt2.relation.fieldDomains.iterator();
+            k = rt2.relation.fieldOptions.iterator();
             while (i.hasNext()) {
                 Variable v = (Variable) i.next();
                 FieldDomain d = (FieldDomain) j.next(); 
+                String o = (String) k.next();
                 if (!myNewNecessaryVariables.contains(v)) continue;
                 FieldDomain d2 = (FieldDomain) neededVariables.get(v);
                 if (d2 != null && d != d2) {
                     throw new IllegalArgumentException(v+": "+d+" != "+d2);
                 }
                 neededVariables.put(v, d);
+                String o2 = (String) variableOptions.get(v);
+                if (o2 != null && !o.equals(o2)) {
+                    throw new IllegalArgumentException(v+": "+o+" != "+o2);
+                }
+                variableOptions.put(v, o);
             }
             // Make a new relation for the bottom.
             List fieldNames = new LinkedList();
@@ -161,12 +178,14 @@ public abstract class InferenceRule {
                 Map.Entry e = (Map.Entry) i.next();
                 Variable v = (Variable) e.getKey();
                 FieldDomain d = (FieldDomain) e.getValue();
+                String o = (String) variableOptions.get(v);
                 fieldNames.add("_"+v);
                 fieldDomains.add(d);
-                fieldOptions.add("");
+                fieldOptions.add(o);
                 newVariables.add(v);
             }
-            String relationName = "syn_"+myIndex+"_"+count;
+            String relationName = bottom.relation.name+"_"+myIndex+"_"+count;
+            if (s.NOISY) s.out.println("Field names: "+fieldNames+" Field domains: "+fieldDomains+" Options: "+fieldOptions);
             Relation newRelation = s.createRelation(relationName, fieldNames, fieldDomains, fieldOptions);
             if (s.NOISY) s.out.println("New relation: "+newRelation);
             RuleTerm newBottom = new RuleTerm(newVariables, newRelation);

@@ -29,6 +29,7 @@ public abstract class Solver {
     
     boolean NOISY = true;
     boolean SPLIT_RULES = true;
+    boolean REPORT_STATS = true;
     boolean TRACE = System.getProperty("tracesolve") != null;
     boolean TRACE_FULL = System.getProperty("fulltracesolve") != null;
     PrintStream out = System.out;
@@ -108,6 +109,10 @@ public abstract class Solver {
         if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
         
         dis.finish();
+        
+        if (dis.REPORT_STATS) {
+            dis.reportStats();
+        }
         
         if (dis.NOISY) dis.out.println("Saving results...");
         time = System.currentTimeMillis();
@@ -310,12 +315,18 @@ public abstract class Solver {
     
     void splitRules() {
         List newRules = new LinkedList();
-        // rules list is changing, so don't use Iterator
-        for (int i = 0; i < rules.size(); ++i) {
-            InferenceRule r = (InferenceRule) rules.get(i);
+        for (Iterator i = rules.iterator(); i.hasNext(); ) {
+            InferenceRule r = (InferenceRule) i.next();
             newRules.addAll(r.split(this));
         }
         rules.addAll(newRules);
+    }
+    
+    void reportStats() {
+        for (Iterator i = rules.iterator(); i.hasNext(); ) {
+            InferenceRule r = (InferenceRule) i.next();
+            r.reportStats();
+        }
     }
     
     void saveResults() throws IOException {

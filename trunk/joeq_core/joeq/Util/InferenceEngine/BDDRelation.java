@@ -34,7 +34,7 @@ public class BDDRelation extends Relation {
     BDD domainSet;
     
     public BDDRelation(BDDSolver solver, String name, List fieldNames, List fieldDomains, List fieldOptions) {
-        super(name, fieldNames, fieldDomains);
+        super(name, fieldNames, fieldDomains, fieldOptions);
         this.solver = solver;
         this.relation = solver.bdd.zero();
         this.domains = new LinkedList();
