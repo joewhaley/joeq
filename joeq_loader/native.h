@@ -18,6 +18,7 @@ extern "C" int __stdcall main_argv_length(const int i);
 extern "C" void __stdcall main_argv(const int i, char* buf);
 extern int _argc;
 extern char** _argv;
+#if defined(WIN32)
 struct dirent {
 	char d_name[MAX_PATH];
 };
@@ -27,6 +28,10 @@ typedef struct {
     HANDLE handle;
     WIN32_FIND_DATA find_data;
 } DIR;
+extern "C" DIR * __stdcall fs_opendir(const char* s);
+extern "C" struct dirent * __stdcall fs_readdir(DIR *dir);
+extern "C" int __stdcall fs_closedir(DIR *dir);
+#endif
 extern "C" int __stdcall fs_getdcwd(const int i, char* buf, const int buflen);
 extern "C" int __stdcall fs_fullpath(char* buf, const char* s, const int buflen);
 extern "C" int __stdcall fs_getfileattributes(const char* s);
@@ -35,9 +40,6 @@ extern "C" int __stdcall fs_access(const char* s, int mode);
 extern "C" __int64 __stdcall fs_getfiletime(const char* s);
 extern "C" __int64 __stdcall fs_stat_size(const char* s);
 extern "C" int __stdcall fs_remove(const char* s);
-extern "C" DIR * __stdcall fs_opendir(const char* s);
-extern "C" struct dirent * __stdcall fs_readdir(DIR *dir);
-extern "C" int __stdcall fs_closedir(DIR *dir);
 extern "C" int __stdcall fs_mkdir(const char* s);
 extern "C" int __stdcall fs_rename(const char* s, const char* s1);
 extern "C" int __stdcall fs_chmod(const char* s, const int mode);
