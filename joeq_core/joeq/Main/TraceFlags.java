@@ -26,6 +26,10 @@ public abstract class TraceFlags {
             Compil3r.Quad.BytecodeToQuad.AbstractState.TRACE = true;
             return i+1;
         }
+        if (args[i].equalsIgnoreCase("-TraceLiveRef")) {
+            Compil3r.BytecodeAnalysis.LiveRefAnalysis.ALWAYS_TRACE = true;
+            return i+1;
+        }
         if (args[i].equalsIgnoreCase("-TraceBootImage")) {
             Bootstrap.BootImage.TRACE = true;
             return i+1;

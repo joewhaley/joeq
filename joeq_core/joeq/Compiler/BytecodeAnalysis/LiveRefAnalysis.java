@@ -879,7 +879,11 @@ public class LiveRefAnalysis {
                 for (int i=0; i<bb.getNumberOfSuccessors(); ++i) {
                     BasicBlock jsr_caller = cfg.getBasicBlock(bb.getSuccessor(i).id-1);
                     if (TRACE) out.println("Merging with jsr successor "+bb.getSuccessor(i)+" from jsr call at "+jsr_caller);
-                    if (this.mergeJSRStateWith(jsr_caller, bb.getSuccessor(i))) go_again = true;
+		    if (start_states[jsr_caller.id] != null) {
+			if (this.mergeJSRStateWith(jsr_caller, bb.getSuccessor(i))) go_again = true;
+		    } else {
+			if (TRACE) out.println("jsr "+jsr_caller+" is not yet reached (or is unreachable");
+		    }
                 }
             } else {
                 for (int i=0; i<bb.getNumberOfSuccessors(); ++i) {
@@ -1543,7 +1547,7 @@ public class LiveRefAnalysis {
         public String toString() { return "LR2/"+this.method.getName(); }
         
         public void traverseBB(Compil3r.BytecodeAnalysis.BasicBlock bb) {
-	    if (end_states[bb.id] == null) {
+	    if ((end_states[bb.id] == null) || (start_states[bb.id] == null)) {
 		// unreachable block!
 		if (TRACE) out.println("Basic block "+bb+" is unreachable!");
 		return;
