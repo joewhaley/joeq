@@ -65,9 +65,9 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
         Assert._assert(class_loader != null);
         this.class_loader = class_loader;
     }
-    protected final ClassLoader class_loader;
-    protected int/*byte*/ state; // use an 'int' so we can do cas4 on it
     protected Object vtable;
+    protected int/*byte*/ state; // use an 'int' so we can do cas4 on it
+    protected final ClassLoader class_loader;
 
     public static class jq_NullType extends jq_Reference {
         private jq_NullType() {

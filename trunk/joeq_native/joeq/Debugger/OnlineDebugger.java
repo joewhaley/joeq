@@ -67,7 +67,7 @@ public class OnlineDebugger {
         //bsh.Interpreter i = null;
 uphere:
         for (;;) {
-            System.err.print("db> ");
+            SystemInterface.debugwrite("db> ");
             String s = null;
             try {
                 s = in.readLine();

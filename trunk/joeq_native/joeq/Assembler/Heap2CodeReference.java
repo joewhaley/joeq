@@ -42,4 +42,22 @@ public class Heap2CodeReference extends Reloc {
         return "from heap:"+from_heaploc.stringRep()+" to code:"+to_codeloc.stringRep();
     }
 
+    public boolean equals(Heap2CodeReference that) {
+        if (this.from_heaploc.difference(that.from_heaploc) != 0)
+            return false;
+        return true;
+    }
+    
+    public boolean equals(Object obj) {
+        if (obj instanceof Heap2CodeReference) {
+            return equals((Heap2CodeReference) obj);
+        }
+        return false;
+    }
+    
+    public int hashCode() {
+        // Note: hash code changes depending on address relocation!
+        int v1 = from_heaploc.to32BitValue();
+        return v1;
+    }
 }

@@ -5,6 +5,7 @@ package joeq.Main;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -15,23 +16,27 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.ByteOrder;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultCodeAllocator;
 import joeq.Allocator.HeapAllocator;
-import joeq.Bootstrap.BootImage;
 import joeq.Bootstrap.BootstrapCodeAddress;
 import joeq.Bootstrap.BootstrapCodeAllocator;
 import joeq.Bootstrap.BootstrapHeapAddress;
 import joeq.Bootstrap.BootstrapRootSet;
+import joeq.Bootstrap.SinglePassBootImage;
 import joeq.Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
 import joeq.Class.Delegates;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_Member;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
@@ -51,8 +56,6 @@ import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.Collections.LinearSet;
-import joeq.Util.IO.DirectBufferedFileOutputStream;
-import joeq.Util.IO.ExtendedDataOutput;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -60,7 +63,7 @@ import joeq.Util.IO.ExtendedDataOutput;
  */
 public abstract class Bootstrapper {
 
-    private static BootImage objmap;
+    private static SinglePassBootImage objmap;
     
     public static void main(String[] args) throws IOException {
         
@@ -147,11 +150,11 @@ public abstract class Bootstrapper {
                 ++i; continue;
             }
             if (args[i].equalsIgnoreCase("-borland")) {
-                BootImage.USE_MICROSOFT_STYLE_MUNGE = false;
+                SinglePassBootImage.USE_MICROSOFT_STYLE_MUNGE = false;
                 ++i; continue;
             }
             if (args[i].equalsIgnoreCase("-microsoft")) {
-                BootImage.USE_MICROSOFT_STYLE_MUNGE = true;
+                SinglePassBootImage.USE_MICROSOFT_STYLE_MUNGE = true;
                 ++i; continue;
             }
             /*
@@ -189,7 +192,7 @@ public abstract class Bootstrapper {
         Reflection.obj_trav = obj_trav;
         obj_trav.initialize();
         //objmap = new BootImage(bca);
-        objmap = BootImage.DEFAULT;
+        objmap = SinglePassBootImage.DEFAULT;
         //HeapAddress.FACTORY = BootstrapHeapAddress.FACTORY = new BootstrapHeapAddressFactory(objmap);
         
         long starttime = System.currentTimeMillis();
@@ -387,44 +390,30 @@ public abstract class Bootstrapper {
         // enable allocations
         objmap.enableAllocations();
 
-        // allocate entrypoints first in bootimage.
+        starttime = System.currentTimeMillis();
+        
+        // Allocate entrypoints first in data section.
         // NOTE: will only be first if java.lang.Object doesn't have any static members.
         SystemInterface._class.sf_initialize();
 
         //jq.Assert(SystemInterface._entry.getAddress() == startAddress + ARRAY_HEADER_SIZE,
         //          "entrypoint is at "+Strings.hex8(SystemInterface._entry.getAddress()));
         
-        // initialize the static fields for all the necessary types
-        starttime = System.currentTimeMillis();
+        // Allocate space for the static fields of all necessary types.
+        // Note: Static fields that are constant objects (typically java.lang.String)
+        //       are also allocated here.
         Iterator it = classset.iterator();
         while (it.hasNext()) {
-            jq_Type t = (jq_Type)it.next();
+            jq_Type t = (jq_Type) it.next();
             Assert._assert(t.isPrepared());
             t.sf_initialize();
-            // initialize static field values, too.
-            if (t.isClassType()) {
-                jq_Class k = (jq_Class)t;
-                Assert._assert((k.getSuperclass() == null) || classset.contains(k.getSuperclass()),
-                          k.getSuperclass()+" (superclass of "+k+") is not in class set!");
-                jq_StaticField[] sfs = k.getDeclaredStaticFields();
-                for (int j=0; j<sfs.length; ++j) {
-                    jq_StaticField sf = sfs[j];
-                    //System.out.println("Initializing static field: "+sf);
-                    objmap.initStaticField(sf);
-                    objmap.addStaticFieldReloc(sf);
-                }
-            }
         }
         long sfinittime = System.currentTimeMillis() - starttime;
         System.out.println("SF init time: "+sfinittime/1000f+"s");
         
-        // turn on jq.RunningNative flag in image
-        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Main/jq;");
-        jq_class.setStaticData(jq_class.getOrCreateStaticField("RunningNative","Z"), 1);
-        // turn off jq.IsBootstrapping flag in image
-        jq_class.setStaticData(jq_class.getOrCreateStaticField("IsBootstrapping","Z"), 0);
-
-        // compile versions of all necessary methods.
+        // Compile versions of all necessary methods.
+        // Automatically allocates any objects in the constant pool
+        // that are used in the code (via ldc instruction).
         starttime = System.currentTimeMillis();
         it = methodset.iterator();
         while (it.hasNext()) {
@@ -439,22 +428,7 @@ public abstract class Bootstrapper {
         long compiletime = System.currentTimeMillis() - starttime;
         System.out.println("Compile time: "+compiletime/1000f+"s");
 
-        // initialize and add the jq_Class/jq_Array/jq_Primitive objects for all
-        // necessary types.
-        starttime = System.currentTimeMillis();
-        it = classset.iterator();
-        while (it.hasNext()) {
-            jq_Type t = (jq_Type)it.next();
-            Assert._assert(t.isSFInitialized());
-            
-            if (t == Unsafe._class) continue;
-            //System.out.println("Compiling type: "+t.getName());
-            t.compile();
-            t.cls_initialize();
-            objmap.getOrAllocateObject(t);
-        }
-        
-        // get the JDK type of each of the classes that could be in our image, so
+        // Get the JDK type of each of the classes that could be in our image, so
         // that we can trigger each of their <clinit> methods, because some
         // <clinit> methods add Utf8 references to our table.
         int numTypes = PrimordialClassLoader.loader.getNumTypes();
@@ -464,92 +438,156 @@ public abstract class Bootstrapper {
             Reflection.getJDKType(t);
         }
 
-        // get the set of compiled methods, because it is used during bootstrapping.
-        CodeAllocator.getCompiledMethods();
-        
-        System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getNumTypes());
-        System.out.println("number of classes in image = "+objmap.boot_types.size());
-        
-        // During the process of initialization, etc., Utf8 objects could
-        // have been allocated, causing the Utf8 table to grow.  We update
-        // the static fields of the Utf8 class to catch these.
-        // (Hopefully no other static fields have changed!?)
-        jq_Class utf8_class = (jq_Class) PrimordialClassLoader.loader.getBSType("Ljoeq/UTF/Utf8;");
-        jq_StaticField[] sfs = utf8_class.getDeclaredStaticFields();
-        for (int j=0; j<sfs.length; ++j) {
-            jq_StaticField sf = sfs[j];
-            //System.out.println("Initializing static field: "+sf);
-            objmap.initStaticField(sf);
+        // Now we have compiled everything, most static fields should be pretty much set.
+        // Add the object of every static field.
+        starttime = System.currentTimeMillis();
+        it = classset.iterator();
+        while (it.hasNext()) {
+            jq_Type t = (jq_Type)it.next();
+            Assert._assert(t.isSFInitialized());
+            if (t.isClassType()) {
+                jq_Class k = (jq_Class)t;
+                if (k.getSuperclass() != null &&
+                    !classset.contains(k.getSuperclass())) {
+                    Assert.UNREACHABLE(k.getSuperclass()+" (superclass of "+k+") is not in class set!");
+                }
+                jq_StaticField[] sfs = k.getDeclaredStaticFields();
+                for (int j=0; j<sfs.length; ++j) {
+                    jq_StaticField sf = sfs[j];
+                    if (sf.getType().isReferenceType() && !sf.getType().isAddressType()) {
+                        Object val = Reflection.getstatic_A(sf);
+                        objmap.getOrAllocateObject(val);
+                    }
+                }
+            }
         }
-        System.out.println("Total number of Utf8 = "+(Utf8.size+1));
-
-        // we shouldn't encounter any new Utf8 from this point
+        
+        // Initialize and add the jq_Class/jq_Array/jq_Primitive objects for all
+        // necessary types.
+        it = classset.iterator();
+        while (it.hasNext()) {
+            jq_Type t = (jq_Type)it.next();
+            Assert._assert(t.isSFInitialized());
+            
+            if (t == Unsafe._class) continue;
+            //System.out.println("Compiling type: "+t.getName());
+            
+            t.compile();
+            t.cls_initialize();
+            objmap.initializeObject(t);
+        }
+        
+        // Reinitialize jq_Reference and jq_Member objects to match the change in initialization state.
+        objmap.reinitializeObjects();
+        
+        // Reinitialize the TreeMap object in the compiledMethods field.
+        // It has changed because new methods have been compiled.
+        objmap.initializeObject(CodeAllocator.compiledMethods);
+        
+        // Get the set of compiled methods, because it is used during bootstrapping.
+        //CodeAllocator.getCompiledMethods();
+        
+        System.out.println("Number of classes seen = "+PrimordialClassLoader.loader.getNumTypes());
+        System.out.println("Number of classes in image = "+objmap.boot_types.size());
+        
+        // Traverse all of the objects recursively.
+        objmap.handleForwardReferences();
+        
+        // We shouldn't encounter any new Utf8 from this point
         Utf8.NO_NEW = true;
 
-        // add all reachable members.
-        System.out.println("Finding all reachable objects...");
-        objmap.find_reachable(0);
+        // Now that we have mostly visited all of the objects, the static fields
+        // should be up-to-date, so we can initialize them here.
+        // We also initialize the vtables, because everything is compiled now.
+        // CAVEAT: This assumes that the only important stuff that has changed are
+        // static fields.  If an field of an object that we have already visited has
+        // this will NOT be reflected in the generated image.  If we want it to,
+        // we will need to explicitly call initializeObject() on that object.
+        it = classset.iterator();
+        while (it.hasNext()) {
+            jq_Type t = (jq_Type) it.next();
+            if (t.isReferenceType()) {
+                jq_Reference r = (jq_Reference) t;
+                if (r != Unsafe._class) {
+                    objmap.initVTable(r);
+                }
+                if (r.isClassType()) {
+                    jq_Class k = (jq_Class) t;
+                    objmap.initStaticFields(k);
+                }
+            }
+        }
+        
+        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Main/jq;");
+        Assert._assert(classset.contains(jq_class));
+        // Turn on jq.RunningNative flag in image.
+        jq_class.setStaticData(jq_class.getOrCreateStaticField("RunningNative","Z"), 1);
+        // Turn off jq.IsBootstrapping flag in image.
+        jq_class.setStaticData(jq_class.getOrCreateStaticField("IsBootstrapping","Z"), 0);
+        jq_Class utf8_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/UTF/Utf8;");
+        // Turn off Utf8.NO_NEW flag in image.
+        utf8_class.setStaticData(utf8_class.getOrCreateStaticField("NO_NEW","Z"), 0);
+        
+        // Now actually set the field values in the image and add relocs.
+        it = classset.iterator();
+        while (it.hasNext()) {
+            jq_Type t = (jq_Type) it.next();
+            if (t.isReferenceType()) {
+                jq_Reference r = (jq_Reference) t;
+                if (t.isClassType()) {
+                    jq_Class k = (jq_Class) t;
+                    objmap.initStaticData(k);
+                    objmap.addStaticFieldRelocs(k);
+                }
+            }
+        }
+        
+        // Maybe more stuff has been compiled.
+        objmap.reinitializeObjects();
+        
+        // A static field may have referred to a new object, so traverse any new stuff.
+        objmap.handleForwardReferences();
         
         long traversaltime = System.currentTimeMillis() - starttime;
-
-        // now that we have visited all reachable objects, jq.on_vm_startup is built
-        int index = objmap.numOfEntries();
-        HeapAddress addr = objmap.getOrAllocateObject(jq.on_vm_startup);
-        Assert._assert(objmap.numOfEntries() > index);
-        objmap.find_reachable(index);
-        jq_StaticField _on_vm_startup = jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;");
-        jq_class.setStaticData(_on_vm_startup, addr);
-        objmap.addDataReloc(_on_vm_startup.getAddress(), addr);
-
-        // all done with traversal, no more objects can be added to the image.
+        
+        // All done with traversal, no more objects can be added to the image.
         objmap.disableAllocations();
         
         System.out.println("Scanned: "+objmap.numOfEntries()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
         System.out.println("Scan time: "+traversaltime/1000f+"s");
-        System.out.println("Image heap size = "+objmap.size());
-        System.out.println("Image code size = "+bca.size());
+        System.out.println("Total number of Utf8 = "+(Utf8.size+1));
+        System.out.println("Code segment size = "+bca.size());
+        System.out.println("Data segment size = "+objmap.size());
         
-        // update code min/max addresses
-        // careful not to re-add relocs for these fields!
+        // Update code min/max addresses.
         objmap.initStaticField(CodeAllocator._lowAddress);
         objmap.initStaticField(CodeAllocator._highAddress);
+        objmap.initStaticData(CodeAllocator._class);
         
-        // update heap min/max addresses
-        // careful not to re-add relocs for these fields!
+        // Update heap min/max addresses.
         HeapAllocator.data_segment_start = new BootstrapHeapAddress(-1);
         HeapAllocator.data_segment_end = new BootstrapHeapAddress(objmap.size());
         objmap.initStaticField(HeapAllocator._data_segment_start);
         objmap.initStaticField(HeapAllocator._data_segment_end);
+        objmap.initStaticData(HeapAllocator._class);
         
-        // dump it!
-        FileOutputStream fos = new FileOutputStream(imageName);
-        DirectBufferedFileOutputStream dbfos = new DirectBufferedFileOutputStream(fos);
-        dbfos.order(ByteOrder.LITTLE_ENDIAN);
+        // Dump it!
+        File f = new File(imageName);
+        if (f.exists()) f.delete();
+        RandomAccessFile fos = new RandomAccessFile(imageName, "rw");
+        FileChannel fc = fos.getChannel();
         starttime = System.currentTimeMillis();
         try {
             if (DUMP_COFF)
-                objmap.dumpCOFF((ExtendedDataOutput) dbfos, rootm);
+                objmap.dumpCOFF(fc, rootm);
             else
-                objmap.dumpELF((ExtendedDataOutput) dbfos, rootm);
+                objmap.dumpELF(fc, rootm);
         } finally {
-            dbfos.close();
+            fc.close();
+            fos.close();
         }
         long dumptime = System.currentTimeMillis() - starttime;
         System.out.println("Dump time: "+dumptime/1000f+"s");
-        
-        if (false) {
-            it = classset.iterator();
-            while (it.hasNext()) {
-                jq_Type t = (jq_Type)it.next();
-                if (t == Unsafe._class) continue;
-                Assert._assert(t.isClsInitialized());
-                System.out.println(t+": "+objmap.getAddressOf(t).stringRep());
-                if (t.isReferenceType()) {
-                    jq_Reference r = (jq_Reference)t;
-                    System.out.println("\tninterfaces "+r.getInterfaces().length+" vtable "+objmap.getAddressOf(r.getVTable()).stringRep());
-                }
-            }
-        }
         
         System.out.println(rootm.getDefaultCompiledVersion());
 

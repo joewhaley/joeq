@@ -28,14 +28,16 @@ import joeq.Util.Assert;
  */
 public class SimpleAllocator extends HeapAllocator {
 
+    public static boolean NO_GC = true;
+    
     public static boolean TRACE_ALLOC = false;
-    public static boolean TRACE_FREELIST = true;
-    public static final boolean TRACE_GC = true;
+    public static boolean TRACE_FREELIST = false;
+    public static boolean TRACE_GC = false;
     
     /**
      * Size of blocks allocated from the OS.
      */
-    public static final int BLOCK_SIZE = 1048576;
+    public static final int BLOCK_SIZE = 4194304;
 
     /**
      * Maximum memory, in bytes, to be allocated from the OS.
@@ -68,7 +70,15 @@ public class SimpleAllocator extends HeapAllocator {
      */
     private AddressQueue gcWorkQueue = new CircularAddressQueue();
     
+    /**
+     * The current state of the GC bit.  Flips back and forth on every GC.
+     */
     private boolean flip;
+    
+    /**
+     * The number of GC's that have occurred.
+     */
+    private int numOfGC;
     
     /**
      * Are we currently doing a GC?  For debugging purposes.
@@ -415,7 +425,7 @@ public class SimpleAllocator extends HeapAllocator {
             heapCurrent = (HeapAddress) heapCurrent.offset(size);
             Assert._assert(heapEnd.difference(heapCurrent) >= 0);
         } else {
-            if (true) Debug.writeln("Fast path object allocation: ", addr);
+            if (TRACE_ALLOC) Debug.writeln("Fast path object allocation: ", addr);
         }
         // fast path
         addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
@@ -650,7 +660,7 @@ public class SimpleAllocator extends HeapAllocator {
                 Assert._assert(heapEnd.difference(heapCurrent) >= 0);
             }
         } else {
-            if (true) Debug.writeln("Fast path array allocation: ", addr);
+            if (TRACE_ALLOC) Debug.writeln("Fast path array allocation: ", addr);
         }
         // fast path
         addr.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).poke4(length);
@@ -681,14 +691,24 @@ public class SimpleAllocator extends HeapAllocator {
      * @see joeq.Allocator.HeapAllocator#collect()
      */
     public void collect() {
+        if (NO_GC) {
+            return;
+        }
         if (inGC) {
             if (TRACE_GC) Debug.writeln("BUG! Recursively calling GC!");
             //allocateNewBlock();
             return;
         }
         inGC = true;
+        ++numOfGC;
+        Debug.write("Starting GC #", numOfGC);
+        Debug.write(" total ", totalMemory() / 1024, "K");
+        Debug.writeln(" free ", freeMemory() / 1024, "K");
         flip = !flip;
         SemiConservative.collect();
+        Debug.write("Finished GC #", numOfGC);
+        Debug.write(" total ", totalMemory() / 1024, "K");
+        Debug.writeln(" free ", freeMemory() / 1024, "K");
         inGC = false;
     }
     

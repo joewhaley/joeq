@@ -3,12 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Bootstrap;
 
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
-
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import joeq.Allocator.CodeAllocator;
 import joeq.Class.jq_BytecodeMap;
 import joeq.Class.jq_CompiledCode;
@@ -87,6 +87,14 @@ public class BootstrapCodeAllocator extends CodeAllocator {
     public List getAllCodeRelocs() { return all_code_relocs; }
     public List getAllDataRelocs() { return all_data_relocs; }
 
+    public void dump(ByteBuffer out) {
+        for (int i=0; i<bundle_idx; ++i) {
+            byte[] bundle = (byte[]) bundles.elementAt(i);
+            out.put(bundle);
+        }
+        out.put(current_bundle, 0, idx+1);
+    }
+    
     public void dump(DataOutput out)
     throws IOException {
         for (int i=0; i<bundle_idx; ++i) {

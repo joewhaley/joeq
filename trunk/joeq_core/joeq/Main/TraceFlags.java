@@ -46,7 +46,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBootImage")) {
-            makeTrue("joeq.Bootstrap.BootImage","TRACE");
+            makeTrue("joeq.Bootstrap.SinglePassBootImage","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceObjectTraverser")) {

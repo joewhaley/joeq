@@ -205,7 +205,7 @@ public abstract class CodeAllocator {
     }
     
     /** Map of compiled methods, sorted by address. */
-    private static final SortedMap compiledMethods;
+    public static final SortedMap compiledMethods;
     
     /**
      * Address range of compiled code.  Code outside of this range cannot be
@@ -400,11 +400,14 @@ public abstract class CodeAllocator {
         }
     }
     
+    public static final jq_Class _class;
     public static final jq_StaticField _lowAddress;
     public static final jq_StaticField _highAddress;
+    public static final jq_StaticField _compiledMethods;
     static {
-        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/CodeAllocator;");
-        _lowAddress = k.getOrCreateStaticField("lowAddress", "Ljoeq/Memory/CodeAddress;");
-        _highAddress = k.getOrCreateStaticField("highAddress", "Ljoeq/Memory/CodeAddress;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/CodeAllocator;");
+        _lowAddress = _class.getOrCreateStaticField("lowAddress", "Ljoeq/Memory/CodeAddress;");
+        _highAddress = _class.getOrCreateStaticField("highAddress", "Ljoeq/Memory/CodeAddress;");
+        _compiledMethods = _class.getOrCreateStaticField("compiledMethods", "Ljava/util/SortedMap;");
     }
 }
