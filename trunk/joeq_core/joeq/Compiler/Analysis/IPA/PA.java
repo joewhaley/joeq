@@ -160,7 +160,7 @@ public class PA {
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "200000"));
-    double bddminfree = Integer.parseInt(System.getProperty("bddminfree", ".20"));
+    double bddminfree = Double.parseDouble(System.getProperty("bddminfree", ".20"));
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
@@ -1266,14 +1266,14 @@ public class PA {
                 if (m == null) continue;
                 
                 if(USE_BOGUS_SUMMARIES && m != null) {
-	                jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
-	                if(replacement != null) {
-						if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
-						    				" with a call to "+ replacement);
-						
-						addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
-						continue;
-	                }                    
+                        jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
+                        if(replacement != null) {
+                                if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
+                                            " with a call to "+ replacement);
+                        
+                        addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
+                        continue;
+                    }                    
                 }
                 
                 if(USE_REFLECTION_PROVIDER && m != null && ReflectionInformationProvider.isNewInstance(n)){
