@@ -50,8 +50,10 @@ public class ClasspathWalker {
             for(Iterator classIter = PrimordialClassLoader.loader.listPackage(packageName, true); classIter.hasNext();){
                 String className = (String) classIter.next();
                 String canonicalClassName = canonicalizeClassName(className);
-                if (loaded.contains(canonicalClassName))
+                if (loaded.contains(canonicalClassName)){
+                    if(TRACE) System.err.println("Skipping " + canonicalClassName);
                     continue;
+                }
                 loaded.add(canonicalClassName);
                 try {
                     jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
@@ -91,7 +93,7 @@ public class ClasspathWalker {
                     if(TRACE) System.err.println("\tSecurity error occurred: " + e.getMessage());
                 }
             }
-            if(GC){
+            if(GC && (classCount % 17) == 3){
                 if(TRACE) System.err.println("GCing...");
                 System.gc();
                 if(TRACE) System.err.println("Done GCing.");
