@@ -206,7 +206,7 @@ uphere2:
             return;
         }
         visited.add(node);
-        System.out.println();
+        if (verbose) System.out.println();
         if (node instanceof MethodSummary.OutsideNode) {
             MethodSummary.OutsideNode onode = (MethodSummary.OutsideNode)node;
             while (onode.skip != null) {
@@ -217,7 +217,7 @@ uphere2:
                 MethodSummary.FieldNode fnode = (MethodSummary.FieldNode)onode;
                 jq_Field field = fnode.f;
                 Set inEdges = fnode.getAccessPathPredecessors();
-                System.out.println(indent+"Parent nodes: "+inEdges);
+                System.out.println(indent+"Field "+field+" Parent nodes: "+inEdges);
                 System.out.print(indent+"Type 'w' to find matching writes to parent nodes, 'u' to go up: ");
                 String s = in.readLine();
                 if (s.equalsIgnoreCase("u")) {
