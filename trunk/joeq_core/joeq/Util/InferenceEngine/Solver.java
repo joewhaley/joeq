@@ -30,7 +30,10 @@ public abstract class Solver {
     PrintStream out = System.out;
     
     abstract InferenceRule createInferenceRule(List/*<RuleTerm>*/ top, RuleTerm bottom);
-    abstract Relation createRelation(String name, List/*<String>*/ names, List/*<FieldDomain>*/ fieldDomains);
+    abstract Relation createRelation(String name,
+                                     List/*<String>*/ names,
+                                     List/*<FieldDomain>*/ fieldDomains,
+                                     List/*<String>*/ fieldOptions);
     public abstract void initialize();
     public abstract void solve();
     public abstract void finish();
@@ -146,33 +149,37 @@ public abstract class Solver {
         if (!openParen.equals("(")) throw new IllegalArgumentException();
         List fieldNames = new LinkedList();
         List fieldDomains = new LinkedList();
+        List fieldOptions = new LinkedList();
         
         for (;;) {
             String fName = st.nextToken();
             fieldNames.add(fName);
             String colon = st.nextToken();
-            if (!colon.equals(":")) throw new IllegalArgumentException();
+            if (!colon.equals(":")) throw new IllegalArgumentException("Expected \":\", got \""+colon+"\"");
             String fdName = st.nextToken();
             FieldDomain fd = getFieldDomain(fdName);
             if (fd == null) throw new IllegalArgumentException("Unknown field domain "+fdName);
             fieldDomains.add(fd);
             String comma = st.nextToken();
+            if (comma.startsWith("bdd:")) {
+                fieldOptions.add(comma.substring(4));
+                comma = st.nextToken();
+            } else {
+                fieldOptions.add("");
+            }
             if (comma.equals(")")) break;
             if (!comma.equals(",")) throw new IllegalArgumentException("Expected \",\", got \""+fName+"\"");
         }
-        Relation r = createRelation(name, fieldNames, fieldDomains);
+        Relation r = createRelation(name, fieldNames, fieldDomains, fieldOptions);
         while (st.hasMoreTokens()) {
             String option = st.nextToken();
             if (option.equals("save")) {
                 relationsToDump.add(r);
-            }
-            else if (option.equals("savenot")) {
+            } else if (option.equals("savenot")) {
             	relationsToDumpNegated.add(r);
-            }
-            else if (option.equals("savetuples")) {
+            } else if (option.equals("savetuples")) {
             	relationsToDumpTuples.add(r);
-            }
-            else {
+            } else {
             	throw new IllegalArgumentException("Unexpected option '"+option+"'");
             }
         }
