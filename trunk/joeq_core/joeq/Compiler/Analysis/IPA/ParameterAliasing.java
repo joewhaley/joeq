@@ -7,10 +7,10 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.BDDFactory;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 class ParameterAliasing {
     /**

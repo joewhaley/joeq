@@ -12,6 +12,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigInteger;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
@@ -35,9 +36,9 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.SSA.EnterSSA;
 import jwutil.collections.IndexMap;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.BDDFactory;
 
 /**
  * BuildBDDIR
@@ -595,17 +596,17 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                 BDD q = (BDD) i.next();
                 q.andWith(relation.id());
                 while (!q.isZero()) {
-                    BDD sat = q.satOne(allDomains, bdd.zero());
+                    BDD sat = q.satOne(allDomains, false);
                     BDD sup = q.support();
                     int[] b = sup.scanSetDomains();
                     sup.free();
-                    long[] v = sat.scanAllVar();
+                    BigInteger[] v = sat.scanAllVar();
                     sat.free();
                     BDD t = bdd.one();
                     for (int j = 0, k = 0, l = 0; j < bdd.numberOfDomains(); ++j) {
                         BDDDomain d = bdd.getDomain(j);
                         if (k >= a.length || a[k] != j) {
-                            Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
+                            Assert._assert(v[j].signum() == 0, "v["+j+"] is "+v[j]);
                             //dos.write("* ");
                             t.andWith(d.domain());
                             continue;
@@ -613,7 +614,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                             ++k;
                         }
                         if (l >= b.length || b[l] != j) {
-                            Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
+                            Assert._assert(v[j].signum() == 0, "v["+j+"] is "+v[j]);
                             dos.write("* ");
                             t.andWith(d.domain());
                             continue;
@@ -643,10 +644,10 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     void printQuad(BDD q) {
-        long id = q.scanVar(quad);
-        if (id == -1) return;
+        BigInteger id = q.scanVar(quad);
+        if (id.signum() < 0) return;
         System.out.println("Quad id "+id);
-        System.out.println("        "+quadMap.get((int) id));
+        System.out.println("        "+quadMap.get(id.intValue()));
         System.out.println(q.toStringWithDomains());
     }
     

@@ -9,10 +9,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.JFactory;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.BDDFactory;
+import net.sf.javabdd.JFactory;
 
 /**
  * FindBestPermutation

@@ -58,7 +58,7 @@ public class GenRelations {
         
         // Make sure we have the BDD library in our classpath.
         try {
-            Class.forName("org.sf.javabdd.BDD");
+            Class.forName("net.sf.javabdd.BDD");
         } catch (ClassNotFoundException x) {
             ClassLoader cl = addBDDLibraryToClasspath(args);
             // Reflective invocation under the new class loader.

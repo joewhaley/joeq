@@ -13,8 +13,8 @@ import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * A query on top of PAResults. Will probably need to move nested classes 

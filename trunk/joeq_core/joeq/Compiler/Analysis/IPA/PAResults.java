@@ -67,11 +67,11 @@ import jwutil.graphs.PathNumbering.Range;
 import jwutil.graphs.SCCPathNumbering.Path;
 import jwutil.strings.Strings;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.BDDPairing;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDDPairing;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * Records results for pointer analysis.  The results can be saved and reloaded.
@@ -983,7 +983,7 @@ public class PAResults implements PointerAnalysisResults {
         Node n = null;
         for (;;) {
             while (!c.isZero()) {
-                int k2 = (int) c.scanVar(r.V1);
+                int k2 = c.scanVar(r.V1).intValue();
                 Node n2 = getVariableNode(k2);
                 if (w.add(n2)) {
                     String name = r.LONG_LOCATIONS ? r.findInMap(r.Vmap, k2) : n2.toString();
@@ -1294,7 +1294,7 @@ public class PAResults implements PointerAnalysisResults {
             while (!relationsToCheck.isZero()) {
                 System.out.print((long)relationsToCheck.satCount(r.H1set.and(H3set))+" relations remaining.        \r");
                 ++outer;
-                BDD h_a = relationsToCheck.satOne(r.H1set, r.bdd.zero());
+                BDD h_a = relationsToCheck.satOne(r.H1set, false);
                 BDD h1 = h_a.exist(H3set); h_a.free();
                 //System.out.println(h1.toStringWithDomains(r.TS));
                 BDD foo = relationsToCheck.restrict(h1); // H3
@@ -1344,7 +1344,7 @@ public class PAResults implements PointerAnalysisResults {
         int i = 0;
         while (!iter.isZero()) {
             ++i;
-            BDD foo = iter.satOne(r.H1set, r.bdd.zero()).exist(H3set);
+            BDD foo = iter.satOne(r.H1set, false).exist(H3set);
             BDD set = sameType.restrict(foo); // H3
             set.replaceWith(H3toH1); // H1
             System.out.println("Equivalence class "+i+": "+set.toStringWithDomains(r.TS));
@@ -1770,8 +1770,8 @@ public class PAResults implements PointerAnalysisResults {
                 }
                 public Object next() {
                     BDD b = (BDD) i.next();
-                    int h = (int) b.scanVar(r.H1);
-                    int f = (int) b.scanVar(r.F);
+                    int h = b.scanVar(r.H1).intValue();
+                    int f = b.scanVar(r.F).intValue();
                     Node hn = (Node) r.Hmap.get(h);
                     jq_Field fn = (jq_Field) r.Fmap.get(f);
                     return new HeapLocation(hn, fn);
@@ -1937,7 +1937,7 @@ public class PAResults implements PointerAnalysisResults {
         BDD c = b.exist(r.V1cV2cset); // I
         for (Iterator i = c.iterator(r.Iset); i.hasNext(); ) {
             BDD i_bdd = (BDD) i.next(); // I
-            int i_i = (int) i_bdd.scanVar(r.I);
+            int i_i = i_bdd.scanVar(r.I).intValue();
             ProgramLocation invoke = getInvoke(i_i);
             System.out.println(" Call site "+i_i+": "+invoke);
             BDD d = b.exist(r.Iset); // V2cxV1c
@@ -1955,7 +1955,7 @@ public class PAResults implements PointerAnalysisResults {
                 System.out.println("  Param "+j+": ");
                 for (Iterator z = g.iterator(r.H1.set()); z.hasNext(); ) {
                     BDD x = (BDD) z.next();
-                    int heap_i = (int) x.scanVar(r.H1);
+                    int heap_i = x.scanVar(r.H1).intValue();
                     Node heap = getHeapNode(heap_i);
                     System.out.println("   "+heap);
                 }
