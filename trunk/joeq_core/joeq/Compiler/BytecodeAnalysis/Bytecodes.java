@@ -173,6 +173,7 @@ public interface Bytecodes {
              obj.initFromFile(cp, bytes, wide); // Do further initializations, if any
              // Byte code offset set in InstructionList
          } catch(Exception e) {
+             e.printStackTrace();
              throw new BytecodeException(e.toString());
          }
          
