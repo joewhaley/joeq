@@ -71,10 +71,11 @@ public class Dot {
             dos = new DataOutputStream(new FileOutputStream(outputFileName));
             
             dos.writeBytes("digraph {\n");
-            dos.writeBytes("  size=\"10,7.5\";\n");
-            dos.writeBytes("  rotate=90;\n");
+            dos.writeBytes("  size=\"7.5,10\";\n");
+            //dos.writeBytes("  rotate=90;\n");
             dos.writeBytes("  concentrate=true;\n");
             dos.writeBytes("  ratio=fill;\n");
+            dos.writeBytes("  rankdir=LR;");
             dos.writeBytes("\n");
             
             i = nodes.iterator();
@@ -138,18 +139,10 @@ public class Dot {
                     throw new IllegalArgumentException();
                 }
                 relationName = st.nextToken();
-                String openParen = st.nextToken();
                 String [] e = new String[3];
                 e[0] = st.nextToken();
-                String comma = st.nextToken();
                 e[1] = st.nextToken();
-                String comma2 = st.nextToken();
                 e[2] = st.nextToken();
-                String closeParen = st.nextToken();
-                if (!openParen.equals("(")) throw new IllegalArgumentException();
-                if (!comma.equals(",")) throw new IllegalArgumentException();
-                if (!comma2.equals(",")) throw new IllegalArgumentException();
-                if (!closeParen.equals(")")) throw new IllegalArgumentException();
                 int sourceIndex = -1;
                 int labelIndex = -1;
                 int sinkIndex = -1;
@@ -167,8 +160,10 @@ public class Dot {
                 if (sourceIndex == -1) throw new IllegalArgumentException();
                 if (sinkIndex == -1) throw new IllegalArgumentException();
                 if (labelIndex == -1) throw new IllegalArgumentException();
+                Relation labelRelation = solver.getRelation(relationName);
+                usedRelations.add(labelRelation);
                                 
-                es.setLabelSource(new LabelSource((BDDRelation)solver.getRelation(relationName), sourceIndex, sinkIndex, labelIndex));
+                es.setLabelSource(new LabelSource(labelRelation, sourceIndex, sinkIndex, labelIndex));
             }
             edgeSources.add(es);
         }
@@ -204,19 +199,38 @@ public class Dot {
     
     
     private static class LabelSource {
-        BDDRelation relation;
+        Relation relation;
         int sourceIndex;
         int sinkIndex;
         int labelIndex;
-        LabelSource(BDDRelation r, int sourceI, int sinkI, int labelI) {
+        FieldDomain labelDomain;
+        LabelSource(Relation r, int sourceI, int sinkI, int labelI) {
             relation = r;
             sourceIndex = sourceI;
             sinkIndex = sinkI;
             labelIndex = labelI;
+            labelDomain = (FieldDomain) relation.fieldDomains.get(labelIndex);
         }
         
         String getLabel(RelationGraph.GraphNode source, RelationGraph.GraphNode sink) {
-            return "";
+            long [] restriction = new long[3];
+            restriction[0] = restriction[1] = restriction[2] = -1;
+            restriction[sourceIndex] = source.number;
+            restriction[sinkIndex] = sink.number;
+            TupleIterator i = relation.iterator(restriction);
+            String label = null;
+            while (i.hasNext()) {
+                long [] labelTuple = i.nextTuple();
+                long labelNumber = labelTuple[labelIndex];
+                String l = labelDomain.toString((int)labelNumber);
+                if (label == null) {
+                    label = l;
+                }
+                else {
+                    label = label + ", " + l;
+                }
+            }
+            return label;
         }
     }
     
@@ -261,10 +275,13 @@ public class Dot {
                 dot.enqueue(source);
                 
                 if (addEdges) {
-                    String label;
+                    String label = null;
                     if (labelSource != null) {
+                        label = labelSource.getLabel(source, sink);
+                    }
+                    if (label != null) {
                         dot.addEdge(dot.nodeName(source) + " -> " + dot.nodeName(sink) + 
-                                    "[" + labelSource.getLabel(source, sink) + "];\n");
+                                    " [label=\"" + label + "\"];\n");
                     } else {
                         dot.addEdge(dot.nodeName(source) + " -> " + dot.nodeName(sink) + ";\n");
                     }
@@ -287,10 +304,13 @@ public class Dot {
                 dot.enqueue(sink);
                 
                 if (addEdges) {
-                    String label;
+                    String label = null;
                     if (labelSource != null) {
+                        label = labelSource.getLabel(source, sink);
+                    }
+                    if (label != null) {
                         dot.addEdge(dot.nodeName(source) + " -> " + dot.nodeName(sink) + 
-                                    "[" + labelSource.getLabel(source, sink) + "];\n");
+                                    " [label=\"" + label + "\"];\n");
                     } else {
                         dot.addEdge(dot.nodeName(source) + " -> " + dot.nodeName(sink) + ";\n");
                     }
