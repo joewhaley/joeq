@@ -202,6 +202,7 @@ public class PA {
     BDD mI;     // MxIxN, method invocations            (no context)
     BDD mV;     // MxV, method variables                (no context)
     BDD sync;   // V, synced locations                  (no context)
+    BDD mSync;  // M, synchronized, non-static methods  (no context)
 
     BDD fT;     // FxT2, field types                    (no context)
     BDD fC;     // FxT2, field containing types         (no context)
@@ -449,6 +450,7 @@ public class PA {
         mI = bdd.zero();
         mV = bdd.zero();
         sync = bdd.zero();
+        mSync = bdd.zero();
         IE = bdd.zero();
         hP = bdd.zero();
         visited = bdd.zero();
@@ -719,6 +721,10 @@ public class PA {
         BDD bdd1 = V1.ithVar(V_i);
         if (TRACE_RELATIONS) out.println("Adding to sync: "+bdd1.toStringWithDomains());
         sync.orWith(bdd1);
+    }
+    
+    void addToMSync(jq_Method m) {
+        mSync.orWith(M.ithVar(Mmap.get(m)));
     }
     
     BDD getVC(ProgramLocation mc, jq_Method callee) {
@@ -2751,6 +2757,8 @@ public class PA {
             ((TypedBDD) pa.mV).setDomains(pa.M, pa.V1);
         if (pa.sync instanceof TypedBDD)
             ((TypedBDD) pa.sync).setDomains(pa.V1);
+        if (pa.mSync instanceof TypedBDD)
+            ((TypedBDD) pa.sync).setDomains(pa.M);
         
         if (pa.fT instanceof TypedBDD)
             ((TypedBDD) pa.fT).setDomains(pa.F, pa.T2);
@@ -3860,6 +3868,7 @@ public class PA {
         bdd.save(dumpPath+"Ithr.bdd", Ithr);
         bdd.save(dumpPath+"IE0.bdd", IE0);
         bdd.save(dumpPath+"sync.bdd", sync);
+        bdd.save(dumpPath+"mSync.bdd", mSync);
         if (threadRuns != null)
             bdd.save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null)
@@ -3986,10 +3995,11 @@ public class PA {
 //                    + cfg.getRegisterFactory().numberOfLocalRegisters()
 //                    + " registers");
             MethodSummary ms = MethodSummary.getSummary(m);
+            //boolean printCfg = false;
             for (Iterator j = cfg.getRegisterFactory().iterator(); j.hasNext();) {
                 Register r = (Register) j.next();
                 if (r == null) {
-                    System.out.println("register " + j + " is null");
+//                    System.out.println("register " + j + " is null");
                     continue;
                 }
  //               System.out.println("register is "+j);

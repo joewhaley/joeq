@@ -216,6 +216,10 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             pa.addToSync(node);
         }
         
+        if (m.isSynchronized() && !m.isStatic()) {
+            pa.addToMSync(m);
+        }
+        
         // build up 'mI', 'actual', 'Iret', 'Ithr'
         for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
