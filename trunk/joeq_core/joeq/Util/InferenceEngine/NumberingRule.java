@@ -26,7 +26,7 @@ import org.sf.javabdd.BDDDomain;
  */
 public class NumberingRule extends InferenceRule {
     
-    boolean TRACE = true;
+    boolean TRACE = false;
     PrintStream out = System.out;
     
     RelationGraph rg;
