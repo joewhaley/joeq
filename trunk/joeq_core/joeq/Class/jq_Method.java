@@ -148,7 +148,7 @@ public abstract class jq_Method extends jq_Member {
     public final jq_CompiledCode compile_stub() {
         chkState(STATE_PREPARED);
         if (state >= STATE_SFINITIALIZED) return default_compiled_version;
-        if (jq.DontCompile) return default_compiled_version = new jq_CompiledCode(this, 0, 0, null, null, null);
+        if (jq.DontCompile) return default_compiled_version = new jq_CompiledCode(this, 0, 0, null, null, null, null, null);
         if (_compile.getState() < STATE_CLSINITIALIZED) _compile.compile();
         default_compiled_version = x86ReferenceCompiler.generate_compile_stub(this);
         state = STATE_SFINITIALIZED;
@@ -180,10 +180,9 @@ public abstract class jq_Method extends jq_Member {
                 default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
             }
         } else {
-            if (!jq.Bootstrapping) x86ReferenceCompiler.initCallPatches();
             Compil3rInterface c = new x86ReferenceCompiler(this);
             default_compiled_version = c.compile();
-            if (!jq.Bootstrapping) x86ReferenceCompiler.patchCalls();
+            if (!jq.Bootstrapping) default_compiled_version.patchDirectBindCalls();
         }
         state = STATE_CLSINITIALIZED;
         return default_compiled_version;
