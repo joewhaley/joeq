@@ -136,7 +136,7 @@ public class PA {
     boolean THREAD_SENSITIVE = !System.getProperty("pa.ts", "no").equals("no");
     boolean OBJECT_SENSITIVE = !System.getProperty("pa.os", "no").equals("no");
     boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
-    boolean BETTER_CONTEXT_NUMBERING = !System.getProperty("bettercontextnumbering.cs", "no").equals("no");
+    boolean BETTER_CONTEXT_NUMBERING = !System.getProperty("pa.bettercontextnumbering", "no").equals("no");
     boolean CS_CALLGRAPH = !System.getProperty("pa.cscg", "no").equals("no");
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
     boolean PRINT_CALL_GRAPH_SCCS = !System.getProperty("pa.printsccs", "no").equals("no");
