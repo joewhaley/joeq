@@ -353,6 +353,11 @@ public abstract class jq {
     public static boolean DontCompile = false;
     
     /**
+     * Whether we are in the middle of the bootstrapping process.
+     */
+    public static boolean IsBootstrapping = false;
+    
+    /**
      * Set of boot types, used during bootstrapping.
      */
     public static Set boot_types;

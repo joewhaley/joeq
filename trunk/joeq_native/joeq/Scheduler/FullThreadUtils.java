@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
-import Bootstrap.ObjectTraverser;
 import Clazz.jq_Class;
 import Main.jq;
 import Run_Time.Reflection;
@@ -14,8 +13,8 @@ import Run_Time.Reflection;
  */
 public class FullThreadUtils implements ThreadUtils.Delegate {
     public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
-        if (!ObjectTraverser.IsBootstrapping) return null;
         if (!jq.RunningNative) {
+            if (!jq.IsBootstrapping) return null;
             jq_Class k = Bootstrap.PrimordialClassLoader.getJavaLangThread();
             Clazz.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
             return (Scheduler.jq_Thread)Reflection.getfield_A(t, f);

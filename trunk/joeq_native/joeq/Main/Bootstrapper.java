@@ -81,7 +81,7 @@ public abstract class Bootstrapper {
         //StackAddress.FACTORY = Bootstrap.BootstrapStackAddress.FACTORY;
         
         ClassLibInterface.useJoeqClasslib(true);
-        ObjectTraverser.IsBootstrapping = true;
+        jq.IsBootstrapping = true;
         
         CodeAllocator.initializeCompiledMethodMap();
         
@@ -397,6 +397,8 @@ public abstract class Bootstrapper {
         // turn on jq.RunningNative flag in image
         jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
         jq_class.setStaticData(jq_class.getOrCreateStaticField("RunningNative","Z"), 1);
+        // turn off jq.IsBootstrapping flag in image
+        jq_class.setStaticData(jq_class.getOrCreateStaticField("IsBootstrapping","Z"), 0);
 
         // compile versions of all necessary methods.
         starttime = System.currentTimeMillis();
