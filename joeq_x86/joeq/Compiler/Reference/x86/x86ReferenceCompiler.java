@@ -2264,16 +2264,15 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 5;
     }
     private void INVOKENODPATCHhelper(byte op, jq_Method f) {
-        jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
-                  (op == INVOKE_INTERFACE) ||
-                  (f.getState() >= STATE_SFINITIALIZED) ||
-                  (f.getDeclaringClass() == method.getDeclaringClass()));
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": INVOKE "+op+" "+f));
             emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case INVOKE_VIRTUAL: {
+                jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                          (f.getState() >= STATE_PREPARED) ||
+                          (f.getDeclaringClass() == method.getDeclaringClass()));
                 int objptroffset = (f.getParamWords() << 2) - 4;
                 int m_off = ((jq_InstanceMethod)f).getOffset();
                 asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, objptroffset, ESP); // 7
@@ -2283,8 +2282,15 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             }
             case INVOKE_SPECIAL:
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
-                // fallthrough
+                jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                          (f.getState() >= STATE_PREPARED) ||
+                          (f.getDeclaringClass() == method.getDeclaringClass()));
+                emitCallRelative(f);
+                break;
             case INVOKE_STATIC:
+                jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                          (f.getState() >= STATE_SFINITIALIZED) ||
+                          (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case INVOKE_INTERFACE:
