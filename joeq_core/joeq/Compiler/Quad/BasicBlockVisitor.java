@@ -6,8 +6,6 @@
  */
 
 package Compil3r.Quad;
-import Clazz.jq_Method;
-import Clazz.jq_MethodVisitor;
 
 /**
  * Interface for the basic block visitor design pattern.
@@ -37,7 +35,7 @@ public interface BasicBlockVisitor {
      * @see  jq_Method
      * @see  jq_MethodVisitor
      */
-    public static class AllBasicBlockVisitor extends jq_MethodVisitor.EmptyVisitor {
+    public static class AllBasicBlockVisitor implements ControlFlowGraphVisitor {
         private final BasicBlockVisitor bbv;
         boolean trace;
         /** Construct a new AllBasicBlockVisitor.
@@ -47,16 +45,10 @@ public interface BasicBlockVisitor {
          * @param bbv  basic block visitor to visit each basic block with.
          * @param trace  value of the trace flag */
         public AllBasicBlockVisitor(BasicBlockVisitor bbv, boolean trace) { this.bbv = bbv; this.trace = trace; }
-        /** Convert the given method to quad format and visit each of its basic blocks
-         * with the basic block visitor specified in the constructor.
-         * Skips native and abstract methods.
-         * @see  Compil3r.Quad.CodeCache
-         * @param m  method to visit
+        /** Visit each of the basic blocks in the given control flow graph.
+         * @param cfg  control flow graph to visit
          */
-        public void visitMethod(jq_Method m) {
-            if (m.isNative() || m.isAbstract()) return;
-            if (trace) System.out.println(m.toString());
-            ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(m);
+        public void visitCFG(ControlFlowGraph cfg) {
             cfg.visitBasicBlocks(bbv);
         }
     }
