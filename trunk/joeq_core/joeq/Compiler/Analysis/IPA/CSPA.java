@@ -169,7 +169,7 @@ public class CSPA {
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+methods.size()+" methods, "+time/1000.+" seconds)");
             Assert._assert(roots.equals(cg.getRoots()));
-        
+            
             try {
                 java.io.FileWriter fw = new java.io.FileWriter("callgraph");
                 java.io.PrintWriter pw = new java.io.PrintWriter(fw);
@@ -179,6 +179,14 @@ public class CSPA {
                 x.printStackTrace();
             }
             
+            // reload the stored call graph because we like our program locations w.r.t. bytecode indices.
+            System.out.print("Loading initial call graph...");
+            time = System.currentTimeMillis();
+            cg = new LoadedCallGraph("callgraph");
+            time = System.currentTimeMillis() - time;
+            System.out.println("done. ("+time/1000.+" seconds)");
+            roots = cg.getRoots();
+            LOADED_CALLGRAPH = true;
         }
         
         if (DO_INLINING) {
