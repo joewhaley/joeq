@@ -9,15 +9,13 @@ import java.util.Map;
 
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
-import Compil3r.Quad.AndersenInterface.AndersenField;
-import Compil3r.Quad.AndersenInterface.AndersenType;
 import Main.jq;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class jq_Field extends jq_Member implements AndersenField {
+public abstract class jq_Field extends jq_Member {
 
     protected jq_Type type;
     
@@ -41,7 +39,6 @@ public abstract class jq_Field extends jq_Member implements AndersenField {
     }
 
     public final jq_Type getType() { return type; }
-    public final AndersenType and_getType() { return getType(); }
     public boolean isVolatile() { chkState(STATE_LOADING2); return (access_flags & ACC_VOLATILE) != 0; }
     public boolean isTransient() { chkState(STATE_LOADING2); return (access_flags & ACC_TRANSIENT) != 0; }
     

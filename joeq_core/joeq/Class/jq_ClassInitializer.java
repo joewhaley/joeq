@@ -6,7 +6,6 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import Bootstrap.PrimordialClassLoader;
-import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
 import UTF.Utf8;
 import Util.Assert;
 
@@ -14,7 +13,7 @@ import Util.Assert;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class jq_ClassInitializer extends jq_StaticMethod implements AndersenClassInitializer {
+public final class jq_ClassInitializer extends jq_StaticMethod {
 
     // clazz, nd are inherited
     

@@ -5,7 +5,6 @@ package Clazz;
 
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
-import Compil3r.Quad.AndersenInterface.AndersenReference;
 import Main.jq;
 import Memory.HeapAddress;
 import Run_Time.Reflection;
@@ -16,7 +15,7 @@ import Util.Assert;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants, AndersenReference {
+public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants {
 
     public static final jq_Reference getTypeOf(Object o) {
         if (!jq.RunningNative) return Reflection.getTypeOf(o);

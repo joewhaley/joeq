@@ -10,10 +10,9 @@ import java.lang.reflect.Member;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import ClassLib.ClassLibInterface;
-import Compil3r.Quad.AndersenInterface.AndersenClass;
-import Compil3r.Quad.AndersenInterface.AndersenMember;
 import Main.jq;
 import Run_Time.Reflection;
 import UTF.Utf8;
@@ -24,7 +23,7 @@ import Util.Collections.FilterIterator;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember {
+public abstract class jq_Member implements jq_ClassFileConstants {
 
     protected final void chkState(int s) {
         if (getState() >= s) return;
@@ -163,9 +162,6 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
     public final jq_Class getDeclaringClass() {
         return clazz;
     }
-    public final AndersenClass and_getDeclaringClass() {
-        return getDeclaringClass();
-    }
 
     public final jq_NameAndDesc getNameAndDesc() {
         return nd;
@@ -249,6 +245,20 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
 
     // Available after resolving
     public abstract boolean isStatic();
+    
+    public void writeDesc(DataOutput out) throws IOException {
+        getDeclaringClass().writeDesc(out);
+        out.writeBytes(" "+getName()+" "+getDesc());
+    }
+    
+    public static jq_Member read(StringTokenizer st) {
+        jq_Class c = (jq_Class) jq_Type.read(st);
+        if (c == null) return null;
+        c.load();
+        String name = st.nextToken();
+        String desc = st.nextToken();
+        return c.getDeclaredMember(name, desc);
+    }
     
     public static class FilterByName extends FilterIterator.Filter {
         private java.util.regex.Pattern p;
