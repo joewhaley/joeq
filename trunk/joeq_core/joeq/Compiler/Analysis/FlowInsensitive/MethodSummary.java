@@ -36,6 +36,7 @@ import Compil3r.Analysis.IPA.LoopAnalysis;
 import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
+import Compil3r.Analysis.IPA.ProgramLocation.FakeProgramLocation;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
@@ -160,6 +161,23 @@ public class MethodSummary {
             if (TRACE_INTER) out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         }
         return s;
+    }
+
+    /**
+     * Get the method summary for the given method.  
+     * If we know how to fake a method summary, do so.
+     *
+     * @return null if method has no bytecode and we do not know how to fake it
+     */
+    public static MethodSummary getSummary(jq_Method m) {
+        MethodSummary hasFake = fakeMethodSummary(m);
+        if (hasFake != null)
+            return hasFake;
+
+        if (m.getBytecode() == null)
+            return null;
+
+        return getSummary(CodeCache.getCode(m));
     }
     
     /**
@@ -2958,8 +2976,7 @@ public class MethodSummary {
             sb.append(fieldName());
             Iterator i=locs.iterator();
             if (i.hasNext()) {
-                ProgramLocation nloc = (ProgramLocation)i.next();
-                int id = nloc == null ? -1 : nloc.getID();
+                int id = ((ProgramLocation)i.next()).getID();
                 if (!i.hasNext()) {
                     sb.append(" loc ");
                     sb.append(id);
@@ -2968,9 +2985,7 @@ public class MethodSummary {
                     sb.append(id);
                     while (i.hasNext()) {
                         sb.append(',');
-                        nloc = (ProgramLocation)i.next();
-                        id = nloc == null ? -1 : nloc.getID();
-                        sb.append(id);
+                        sb.append(((ProgramLocation)i.next()).getID());
                     }
                     sb.append('}');
                 }
@@ -4931,16 +4946,51 @@ outer:
      * fake method summaries for fake methods.
      */
     private static HashMap fakeCache = new HashMap();
-    public static MethodSummary fakeMethodSummary(jq_FakeInstanceMethod method) {
+    public static MethodSummary fakeMethodSummary(jq_Method method) {
         MethodSummary ms = (MethodSummary)fakeCache.get(method);
         if (ms != null)
             return ms;
-        if (method.getName().toString().equals(fakeCloneName))
-            ms = fakeCloneMethodSummary(method);
-        else
+
+        boolean mustfake = method instanceof jq_FakeInstanceMethod;
+        if (mustfake && method.getName().toString().equals(fakeCloneName)) {
+            ms = fakeCloneMethodSummary((jq_FakeInstanceMethod)method);
+        } else if (identityMethods.contains(method)) {
+            ms = fakeIdentityMethodSummary(method);
+        } else {
+            if (!mustfake)
+                return null;
             throw new Error("don't know how to fake " + method);
+        }
         fakeCache.put(method, ms);
         return ms;
+    }
+
+    private static HashSet/*jq_Method*/ identityMethods = new HashSet();
+    {
+        jq_Class throwable_class = Bootstrap.PrimordialClassLoader.getJavaLangThrowable();
+        identityMethods.add(throwable_class.getDeclaredMember("fillInStackTrace", "()Ljava/lang/Throwable;"));
+    }
+
+    /**
+     * fake a method summary that simulates the effect of '{ return this; }'
+     */
+    static MethodSummary fakeIdentityMethodSummary(jq_Method method) {
+        jq_Class clazz = method.getDeclaringClass();
+        ParamNode []params = new ParamNode[] { new FakeParamNode(method, 0, clazz) };
+
+        return new MethodSummary((BuildMethodSummary)null,
+                         method,
+                         params, 
+                         new GlobalNode(method),
+                         /* methodCalls */Collections.EMPTY_SET,
+                         /* callToRVN */Collections.EMPTY_MAP,
+                         /* callToTEN */Collections.EMPTY_MAP,
+                         /* castMap */Collections.EMPTY_MAP,
+                         /* castPredecessors */Collections.EMPTY_SET,
+                         /* returned */Collections.singleton(params[0]),
+                         /* thrown */Collections.EMPTY_SET,
+                         /* passedAsParameters */Collections.EMPTY_SET,
+                         /* sync_ops */Collections.EMPTY_MAP);
     }
 
     /**
@@ -4950,20 +5000,20 @@ outer:
     public static MethodSummary fakeCloneMethodSummary(jq_FakeInstanceMethod method) {
         jq_Class clazz = method.getDeclaringClass();
         ParamNode []params = new ParamNode[] { new FakeParamNode(method, 0, clazz) };
-        ConcreteTypeNode clone = new ConcreteTypeNode(clazz, null);
+        ConcreteTypeNode clone = new ConcreteTypeNode(clazz, new FakeProgramLocation(method, "fakedclone"));
 
         clazz.prepare();
         jq_InstanceField [] f = clazz.getInstanceFields();
         for (int i = 0; i < f.length; i++) {
             if (f[i].getType().isReferenceType())
-                clone.addEdge(f[i], FieldNode.get(params[0], f[i], new BCProgramLocation(method, i)));
+                clone.addEdge(f[i], FieldNode.get(params[0], f[i], new FakeProgramLocation(method, "field="+f[i].getName())));
         }
 
         return new MethodSummary((BuildMethodSummary)null,
                          method,
                          params, 
                          new GlobalNode(method),
-                         /* methodCalls */ Collections.EMPTY_SET,
+                         /* methodCalls */Collections.EMPTY_SET,
                          /* callToRVN */Collections.EMPTY_MAP,
                          /* callToTEN */Collections.EMPTY_MAP,
                          /* castMap */Collections.EMPTY_MAP,
