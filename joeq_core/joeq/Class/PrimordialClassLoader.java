@@ -403,24 +403,34 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         return null;
     }
     
-    private final List/*<ClasspathElement>*/ classpathList;
-    
     private PrimordialClassLoader() {
         bs_desc2type = new HashMap();
+        allTypes = new jq_Type[1024]; numTypes = 0;
         classpathList = new ArrayList();
+    }
+    
+    private void put_desc2type(Utf8 desc, jq_Type type) {
+        Object result = bs_desc2type.put(desc, type);
+        Assert._assert(result == null);
+        if (numTypes == allTypes.length) {
+            jq_Type[] a = new jq_Type[allTypes.length * 2];
+            System.arraycopy(allTypes, 0, a, 0, numTypes);
+            allTypes = a;
+        }
+        allTypes[numTypes++] = type;
     }
     
     private static void initPrimitiveTypes() {
         // trigger jq_Primitive clinit
         loader.getOrCreateBSType(jq_Primitive.BYTE.getDesc());
-        loader.bs_desc2type.put(jq_Array.BYTE_ARRAY.getDesc(), jq_Array.BYTE_ARRAY);
-        loader.bs_desc2type.put(jq_Array.CHAR_ARRAY.getDesc(), jq_Array.CHAR_ARRAY);
-        loader.bs_desc2type.put(jq_Array.DOUBLE_ARRAY.getDesc(), jq_Array.DOUBLE_ARRAY);
-        loader.bs_desc2type.put(jq_Array.FLOAT_ARRAY.getDesc(), jq_Array.FLOAT_ARRAY);
-        loader.bs_desc2type.put(jq_Array.INT_ARRAY.getDesc(), jq_Array.INT_ARRAY);
-        loader.bs_desc2type.put(jq_Array.LONG_ARRAY.getDesc(), jq_Array.LONG_ARRAY);
-        loader.bs_desc2type.put(jq_Array.SHORT_ARRAY.getDesc(), jq_Array.SHORT_ARRAY);
-        loader.bs_desc2type.put(jq_Array.BOOLEAN_ARRAY.getDesc(), jq_Array.BOOLEAN_ARRAY);
+        loader.put_desc2type(jq_Array.BYTE_ARRAY.getDesc(), jq_Array.BYTE_ARRAY);
+        loader.put_desc2type(jq_Array.CHAR_ARRAY.getDesc(), jq_Array.CHAR_ARRAY);
+        loader.put_desc2type(jq_Array.DOUBLE_ARRAY.getDesc(), jq_Array.DOUBLE_ARRAY);
+        loader.put_desc2type(jq_Array.FLOAT_ARRAY.getDesc(), jq_Array.FLOAT_ARRAY);
+        loader.put_desc2type(jq_Array.INT_ARRAY.getDesc(), jq_Array.INT_ARRAY);
+        loader.put_desc2type(jq_Array.LONG_ARRAY.getDesc(), jq_Array.LONG_ARRAY);
+        loader.put_desc2type(jq_Array.SHORT_ARRAY.getDesc(), jq_Array.SHORT_ARRAY);
+        loader.put_desc2type(jq_Array.BOOLEAN_ARRAY.getDesc(), jq_Array.BOOLEAN_ARRAY);
     }
     
     public DataInputStream getClassFileStream(Utf8 descriptor)
@@ -473,18 +483,23 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static jq_Class getJavaLangThread() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/Thread;"); }
     public static jq_Class getJavaLangRefFinalizer() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ref/Finalizer;"); }
     private final Map/*<Utf8, jq_Type>*/ bs_desc2type;
+    private jq_Type[] allTypes; private int numTypes;
+    private final List/*<ClasspathElement>*/ classpathList;
 
-    public Collection/*jq_Type*/ getAllTypes() {
-        return bs_desc2type.values();
+    public jq_Type[] getAllTypes() {
+        return allTypes;
     }
     
-    public final Set/*jq_Class*/ getClassesThatReference(jq_Member m) {
-        Iterator i = bs_desc2type.entrySet().iterator();
+    public int getNumTypes() {
+        return numTypes;
+    }
+    
+    public final Set/*<jq_Class>*/ getClassesThatReference(jq_Member m) {
         HashSet s = new HashSet();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry)i.next();
-            if (e.getValue() instanceof jq_Class) {
-                jq_Class k = (jq_Class)e.getValue();
+        for (int i = 0; i < numTypes; ++i) {
+            jq_Type t = allTypes[i];
+            if (t instanceof jq_Class) {
+                jq_Class k = (jq_Class) t;
                 if (k.doesConstantPoolContain(m))
                     s.add(k);
             }
@@ -550,8 +565,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                  */
                 else Assert.UNREACHABLE("bad descriptor! "+desc);
             }
-            Object old = bs_desc2type.put(desc, t);
-            Assert._assert(old == null);
+            put_desc2type(desc, t);
         }
         return t;
     }
@@ -570,7 +584,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         // now load 'new' with a fake name
         Utf8 newDesc = Utf8.get("LREPLACE"+cName.replace('.', '/')+";") ;
         jq_Class new_c = jq_Class.newClass(this, newDesc);
-        bs_desc2type.put(newDesc, new_c);
+        put_desc2type(newDesc, new_c);
 
         // take inputstream on OLD class, but load in NEW class.
         DataInputStream in = null;
@@ -588,6 +602,14 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     
     public void unloadBSType(jq_Type t) {
         bs_desc2type.remove(t.getDesc());
+        for (int i = 0; ; ++i) {
+            if (allTypes[i] == t) {
+                numTypes--;
+                System.arraycopy(allTypes, i+1, allTypes, i, numTypes - i);
+                allTypes[numTypes] = null;
+                break;
+            }
+        }
     }
     
     public static final jq_Type getOrCreateType(ClassLoader cl, Utf8 desc) {

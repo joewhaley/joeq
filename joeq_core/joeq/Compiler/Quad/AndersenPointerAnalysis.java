@@ -270,24 +270,23 @@ public class AndersenPointerAnalysis {
             }
         }
         public static void calcRTA() {
-            Collection/*<jq_Type>*/ s = PrimordialClassLoader.loader.getAllTypes();
             for (;;) {
-                int size = s.size();
-                Iterator i = new ArrayList(s).iterator();
-                while (i.hasNext()) {
-                    jq_Type t = (jq_Type)i.next();
+                int numTypes = PrimordialClassLoader.loader.getNumTypes();
+                jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+                for (int i = 0; i < numTypes; ++i) {
+                    jq_Type t = types[i];
                     t.prepare();
                 }
-                s = PrimordialClassLoader.loader.getAllTypes();
-                if (false || s.size() == size)
+                if (false || PrimordialClassLoader.loader.getNumTypes() == numTypes)
                     break;
             }
-            System.out.println("Number of RTA classes: "+s.size());
+            int numTypes = PrimordialClassLoader.loader.getNumTypes();
+            System.out.println("Number of RTA classes: "+numTypes);
             int nMethods = 0;
-            Iterator i = s.iterator();
+            jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
             Set methods = new HashSet();
-            while (i.hasNext()) {
-                jq_Type t = (jq_Type)i.next();
+            for (int i = 0; i < numTypes; ++i) {
+                jq_Type t = types[i];
                 if (t instanceof jq_Class) {
                     jq_Class k = (jq_Class)t;
                     k.load();

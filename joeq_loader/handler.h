@@ -7,12 +7,12 @@ typedef EXCEPTION_DISPOSITION (*Handler)(EXCEPTION_RECORD *exceptionRecord, void
 // Win32 exception handler registration record (missing from <windows.h>).
 //
 typedef struct HandlerRegistrationRecord {
-	struct HandlerRegistrationRecord *previous;
-	Handler                    handler;
+    struct HandlerRegistrationRecord *previous;
+    Handler                           handler;
 } HandlerRegistrationRecord;
 
 extern EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord,
-													  void *establisherFrame,
-													  CONTEXT *contextRecord,
-													  void *dispatcherContext);
+                                                      void *establisherFrame,
+                                                      CONTEXT *contextRecord,
+                                                      void *dispatcherContext);
 #endif

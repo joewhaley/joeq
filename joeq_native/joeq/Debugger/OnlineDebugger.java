@@ -3,11 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Debugger;
 
+import java.util.StringTokenizer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.StringTokenizer;
-
 import joeq.Allocator.CodeAllocator;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -25,6 +24,7 @@ import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
+import joeq.Runtime.Debug;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.StackCodeWalker;
 import joeq.Runtime.SystemInterface;
@@ -40,11 +40,22 @@ public class OnlineDebugger {
 
     public static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
+    static boolean inDebugger;
+
     public static boolean debuggerEntryPoint() {
         if (!jq.RunningNative) {
             new InternalError().printStackTrace();
             System.exit(-1);
         }
+        if (inDebugger) {
+            SystemInterface.debugwriteln("Recursively entering debugger!");
+            StackAddress fp = StackAddress.getBasePointer();
+            CodeAddress ip = (CodeAddress) fp.offset(4).peek();
+            Debug.writeln("fp = ", fp);
+            Debug.writeln("ip = ", ip);
+            return false;
+        }
+        inDebugger = true;
         SystemInterface.debugwriteln(">>> Entering debugger.");
         StackAddress fp = StackAddress.getBasePointer();
         CodeAddress ip = (CodeAddress) fp.offset(4).peek();
@@ -63,6 +74,7 @@ uphere:
             } catch (IOException _) { }
             if (s == null) {
                 SystemInterface.debugwriteln(">>> Exiting debugger.");
+                inDebugger = false;
                 return true;
             }
             if (s.equals("")) {
@@ -70,6 +82,7 @@ uphere:
             }
             if (s.equals("c")) {
                 SystemInterface.debugwriteln(">>> Continuing execution.");
+                inDebugger = false;
                 return true;
             }
             if (s.equals("s")) {

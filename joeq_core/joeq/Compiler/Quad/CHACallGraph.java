@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,12 +10,12 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
-import joeq.Compiler.Analysis.IPA.*;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Util.Collections.SizedArrayList;
 
 /**
  * A simple call graph implementation based on class-hierarchy analysis with
@@ -51,8 +50,12 @@ public class CHACallGraph extends CallGraph {
         Collection result;
         if (callSite.isInterfaceCall()) {
             result = new LinkedHashSet();
-            Collection s = classes!=null?classes:PrimordialClassLoader.loader.getAllTypes();
-            for (Iterator i=new ArrayList(s).iterator(); i.hasNext(); ) {
+            Collection s = classes;
+            if (s == null) {
+                s = new SizedArrayList(PrimordialClassLoader.loader.getAllTypes(),
+                    PrimordialClassLoader.loader.getNumTypes());
+            }
+            for (Iterator i = s.iterator(); i.hasNext(); ) {
                 jq_Type t = (jq_Type) i.next();
                 if (t instanceof jq_Class) {
                     jq_Class c = (jq_Class) t;

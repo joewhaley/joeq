@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
-import junit.framework.TestCase;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -13,6 +12,8 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.CompilationConstants;
 import joeq.Main.HostedVM;
 import joeq.Runtime.TypeCheck;
+import joeq.Util.Collections.SizedArrayList;
+import junit.framework.TestCase;
 
 /**
  * Tests for TypeCheck 
@@ -226,13 +227,13 @@ public class TypeCheckTest extends TestCase implements CompilationConstants {
     }
     
     public void prepareAll() {
-        typeList = new java.util.LinkedList(PrimordialClassLoader.loader.getAllTypes());
+        typeList = new SizedArrayList(PrimordialClassLoader.loader.getAllTypes(), PrimordialClassLoader.loader.getNumTypes());
         java.util.Iterator i = typeList.iterator();
         while (i.hasNext()) {
             jq_Type t = (jq_Type) i.next();
             t.prepare();
         }
-        typeList = new java.util.LinkedList(PrimordialClassLoader.loader.getAllTypes());
+        typeList = new SizedArrayList(PrimordialClassLoader.loader.getAllTypes(), PrimordialClassLoader.loader.getNumTypes());
     }
     
     public void checkAll() {

@@ -622,8 +622,8 @@ void __stdcall timer_tick(LPVOID arg, DWORD lo, DWORD hi)
     __asm__ __volatile__ (
         "movl %%fs:20, %0"
         :"=r"(java_thread)
-	:
-	);
+        :
+    );
 #endif
     // check if thread switch is ok
     if (java_thread->thread_switch_enabled != 0) {
@@ -801,7 +801,7 @@ int __stdcall init_thread()
     void* descr = calloc(1, 1024);
     __asm__ __volatile__ (
         "nop\n"\
-	"uphere:\n\t"\
+        "uphere:\n\t"\
         "movl %2, %%eax\n\t"\
         "movl %%eax, %%ebx\n\t"\
         "inc %%ebx\n\t"\

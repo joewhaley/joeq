@@ -651,7 +651,8 @@ uphere:
         return Double.longBitsToDouble(getfield_L(o, f));
     }
     public Object getfield_A(Object o, jq_InstanceField f) {
-        Assert._assert(f.getType().isReferenceType() && !f.getType().isAddressType());
+        Assert._assert(f.getType().isReferenceType());
+        Assert._assert(!f.getType().isAddressType());
         if (!jq.RunningNative) return Reflection.obj_trav.getInstanceFieldValue(o, f);
         Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return ((HeapAddress) HeapAddress.addressOf(o).offset(f.getOffset()).peek()).asObject();

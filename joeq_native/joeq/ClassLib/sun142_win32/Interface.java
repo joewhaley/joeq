@@ -43,7 +43,7 @@ public class Interface extends joeq.ClassLib.sun14_win32.Interface {
                 k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/ClassLib/Common/java/util/zip/DeflaterHuffman;");
                 k.load();
             } catch (NoClassDefFoundError _) {
-            	System.err.println("Error preloading DeflaterHuffman class");
+                System.err.println("Error preloading DeflaterHuffman class");
             }
             
             // used during bootstrapping.

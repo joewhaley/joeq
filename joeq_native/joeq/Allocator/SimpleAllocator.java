@@ -8,15 +8,12 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceMethod;
-import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
+import joeq.Runtime.Debug;
 import joeq.Runtime.SystemInterface;
-import joeq.Runtime.Unsafe;
-import joeq.Scheduler.jq_NativeThread;
-import joeq.Scheduler.jq_Thread;
 import joeq.Util.Assert;
 
 /**
@@ -49,19 +46,19 @@ public class SimpleAllocator extends HeapAllocator {
     private HeapAddress heapFirst, heapCurrent, heapEnd;
 
     /**
-     * Simple work queue for GC.
-     */
-    private SimpleGCWorkQueue gcWorkQueue = new SimpleGCWorkQueue();
-    
-    /**
      * Pointer to the start of the free list.
      */
-    private HeapAddress firstFreeBlock;
+    private HeapAddress firstFree;
     
     /**
      * Pointer to the start and current of the large object list.
      */
     private HeapAddress firstLarge, currLarge;
+    
+    /**
+     * Simple work queue for GC.
+     */
+    private SimpleGCWorkQueue gcWorkQueue = new SimpleGCWorkQueue();
     
     /**
      * Are we currently doing a GC?  For debugging purposes.
@@ -74,6 +71,79 @@ public class SimpleAllocator extends HeapAllocator {
     private boolean inAlloc;
     
     /**
+     * Smallest object size allowed in free list.
+     */
+    public static final int MIN_SIZE = Math.max(ObjectLayout.OBJ_HEADER_SIZE, 8);
+    
+    static final HeapAddress allocNewBlock() {
+        HeapAddress block = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
+        if (block.isNull()) {
+            HeapAllocator.outOfMemory();
+        }
+        return block;
+    }
+    
+    static final HeapAddress getBlockEnd(HeapAddress block) {
+        // At end of memory block:
+        //  - one word for pointer to start of next memory block.
+        return (HeapAddress) block.offset(BLOCK_SIZE - HeapAddress.size());
+    }
+    
+    static final int getBlockSize(HeapAddress block) {
+        return BLOCK_SIZE;
+    }
+    
+    static final void setBlockNext(HeapAddress block, HeapAddress next) {
+        block.offset(BLOCK_SIZE - HeapAddress.size()).poke(next);
+    }
+    
+    static final HeapAddress getBlockNext(HeapAddress block) {
+        return (HeapAddress) block.offset(BLOCK_SIZE - HeapAddress.size()).peek();
+    }
+    
+    static final HeapAddress getFreeNext(HeapAddress free) {
+        return (HeapAddress) free.peek();
+    }
+    
+    static final void setFreeNext(HeapAddress free, HeapAddress next) {
+        free.poke(next);
+    }
+    
+    static final int getFreeSize(HeapAddress free) {
+        return free.offset(HeapAddress.size()).peek4();
+    }
+    
+    static final void setFreeSize(HeapAddress free, int size) {
+        free.offset(HeapAddress.size()).poke4(size);
+    }
+    
+    static final HeapAddress getFreeEnd(HeapAddress free) {
+        int size = getFreeSize(free);
+        return (HeapAddress) free.offset(size);
+    }
+    
+    static final HeapAddress getLargeNext(HeapAddress large) {
+        int size = getLargeSize(large);
+        return (HeapAddress) large.offset(size).peek();
+    }
+    
+    static final void setLargeNext(HeapAddress large, HeapAddress next) {
+        int size = getLargeSize(large);
+        large.offset(size).poke(next);
+    }
+    
+    static final Object getLargeObject(HeapAddress large) {
+        Object o = ((HeapAddress) large.offset(ObjectLayout.ARRAY_HEADER_SIZE)).asObject();
+        return o;
+    }
+    
+    static final int getLargeSize(HeapAddress large) {
+        Object o = ((HeapAddress) large.offset(ObjectLayout.ARRAY_HEADER_SIZE)).asObject();
+        int size = getObjectSize(o);
+        return size;
+    }
+    
+    /**
      * Perform initialization for this allocator.  This will be called before any other methods.
      * This allocates an initial block of memory from the OS and sets up relevant pointers.
      *
@@ -82,15 +152,13 @@ public class SimpleAllocator extends HeapAllocator {
     public void init() throws OutOfMemoryError {
         Assert._assert(!inGC);
         Assert._assert(!inAlloc);
-        heapCurrent = heapFirst = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
-        if (heapCurrent.isNull())
-            HeapAllocator.outOfMemory();
-        // At end of memory block:
-        //  - one word for pointer to first free memory in this block.
-        //  - one word for pointer to start of next memory block.
-        heapEnd = (HeapAddress) heapFirst.offset(BLOCK_SIZE - 2 * HeapAddress.size());
+        heapCurrent = heapFirst = allocNewBlock();
+        heapEnd = getBlockEnd(heapCurrent);
+        firstFree = firstLarge = currLarge = HeapAddress.getNull();
     }
 
+    static final boolean TRACE = true;
+    
     /**
      * Allocates a new block of memory from the OS, sets the current block to
      * point to it, and makes the new block the current block.
@@ -98,24 +166,78 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is not enough memory for initialization
      */
     private void allocateNewBlock() {
-        if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
-        heapCurrent = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
-        if (heapCurrent.isNull())
+        if (TRACE) Debug.writeln("Allocating new memory block.");
+        if (totalMemory() >= MAX_MEMORY) {
             HeapAllocator.outOfMemory();
-        heapEnd.offset(HeapAddress.size()).poke(heapCurrent);
-        // At end of memory block:
-        //  - one word for pointer to first free memory in this block.
-        //  - one word for pointer to start of next memory block.
-        heapEnd = (HeapAddress) heapCurrent.offset(BLOCK_SIZE - 2 * HeapAddress.size());
+        }
+        int size = heapEnd.difference(heapCurrent);
+        if (TRACE) Debug.writeln("Size of remaining: ", size);
+        if (size >= MIN_SIZE) {
+            // Add remainder of this block to the free list.
+            setFreeSize(heapCurrent, size);
+            HeapAddress curr_p = firstFree;
+            HeapAddress prev_p = HeapAddress.getNull();
+            if (TRACE) Debug.writeln("Adding free block ", heapCurrent);
+            for (;;) {
+                if (TRACE) Debug.writeln("Checking ", curr_p);
+                if (curr_p.isNull() || heapCurrent.difference(curr_p) < 0) {
+                    if (prev_p.isNull()) {
+                        firstFree = heapCurrent;
+                        if (TRACE) Debug.writeln("New head of free list ", firstFree);
+                    } else {
+                        setFreeNext(prev_p, heapCurrent);
+                        if (TRACE) Debug.writeln("Inserting after ", prev_p);
+                    }
+                    setFreeNext(heapCurrent, curr_p);
+                    break;
+                }
+                HeapAddress next_p = getFreeNext(curr_p);
+                prev_p = curr_p;
+                curr_p = next_p;
+            }
+        }
+        heapCurrent = allocNewBlock();
+        setBlockNext(heapEnd, heapCurrent);
+        heapEnd = getBlockEnd(heapCurrent);
     }
 
+    /**
+     * Returns the number of bytes available in the free list.
+     * 
+     * @return bytes available in the free list
+     */
+    int getFreeListBytes() {
+        int freeListMem = 0;
+        HeapAddress p = firstFree;
+        while (!p.isNull()) {
+            freeListMem += getFreeSize(p);
+            p = getFreeNext(p);
+        }
+        return freeListMem;
+    }
+    
+    /**
+     * Returns the number of bytes allocated in the large object list.
+     * 
+     * @return bytes allocated for large objects
+     */
+    int getLargeBytes() {
+        int largeMem = 0;
+        HeapAddress p = firstLarge;
+        while (!p.isNull()) {
+            largeMem += getLargeSize(p);
+            p = getLargeNext(p);
+        }
+        return largeMem;
+    }
+    
     /**
      * Returns an estimate of the amount of free memory available.
      *
      * @return bytes of free memory
      */
     public int freeMemory() {
-        return heapEnd.difference(heapCurrent);
+        return getFreeListBytes() + heapEnd.difference(heapCurrent);
     }
 
     /**
@@ -127,9 +249,10 @@ public class SimpleAllocator extends HeapAllocator {
         int total = 0;
         HeapAddress ptr = heapFirst;
         while (!ptr.isNull()) {
-            total += BLOCK_SIZE;
-            ptr = (HeapAddress) ptr.offset(BLOCK_SIZE - HeapAddress.size()).peek();
+            total += getBlockSize(ptr);
+            ptr = getBlockNext(ptr);
         }
+        total += getLargeBytes();
         return total;
     }
 
@@ -143,8 +266,20 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public Object allocateObject(int size, Object vtable) throws OutOfMemoryError {
-        Assert._assert(!inGC);
-        Assert._assert(!inAlloc); inAlloc = true;
+        if (TRACE) {
+            Debug.write("Allocating object of size ", size);
+            jq_Type type = (jq_Type) ((HeapAddress) HeapAddress.addressOf(vtable).peek()).asObject();
+            Debug.write(" type ");
+            Debug.write(type.getDesc());
+            Debug.writeln(" vtable ", HeapAddress.addressOf(vtable));
+        }
+        if (inGC) {
+            Debug.writeln("BUG! Trying to allocate during GC!");
+        }
+        if (inAlloc) {
+            Debug.writeln("BUG! Trying to allocate during another allocation!");
+        }
+        inAlloc = true;
         if (size < ObjectLayout.OBJ_HEADER_SIZE) {
             // size overflow! become minus!
             inAlloc = false;
@@ -157,6 +292,8 @@ public class SimpleAllocator extends HeapAllocator {
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
             heapCurrent = (HeapAddress) heapCurrent.offset(-size);
+            if (TRACE) Debug.writeln("Not enough free space: ", heapEnd.difference(heapCurrent));
+            // try to allocate the object from the free list.
             Object o = allocObjectFromFreeList(size, vtable);
             if (o != null) {
                 inAlloc = false;
@@ -165,6 +302,10 @@ public class SimpleAllocator extends HeapAllocator {
             // not enough space on free list, allocate another memory block.
             allocateNewBlock();
             addr = (HeapAddress) heapCurrent.offset(ObjectLayout.OBJ_HEADER_SIZE);
+            heapCurrent = (HeapAddress) heapCurrent.offset(size);
+            Assert._assert(heapEnd.difference(heapCurrent) >= 0);
+        } else {
+            if (TRACE) Debug.writeln("Fast path object allocation: ", addr);
         }
         // fast path
         addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
@@ -172,49 +313,53 @@ public class SimpleAllocator extends HeapAllocator {
         return addr.asObject();
     }
 
-    /**
-     * Smallest object size allowed in free list.
-     */
-    public static final int MIN_SIZE = ObjectLayout.OBJ_HEADER_SIZE;
-    
     private HeapAddress allocFromFreeList(int size) {
         // Search free list to find if there is an area that will fit the object.
         HeapAddress prev_p = HeapAddress.getNull();
-        HeapAddress curr_p = firstFreeBlock;
+        HeapAddress curr_p = firstFree;
+        if (TRACE) Debug.writeln("Searching free list for block of size: ", size);
         while (!curr_p.isNull()) {
-            HeapAddress next_p = (HeapAddress) curr_p.peek();
-            int areaSize = curr_p.offset(HeapAddress.size()).peek4();
+            if (TRACE) Debug.writeln("Looking at block ", curr_p);
+            HeapAddress next_p = getFreeNext(curr_p);
+            int areaSize = getFreeSize(curr_p);
+            if (TRACE) Debug.writeln("Block size ", areaSize);
             if (areaSize >= size) {
                 // This area fits!
-                HeapAddress addr = (HeapAddress) curr_p.offset(ObjectLayout.OBJ_HEADER_SIZE);
+                if (TRACE) Debug.writeln("Block fits, zeroing ", curr_p);
                 // Zero out the memory.
                 SystemInterface.mem_set(curr_p, areaSize, (byte) 0);
                 // Fix up free list.
                 int newSize = areaSize - size;
+                if (TRACE) Debug.writeln("New size of block: ", newSize);
                 HeapAddress new_next_p;
-                if (newSize > MIN_SIZE) {
+                if (newSize >= MIN_SIZE) {
                     // Still some space left here.
                     Assert._assert(newSize >= HeapAddress.size() * 2);
                     new_next_p = (HeapAddress) curr_p.offset(size);
-                    new_next_p.poke(next_p);
-                    new_next_p.offset(HeapAddress.size()).poke4(newSize);
+                    setFreeNext(new_next_p, next_p);
+                    setFreeSize(new_next_p, newSize);
+                    if (TRACE) Debug.writeln("Block shrunk, now ", new_next_p);
                 } else {
                     // Remainder is too small, skip it.
                     new_next_p = next_p;
+                    if (TRACE) Debug.writeln("Result too small, new next ", new_next_p);
                 }
                 if (prev_p.isNull()) {
                     // New start of free list.
-                    firstFreeBlock = new_next_p;
+                    firstFree = new_next_p;
+                    if (TRACE) Debug.writeln("New start of free list: ", firstFree);
                 } else {
                     // Patch previous in free list to point to new location.
-                    prev_p.poke(new_next_p);
+                    setFreeNext(prev_p, new_next_p);
+                    if (TRACE) Debug.writeln("Inserted after ", prev_p);
                 }
-                return addr;
+                return curr_p;
             }
             prev_p = curr_p;
             curr_p = next_p;
         }
         // Nothing in the free list is big enough!
+        if (TRACE) Debug.writeln("Nothing in free list is big enough.");
         return HeapAddress.getNull();
     }
     
@@ -261,21 +406,6 @@ public class SimpleAllocator extends HeapAllocator {
         return addr.asObject();
     }
     
-    public static final int getObjectSize(Object o) {
-        jq_Reference t = jq_Reference.getTypeOf(o);
-        int size;
-        if (t.isArrayType()) {
-            jq_Array a = (jq_Array) t;
-            int length = Array.getLength(o);
-            size = a.getInstanceSize(length);
-        } else {
-            jq_Class c = (jq_Class) t;
-            size = c.getInstanceSize();
-        }
-        size = (size + 3) & ~3; // align size
-        return size;
-    }
-    
     /**
      * @param length
      * @param size
@@ -290,15 +420,28 @@ public class SimpleAllocator extends HeapAllocator {
         if (firstLarge.isNull()) {
             firstLarge = currLarge = addr;
         } else {
-            Object o = ((HeapAddress) currLarge.offset(ObjectLayout.ARRAY_HEADER_SIZE)).asObject();
-            int currLargeSize = getObjectSize(o);
-            currLarge.offset(currLargeSize).poke(addr);
+            setLargeNext(currLarge, addr);
             currLarge = addr;
         }
         addr = (HeapAddress) addr.offset(ObjectLayout.ARRAY_HEADER_SIZE);
         addr.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).poke4(length);
         addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         return addr.asObject();
+    }
+    
+    public static final int getObjectSize(Object o) {
+        jq_Reference t = jq_Reference.getTypeOf(o);
+        int size;
+        if (t.isArrayType()) {
+            jq_Array a = (jq_Array) t;
+            int length = Array.getLength(o);
+            size = a.getInstanceSize(length);
+        } else {
+            jq_Class c = (jq_Class) t;
+            size = c.getInstanceSize();
+        }
+        size = (size + 3) & ~3; // align size
+        return size;
     }
     
     /**
@@ -328,9 +471,22 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public Object allocateArray(int length, int size, Object vtable) throws OutOfMemoryError, NegativeArraySizeException {
-        Assert._assert(!inGC);
-        Assert._assert(!inAlloc); inAlloc = true;
         if (length < 0) throw new NegativeArraySizeException(length + " < 0");
+        if (TRACE) {
+            Debug.write("Allocating array of size ", size);
+            jq_Type type = (jq_Type) ((HeapAddress) HeapAddress.addressOf(vtable).peek()).asObject();
+            Debug.write(" type ");
+            Debug.write(type.getDesc());
+            Debug.write(" length ", length);
+            Debug.writeln(" vtable ", HeapAddress.addressOf(vtable));
+        }
+        if (inGC) {
+            Debug.writeln("BUG! Trying to allocate during GC!");
+        }
+        if (inAlloc) {
+            Debug.writeln("BUG! Trying to allocate during another allocation!");
+        }
+        inAlloc = true;
         if (size < ObjectLayout.ARRAY_HEADER_SIZE) {
             // size overflow!
             inAlloc = false;
@@ -355,6 +511,8 @@ public class SimpleAllocator extends HeapAllocator {
                 allocateNewBlock();
                 addr = (HeapAddress) heapCurrent.offset(ObjectLayout.ARRAY_HEADER_SIZE);
             }
+        } else {
+            if (TRACE) Debug.writeln("Fast path array allocation: ", addr);
         }
         // fast path
         addr.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).poke4(length);
@@ -381,26 +539,25 @@ public class SimpleAllocator extends HeapAllocator {
     }
 
     public void collect() {
-        jq_Thread t = Unsafe.getThreadBlock();
-        t.disableThreadSwitch();
+        if (inGC) {
+            if (TRACE) Debug.writeln("BUG! Recursively calling GC!");
+            //allocateNewBlock();
+            return;
+        }
         inGC = true;
-        jq_NativeThread.suspendAllThreads();
-        
-        SemiConservative.scanRoots(true);
-        scanGCQueue(true);
+        SemiConservative.collect();
+        inGC = false;
+    }
+    
+    public void sweep() {
         updateFreeList();
         updateLargeObjectList();
-        SemiConservative.scanRoots(false);
-        scanGCQueue(false);        
-        
-        inGC = false;
-        jq_NativeThread.resumeAllThreads();
-        t.enableThreadSwitch();
     }
 
     void scanGCQueue(boolean b) {
         for (;;) {
             Object o = gcWorkQueue.pull();
+            if (SimpleAllocator.TRACE) Debug.writeln("Pulled object from queue: ", HeapAddress.addressOf(o));
             if (o == null) break;
             scanObject(o, b);
         }
@@ -408,50 +565,50 @@ public class SimpleAllocator extends HeapAllocator {
     
     void updateLargeObjectList() {
         HeapAddress prev_p = HeapAddress.getNull();
-        int prevSize = 0;
         HeapAddress curr_p = firstLarge;
-        int currSize;
         while (!curr_p.isNull()) {
-            Object o = ((HeapAddress) curr_p.offset(ObjectLayout.ARRAY_HEADER_SIZE)).asObject();
-            currSize = getObjectSize(o);
-            HeapAddress next_p = (HeapAddress) curr_p.offset(currSize).peek();
+            Object o = getLargeObject(curr_p);
+            HeapAddress next_p = getLargeNext(curr_p);
             int status = HeapAddress.addressOf(o).offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
             if ((status & ObjectLayout.GC_BIT) == 0) {
                 if (prev_p.isNull()) {
                     firstLarge = next_p;
                 } else {
-                    prev_p.offset(prevSize).poke(next_p);
+                    setLargeNext(prev_p, next_p);
                 }
                 if (curr_p.difference(currLarge) == 0) {
                     currLarge = prev_p;
                 }
             }
             prev_p = curr_p;
-            prevSize = currSize;
             curr_p = next_p;
         }
     }
     
     void updateFreeList() {
         // Scan forward through heap, finding unmarked objects and merging free spaces.
-        HeapAddress currFree, prevFree;
-        int prevFreeSize;
-        prevFree = HeapAddress.getNull();
-        prevFreeSize = 0;
-        currFree = firstFreeBlock;
         HeapAddress currBlock = heapFirst;
         while (!currBlock.isNull()) {
-            HeapAddress currBlockEnd = (HeapAddress) currBlock.offset(BLOCK_SIZE - 2 * HeapAddress.size());
+            HeapAddress currBlockEnd = getBlockEnd(currBlock);
             HeapAddress p = currBlock;
+            
+            HeapAddress currFree, prevFree;
+            prevFree = HeapAddress.getNull();
+            currFree = firstFree;
+            // Seek to the right place in the free list.
+            while (!currFree.isNull() && currFree.difference(p) <= 0) {
+                prevFree = currFree;
+                currFree = getFreeNext(currFree);
+            }
+            
+            // Walk over current block.
             while (currBlockEnd.difference(p) > 0) {
                 
                 if (p.difference(currFree) == 0) {
                     // Skip over free chunk.
-                    int size = currFree.offset(HeapAddress.size()).peek4();
-                    p = (HeapAddress) p.offset(size);
+                    p = getFreeEnd(currFree);
                     prevFree = currFree;
-                    prevFreeSize = size;
-                    currFree = (HeapAddress) currFree.peek();
+                    currFree = getFreeNext(currFree);
                     continue;
                 }
                 
@@ -507,19 +664,20 @@ public class SimpleAllocator extends HeapAllocator {
                 
                 int status = obj.offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
                 if ((status & ObjectLayout.GC_BIT) == 0) {
-                    HeapAddress prevFreeEnd = (HeapAddress) prevFree.offset(prevFreeSize);
+                    HeapAddress prevFreeEnd = getFreeEnd(prevFree);
                     if (p.difference(prevFreeEnd) == 0) {
                         // Just extend size of this free area.
-                        prevFreeSize = p.difference(prevFree);
-                        prevFree.offset(HeapAddress.size()).poke4(prevFreeSize);
+                        int newSize = next_p.difference(prevFree);
+                        setFreeSize(prevFree, newSize);
                     } else {
                         // Insert into free list.
-                        p.poke(currFree);
-                        p.offset(HeapAddress.size()).poke4(next_p.difference(p));
+                        setFreeNext(p, currFree);
+                        int newSize = next_p.difference(p);
+                        setFreeSize(p, newSize);
                         if (prevFree.isNull()) {
-                            firstFreeBlock = p;
+                            firstFree = p;
                         } else {
-                            prevFree.poke(p);
+                            setFreeNext(prevFree, p);
                         }
                     }
                 }
@@ -533,12 +691,15 @@ public class SimpleAllocator extends HeapAllocator {
     void scanObject(Object obj, boolean b) {
         jq_Reference type = jq_Reference.getTypeOf(obj);
         if (type.isClassType()) {
+            if (SimpleAllocator.TRACE) Debug.writeln("Scanning object ", HeapAddress.addressOf(obj));
             int[] referenceOffsets = ((jq_Class)type).getReferenceOffsets();
             for (int i = 0, n = referenceOffsets.length; i < n; i++) {
                 HeapAddress objRef = HeapAddress.addressOf(obj);
+                if (SimpleAllocator.TRACE) Debug.writeln("Scanning offset ", referenceOffsets[i]);
                 DefaultHeapAllocator.processPtrField(objRef.offset(referenceOffsets[i]), b);
             }
         } else {
+            if (SimpleAllocator.TRACE) Debug.writeln("Scanning array ", HeapAddress.addressOf(obj));
             jq_Type elementType = ((jq_Array)type).getElementType();
             if (elementType.isReferenceType()) {
                 int num_elements = Array.getLength(obj);
@@ -547,6 +708,7 @@ public class SimpleAllocator extends HeapAllocator {
                 HeapAddress location = (HeapAddress) objRef.offset(ObjectLayout.ARRAY_ELEMENT_OFFSET);
                 HeapAddress end = (HeapAddress) location.offset(numBytes);
                 while (location.difference(end) < 0) {
+                    if (SimpleAllocator.TRACE) Debug.writeln("Scanning address ", location);
                     DefaultHeapAllocator.processPtrField(location, b);
                     location =
                         (HeapAddress) location.offset(HeapAddress.size());
@@ -556,71 +718,18 @@ public class SimpleAllocator extends HeapAllocator {
     }
     
     public void processPtrField(Address a, boolean b) {
-        if (!isValidObjectRef(a)) return;
+        if (!isValidObjectRef(a)) {
+            if (SimpleAllocator.TRACE) Debug.writeln("Address not a valid object, skipping: ", a);
+            return;
+        }
+        if (SimpleAllocator.TRACE) Debug.writeln("Adding object to queue: ", a);
         gcWorkQueue.addToQueue(a, b);
     }
     
-    public boolean isValidObjectRef(Address a) {
-        if (!isValidAddress(a)) return false;
-        Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        return isValidVTable(vt);
-    }
-    
-    public boolean isValidArrayRef(Address a) {
-        if (!isValidAddress(a)) return false;
-        Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        return isValidArrayVTable(vt);
-    }
-    
-    public boolean isValidVTable(Address a) {
-        if (!isValidAddress(a)) return false;
-        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET);
-        jq_Reference r = PrimordialClassLoader.getAddressArray();
-        if (!isType(vtableTypeAddr, r)) return false;
-        return isValidType((HeapAddress) a.peek());
-    }
-    
-    public boolean isValidArrayVTable(Address a) {
-        if (!isValidAddress(a)) return false;
-        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET);
-        jq_Reference r = PrimordialClassLoader.getAddressArray();
-        if (!isType(vtableTypeAddr, r)) return false;
-        return isValidArray((HeapAddress) a.peek());
-    }
-    
-    public boolean isType(Address a, jq_Reference t) {
-        if (!isValidAddress(a)) return false;
-
-        Address vtable = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        if (!isValidAddress(vtable)) return false;
-        Address type = vtable.peek();
-        Address expected = HeapAddress.addressOf(t);
-        return expected.difference(type) == 0;
-    }
-    
-    public boolean isValidType(Address typeAddress) {
-        if (!isValidAddress(typeAddress)) return false;
-
-        // check if vtable is one of three possible values
-        Object vtable = ObjectLayoutMethods.getVTable(((HeapAddress) typeAddress).asObject());
-        boolean valid = vtable == jq_Class._class.getVTable() ||
-                        vtable == jq_Array._class.getVTable() ||
-                        vtable == jq_Primitive._class.getVTable();
-        return valid;
-    }
-    
-    public boolean isValidArray(Address typeAddress) {
-        if (!isValidAddress(typeAddress)) return false;
-
-        Object vtable = ObjectLayoutMethods.getVTable(((HeapAddress) typeAddress).asObject());
-        boolean valid = vtable == jq_Array._class.getVTable();
-        return valid;
-    }
-    
-    public boolean isValidAddress(Address a) {
+    public boolean isInHeap(Address a) {
         HeapAddress p = heapFirst;
         while (!p.isNull()) {
-            int diff = a.difference(p); 
+            int diff = a.difference(p);
             if (diff >= 0 && diff < BLOCK_SIZE - 2 * HeapAddress.size())
                 return true;
             p = (HeapAddress) p.offset(BLOCK_SIZE - HeapAddress.size()).peek();
@@ -641,4 +750,5 @@ public class SimpleAllocator extends HeapAllocator {
         _allocateArray = _class.getOrCreateInstanceMethod("allocateArray", "(IILjava/lang/Object;)Ljava/lang/Object;");
         _allocateArrayAlign8 = _class.getOrCreateInstanceMethod("allocateArrayAlign8", "(IILjava/lang/Object;)Ljava/lang/Object;");
     }
+
 }
