@@ -151,7 +151,10 @@ public class GenRelations {
         System.setProperty("pa.dumpresults", "no");
         if (CS) System.setProperty("pa.cs", "yes");
         if (FLY) System.setProperty("pa.dumpfly", "yes");
-        if (SSA) System.setProperty("pa.dumpssa", "yes");
+        if (SSA) {
+            System.setProperty("ssa", "yes");
+            System.setProperty("pa.dumpssa", "yes");
+        }
         String dumppath = System.getProperty("pa.dumppath");
         if (dumppath != null) {
             if (dumppath.length() > 0) {
