@@ -22,8 +22,6 @@ import jq;
 
 public abstract class SystemInterface {
 
-    public static int/*CodeAddress*/ entry_0;
-    public static int/*CodeAddress*/ trap_handler_8;
     public static int/*CodeAddress*/ debugmsg_4;
     public static int/*CodeAddress*/ syscalloc_4;
     public static int/*CodeAddress*/ die_4;
@@ -71,13 +69,9 @@ public abstract class SystemInterface {
     public static int/*CodeAddress*/ release_semaphore_8;
 
     public static final jq_Class _class;
-    public static final jq_StaticField _entry;
-    public static final jq_StaticField _trap_handler;
     public static final jq_StaticField _debugmsg;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/SystemInterface;");
-        _entry = _class.getOrCreateStaticField("entry_0", "I");
-        _trap_handler = _class.getOrCreateStaticField("trap_handler_8", "I");
         _debugmsg = _class.getOrCreateStaticField("debugmsg_4", "I");
     }
 
