@@ -22,6 +22,9 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
 	case EXCEPTION_INT_DIVIDE_BY_ZERO: // divide by zero exception
 		java_ex_code = 2;
 		break;
+	case EXCEPTION_STACK_OVERFLOW:
+		java_ex_code = 3;
+		break;
 	default:
 		java_ex_code = -1;
 		break;
