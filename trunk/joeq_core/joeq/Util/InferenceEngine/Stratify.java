@@ -65,9 +65,15 @@ public class Stratify {
         // Ignore all edges to/from unnecessary stuff.
         depNav.retainAll(necessary);
         
+        Set allRelations = new HashSet();
+        for (Iterator i = necessary.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (o instanceof Relation) allRelations.add(o);
+        }
+        
         for (int i = 1; ; ++i) {
             // Discover current stratum.
-            Set stratumSccs = discoverStratum(depNav, inputs);
+            Set stratumSccs = discoverStratum(depNav, allRelations, inputs);
             
             if (TRACE) out.println("Stratum #"+i+": "+stratumSccs);
             
@@ -130,9 +136,9 @@ public class Stratify {
         return w.getVisitedSet();
     }
     
-    Set discoverStratum(InferenceRule.DependenceNavigator depNav, Collection inputs) {
+    Set discoverStratum(InferenceRule.DependenceNavigator depNav, Collection allRelations, Collection inputs) {
         // Break into SCCs.
-        Collection/*<SCComponent>*/ sccs = SCComponent.buildSCC(inputs, depNav);
+        Collection/*<SCComponent>*/ sccs = SCComponent.buildSCC(allRelations, depNav);
         
         LinkedList w = new LinkedList();
         Set stratum = new HashSet();
@@ -157,11 +163,11 @@ public class Stratify {
                 }
             }
         }
-        // Remove those inputs that do not have all predecessors in stratum.
+        // Remove those nodes that do not have all predecessors in stratum.
         for (Iterator i = sccs.iterator(); i.hasNext(); ) {
             SCComponent p = (SCComponent) i.next();
             if (!stratum.containsAll(Arrays.asList(p.prev()))) {
-                if (TRACE) out.println("Not all predecessors of input "+p+", removing.");
+                if (TRACE) out.println("Not all predecessors of relation "+p+", removing.");
                 stratum.remove(p);
             }
         }
