@@ -3,6 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Scheduler;
 
+import joeq.Runtime.Unsafe;
+import joeq.Util.Assert;
+
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
@@ -10,9 +13,29 @@ package joeq.Scheduler;
 public class jq_SynchThreadQueue extends jq_ThreadQueue {
 
     //public synchronized boolean isEmpty() { return super.isEmpty(); }
-    public synchronized void enqueue(jq_Thread t) { super.enqueue(t); }
-    public synchronized void enqueueFront(jq_Thread t) { super.enqueueFront(t); }
-    public synchronized jq_Thread dequeue() { return super.dequeue(); }
-    public synchronized boolean remove(jq_Thread t2) { return super.remove(t2); }
+    public void enqueue(jq_Thread t) {
+        Assert._assert(Unsafe.getThreadBlock().isScheduler);
+        synchronized (this) {
+            super.enqueue(t);
+        }
+    }
+    public synchronized void enqueueFront(jq_Thread t) {
+        Assert._assert(Unsafe.getThreadBlock().isScheduler);
+        synchronized (this) {
+            super.enqueueFront(t);
+        }
+    }
+    public synchronized jq_Thread dequeue() {
+        Assert._assert(Unsafe.getThreadBlock().isScheduler);
+        synchronized (this) {
+            return super.dequeue();
+        }
+    }
+    public synchronized boolean remove(jq_Thread t2) {
+        Assert._assert(Unsafe.getThreadBlock().isScheduler);
+        synchronized (this) {
+            return super.remove(t2);
+        }
+    }
 
 }

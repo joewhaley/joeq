@@ -43,6 +43,7 @@ public class jq_Thread implements jq_DontAlign {
     jq_Thread next;
     private jq_CompiledCode entry_point;
     private boolean isDaemon;
+    boolean isScheduler;
     private boolean hasStarted;
     private boolean isDead;
     boolean wasPreempted;
@@ -202,7 +203,7 @@ public class jq_Thread implements jq_DontAlign {
 
     public static void destroyCurrentThread() {
         jq_Thread t = Unsafe.getThreadBlock();
-        Debug.writeln("Destroying thread ", t.getThreadId());
+        //Debug.writeln("Destroying thread ", t.getThreadId());
         t.disableThreadSwitch();
         t.isDead = true;
         jq_NativeThread.endCurrentJavaThread();
