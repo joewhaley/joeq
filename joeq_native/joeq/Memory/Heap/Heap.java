@@ -333,7 +333,7 @@ public abstract class Heap {
         throws OutOfMemoryError {
         // note: array size might not be a word multiple,
         //       must preserve alignment of future allocations.
-        size = HeapAddress.align(size, HeapAddress.logSize());
+        size = HeapAddress.alignInt(size, HeapAddress.logSize());
         HeapAddress region = allocateZeroedMemory(size);
         Object newObj = ObjectLayoutMethods.initializeArray(region, vtable, numElements, size);
         postAllocationProcessing(newObj);
