@@ -1,10 +1,6 @@
-/*
- * Bytecodes.java
- *
- * Created on October 24, 2001, 5:43 PM
- *
- */
-
+// Bytecodes.java, created Fri Jan 11 16:49:00 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.BytecodeAnalysis;
 
 import java.io.ByteArrayOutputStream;
@@ -46,7 +42,7 @@ import Util.Collections.LinearSet;
 import Util.IO.ByteSequence;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface Bytecodes {

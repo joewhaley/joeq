@@ -1,16 +1,14 @@
-/*
- * StrictMath.java
- *
- * Created on January 29, 2001, 11:04 AM
- *
- */
-
+// StrictMath.java, created Thu Jul  4  4:50:03 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.lang;
 
-import Run_Time.JMath;
+import Support.JMath;
 
-/*
- * @author  John Whaley
+/**
+ * StrictMath
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 abstract class StrictMath extends java.lang.Object {

@@ -1,10 +1,6 @@
-/*
- * jq_Field.java
- *
- * Created on December 19, 2000, 11:20 AM
- *
- */
-
+// jq_Field.java, created Mon Feb  5 23:23:20 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import java.io.DataInput;
@@ -18,7 +14,7 @@ import Compil3r.Quad.AndersenInterface.AndersenType;
 import Main.jq;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class jq_Field extends jq_Member implements AndersenField {

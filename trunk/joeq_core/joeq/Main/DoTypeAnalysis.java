@@ -1,10 +1,6 @@
-/*
- * DoTypeAnalysis.java
- *
- * Created on December 20, 2000, 1:18 AM
- *
- */
-
+// DoTypeAnalysis.java, created Fri Jan 11 17:13:17 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.io.BufferedReader;
@@ -26,7 +22,7 @@ import Run_Time.TypeCheck;
 import Util.Collections.AppendIterator;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class DoTypeAnalysis {

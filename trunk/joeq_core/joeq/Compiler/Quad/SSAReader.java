@@ -1,9 +1,6 @@
-/*
- * SSAReader.java
- *
- * Created on November 26, 2002, 3:33 PM
- */
-
+// SSAReader.java, created Wed Dec 11 17:37:39 2002 by dmwright
+// Copyright (C) 2001-3 Daniel Wright <dmwright@stanford.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.io.BufferedReader;
@@ -40,7 +37,8 @@ import UTF.Utf8;
 
 /**
  *
- * @author  Daniel Wright
+ * @author  Daniel Wright <dmwright@stanford.edu>
+ * @version $Id$
  */
 public class SSAReader {
     static class SSAClass implements AndersenClass {

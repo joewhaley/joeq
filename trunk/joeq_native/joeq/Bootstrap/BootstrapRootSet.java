@@ -1,10 +1,8 @@
-/*
- * BootstrapRootSet.java
- *
- * Created on June 10, 2002, 5:01 PM
- */
-
+// BootstrapRootSet.java, created Wed Jun 26 12:27:23 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Bootstrap;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -40,8 +38,9 @@ import Util.Assert;
 import Util.Collections.IdentityHashCodeWrapper;
 
 /**
+ * BootstrapRootSet
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class BootstrapRootSet {

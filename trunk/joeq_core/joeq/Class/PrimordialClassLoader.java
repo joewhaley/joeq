@@ -1,10 +1,6 @@
-/*
- * PrimordialClassLoader.java
- *
- * Created on January 15, 2001, 12:59 AM
- *
- */
-
+// PrimordialClassLoader.java, created Mon Feb  5 23:23:20 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Bootstrap;
 
 import java.io.DataInput;
@@ -43,7 +39,9 @@ import Util.Collections.FilterIterator;
 import Util.Collections.UnmodifiableIterator;
 
 /**
- * @author  John Whaley
+ * PrimordialClassLoader
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileConstants {
@@ -521,7 +519,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     
     /*
      * @param cName a string, not a descriptor.
-     * @author Chrislain
+     * @author Chrislain Razafimahefa <razafima@cui.unige.ch>
      */
     public final void replaceClass(String cName)
     {

@@ -1,10 +1,6 @@
-/*
- * Field.java
- *
- * Created on April 13, 2001, 6:19 PM
- *
- */
-
+// Field.java, created Thu Jul  4  4:50:03 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.lang.reflect;
 
 import ClassLib.Common.ClassUtils;
@@ -22,8 +18,10 @@ import Run_Time.TypeCheck;
 import UTF.Utf8;
 import Util.Assert;
 
-/*
- * @author  John Whaley
+/**
+ * Field
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Field extends AccessibleObject {

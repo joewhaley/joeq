@@ -1,15 +1,16 @@
-/**
- * GCManager
- *
- * Created on Sep 25, 2002, 8:28:16 PM
- *
- * @author laudney <laudney@acm.org>
- * @version 0.1
- */
+// GCManager.java, created Wed Sep 25  7:09:24 2002 by laudney
+// Copyright (C) 2001-3 laudney <laudney@acm.org>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package GC;
 
 import java.util.Hashtable;
 
+/**
+ * GCManager
+ *
+ * @author laudney <laudney@acm.org>
+ * @version $Id$
+ */
 public class GCManager {
     // Reference Counting GC
     public static final int RC_GC = 1;

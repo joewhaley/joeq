@@ -1,11 +1,6 @@
-/**
- * StackHeapWalker
- *
- * Created on Sep 26, 2002, 8:47:02 PM
- *
- * @author laudney <laudney@acm.org>
- * @version 0.1
- */
+// StackHeapWalker.java, created Thu Sep 26  7:13:33 2002 by laudney
+// Copyright (C) 2001-3 laudney <laudney@acm.org>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
 import java.util.ArrayList;
@@ -14,6 +9,12 @@ import GC.GCBitsManager;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 
+/**
+ * StackHeapWalker
+ *
+ * @author laudney <laudney@acm.org>
+ * @version $Id$
+ */
 public class StackHeapWalker {
 
     public static /*final*/ boolean TRACE = false;

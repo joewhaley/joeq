@@ -1,10 +1,6 @@
-/*
- * Operand.java
- *
- * Created on April 22, 2001, 12:33 AM
- *
- */
-
+// Operand.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import Clazz.jq_Field;
@@ -19,7 +15,7 @@ import Run_Time.Reflection;
 import Util.Assert;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface Operand {

@@ -1,5 +1,12 @@
+// ThreadUtils.java, created Mon Dec 16 18:57:13 2002 by mcmartin
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
+/**
+ * @author  John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
+ */
 public abstract class ThreadUtils {
     public static jq_Thread getJQThread(java.lang.Thread t) {
 	return _delegate.getJQThread(t);

@@ -1,3 +1,6 @@
+// SortedArraySet.java, created Wed Mar  5  0:26:26 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
 import java.io.Serializable;
@@ -14,7 +17,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
  */
 public class SortedArraySet
     extends AbstractList

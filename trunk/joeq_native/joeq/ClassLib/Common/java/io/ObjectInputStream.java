@@ -1,9 +1,6 @@
-/*
- * ObjectInputStream.java
- *
- * Created on July 8, 2002, 12:02 AM
- */
-
+// ObjectInputStream.java, created Mon Jul  8  0:41:49 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.io;
 
 import ClassLib.Common.ClassUtils;
@@ -19,8 +16,9 @@ import Util.Assert;
 import Util.Convert;
 
 /**
+ * ObjectInputStream
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class ObjectInputStream {

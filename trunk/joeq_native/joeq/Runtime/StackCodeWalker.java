@@ -1,10 +1,6 @@
-/*
- * StackCodeWalker.java
- *
- * Created on January 11, 2001, 10:34 PM
- *
- */
-
+// StackCodeWalker.java, created Thu Sep 26 22:01:42 2002 by laudney
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
 import java.util.Iterator;
@@ -19,7 +15,7 @@ import UTF.Utf8;
 import Util.Strings;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class StackCodeWalker implements Iterator {

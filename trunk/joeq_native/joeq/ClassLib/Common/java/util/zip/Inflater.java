@@ -1,16 +1,15 @@
-/*
- * Inflater.java
- *
- * Created on July 8, 2002, 1:19 AM
- */
+// Inflater.java, created Mon Jul  8  4:06:18 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 
 package ClassLib.Common.java.util.zip;
-//import java.util.zip.Adler32;
+
 import java.util.zip.DataFormatException;
 
 /**
+ * Inflater
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Inflater {

@@ -1,10 +1,6 @@
-/*
- * jq_ThreadQueue.java
- *
- * Created on March 26, 2001, 10:27 AM
- *
- */
-
+// jq_ThreadQueue.java, created Mon Apr  9  1:52:50 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
 import java.util.Iterator;
@@ -12,7 +8,7 @@ import java.util.Iterator;
 import Util.Assert;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class jq_ThreadQueue {

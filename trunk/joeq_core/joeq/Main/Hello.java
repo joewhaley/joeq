@@ -1,10 +1,6 @@
-/*
- * Hello.java
- *
- * Created on January 15, 2001, 6:20 PM
- *
- */
-
+// Hello.java, created Mon Feb  5 23:23:21 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.util.Iterator;
@@ -13,7 +9,7 @@ import Bootstrap.PrimordialClassLoader;
 import Util.Assert;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Hello {

@@ -1,14 +1,12 @@
-/*
- * Adler32.java
- *
- * Created on July 8, 2002, 11:11 AM
- */
-
+// Adler32.java, created Mon Jul  8 11:14:45 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.util.zip;
 
 /**
+ * Adler32
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Adler32 {

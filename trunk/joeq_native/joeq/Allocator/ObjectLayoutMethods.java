@@ -1,12 +1,7 @@
-/*
- * ObjectLayout.java
- *
- * Created on January 1, 2000, 10:15 PM
- *
- */
-
+// ObjectLayoutMethods.java, created Mon Dec 16 22:24:22 2002 by mcmartin
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
-
 
 import Memory.HeapAddress;
 import Run_Time.Unsafe;
@@ -14,7 +9,7 @@ import Run_Time.Unsafe;
 /** This interface contains utility functions for the joeq object layout.
  *  You can play with these constants to experiment with different object layouts.
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class ObjectLayoutMethods {

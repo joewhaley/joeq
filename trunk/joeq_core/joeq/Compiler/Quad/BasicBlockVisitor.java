@@ -1,16 +1,12 @@
-/*
- * BasicBlockVisitor.java
- *
- * Created on January 9, 2002, 8:47 AM
- *
- */
-
+// BasicBlockVisitor.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 /**
  * Interface for the basic block visitor design pattern.
  * Make your visitor object implement this class in order to visit 
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @see BasicBlock
  * @version $Id$
  */

@@ -1,18 +1,16 @@
-/*
- * x86.java
- *
- * Created on December 22, 2000, 7:07 AM
- *
- */
-
+// x86.java, created Mon Feb  5 23:23:19 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Assembler.x86;
 
 import Allocator.CodeAllocator;
 import Util.Assert;
 import Util.Strings;
 
-/*
- * @author  John Whaley
+/**
+ * x86
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class x86 implements x86Constants {

@@ -1,10 +1,6 @@
-/*
- * jq_InstanceField.java
- *
- * Created on December 19, 2000, 11:22 AM
- *
- */
-
+// jq_InstanceField.java, created Mon Feb  5 23:23:20 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import java.io.DataInput;
@@ -19,7 +15,7 @@ import Util.Assert;
 //friend jq_ClassLoader;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public final class jq_InstanceField extends jq_Field {

@@ -1,10 +1,6 @@
-/*
- * jq_RegisterState.java
- *
- * Created on January 12, 2001, 8:59 AM
- *
- */
-
+// jq_RegisterState.java, created Mon Feb  5 23:23:21 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
 import Assembler.x86.x86Constants;
@@ -13,7 +9,7 @@ import Memory.CodeAddress;
 import Memory.StackAddress;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class jq_RegisterState implements x86Constants, jq_DontAlign {

@@ -1,17 +1,13 @@
-/*
- * ByteSequence.java
- *
- * Created on October 25, 2001, 11:17 AM
- *
- */
-
+// ByteSequence.java, created Wed Mar  5  0:26:34 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.IO;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public final class ByteSequence extends DataInputStream {

@@ -1,6 +1,6 @@
-/*
- * Created on Mar 7, 2003
- */
+// Inet4AddressImpl.java, created Fri Mar  7 11:01:56 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.net;
 
 import Bootstrap.MethodInvocation;
@@ -19,7 +19,9 @@ import Run_Time.SystemInterface.Library;
 import Util.Assert;
 
 /**
- * @author John Whaley
+ * Inet4AddressImpl
+ *
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Inet4AddressImpl {

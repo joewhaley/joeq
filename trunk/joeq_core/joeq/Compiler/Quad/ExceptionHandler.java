@@ -1,11 +1,8 @@
-/*
- * ExceptionHandler.java
- *
- * Created on January 9, 2002, 5:25 PM
- *
- */
-
+// ExceptionHandler.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
+
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Run_Time.TypeCheck;
@@ -23,7 +20,7 @@ import Util.Templates.ListWrapper;
  * 
  * @see  ExceptionHandlerList
  * @see  Run_Time.TypeCheck
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version  $Id$
  */
 

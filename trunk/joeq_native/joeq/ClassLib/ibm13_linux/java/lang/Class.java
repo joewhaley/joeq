@@ -1,15 +1,14 @@
-/*
- * Class.java
- *
- * Created on July 3, 2002, 1:16 PM
- */
-
+// Class.java, created Fri Jan 11 17:08:41 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.ibm13_linux.java.lang;
+
 import Bootstrap.PrimordialClassLoader;
 
 /**
+ * Class
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Class {

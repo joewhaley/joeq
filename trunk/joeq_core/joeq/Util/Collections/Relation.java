@@ -1,5 +1,5 @@
 // Relation.java, created Tue Jan 11 14:52:48 2000 by salcianu
-// Copyright (C) 2000 Alexandru SALCIANU <salcianu@MIT.EDU>
+// Copyright (C) 2000 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 package Util.Collections;
 
@@ -14,7 +14,7 @@ import java.util.Set;
  * to be simpler and better tailored for the implementation of the Pointer
  * Analysis algorithm.
  *
- * @author  Alexandru SALCIANU <salcianu@MIT.EDU>
+ * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
 public interface Relation {
@@ -115,7 +115,7 @@ public interface Relation {
      called on a relation entry of the form <code>&lt;key,value&gt;</code>.
      There is no other way to pass a function in Java (no pointers to methods ...)
      * 
-     * @author  Alexandru SALCIANU <salcianu@MIT.EDU>
+     * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
      * @version $Id$
      */
     public static interface EntryVisitor {

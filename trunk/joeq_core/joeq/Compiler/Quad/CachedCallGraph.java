@@ -1,6 +1,6 @@
-/*
- * Created on Mar 28, 2003
- */
+// CachedCallGraph.java, created Sat Mar 29  0:56:01 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.util.Collection;
@@ -16,9 +16,8 @@ import Util.Collections.GenericMultiMap;
 import Util.Collections.InvertibleMultiMap;
 import Util.Collections.MultiMap;
 
-
 /**
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class CachedCallGraph extends CallGraph {

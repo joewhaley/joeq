@@ -1,10 +1,6 @@
-/*
- * Finalizer.java
- *
- * Created on February 26, 2001, 9:01 PM
- *
- */
-
+// Finalizer.java, created Thu Jul  4  4:50:03 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.lang.ref;
 
 import Clazz.jq_InstanceMethod;
@@ -14,8 +10,10 @@ import Run_Time.Reflection;
 import UTF.Utf8;
 import Util.Assert;
 
-/*
- * @author  John Whaley
+/**
+ * Finalizer
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Finalizer {

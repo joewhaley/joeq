@@ -1,10 +1,6 @@
-/*
- * jq_Reference.java
- *
- * Created on December 19, 2000, 8:38 AM
- *
- */
-
+// jq_Reference.java, created Mon Feb  5 23:23:20 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import Allocator.ObjectLayout;
@@ -17,7 +13,7 @@ import UTF.Utf8;
 import Util.Assert;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants, AndersenReference {

@@ -1,3 +1,6 @@
+// DotGraph.java, created Tue Nov  5 14:16:40 2002 by joewhaley
+// Copyright (C) 2001-3 Godmar Back <gback@cs.utah.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.io.File;
@@ -10,6 +13,10 @@ import java.util.Iterator;
 import Clazz.jq_Class;
 import Util.Templates.ListIterator;
 
+/**
+ * @author Godmar Back <gback@cs.utah.edu>
+ * @version $Id$
+ */
 public class DotGraph implements ControlFlowGraphVisitor {
 
     /**
@@ -19,7 +26,7 @@ public class DotGraph implements ControlFlowGraphVisitor {
      *
      * Process with, for instance, "dot -Tgif -o graph.gif <inputfile>"
      *
-     * @author Godmar Back <gback@stanford.edu>
+     * @author Godmar Back <gback@cs.utah.edu>
      */
     public static class dot {
 	private static PrintWriter containedgraph = null;

@@ -1,7 +1,6 @@
-/*
- * Created on Mar 28, 2003
- * 
- */
+// HashWorklist.java, created Fri Mar 28 23:58:36 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
 import java.util.AbstractList;
@@ -12,7 +11,7 @@ import java.util.Set;
 import Util.Assert;
 
 /**
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class HashWorklist extends AbstractList implements Worklist, Set {

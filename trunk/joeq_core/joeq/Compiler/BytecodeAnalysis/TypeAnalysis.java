@@ -1,10 +1,6 @@
-/*
- * TypeAnalysis.java
- *
- * Created on June 23, 2001, 5:32 PM
- *
- */
-
+// TypeAnalysis.java, created Fri Jan 11 16:49:00 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.BytecodeAnalysis;
 
 import java.util.HashMap;
@@ -34,7 +30,7 @@ import Util.Collections.IdentityHashCodeWrapper;
 import Util.Collections.LinearSet;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class TypeAnalysis {

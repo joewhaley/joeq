@@ -1,10 +1,6 @@
-/*
- * TraceFlags.java
- *
- * Created on February 1, 2001, 12:35 PM
- *
- */
-
+// TraceFlags.java, created Mon Feb  5 23:23:21 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.lang.reflect.Field;
@@ -25,7 +21,7 @@ import UTF.Utf8;
 import Util.Assert;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class TraceFlags {

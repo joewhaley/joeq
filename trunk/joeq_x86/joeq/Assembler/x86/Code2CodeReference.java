@@ -1,10 +1,6 @@
-/*
- * Code2CodeReference.java
- *
- * Created on February 13, 2001, 9:58 PM
- *
- */
-
+// Code2CodeReference.java, created Thu Mar  6 22:18:34 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Assembler.x86;
 
 import java.io.DataOutput;
@@ -13,8 +9,10 @@ import java.io.IOException;
 import Allocator.DefaultCodeAllocator;
 import Memory.CodeAddress;
 
-/*
- * @author  John Whaley
+/**
+ * Code2CodeReference
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Code2CodeReference extends Reloc {

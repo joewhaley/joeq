@@ -1,3 +1,6 @@
+// Dataflow.java, created Tue Jun  4 15:58:53 2002 by joewhaley
+// Copyright (C) 2001-3 mcmartin
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -5,6 +8,10 @@ import java.util.Iterator;
 import Clazz.jq_Method;
 import Clazz.jq_MethodVisitor;
 
+/**
+ * @author Michael Martin <mcmartin@stanford.edu>
+ * @version $Id$
+ */
 public class Dataflow {
     private static final boolean TRACE_DATAFLOW = true;
     private static final boolean TRACE_DATAFLOW_QUADS = false;

@@ -1,10 +1,6 @@
-/*
- * SimpleAllocator.java
- *
- * Created on January 1, 2001, 9:41 PM
- *
- */
-
+// SimpleAllocator.java, created Mon Feb  5 23:23:19 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import Bootstrap.PrimordialClassLoader;
@@ -16,8 +12,10 @@ import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Util.Assert;
 
-/*
- * @author  John Whaley
+/**
+ * SimpleAllocator
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 

@@ -1,7 +1,6 @@
 // AbstrRelation.java, created Thu Jun 29 19:13:12 2000 by salcianu
-// Copyright (C) 2000 Alexandru SALCIANU <salcianu@MIT.EDU>
+// Copyright (C) 2000 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-
 package Util.Collections;
 
 import java.util.Collection;
@@ -15,7 +14,7 @@ import Util.Strings;
 /**
  * <code>AbstrRelation</code>
  * 
- * @author  Alexandru SALCIANU <salcianu@MIT.EDU>
+ * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
 public abstract class AbstrRelation implements Relation, Cloneable, 

@@ -1,10 +1,6 @@
-/*
- * jq_StaticField.java
- *
- * Created on December 19, 2000, 12:34 PM
- *
- */
-
+// jq_StaticField.java, created Mon Feb  5 23:23:20 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 //friend jq_ClassLoader;
@@ -23,7 +19,7 @@ import Util.Assert;
 import Util.Convert;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public final class jq_StaticField extends jq_Field {

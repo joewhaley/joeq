@@ -1,8 +1,6 @@
-/*
- * CHACallGraph.java
- * 
- * Created on Mar 3, 2003
- */
+// CHACallGraph.java, created Mon Mar  3 18:01:33 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.util.Arrays;
@@ -22,7 +20,7 @@ import Clazz.jq_Type;
  * A simple call graph implementation based on class-hierarchy analysis with
  * optional rapid type analysis.
  * 
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class CHACallGraph extends CallGraph {

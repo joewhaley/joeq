@@ -1,10 +1,6 @@
-/*
- * Method.java
- *
- * Created on April 14, 2001, 3:11 PM
- *
- */
-
+// Method.java, created Thu Jul  4  4:50:03 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.lang.reflect;
 
 import ClassLib.ClassLibInterface;
@@ -23,8 +19,10 @@ import Run_Time.TypeCheck;
 import UTF.Utf8;
 import Util.Assert;
 
-/*
- * @author  John Whaley
+/**
+ * Method
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Method extends AccessibleObject {

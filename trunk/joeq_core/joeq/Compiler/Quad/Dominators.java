@@ -1,9 +1,6 @@
-/*
- * Dominators.java
- *
- * Created on January 30, 2002, 4:13 AM
- */
-
+// Dominators.java, created Wed Jan 30 22:34:43 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,7 +13,7 @@ import Util.Templates.ListIterator;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBlockVisitor {

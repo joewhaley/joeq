@@ -1,10 +1,6 @@
-/*
- * HeapAllocator.java
- *
- * Created on January 16, 2001, 9:45 PM
- *
- */
-
+// HeapAllocator.java, created Tue Feb 27  2:52:57 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import java.lang.reflect.Array;
@@ -22,8 +18,10 @@ import Memory.Heap.Heap;
 import Run_Time.SystemInterface;
 import Util.Assert;
 
-/*
- * @author  John Whaley
+/**
+ * HeapAllocator
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class HeapAllocator implements jq_ClassFileConstants {

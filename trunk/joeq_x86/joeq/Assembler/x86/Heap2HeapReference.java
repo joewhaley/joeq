@@ -1,10 +1,6 @@
-/*
- * Heap2HeapReference.java
- *
- * Created on February 13, 2001, 11:11 PM
- *
- */
-
+// Heap2HeapReference.java, created Tue Feb 27  2:59:43 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Assembler.x86;
 
 import java.io.DataOutput;
@@ -14,8 +10,10 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Memory.HeapAddress;
 
-/*
- * @author  John Whaley
+/**
+ * Heap2HeapReference
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Heap2HeapReference extends Reloc {

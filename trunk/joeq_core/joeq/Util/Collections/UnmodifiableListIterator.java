@@ -1,3 +1,6 @@
+// UnmodifiableListIterator.java, created Wed Mar  5  0:26:28 2003 by joewhaley
+// Copyright (C) 2001-3 C. Scott Ananian <cananian@alumni.princeton.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
 import java.util.ListIterator;

@@ -1,3 +1,6 @@
+// HostedVM.java, created Sat Dec 14  2:52:34 2002 by mcmartin
+// Copyright (C) 2001-3 mcmartin
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.util.Iterator;
@@ -10,6 +13,10 @@ import Memory.StackAddress;
 import Run_Time.Reflection;
 import Util.Assert;
 
+/**
+ * @author  Michael Martin <mcmartin@stanford.edu>
+ * @version $Id$
+ */
 public abstract class HostedVM {
     public static void initialize() {
         if (jq.RunningNative) return;

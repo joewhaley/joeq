@@ -1,5 +1,5 @@
 // LightMap.java, created Sun Mar 19 15:46:56 2000 by salcianu
-// Copyright (C) 2000 Alexandru SALCIANU <salcianu@MIT.EDU>
+// Copyright (C) 2000 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 package Util.Collections;
 
@@ -14,7 +14,7 @@ import java.util.Set;
  * <code>LightMap</code> is a very lightweight implementation of
  the <code>java.util.Map</code> interface.
  * 
- * @author  Alexandru SALCIANU <salcianu@MIT.EDU>
+ * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
 public class LightMap implements Map, Cloneable, java.io.Serializable {

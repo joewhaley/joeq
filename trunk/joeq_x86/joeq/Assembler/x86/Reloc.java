@@ -1,17 +1,15 @@
-/*
- * Reloc.java
- *
- * Created on February 9, 2001, 1:29 PM
- *
- */
-
+// Reloc.java, created Tue Feb 27  2:59:43 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Assembler.x86;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-/*
- * @author  John Whaley
+/**
+ * Reloc
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Reloc {

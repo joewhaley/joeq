@@ -1,14 +1,10 @@
-/*
- * jq_SynchThreadQueue.java
- *
- * Created on March 27, 2001, 11:21 PM
- *
- */
-
+// jq_SynchThreadQueue.java, created Mon Apr  9  1:52:50 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class jq_SynchThreadQueue extends jq_ThreadQueue {

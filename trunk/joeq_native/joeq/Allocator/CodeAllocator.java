@@ -1,9 +1,6 @@
-/*
- * CodeAllocator.java
- *
- * Created on February 9, 2001, 8:40 AM
- *
- */
+// CodeAllocator.java, created Mon Feb  5 23:23:19 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import java.util.Iterator;
@@ -32,7 +29,7 @@ import Run_Time.ExceptionDeliverer;
  * 
  * It also includes an inner class that provides the interface for code buffers.
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class CodeAllocator {

@@ -1,10 +1,6 @@
-/*
- * jq_MethodVisitor.java
- *
- * Created on January 9, 2002, 9:40 AM
- *
- */
-
+// jq_MethodVisitor.java, created Fri Jan 11 17:28:36 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import java.util.Arrays;
@@ -14,7 +10,7 @@ import java.util.Set;
 import Util.Collections.AppendIterator;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface jq_MethodVisitor {

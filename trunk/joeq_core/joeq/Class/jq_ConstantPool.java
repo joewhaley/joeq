@@ -1,10 +1,6 @@
-/*
- * jq_ConstantPool.java
- *
- * Created on November 1, 2001, 4:45 PM
- *
- */
-
+// jq_ConstantPool.java, created Fri Jan 11 17:29:36 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import java.io.DataInput;
@@ -24,7 +20,7 @@ import UTF.Utf8;
 import Util.Assert;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class jq_ConstantPool implements jq_ClassFileConstants {
@@ -756,7 +752,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
      * As opposed to <code>ConstantPoolRebuilder<\code>, this class
      * does not COMPLETELY rebuild the constant pool. It does instead add new entries
      * to the constantpool given as arguments to its constructor
-     * @author Chrislain
+     * @author Chrislain Razafimahefa <razafima@cui.unige.ch>
      */
     public static class ConstantPoolAdder extends ConstantPoolRebuilder {
         jq_ConstantPool cp;

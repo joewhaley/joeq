@@ -1,10 +1,6 @@
-/*
- * BootstrapHeapAddress.java
- *
- * Created on September 13, 2002, 12:06 AM
- *
- */
- 
+// BootstrapHeapAddress.java, created Wed Sep 18  1:22:47 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Bootstrap;
 
 import Clazz.jq_Class;
@@ -14,7 +10,9 @@ import Util.Assert;
 import Util.Strings;
 
 /**
- * @author  John Whaley
+ * BootstrapHeapAddress
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class BootstrapHeapAddress extends HeapAddress implements BootstrapAddress {

@@ -1,16 +1,17 @@
-/**
- * Worst Fit Strategy
- *
- * Created on Nov 26, 2002, 11:03:57 PM
- *
- * @author laudney <laudney@acm.org>
- * @version 0.1
- */
+// WorstFitStrategy.java, created Mon Mar 17  2:03:41 2003 by laudney
+// Copyright (C) 2001-3 laudney <laudney@acm.org>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import java.util.Collection;
 import java.util.TreeSet;
 
+/**
+ * Worst Fit Strategy
+ *
+ * @author laudney <laudney@acm.org>
+ * @version $Id$
+ */
 public class WorstFitStrategy implements FreeMemStrategy {
     private TreeSet freePool;
 

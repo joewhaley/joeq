@@ -1,9 +1,6 @@
-/*
- * jq.java
- *
- * Created on December 19, 2000, 11:15 AM
- *
- */
+// jq.java, created Fri Aug 16 16:04:04 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.util.List;
@@ -11,7 +8,7 @@ import java.util.Set;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 

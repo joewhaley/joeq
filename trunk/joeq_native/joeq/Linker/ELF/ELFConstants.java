@@ -1,14 +1,11 @@
-/*
- * ELFConstants.java
- *
- * Created on May 21, 2002, 2:17 AM
- */
-
+// ELFConstants.java, created Sat May 25 12:46:16 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Linker.ELF;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface ELFConstants {

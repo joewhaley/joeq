@@ -1,17 +1,13 @@
-/*
- * jq_Primitive.java
- *
- * Created on December 19, 2000, 8:54 AM
- *
- */
-
+// jq_Primitive.java, created Mon Feb  5 23:23:20 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {

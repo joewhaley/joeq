@@ -1,3 +1,6 @@
+// ClassUtils.java, created Sun Dec 22 15:45:52 2002 by mcmartin
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common;
 
 import Clazz.jq_Class;
@@ -7,6 +10,12 @@ import Memory.StackAddress;
 import Run_Time.StackCodeWalker;
 import Run_Time.TypeCheck;
 
+/**
+ * ClassUtils
+ *
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
+ */
 public abstract class ClassUtils {
     public static final void checkCallerAccess(jq_Member m, int depth) throws IllegalAccessException {
         jq_Class field_class = m.getDeclaringClass();

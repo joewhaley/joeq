@@ -1,3 +1,6 @@
+// B2QUnsafeHandler.java, created Mon Dec 23 23:00:34 2002 by mcmartin
+// Copyright (C) 2001-3 mcmartin
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import Clazz.jq_Method;
@@ -12,6 +15,10 @@ import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 import Util.Assert;
 
+/*
+ * @author  Michael Martin <mcmartin@stanford.edu>
+ * @version $Id$
+ */
 class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
     public boolean isUnsafe(jq_Method m) {
 	return m.getDeclaringClass() == Unsafe._class;

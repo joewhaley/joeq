@@ -1,3 +1,6 @@
+// SelectiveCloning.java, created Sun Nov 10 10:35:17 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.io.PrintStream;
@@ -28,7 +31,8 @@ import Util.Collections.LinearSet;
 import Util.Collections.Pair;
 
 /**
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
  */
 public class SelectiveCloning {
 

@@ -1,10 +1,6 @@
-/*
- * Interface.java
- *
- * Created on December 12, 2001, 1:27 AM
- *
- */
-
+// Interface.java, created Fri May 17 22:58:31 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.sun13_linux;
 
 import Bootstrap.ObjectTraverser;
@@ -14,8 +10,10 @@ import Clazz.jq_Class;
 import Run_Time.SystemInterface;
 import UTF.Utf8;
 
-/*
- * @author  John Whaley
+/**
+ * Interface
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public final class Interface extends ClassLib.Common.InterfaceImpl {
