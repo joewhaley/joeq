@@ -46,16 +46,19 @@ public class ClasspathWalker {
 //                        System.out.println("Initialized a subclass of " + clazz + ", class: " + c);
 //                        result.add(c);
 //                    }
+                    //c.getInterfaces()
                     PrimordialClassLoader.loader.unloadBSType(c);
                     classCount++;
                    //if(TRACE) System.out.println("Processing class # " + classCount + ", " + canonicalClassName);
                 } catch (NoClassDefFoundError x) {
                     if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + ").");
-                } /*catch (LinkageError le) {
+                } catch (ClassFormatError cfe) {
+                    if(TRACE) System.err.println("Class format error occurred while loading class (" + canonicalClassName + "):" + cfe.getMessage());
+                    //le.printStackTrace(System.err);
+                } catch (LinkageError le) {
                     if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):" + le.getMessage());
                     //le.printStackTrace(System.err);
-                } */
-                catch (RuntimeException e){
+                } catch (RuntimeException e){
                     if(TRACE) System.err.println("Security error occured: " + e.getMessage());
                 }
             }            
