@@ -467,6 +467,7 @@ public class CSPA {
     public static interface HeapObject {
         void write(IndexedMap map, DataOutput out) throws IOException;
         jq_Reference getDeclaredType();
+        ProgramLocation getLocation();
     }
 
     private void dumpVarIndexMap(DataOutput out) throws IOException {

@@ -181,6 +181,15 @@ public class CSPAResults {
     /** Multi-map between passed parameters and nodes they operate on. */
     InvertibleMultiMap passedParams;
 
+    /** Roots of the SCC graph. */
+    Collection sccRoots;
+
+    /** Map from SCC to a BDD of the vars that it accesses. */
+    Map sccToVars;
+
+    /** Map from SCC to a BDD of the vars that it transitively accesses. */
+    Map sccToVarsTransitive;
+    
     public TypedBDD getPointsToSet(int var) {
         BDD result = ci_pointsTo.restrict(V1o.ithVar(var));
         return new TypedBDD(result, H1o);
@@ -279,6 +288,45 @@ public class CSPAResults {
         return !result.isZero();
     }
 
+    void buildSCCToVarBDD() {
+        SCCTopSortedGraph sccgraph = pn.getSCCGraph();
+        sccRoots = new LinkedList();
+        for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
+            SCComponent scc = pn.getSCC(i.next());
+            sccRoots.add(scc);
+        }
+        Navigator nav = sccgraph.getNavigator();
+        List sccs = Traversals.postOrder(nav, sccRoots);
+        sccToVars = new HashMap();
+        sccToVarsTransitive = new HashMap();
+        for (Iterator i = sccs.iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            if (TRACE_ACC_LOC) System.out.println("Visiting SCC"+scc.getId());
+            // build the set of local vars in domain V1o
+            BDD localVars = bdd.zero();
+            for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
+                Object o = j.next();
+                if (!(o instanceof jq_Method)) continue;
+                jq_Method method = (jq_Method) o;
+                if (TRACE_ACC_LOC) System.out.println("Node "+method);
+                Collection method_nodes = methodToVariables.getValues(method);
+                for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
+                    Node n = (Node) k.next();
+                    int x = getVariableIndex(n);
+                    localVars.orWith(V1o.ithVar(x));
+                }
+            }
+            sccToVars.put(scc, localVars);
+            BDD transVars = localVars.id();
+            for (int j = 0; j < scc.nextLength(); ++j) {
+                SCComponent callee = scc.next(j);
+                BDD tvars_callee = (BDD) sccToVarsTransitive.get(callee);
+                transVars.orWith(tvars_callee.id());
+            }
+            sccToVarsTransitive.put(scc, transVars);
+        }
+    }
+
     void buildCallGraphRelation() {
         BDDPairing V1oToV2o = bdd.makePair(V1o, V2o);
         
@@ -343,6 +391,13 @@ public class CSPAResults {
             BDD b = (BDD) i.next();
             b.free();
         }
+    }
+    
+    public TypedBDD getAccessedLocations(jq_Method m) {
+        if (sccToVarsTransitive == null) buildSCCToVarBDD();
+        SCComponent scc = pn.getSCC(m);
+        BDD b = (BDD) sccToVarsTransitive.get(scc);
+        return new TypedBDD(b, V1o);
     }
     
     void buildAccessibleLocations() {
@@ -723,6 +778,7 @@ public class CSPAResults {
             int target_i = val[H1o.getIndex()];
             s.andWith(H1o.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
+            ProgramLocation l = h.getLocation();
             jq_Type t = null;
             if (h != null) {
                 t = h.getDeclaredType();
@@ -2062,6 +2118,9 @@ public class CSPAResults {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd = findRef(bdd1);
                     results.add(bdd);
+                } else if (command.equals("help")) {
+                    printHelp();
+                    increaseCount = false;
                 } else {
                     System.err.println("Unrecognized command");
                     increaseCount = false;
@@ -2097,6 +2156,14 @@ public class CSPAResults {
 
     public CSPAResults(BDDFactory bdd) {
         this.bdd = bdd;
+    }
+
+    public static void printHelp() {
+        System.out.println("dumpconnect # <fn>:   dump heap connectivity graph for heap object # to file fn");
+        System.out.println("dumpallconnect <fn>:  dump entire geap connectivity graph to file fn");
+        System.out.println("escape:               run escape analysis");
+        System.out.println("findequiv:            find equivalent objects");
+        System.out.println("relprod b1 b2 bs:     relational product of b1 and b2 w.r.t. set bs");
     }
 
 }
