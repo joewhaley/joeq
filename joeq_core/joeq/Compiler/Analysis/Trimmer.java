@@ -11,7 +11,7 @@ package Compil3r.Analysis;
 
 import jq;
 import Allocator.HeapAllocator;
-import Allocator.DefaultAllocator;
+import Allocator.DefaultHeapAllocator;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_Type;
 import Clazz.jq_Primitive;
@@ -36,6 +36,8 @@ import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
+import Scheduler.jq_NativeThread;
+import Scheduler.jq_InterrupterThread;
 import Compil3r.Reference.x86.x86ReferenceLinker;
 
 import java.io.PrintStream;
@@ -135,12 +137,34 @@ public class Trimmer {
         jq_InstanceMethod i = c.getOrCreateInstanceMethod("<init>", "()V");
         addToWorklist(i);
         
+        // an instance of this class is created via reflection during VM initialization.
+        c = (jq_Class)Reflection.getJQType(sun.io.ByteToCharConverter.getDefault().getClass());
+        c.load(); c.verify(); c.prepare();
+        addToInstantiatedTypes(c);
+        i = c.getOrCreateInstanceMethod("<init>", "()V");
+        addToWorklist(i);
+        
+        // created via reflection when loading from a zip file
+        c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile$ZipFileInputStream;");
+        c.load(); c.verify(); c.prepare();
+        addToInstantiatedTypes(c);
+        
         // the trap handler can be implicitly called from any bytecode than can trigger a hardware exception.
         jq_StaticMethod sm = ExceptionDeliverer._trap_handler;
         c = sm.getDeclaringClass(); c.load(); c.verify(); c.prepare();
         addToWorklist(sm);
         
         addToWorklist(jq_Method._compile);
+        
+        // entrypoint for new threads
+        c = jq_NativeThread._class; c.load(); c.verify(); c.prepare();
+        addToWorklist(jq_NativeThread._nativeThreadEntry);
+        // thread switch interrupt
+        addToWorklist(jq_NativeThread._threadSwitch);
+        
+        // entrypoint for interrupter thread
+        c = jq_InterrupterThread._class; c.load(); c.verify(); c.prepare();
+        addToWorklist(jq_InterrupterThread._run);
         
         // tracing in the compiler uses these
         //c = jq._class; c.load(); c.verify(); c.prepare();
@@ -722,7 +746,7 @@ public class Trimmer {
         public void visitNEW(jq_Type f) {
             super.visitNEW(f);
             if (true) {
-                INVOKEhelper(INVOKE_STATIC, DefaultAllocator._allocateObject);
+                INVOKEhelper(INVOKE_STATIC, DefaultHeapAllocator._allocateObject);
             } else {
                 INVOKEhelper(INVOKE_STATIC, HeapAllocator._clsinitAndAllocateObject);
             }
@@ -736,7 +760,7 @@ public class Trimmer {
         }
         public void visitNEWARRAY(jq_Array f) {
             super.visitNEWARRAY(f);
-            INVOKEhelper(INVOKE_STATIC, DefaultAllocator._allocateArray);
+            INVOKEhelper(INVOKE_STATIC, DefaultHeapAllocator._allocateArray);
             f.load(); f.verify(); f.prepare();
             if (!instantiatedTypes.contains(f)) {
                 f.load(); f.verify(); f.prepare();
