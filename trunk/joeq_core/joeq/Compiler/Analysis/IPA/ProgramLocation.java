@@ -165,6 +165,7 @@ public abstract class ProgramLocation implements Textualizable {
                 }
                 Invoke.getMethod(q).setMethod(target);
             }
+            if (target.isFinal()) return true;
             if (!target.isVirtual()) return true;
             return false;
         }
@@ -187,6 +188,8 @@ public abstract class ProgramLocation implements Textualizable {
         
         public String toString() {
             StringBuffer sb = new StringBuffer();
+            sb.append(super.m.getDeclaringClass().getName());
+            sb.append('.');
             sb.append(super.m.getName());
             sb.append("() quad ");
             sb.append((q==null)?-1:q.getID());
@@ -346,7 +349,7 @@ public abstract class ProgramLocation implements Textualizable {
             return false;
         }
         public String toString() {
-            String s = super.m.getName()+"() @ "+bcIndex;
+            String s = super.m.getDeclaringClass().getName()+"."+super.m.getName()+"() @ "+bcIndex;
             return s;
         }
         
@@ -482,7 +485,7 @@ public abstract class ProgramLocation implements Textualizable {
         }
 
         public String toString() {
-            String s = super.m.getName()+"() '"+label+"'";
+            String s = super.m.getDeclaringClass().getName()+"."+super.m.getName()+"() '"+label+"'";
             return s;
         }
 
@@ -520,7 +523,7 @@ public abstract class ProgramLocation implements Textualizable {
         }
 
         public String toString() {
-            String s = locationLabel + " of " + super.m.getName()+"()";
+            String s = locationLabel + " of " + super.m.getDeclaringClass().getName()+"."+super.m.getName()+"()";
             return s;
         }
 
