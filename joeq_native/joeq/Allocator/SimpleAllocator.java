@@ -884,34 +884,35 @@ public class SimpleAllocator extends HeapAllocator {
     /* (non-Javadoc)
      * @see joeq.Allocator.HeapAllocator#processObjectReference(joeq.Memory.HeapAddress)
      */
-    public void processObjectReference(HeapAddress a) {
+    public void processObjectReference(Address a) {
         if (TRACE_GC) Debug.writeln("Processing object reference at ", a);
-        a = (HeapAddress) a.peek();
-        if (a.isNull()) {
+        HeapAddress a2 = (HeapAddress) a.peek();
+        if (a2.isNull()) {
             return;
         }
-        if (getGCBit(a.asObject()) == flip) {
+        if (getGCBit(a2.asObject()) == flip) {
             return;
         }
-        setGCBit(a.asObject(), flip);
-        gcWorkQueue.push(a);
+        setGCBit(a2.asObject(), flip);
+        gcWorkQueue.push(a2);
     }
     
     /* (non-Javadoc)
-     * @see joeq.Allocator.HeapAllocator#processConservativeReference(joeq.Memory.HeapAddress)
+     * @see joeq.Allocator.HeapAllocator#processPossibleObjectReference(joeq.Memory.Address)
      */
-    public void processPossibleObjectReference(HeapAddress a) {
+    public void processPossibleObjectReference(Address a) {
         if (TRACE_GC) Debug.writeln("Processing possible object reference at ", a);
-        if (!isValidHeapAddress(a)) {
-            if (TRACE_GC) Debug.writeln("Not a valid address, skipping");
+        HeapAddress a2 = (HeapAddress) a.peek();
+        if (!isValidObject(a2, 1)) {
+            if (TRACE_GC) Debug.writeln("Not a valid object, skipping: ", a2);
             return;
         }
-        a = (HeapAddress) a.peek();
-        if (!isValidObject(a, 1)) {
-            if (TRACE_GC) Debug.writeln("Not a valid object, skipping: ", a);
+        if (getGCBit(a2.asObject()) == flip) {
             return;
         }
-        gcWorkQueue.push(a);
+        // TODO: don't set GC bit for possible objects, use a separate data structure instead.
+        setGCBit(a2.asObject(), flip);
+        gcWorkQueue.push(a2);
     }
     
     /* (non-Javadoc)

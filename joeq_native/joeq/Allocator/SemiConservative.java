@@ -27,23 +27,23 @@ import joeq.Scheduler.jq_ThreadQueue;
 public abstract class SemiConservative {
     
     public static void collect() {
-        if (true) Debug.writeln("Starting collection.");
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("Starting collection.");
         
         jq_Thread t = Unsafe.getThreadBlock();
         t.disableThreadSwitch();
         
         jq_NativeThread.suspendAllThreads();
         
-        if (true) Debug.writeln("Threads suspended.");
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("Threads suspended.");
         SimpleAllocator s = (SimpleAllocator) DefaultHeapAllocator.def();
-        if (true) Debug.writeln("--> Marking roots.");
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("--> Marking roots.");
         scanRoots();
-        if (true) Debug.writeln("--> Marking queue.");
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("--> Marking queue.");
         s.scanGCQueue();
-        if (true) Debug.writeln("--> Sweeping.");
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("--> Sweeping.");
         s.sweep();
         
-        if (true) Debug.writeln("Resuming threads.");
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("Resuming threads.");
         jq_NativeThread.resumeAllThreads();
         
         t.enableThreadSwitch();
@@ -127,11 +127,22 @@ public abstract class SemiConservative {
         StackAddress sp = StackAddress.getStackPointer();
         CodeAddress ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
         while (!fp.isNull()) {
+            if (SimpleAllocator.TRACE_GC) {
+                Debug.write("Scanning stack frame fp=", fp);
+                Debug.write(" sp=", sp);
+                Debug.writeln(" ip=", ip);
+            }
             if (--skip < 0) {
                 while (fp.difference(sp) > 0) {
-                    addConservativeAddress(sp.peek());
+                    if (SimpleAllocator.TRACE_GC) {
+                        Debug.write("sp: ", sp);
+                        Debug.writeln("  ", sp.peek());
+                    }
+                    addConservativeAddress(sp);
                     sp = (StackAddress) sp.offset(HeapAddress.size());
                 }
+            } else {
+                if (SimpleAllocator.TRACE_GC) Debug.writeln("Skipping this frame.");
             }
             ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
             sp = fp;
@@ -146,7 +157,7 @@ public abstract class SemiConservative {
         StackAddress sp = s.getEsp();
         while (!fp.isNull()) {
             while (fp.difference(sp) > 0) {
-                addConservativeAddress(sp.peek());
+                addConservativeAddress(sp);
                 sp = (StackAddress) sp.offset(HeapAddress.size());
             }
             ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
@@ -156,7 +167,7 @@ public abstract class SemiConservative {
     }
     
     public static void addConservativeAddress(Address a) {
-        DefaultHeapAllocator.processPossibleObjectReference((HeapAddress) a);
+        DefaultHeapAllocator.processPossibleObjectReference(a);
     }
     
 }
