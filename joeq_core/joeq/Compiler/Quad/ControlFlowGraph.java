@@ -99,8 +99,16 @@ public class ControlFlowGraph {
      * The reversed graph is the graph where all edges are reversed.
      * @see  BasicBlockIterator
      * @return  an iteration of the basic blocks in the reversed graph in reverse post order. */
-    public ListIterator.BasicBlock reverseReversePostOrderIterator() {
-        return reverseReversePostOrder(end_node).basicBlockIterator();
+    public ListIterator.BasicBlock reversePostOrderOnReverseGraphIterator() {
+        return reversePostOrderOnReverseGraph(end_node).basicBlockIterator();
+    }
+    
+    /** Returns an iteration of the basic blocks in the reversed graph in post order.
+     * The reversed graph is the graph where all edges are reversed.
+     * @see  BasicBlockIterator
+     * @return  an iteration of the basic blocks in the reversed graph in post order. */
+    public ListIterator.BasicBlock postOrderOnReverseGraphIterator() {
+        return postOrderOnReverseGraph(end_node).basicBlockIterator();
     }
     
     /** Returns an iteration of the basic blocks in this graph reachable from the given
@@ -135,10 +143,23 @@ public class ControlFlowGraph {
     /** Returns a list of basic blocks of the reversed graph in reverse post order, starting at the given basic block.
      * @param start_bb  basic block to start from.
      * @return  a list of basic blocks of the reversed graph in reverse post order, starting at the given basic block. */
-    public List.BasicBlock reverseReversePostOrder(BasicBlock start_bb) {
+    public List.BasicBlock reversePostOrderOnReverseGraph(BasicBlock start_bb) {
 	java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
 	boolean[] visited = new boolean[bb_counter+1];
 	reversePostOrder_helper(start_bb, visited, result, false);
+        BasicBlock[] bb = new BasicBlock[result.size()];
+        bb = (BasicBlock[])result.toArray(bb);
+	return new UnmodifiableList.BasicBlock(bb);
+    }
+    
+    /** Returns a list of basic blocks of the reversed graph in post order, starting at the given basic block.
+     * @param start_bb  basic block to start from.
+     * @return  a list of basic blocks of the reversed graph in post order, starting at the given basic block. */
+    public List.BasicBlock postOrderOnReverseGraph(BasicBlock start_bb) {
+	java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
+	boolean[] visited = new boolean[bb_counter+1];
+	reversePostOrder_helper(start_bb, visited, result, false);
+        java.util.Collections.reverse(result);
         BasicBlock[] bb = new BasicBlock[result.size()];
         bb = (BasicBlock[])result.toArray(bb);
 	return new UnmodifiableList.BasicBlock(bb);
@@ -163,10 +184,14 @@ public class ControlFlowGraph {
             }
         } else {
             if (b.isExceptionHandlerEntry()) {
-                java.util.Iterator i = getExceptionHandlersMatchingEntry(b);
-                while (i.hasNext()) {
-                    BasicBlock b2 = (BasicBlock)i.next();
-                    reversePostOrder_helper(b2, visited, result, direction);
+                java.util.Iterator ex_handlers = getExceptionHandlersMatchingEntry(b);
+                while (ex_handlers.hasNext()) {
+                    ExceptionHandler eh = (ExceptionHandler)ex_handlers.next();
+                    ListIterator.BasicBlock handled = eh.getHandledBasicBlocks().basicBlockIterator();
+                    while (handled.hasNext()) {
+                        BasicBlock bb = handled.nextBasicBlock();
+                        reversePostOrder_helper(bb, visited, result, direction);
+                    }
                 }
             }
         }
