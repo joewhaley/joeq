@@ -1981,7 +1981,7 @@ public class PA {
             String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
             if(stringConst == null){
                 if(missingConst.get(stringConst) == null){
-                    System.err.println("No constant string for " + n + " at " + h.toStringWithDomains(TS));                                    
+                    if(TRACE_REFLECTION) System.err.println("No constant string for " + n + " at " + h.toStringWithDomains(TS));                                    
                     missingConst.put(stringConst, new Integer(0));
                 }                
                 continue;
@@ -1999,21 +1999,21 @@ public class PA {
                     Assert._assert(c != null);
                 }else{
                     if(cantCastTypes.get(clazz) == null){
-                        System.err.println("Can't cast " + clazz + " to jq_Class at " + h.toStringWithDomains(TS));
+                        if(TRACE_REFLECTION) System.err.println("Can't cast " + clazz + " to jq_Class at " + h.toStringWithDomains(TS));
                         cantCastTypes.put(clazz, new Integer(0));
                     }
                     continue;
                 }
             } catch(NoClassDefFoundError e) {
                 if(missingClasses.get(stringConst) == null){
-                    System.err.println("Resolving reflection: unable to load " + stringConst + 
+                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: unable to load " + stringConst + 
                         " at " + h.toStringWithDomains(TS));
-                      missingClasses.put(stringConst, new Integer(0));
+                    missingClasses.put(stringConst, new Integer(0));
                 }
                 continue;
             } catch(java.lang.ClassCircularityError e) {
                 if(circularClasses.get(stringConst) == null){
-                    System.err.println("Resolving reflection: circularity error " + stringConst + 
+                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: circularity error " + stringConst + 
                         " at " + h.toStringWithDomains(TS));
                     circularClasses.put(stringConst, new Integer(0));
                 }                
@@ -2024,7 +2024,7 @@ public class PA {
             jq_Method constructor = c.getClassInitializer();
             if(constructor == null){
                 if(noConstrClasses.get(c) == null){
-                    System.err.println("No constructor in class " + c);
+                    if(TRACE_REFLECTION) System.err.println("No constructor in class " + c);
                     noConstrClasses.put(c, new Integer(0));                    
                 }
                 continue;
@@ -2058,7 +2058,7 @@ public class PA {
                     out.println("Call graph edges after: "+IE.satCount(IMset));
                 }
             }
-            out.println("Call graph edges after: "+IE.satCount(IMset));
+            if(TRACE_REFLECTION) out.println("Call graph edges after: "+IE.satCount(IMset));
         
             return true;
         } else {
