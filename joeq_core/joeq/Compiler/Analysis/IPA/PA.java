@@ -2298,6 +2298,10 @@ public class PA {
                         }
                     }
                 }
+            }else{
+                if(TRACE_FORNAME){
+                    System.out.println("No points-to set at " + I_bdd.toStringWithDomains(TS));
+                }
             }
             I_bdd.free();
             t2.free();
