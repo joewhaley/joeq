@@ -1668,7 +1668,9 @@ public class PA {
             if (n1.equals(n2)) {
                 relation = V1c.buildAdd(H1c, BigInteger.valueOf(n1.longValue()).bitLength(), 0);
                 relation.andWith(V1c.varRange(0, n1.longValue()-1));
+                System.out.println("Root numbering: "+relation.toStringWithDomains());
             } else {
+                System.out.println("Root numbering doesn't match: "+root);
                 // just intermix them all, because we don't know the mapping.
                 relation = V1c.varRange(0, n1.longValue()-1);
                 relation.andWith(H1c.varRange(0, n2.longValue()-1));
