@@ -94,16 +94,16 @@ public class FindBestPermutation extends Thread {
                 System.out.println("New best: ordering = "+bestOrdering+" node count: "+bestNodeCount+" time: "+bestTime+" ms");
                 updated = true;
             }
-            if (index1 == 0 && index2 == 0) {
-                if (!updated) {
-                    break;
-                }
-                updated = false;
-            }
             if (flip) {
                 ordering = tweakInterleaving(bestOrdering);
                 System.out.println("Tweaked interleaving = "+ordering);
             } else {
+                if (index1 == 0 && index2 == 0) {
+                    if (!updated) {
+                        break;
+                    }
+                    updated = false;
+                }
                 ordering = tweakOrdering(bestOrdering);
                 System.out.println("Tweaked ordering = "+ordering);
             }
@@ -167,7 +167,7 @@ public class FindBestPermutation extends Thread {
         if (index2 >= a.length) {
             ++index1;
             index2 = index1 + 1;
-            if (index1 >= a.length) {
+            if (index1 >= a.length-1) {
                 index1 = 0;
             }
             if (index2 >= a.length) {
