@@ -43,5 +43,25 @@ public class Heap2HeapReference extends Reloc {
         return "from heap:"+from_heaploc.stringRep()+" to heap:"+to_heaploc.stringRep();
     }
     
+
+    public boolean equals(Heap2HeapReference that) {
+        if (this.from_heaploc.difference(that.from_heaploc) != 0)
+            return false;
+        return true;
+    }
+    
+    public boolean equals(Object obj) {
+        if (obj instanceof Heap2HeapReference) {
+            return equals((Heap2HeapReference) obj);
+        }
+        return false;
+    }
+    
+    public int hashCode() {
+        // Note: hash code changes depending on address relocation!
+        int v1 = from_heaploc.to32BitValue();
+        return v1;
+    }
+    
     public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Assembler/Heap2HeapReference;");
 }

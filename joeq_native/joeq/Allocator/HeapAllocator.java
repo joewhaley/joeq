@@ -575,13 +575,14 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         
     }
     
+    public static final jq_Class _class;
     public static final jq_StaticMethod _clsinitAndAllocateObject;
     public static final jq_StaticField _data_segment_start;
     public static final jq_StaticField _data_segment_end;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/HeapAllocator;");
-        _clsinitAndAllocateObject = k.getOrCreateStaticMethod("clsinitAndAllocateObject", "(Ljoeq/Class/jq_Type;)Ljava/lang/Object;");
-        _data_segment_start = k.getOrCreateStaticField("data_segment_start", "Ljoeq/Memory/HeapAddress;");
-        _data_segment_end = k.getOrCreateStaticField("data_segment_end", "Ljoeq/Memory/HeapAddress;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/HeapAllocator;");
+        _clsinitAndAllocateObject = _class.getOrCreateStaticMethod("clsinitAndAllocateObject", "(Ljoeq/Class/jq_Type;)Ljava/lang/Object;");
+        _data_segment_start = _class.getOrCreateStaticField("data_segment_start", "Ljoeq/Memory/HeapAddress;");
+        _data_segment_end = _class.getOrCreateStaticField("data_segment_end", "Ljoeq/Memory/HeapAddress;");
     }
 }

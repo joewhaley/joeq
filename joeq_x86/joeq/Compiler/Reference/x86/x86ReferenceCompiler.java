@@ -2401,6 +2401,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
     }
     private void INVOKEhelper(byte op, jq_Method f) {
         f = (jq_Method) tryResolve(f);
+        Assert._assert(!f.getDeclaringClass().getName().equals("joeq.Runtime.Unsafe"));
         boolean dynlink = state.needsDynamicLink(method, f);
         switch (op) {
             case INVOKE_VIRTUAL:
@@ -2777,7 +2778,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
             Assert.UNREACHABLE(f.toString());
         }
     }
-        
+    
     private void gen_unsafe(jq_Method f) {
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": UNSAFE "+f));

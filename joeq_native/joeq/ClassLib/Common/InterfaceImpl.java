@@ -3,16 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
-
-import joeq.Bootstrap.BootImage;
+import java.lang.reflect.Constructor;
 import joeq.Bootstrap.MethodInvocation;
-import joeq.Runtime.ObjectTraverser;
+import joeq.Bootstrap.SinglePassBootImage;
 import joeq.Class.PrimordialClassLoader;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Member;
@@ -20,11 +17,13 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
+import joeq.Runtime.ObjectTraverser;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.Scheduler.jq_Thread;
@@ -64,7 +63,7 @@ public abstract class InterfaceImpl implements Interface {
             nullStaticFields.add(CodeAddress._FACTORY);
             nullStaticFields.add(HeapAddress._FACTORY);
             nullStaticFields.add(StackAddress._FACTORY);
-            nullStaticFields.add(BootImage._DEFAULT);
+            nullStaticFields.add(SinglePassBootImage._DEFAULT);
             nullStaticFields.add(Reflection._obj_trav);
             Reflection.registerNullStaticFields(nullStaticFields);
             nullStaticFields.add(joeq.Allocator.DefaultCodeAllocator._default_allocator);

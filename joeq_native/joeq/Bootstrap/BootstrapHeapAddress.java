@@ -18,11 +18,11 @@ import joeq.Util.Strings;
  */
 public class BootstrapHeapAddress extends HeapAddress implements BootstrapAddress {
 
-    public static BootstrapHeapAddressFactory FACTORY = new BootstrapHeapAddressFactory(BootImage.DEFAULT);
+    public static BootstrapHeapAddressFactory FACTORY = new BootstrapHeapAddressFactory(SinglePassBootImage.DEFAULT);
     
     public static class BootstrapHeapAddressFactory extends HeapAddressFactory {
-        BootImage bi;
-        public BootstrapHeapAddressFactory(BootImage bi) {
+        SinglePassBootImage bi;
+        public BootstrapHeapAddressFactory(SinglePassBootImage bi) {
             Assert._assert(bi != null);
             this.bi = bi;
         }

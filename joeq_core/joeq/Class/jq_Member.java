@@ -302,4 +302,6 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
         }
     }
     
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_Member;");
+    public static final jq_InstanceField _state = (jq_InstanceField) _class.getOrCreateInstanceField("state", "B");
 }

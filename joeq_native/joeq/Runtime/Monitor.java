@@ -22,7 +22,9 @@ public class Monitor {
 
     public static /*final*/ boolean TRACE = false;
     
-    private Monitor() {}
+    private Monitor() {
+        Assert.UNREACHABLE("Monitor objects must be constructed specially.");
+    }
     
     int atomic_count = 0;  // -1 means no threads; 0 means one thread (monitor_owner)
     jq_Thread monitor_owner;

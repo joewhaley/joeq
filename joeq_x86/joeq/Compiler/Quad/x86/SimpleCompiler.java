@@ -11,21 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import joeq.Main.HostedVM;
-import joeq.Main.jq;
-import joeq.Memory.CodeAddress;
-import joeq.Memory.HeapAddress;
-import joeq.Runtime.ExceptionDeliverer;
-import joeq.Runtime.MathSupport;
-import joeq.Runtime.Reflection;
-import joeq.Runtime.SystemInterface;
-import joeq.Runtime.TypeCheck;
-import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.AppendIterator;
-
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultCodeAllocator;
 import joeq.Allocator.DefaultHeapAllocator;
@@ -37,11 +22,8 @@ import joeq.Assembler.DirectBindCall;
 import joeq.Assembler.x86.x86;
 import joeq.Assembler.x86.x86Assembler;
 import joeq.Assembler.x86.x86Constants;
-import joeq.Bootstrap.BootImage;
 import joeq.Bootstrap.BootstrapCodeAllocator;
-import joeq.Runtime.ObjectTraverser;
-import joeq.Scheduler.jq_x86RegisterState;
-import joeq.ClassLib.ClassLibInterface;
+import joeq.Bootstrap.SinglePassBootImage;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_CompiledCode;
@@ -53,6 +35,7 @@ import joeq.Class.jq_StaticField;
 import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_TryCatch;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Compiler.CompilerInterface;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.Quad.BasicBlock;
@@ -105,6 +88,21 @@ import joeq.Compiler.Quad.Operator.ZeroCheck;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Reference.x86.x86ReferenceCompiler;
 import joeq.Compiler.Reference.x86.x86ReferenceLinker;
+import joeq.Main.HostedVM;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Runtime.ExceptionDeliverer;
+import joeq.Runtime.MathSupport;
+import joeq.Runtime.ObjectTraverser;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.TypeCheck;
+import joeq.Runtime.Unsafe;
+import joeq.Scheduler.jq_x86RegisterState;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.AppendIterator;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>
@@ -2069,7 +2067,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         ObjectTraverser obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav = obj_trav;
         obj_trav.initialize();
-        BootImage objmap = BootImage.DEFAULT;
+        SinglePassBootImage objmap = SinglePassBootImage.DEFAULT;
         
         // enable allocations
         objmap.enableAllocations();
