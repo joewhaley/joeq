@@ -1,15 +1,15 @@
 packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util java
 
-all:	jikes
+all:	javac
 
 jikes:	bootclasspath
-	find ${packages} -name "*.java" | xargs jikes -bootclasspath @bootclasspath
+	find ${packages} -name "*.java" | xargs jikes -target 1.3 -bootclasspath @bootclasspath
 
 jikes-pedantic:	bootclasspath
-	find ${packages} -name "*.java" | xargs jikes -bootclasspath @bootclasspath -P
+	find ${packages} -name "*.java" | xargs jikes -target 1.3 -bootclasspath @bootclasspath +P
 
 javac:
-	find ${packages} -name "*.java" | xargs javac
+	find ${packages} -name "*.java" | xargs javac -target 1.3
 
 clean:
 	find ${packages} -name "*.class" | xargs rm -f
@@ -25,6 +25,18 @@ commit:
 
 bootstrap:
 	java -Xbootclasspath/a:. -mx250M Main.Bootstrapper
+
+bootstrap-sun14-linux:	javac
+	java -ms240M -mx240M Main.Bootstrapper -cl ClassLib/sun14_linux/classlist.txt
+
+bootstrap-sun13-linux:	javac
+	java -Xbootclasspath/a:. -ms150M -mx150M Main.Bootstrapper -cl ClassLib/sun13_linux/classlist.txt
+
+bootstrap-sun14-win32:	javac
+	java -ms180M -mx180M Main.Bootstrapper -cl ClassLib/sun14_win32/classlist.txt
+
+bootstrap-sun13-win32:	javac
+	java -Xbootclasspath/a:. -ms120M -mx120M Main.Bootstrapper -cl ClassLib/sun13_win32/classlist.txt
 
 bootclasspath:	Main/GetBootClassPath.class
 	java Main.GetBootClassPath > bootclasspath
