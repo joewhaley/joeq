@@ -11,6 +11,7 @@ import Util.Templates.ListIterator;
 
 import Clazz.jq_Class;
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPSSA.Utils.*;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.BasicBlockVisitor;
 import Compil3r.Quad.CodeCache;
