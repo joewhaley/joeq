@@ -41,7 +41,7 @@ public class GCBitsManager {
     // In order for addr to be valid, totally 3 conditions must be met
     public static boolean isValidHeapAddr(HeapAddress addr) {
         // First Condition: addr is within a memory block
-        HeapPointer key = (HeapPointer) pool.tailMap(addr).firstKey();
+        HeapPointer key = (HeapPointer) pool.tailMap(new HeapPointer(addr)).firstKey();
         GCBits value = (GCBits) pool.get(key);
         int difference;
         if ((difference = addr.difference(value.blockHead)) < 0) {
@@ -70,7 +70,7 @@ public class GCBitsManager {
     }
 
     public static void mark(HeapAddress addr) {
-        HeapPointer key = (HeapPointer) pool.tailMap(addr).firstKey();
+        HeapPointer key = (HeapPointer) pool.tailMap(new HeapPointer(addr)).firstKey();
         GCBits value = (GCBits) pool.get(key);
         value.mark(addr);
     }

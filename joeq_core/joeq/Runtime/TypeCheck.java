@@ -62,8 +62,12 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         if (S == T)
             return true;
         jq_Type s2 = S, t2 = T;
-        jq.Assert(!t2.isAddressType());
-        jq.Assert(!s2.isAddressType());
+        if (false) {
+            if (t2 == Address._class)
+                return s2.isAddressType();
+            if (t2.isAddressType() || s2.isAddressType())
+                return false;
+        }
         while (t2.isArrayType()) {
             if (!s2.isArrayType()) {
                 return false;
@@ -173,12 +177,12 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         if (t1.isPrimitiveType() || t2.isPrimitiveType()) {
             jq_Reference result = PrimordialClassLoader.loader.getJavaLangObject();
             --dim;
-            while (--dim >= 0) result.getArrayTypeForElementType();
+            while (--dim >= 0) result = result.getArrayTypeForElementType();
             return result;
         }
         if (!t1.isClassType() || !t2.isClassType()) {
             jq_Reference result = PrimordialClassLoader.loader.getJavaLangObject();
-            while (--dim >= 0) result.getArrayTypeForElementType();
+            while (--dim >= 0) result = result.getArrayTypeForElementType();
             return result;
         }
         jq_Class c1 = (jq_Class)t1;
@@ -187,19 +191,21 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         do {
             if (!c1.isLoaded()) {
                 if (load) c1.load();
-                else return PrimordialClassLoader.loader.getJavaLangObject();
+                else c1 = PrimordialClassLoader.loader.getJavaLangObject();
             }
             s1.push(c1);
-            c1 = c1.getSuperclass();
+            if (c1.isLoaded()) c1 = c1.getSuperclass();
+            else break;
         } while (c1 != null);
         Stack s2 = new Stack();
         do {
             if (!c2.isLoaded()) {
                 if (load) c2.load();
-                else return PrimordialClassLoader.loader.getJavaLangObject();
+                else c2 = PrimordialClassLoader.loader.getJavaLangObject();
             }
             s2.push(c2);
-            c2 = c2.getSuperclass();
+            if (c2.isLoaded()) c2 = c2.getSuperclass();
+            else break;
         } while (c2 != null);
         jq_Class result = PrimordialClassLoader.loader.getJavaLangObject();
         while (!s1.empty() && !s2.empty()) {
@@ -207,7 +213,9 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
             if (temp == s2.pop()) result = temp;
             else break;
         }
-        return result;
+        jq_Reference result2 = result;
+        while (--dim >= 0) result2 = result2.getArrayTypeForElementType();
+        return result2;
     }
     
     public static final jq_StaticMethod _checkcast;

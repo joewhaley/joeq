@@ -34,6 +34,7 @@ import Compil3r.Quad.Operator.CheckCast;
 import Compil3r.Quad.Operator.Getfield;
 import Compil3r.Quad.Operator.Getstatic;
 import Compil3r.Quad.Operator.Invoke;
+import Compil3r.Quad.Operator.Jsr;
 import Compil3r.Quad.Operator.Move;
 import Compil3r.Quad.Operator.New;
 import Compil3r.Quad.Operator.NewArray;
@@ -132,6 +133,7 @@ public class MethodSummary {
             if (my_global.hasAccessPathEdges() || my_global.hasEdges()) {
                 Set set = Collections.singleton(GlobalNode.GLOBAL);
                 my_global.replaceBy(set, true);
+                s.nodes.remove(my_global);
                 /*
                 for (Iterator i=my_global.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -185,7 +187,7 @@ public class MethodSummary {
             jq_Type[] params = this.method.getParamTypes();
             this.param_nodes = new ParamNode[params.length];
             for (int i=0, j=0; i<params.length; ++i, ++j) {
-                if (params[i].isReferenceType()) {
+                if (params[i].isReferenceType() && !params[i].isAddressType()) {
                     setLocal(j, param_nodes[i] = new ParamNode(method, i, (jq_Reference)params[i]));
                 } else if (params[i].getReferenceSize() == 8) ++j;
             }
@@ -233,7 +235,22 @@ public class MethodSummary {
                     ListIterator.BasicBlock succs = this.bb.getSuccessors().basicBlockIterator();
                     while (succs.hasNext()) {
                         BasicBlock succ = succs.nextBasicBlock();
-                        mergeWith(succ);
+                        if (this.bb.endsInRet()) {
+                            if (jsr_states != null) {
+                                State s2 = (State) jsr_states.get(succ);
+                                if (s2 != null) {
+                                    JSRInfo info = cfg.getJSRInfo(this.bb);
+                                    boolean[] changedLocals = info.changedLocals;
+                                    mergeWithJSR(succ, s2, changedLocals);
+                                } else {
+                                    if (TRACE_INTRA) out.println("jsr before "+succ+" not yet visited!");
+                                }
+                            } else {
+                                if (TRACE_INTRA) out.println("no jsr's visited yet! was looking for jsr successor "+succ);
+                            }
+                        } else {
+                            mergeWith(succ);
+                        }
                     }
                 }
                 if (!this.change) break;
@@ -253,6 +270,29 @@ public class MethodSummary {
                 if (this.start_states[succ.getID()].merge(this.s)) {
                     if (TRACE_INTRA) out.println(succ+" in set changed");
                     this.change = true;
+                }
+            }
+        }
+        
+        protected void mergeWithJSR(BasicBlock succ, State s2, boolean[] changedLocals) {
+            State state = this.start_states[succ.getID()];
+            if (state == null) {
+                if (TRACE_INTRA) out.println(succ+" not yet visited.");
+                this.start_states[succ.getID()] = state = this.s.copy();
+                this.change = true;
+            }
+            if (TRACE_INTRA) out.println("merging out set of jsr "+bb+" "+jq.hex8(this.s.hashCode())+" into in set of "+succ+" "+jq.hex8(this.start_states[succ.getID()].hashCode()));
+            for (int i=0; i<changedLocals.length; ++i) {
+                if (changedLocals[i]) {
+                    if (state.merge(i, this.s.registers[i])) {
+                        if (TRACE_INTRA) out.println(succ+" in set changed by register "+i+" in jsr subroutine");
+                        this.change = true;
+                    }
+                } else {
+                    if (state.merge(i, s2.registers[i])) {
+                        if (TRACE_INTRA) out.println(succ+" in set changed by register "+i+" before jsr subroutine");
+                        this.change = true;
+                    }
                 }
             }
         }
@@ -506,6 +546,18 @@ public class MethodSummary {
                 }
             }
         }
+        
+        HashMap jsr_states;
+		/**
+		 * @see Compil3r.Quad.QuadVisitor#visitJsr(Compil3r.Quad.Quad)
+		 */
+		public void visitJsr(Quad obj) {
+            if (TRACE_INTRA) out.println("Visiting: "+obj);
+            if (jsr_states == null) jsr_states = new HashMap();
+            BasicBlock succ = Jsr.getSuccessor(obj).getTarget();
+            jsr_states.put(succ, this.s);
+		}
+        
         /** Visit a register move instruction. */
         public void visitMove(Quad obj) {
             if (obj.getOperator() instanceof Operator.Move.MOVE_A) {
@@ -2119,6 +2171,7 @@ public class MethodSummary {
         this.nodes = new LinkedHashMap();
         // build useful node set
         HashSet visited = new HashSet();
+        this.nodes.put(my_global, my_global); visited.add(my_global);
         for (int i=0; i<params.length; ++i) {
             if (params[i] == null) continue;
             addAsUseful(visited, params[i]);
