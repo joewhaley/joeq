@@ -22,6 +22,9 @@ import Util.Assert;
  * @author Vladimir Livshits
  * This is a sample application that prints all paths between two definitions.
  * Use one of the subclasses that rely on different sources for def-use data.
+ * 
+ * @see IPSSABuilder.Application
+ * @version $Id$
  */
 public abstract class ReachabilityTracerApp extends IPSSABuilder.Application {
     protected String _def1_str;
@@ -42,6 +45,9 @@ public abstract class ReachabilityTracerApp extends IPSSABuilder.Application {
         System.exit(1);   
     }
 
+    /**
+     * This will be added by implementations.
+     * */
     protected abstract void printPath(String def1_str, String def2_str);
 
     protected void parseParams(String[] argv) {
@@ -139,7 +145,6 @@ public abstract class ReachabilityTracerApp extends IPSSABuilder.Application {
         IPSSAReachabilityTracerApp(IPSSABuilder builder, String name, String[] args) {
             super(builder, name, args);
         }
-
     
         protected void printPath(String def1_str, String def2_str) {
             SSADefinition def1, def2;             

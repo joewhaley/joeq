@@ -17,6 +17,9 @@ import Compil3r.Analysis.IPSSA.SSADefinition;
 /**
  * Allows referring to analysis objects in a simple textual fashion.
  * Implementation provide parsing facilities.
+ * @see AnalysisObjectSpec.PAObjectSpec
+ * @see AnalysisObjectSpec.IPSSAObjectSpec
+ * @version $Id$
  * */
 public abstract class AnalysisObjectSpec {
     /** Some pre-defined object types. Implementations provide more. */
@@ -86,9 +89,10 @@ public abstract class AnalysisObjectSpec {
     }
     
     public static class IPSSAObjectSpec extends AnalysisObjectSpec {
+        static final String DEFINITION = "definition";
+        
         SSADefinition _definition;
         IPSSABuilder _builder;
-        static final String DEFINITION = "definition";
         
         IPSSAObjectSpec(IPSSABuilder builder, String type, String args[]){
             super(type, args);
@@ -102,6 +106,7 @@ public abstract class AnalysisObjectSpec {
             StringTokenizer tok = new StringTokenizer(line, " ");
             Assert._assert(tok.hasMoreTokens());
             String type = tok.nextToken();
+            
             String[] args = new String[tok.countTokens()];
             for(int i = 0; tok.hasMoreTokens(); i++) {
                 args[i] = tok.nextToken();

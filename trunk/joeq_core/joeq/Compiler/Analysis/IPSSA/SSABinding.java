@@ -5,7 +5,9 @@ import Compil3r.Quad.Quad;
 /**
  * An SSABinding is an assignment of an SSAValue to to an SSADefinition.
  * @see SSADefinition
- * @see SSAValue 
+ * @see Compil3r.Analysis.IPSSA.SSAValue
+ * @see Compil3r.Analysis.IPSSA.SSADefinition
+ * @version $Id$
  * */
 public class SSABinding {
 	protected Quad             _quad;

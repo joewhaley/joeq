@@ -53,6 +53,8 @@ import Util.Templates.ListIterator;
  * This is where the main action pertaining to IPSSA construction happens. 
  * A subclass is SSABuilder, which is responsible for intraprocedural IPSSA
  * construction.
+ * @see IPSSABuilder.SSABuilder
+ * @version $Id$
  * */
 public class IPSSABuilder implements Runnable {
 	protected int      			                _verbosity;
@@ -167,6 +169,9 @@ public class IPSSABuilder implements Runnable {
         }        
     }
 	
+    /**
+     * A method filter.
+     * */
 	private boolean skipMethod(jq_Method method) {
         jq_Class k = method.getDeclaringClass();
         if(!_classes.contains(k)) {
@@ -184,6 +189,10 @@ public class IPSSABuilder implements Runnable {
 		return (SSABuilder)_builderMap.get(m);
 	}
 	
+    
+    /**
+     * SSABuilder takes care of a single method.
+     * */
 	class SSABuilder {
 		protected int      				_verbosity;
 		protected jq_Method 			_method;
@@ -514,7 +523,7 @@ public class IPSSABuilder implements Runnable {
 			private void processDefs(Quad quad) {
 				QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
 				Assert._assert(isCall(quad) || isStore(quad));
-				Set mods = _ptr.mod(pl);
+				Set mods = _ptr.mod(pl, _q.getDominatorQuery().getBasicBlock(quad));
 
 				// create bindingins for all modified locations
 				if(mods != null && mods.size() > 0){
@@ -565,55 +574,6 @@ public class IPSSABuilder implements Runnable {
 				System.err.println(s);
 			}
 		}
-		
-		/** 
-		 * Stage 2     : Walk over and fill in all RHSs that don't require dereferencing. 
-		 * Invariant 2 : All remaining RHSs that haven't been filled in require dereferencing.		
-		 * */
-//		class Stage2Visitor implements ControlFlowGraphVisitor {
-//			public void visitCFG(ControlFlowGraph cfg) {
-//				SSAProcInfo.Query q = SSAProcInfo.retrieveQuery(cfg.getMethod()); 
-//				for(Iterator iter = new QuadIterator(cfg); iter.hasNext();){
-//					Quad quad = (Quad)iter.next();
-//					for(Iterator bindingIter = q.getBindingIterator(quad); bindingIter.hasNext(); ){
-//						SSABinding b = (SSABinding)bindingIter.next();
-//						
-//						if(!isStore(quad) && !isLoad(quad) && !isCall(quad)){
-//							specialize(quad);
-//						}
-//					} 
-//				}
-//			}
-//
-//			void specialize(Quad quad) {
-//							
-//			}
-//		}
-//		
-//		/** 
-//		 * Stage 3	   : Walk over and do all remaining pointer resolution. 
-//		 * Invariant 3 : All RHSs are filled in.
-//		 * */
-//		final class Stage3Visitor extends SSABindingVisitor {
-//			public void visit(SSABinding b) {
-//				Quad quad = b.getQuad();
-//				
-//				if(isStore(quad)){
-//					// rewrite a store
-//					processStore(quad);
-//				}else
-//				if(isLoad(quad)){
-//					// rewrite a load
-//					processLoad(quad);
-//				}
-//			}
-//
-//			private void processStore(Quad quad) {
-//			}
-//
-//			private void processLoad(Quad quad) {
-//			}			
-//		}
 	
 		/** 
 		 * Stage 2     : Walk over and fill in all RHSs that don't require dereferencing. 
@@ -740,7 +700,7 @@ public class IPSSABuilder implements Runnable {
 			private void processLoad(Quad quad) {
 				QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
 				Assert._assert(isLoad(quad));
-				Set refs = _ptr.ref(pl);
+				Set refs = _ptr.ref(pl, _q.getDominatorQuery().getBasicBlock(quad));
 
                 SSAValue.OmegaPhi value = new SSAValue.OmegaPhi(); 
 
@@ -859,6 +819,7 @@ public class IPSSABuilder implements Runnable {
 		}
 	} // End of SSABuilder
 	
+    // ----------------------------- Auxilary procedures ----------------------------- // 
 	static boolean isLoad(Quad quad) {
 		return 
 			(quad.getOperator() instanceof Operator.Getfield) ||
@@ -1063,6 +1024,9 @@ public class IPSSABuilder implements Runnable {
         public abstract void run();
     }
     
+    /**
+     * This is an entry point for IPSSABuilder with a main(...) function.
+     * */
     public static class Main {
         static boolean _verbose = false;
         
@@ -1127,76 +1091,3 @@ public class IPSSABuilder implements Runnable {
         }
     }
 };
-
-			/********************************************************/
-			/** The stuff below is not intended to be implemented  **/
-			/********************************************************/ 
-	
-//			/** A potentially excepting instruction. */
-//			public void visitExceptionThrower(Quad obj) {}
-//			/** An instruction that may branch (not including exceptional control flow). */
-//			public void visitBranch(Quad obj) {}
-//			/** A conditional branch instruction. */
-//			public void visitCondBranch(Quad obj) {}
-//			/** An exception check instruction. */
-//			public void visitCheck(Quad obj) {}
-//			/** An instruction.that accesses an array. */
-//			public void visitArray(Quad obj) {}
-//			/** An instruction.that does an allocation. */
-//			public void visitAllocation(Quad obj) {}
-//			
-//			/** An instruction.that does a type check. */
-//			public void visitTypeCheck(Quad obj) {/* NOOP */}
-//			
-//			/** An array length instruction. */
-//			public void visitALength(Quad obj) {/* NOOP */}
-//			/** A binary operation instruction. */
-//			public void visitBinary(Quad obj) {}
-//			/** An array bounds check instruction. */
-//			public void visitBoundsCheck(Quad obj) {/* NOOP */}
-//			/** A type cast check instruction. */
-//			public void visitCheckCast(Quad obj) {/* NOOP */}
-//			/** A goto instruction. */
-//			public void visitGoto(Quad obj) {/* NOOP */}
-//			/** A type instance of instruction. */
-//			public void visitInstanceOf(Quad obj) {/* NOOP */}
-//			/** A compare and branch instruction. */
-//			public void visitIntIfCmp(Quad obj) {/* NOOP */}
-//			/** An invoke instruction. */
-//			public void visitInvoke(Quad obj) {}
-//			/** A jump local subroutine instruction. */
-//			public void visitJsr(Quad obj) {}
-//			/** A lookup switch instruction. */
-//			public void visitLookupSwitch(Quad obj) {}		
-//			
-//			/** A raw memory load instruction. */
-//			
-//			public void visitMemLoad(Quad obj) {}
-//			/** A raw memory store instruction. */
-//			public void visitMemStore(Quad obj) {}
-//			
-//			/** An object monitor lock/unlock instruction. */
-//			public void visitMonitor(Quad obj) {}
-//			/** A null pointer check instruction. */
-//			public void visitNullCheck(Quad obj) {/* NOOP */}
-//			/** A return from local subroutine instruction. */
-//			public void visitRet(Quad obj) {}
-//			/** A special instruction. */
-//			public void visitSpecial(Quad obj) {}
-//			/** An object array store type check instruction. */
-//			public void visitStoreCheck(Quad obj) {}
-//			/** A jump table switch instruction. */
-//			public void visitTableSwitch(Quad obj) {}
-//			/** A unary operation instruction. */
-//			public void visitUnary(Quad obj) {}
-//			/** A divide-by-zero check instruction. */
-//			public void visitZeroCheck(Quad obj) {}
-//			
-//			/** An instruction that loads from memory. */
-//			public void visitLoad(Quad obj) {}
-//			/** An instruction that stores into memory. */
-//			public void visitStore(Quad obj) {}
-//			/** An instruction.that accesses a static field. */
-//			public void visitStaticField(Quad obj) {}
-//			/** An instruction that accesses an instance field. */
-//			public void visitInstanceField(Quad obj) {}      
