@@ -9,19 +9,19 @@
 package Allocator;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import Memory.HeapAddress;
 
 public class FreeMemManager {
     private static FreeMemStrategy defaultStrategy = new BestAdaptionStrategy();
 
-    private Collection freePool;
+    private Collection freePool = new HashSet();
     private FreeMemStrategy stg;
 
     public FreeMemManager(FreeMemStrategy stg) {
         this.stg = stg;
-        //JW: freePool is uninitialized, causes crash.
-        //stg.addCollection(freePool);
+        stg.addCollection(freePool);
     }
 
     public FreeMemManager() {
