@@ -52,6 +52,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap constantMap;
     
     String dumpDir = System.getProperty("bdddumpdir", "");
+    boolean DUMP_TUPLES = !System.getProperty("dumptuples", "yes").equals("no");
     
     String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_opc_srcs_dest_srcNum";
     
@@ -379,13 +380,15 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         bdd.save(dumpDir+"nonnullconstants.bdd", nonNullConstants);
         System.out.println("done.");
         
-        System.out.println("Saving tuples....");
-        dumpTuples(bdd, dumpDir+relationName+".tuples", allQuads);
-        dumpTuples(bdd, dumpDir+"m2q.tuples", methodToQuad);
-        dumpTuples(bdd, dumpDir+"entries.tuples", methodEntries);
-        dumpTuples(bdd, dumpDir+"nullconstant.tuples", nullConstant);
-        dumpTuples(bdd, dumpDir+"nonnullconstants.tuples", nonNullConstants);
-        System.out.println("done.");
+        if (DUMP_TUPLES) {
+            System.out.println("Saving tuples....");
+            dumpTuples(bdd, dumpDir+relationName+".tuples", allQuads);
+            dumpTuples(bdd, dumpDir+"m2q.tuples", methodToQuad);
+            dumpTuples(bdd, dumpDir+"entries.tuples", methodEntries);
+            dumpTuples(bdd, dumpDir+"nullconstant.tuples", nullConstant);
+            dumpTuples(bdd, dumpDir+"nonnullconstants.tuples", nonNullConstants);
+            System.out.println("done.");
+        }
     }
     
     void dumpBDDConfig(String fileName) throws IOException {
