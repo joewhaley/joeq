@@ -360,6 +360,10 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 	return t;
     }
 
+    public final jq_Type getBSType(String desc) { return getBSType(Utf8.get(desc)); }
+    public final jq_Type getBSType(Utf8 desc) {
+        return (jq_Type)bs_desc2type.get(desc);
+    }
     public final jq_Type getOrCreateBSType(String desc) { return getOrCreateBSType(Utf8.get(desc)); }
     public final jq_Type getOrCreateBSType(Utf8 desc) {
         if (!jq.Bootstrapping) return ClassLibInterface.i.getOrCreateType(this, desc);

@@ -62,17 +62,18 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         if (estimated_size < maxFreePrevious) {
             // use a prior block's unused space.
             if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+" fits within a prior block: maxfreeprev="+jq.hex(maxFreePrevious));
+            // start searching at the first block
             int ptr = heapFirst;
             for (;;) {
-                jq.Assert(ptr != 0);
-                int ptr2 = ptr+BLOCK_SIZE-8;
-                int ptr3 = Unsafe.peek(ptr2);
+                jq.Assert(ptr != 0);          // points to start of current block
+                int ptr2 = ptr+BLOCK_SIZE-8;  // points to end of current block
+                int ptr3 = Unsafe.peek(ptr2); // current pointer for current block
                 if (TRACE) SystemInterface.debugmsg("Checking block "+jq.hex8(ptr)+"-"+jq.hex8(ptr2)+", current ptr="+jq.hex8(ptr3));
-                if ((ptr3-ptr2) >= estimated_size) {
-                    if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+") fits within block "+jq.hex8(ptr3)+"-"+jq.hex8(ptr2));
+                if ((ptr2-ptr3) >= estimated_size) {
+                    if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+") fits within free space "+jq.hex8(ptr3)+"-"+jq.hex8(ptr2));
                     return new Runtimex86CodeBuffer(ptr3, ptr2);
                 }
-                ptr = Unsafe.peek(ptr2+4);
+                ptr = Unsafe.peek(ptr2+4);    // go to the next block
                 if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+") doesn't fit, trying next block "+jq.hex8(ptr));
             }
         }
