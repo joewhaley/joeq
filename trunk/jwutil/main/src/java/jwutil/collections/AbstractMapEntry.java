@@ -15,13 +15,16 @@ import java.util.Map;
  * @author  C. Scott Ananian <cananian@alumni.princeton.edu>
  * @version $Id$ */
 public abstract class AbstractMapEntry/*<K,V>*/ implements Map.Entry/*<K,V>*/ {
+    
     /** Returns the key corresponding to this entry. */
     public abstract Object/*K*/ getKey();
+    
     /** Returns the value corresponding to this entry.  If the mapping
      *  has been removed from the backing map (by the iterator's
      *  <code>remove()</code> operation), the results of this call are
      *  undefined. */
     public abstract Object/*V*/ getValue();
+    
     /** Replaces the value corresponding to this entry with the specified
      *  value (optional operation).  (Writes through to the map.)  The
      *  behavior of this call is undefined if the mapping has already been
@@ -32,33 +35,40 @@ public abstract class AbstractMapEntry/*<K,V>*/ implements Map.Entry/*<K,V>*/ {
     public Object/*V*/ setValue(Object/*V*/ value) {
         throw new UnsupportedOperationException();
     }
+    
     /** Returns a human-readable representation of this map entry. */
     public String toString() {
         return 
             ((getKey()  ==null)?"null":getKey()  .toString()) + "=" +
             ((getValue()==null)?"null":getValue().toString());
     }
+    
     /** Compares the specified object with this entry for equality.
      *  Returns <code>true</code> if the given object is also a map
      *  entry and the two entries represent the same mapping. */
     public boolean equals(Object o) {
-        Map.Entry e1 = this;
-        Map.Entry e2;
-        if (this==o) return true;
-        if (null==o) return false;
-        try { e2 = (Map.Entry) o; }
-        catch (ClassCastException e) { return false; }
-        return 
-            (e1.getKey()==null ?
-             e2.getKey()==null : e1.getKey().equals(e2.getKey())) &&
-            (e1.getValue()==null ?
-             e2.getValue()==null : e1.getValue().equals(e2.getValue()));
+        if (o instanceof Map.Entry) return equals((Map.Entry) o);
+        return false;
     }
+    
+    public boolean equals(Map.Entry e) {
+        if (this == e) return true;
+        Object k1 = getKey();
+        Object k2 = e.getKey();
+        if (k1 == k2 || (k1 != null && k1.equals(k2))) {
+            Object v1 = getValue();
+            Object v2 = e.getValue();
+            if (v1 == v2 || (v1 != null && v1.equals(v2))) 
+                return true;
+        }
+        return false;
+    }
+    
     /** Returns the hash code value for this map entry. */
     public int hashCode() {
-        return
-            (getKey()==null   ? 0 : getKey().hashCode()) ^
-            (getValue()==null ? 0 : getValue().hashCode());
+        Object key = getKey();
+        Object value = getValue();
+        return (key==null ? 0 : key.hashCode()) ^
+               (value==null ? 0 : value.hashCode());
     }
 }
-

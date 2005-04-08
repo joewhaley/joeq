@@ -166,7 +166,7 @@ public class LinearMap extends AbstractMap {
         
     }
     
-    class Entry implements Map.Entry {
+    class Entry extends AbstractMapEntry {
         int k;
 
         Entry(int k) {

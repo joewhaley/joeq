@@ -228,7 +228,7 @@ public class SimpleHashSet extends AbstractMap {
         return new EntrySet();
     }
     
-    public static class Entry implements Map.Entry {
+    public static class Entry extends AbstractMapEntry {
         Object o;
         public Entry(Object o) { this.o = o; }
         public Object getKey() { return o; }
