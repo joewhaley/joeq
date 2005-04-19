@@ -60,6 +60,8 @@ public class BinHeapPriorityQueue extends AbstractCollection implements MaxPrior
         heap[size] = entry;
         size++;
         
+        item2entry.put(item, entry);
+        
         // now percolate to go up the hierarchy
         percolate(entry);
 
