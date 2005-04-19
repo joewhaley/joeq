@@ -29,8 +29,8 @@ You can obtain addresses via static methods in the above classes.
 </ul>
 </p>
 <p>
-Furthermore, you can get addresses from other addresses.  The "<a href="../javadoc/joeq/Memory/Address.html#offset(int)">offset(int)</a>" method
-returns a new address that is an offset from the given address.  The "<a href="../javadoc/joeq/Memory/Address.html#peek()">peek()</a>"
+Furthermore, you can get addresses from other addresses.  The "<a href="../apidocs/joeq/Memory/Address.html#offset(int)">offset(int)</a>" method
+returns a new address that is an offset from the given address.  The "<a href="../apidocs/joeq/Memory/Address.html#peek()">peek()</a>"
 method dereferences the given address; that is, it returns the address that the given
 address points to.  There are other methods in <a href="../xref/joeq/Memory/Address.html">Address</a> for peeking of other data types,
 finding the difference between two addresses, etc.
