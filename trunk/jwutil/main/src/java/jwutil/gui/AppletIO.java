@@ -3,17 +3,17 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package jwutil.gui;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.swing.JApplet;
@@ -35,6 +35,11 @@ import jwutil.reflect.Reflect;
  * @version $Id$
  */
 public class AppletIO extends JApplet {
+    
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4121128139021169972L;
     
     public static String DEFAULT_ENCODING = "UTF-8";
     
@@ -130,6 +135,10 @@ public class AppletIO extends JApplet {
                     int sOff = inputArea.getLineStartOffset(lineNum);
                     int eOff = inputArea.getLineEndOffset(lineNum);
                     String line = inputArea.getText(sOff, eOff - sOff);
+                    if (outputArea != null) {
+                        outputArea.append(line);
+                        jumpToEndOfOutput();
+                    }
                     if (inputWriter != null) {
                         inputWriter.write(line);
                     }
@@ -177,13 +186,21 @@ public class AppletIO extends JApplet {
         String methodName = getParameter("method");
         if (methodName == null) methodName = "main";
         method = Reflect.getDeclaredMethod(className, methodName);
-        List mArgs = new ArrayList();
-        for (int i = 0; ; ++i) {
-            String arg = getParameter("arg"+i);
-            if (arg == null) break;
-            mArgs.add(arg);
+        Class[] pTypes = method.getParameterTypes();
+        methodArgs = new Object[pTypes.length];
+        Object[] args;
+        if (pTypes.length == 1 && pTypes[0] == String[].class) {
+            int nParams = 0;
+            while (getParameter("arg"+nParams) != null)
+                ++nParams;
+            methodArgs[0] = args = new String[nParams];
+        } else {
+            args = methodArgs;
         }
-        methodArgs = mArgs.toArray();
+        for (int i = 0; i < args.length; ++i) {
+            String arg = getParameter("arg"+i);
+            args[i] = arg;
+        }
     }
     
     public void init() {
@@ -194,7 +211,8 @@ public class AppletIO extends JApplet {
         try {
             javax.swing.SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
-                    createGUI();
+                    PrintStream out = createGUI();
+                    launch(out, method, methodArgs);
                 }
             });
         } catch (Exception e) { 
@@ -202,7 +220,7 @@ public class AppletIO extends JApplet {
         }
     }
     
-    void createGUI() {
+    PrintStream createGUI() {
         outputArea = new JTextArea();
         outputArea.setMargin(new Insets(5, 5, 5, 5));
         outputArea.setEditable(false);
@@ -226,34 +244,39 @@ public class AppletIO extends JApplet {
         inputArea.getDocument().addDocumentListener(myListener);
         // Redirect System.out/System.err to our text area.
         try {
-            PrintStream out = new PrintStream(new AppletOutputStream(), true, DEFAULT_ENCODING);
+            InputStream in;
+            FillableReader fin = new FillableReader();
+            inputWriter = fin.getWriter();
+            in = new ReaderInputStream(fin);
+
+            // Support for JDK1.3, which doesn't allow encoding on PrintStream
+            PrintStream out, err;
+            try {
+                err = out = new PrintStream(new AppletOutputStream(), true, DEFAULT_ENCODING);
+            } catch (NoSuchMethodError _) {
+                err = out = new PrintStream(new AppletOutputStream(), true);
+            }
             try {
                 System.setOut(out);
-                System.setErr(out);
+                System.setErr(err);
                 // Redirect System.in from our input area.
-                FillableReader in = new FillableReader();
-                inputWriter = in.getWriter();
-                System.setIn(new ReaderInputStream(in));
+                System.setIn(in);
             } catch (SecurityException x) {
-                outputArea.append("Cannot reset stdio: " + x);
-                x.printStackTrace(out);
+                //outputArea.append("Note: Cannot reset stdio: " + x.toString());
+                x.printStackTrace();
+                initStreams(method.getDeclaringClass(), in, out, err);
             }
+            return out;
         } catch (UnsupportedEncodingException x) {
             outputArea.append(x.toString());
             x.printStackTrace();
+            return null;
         }
     }
     
     public static void main(String[] s) throws SecurityException,
         NoSuchMethodException, ClassNotFoundException {
         AppletIO applet = new AppletIO();
-        JFrame f = new JFrame();
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.getContentPane().add(applet);
-        f.setSize(500, 400);
-        f.setLocation(200, 200);
-        applet.createGUI();
-        f.setVisible(true);
         
         if (s.length < 1) {
             applet.method = AppletIO.class.getDeclaredMethod("example", new Class[0]);
@@ -265,12 +288,43 @@ public class AppletIO extends JApplet {
             System.arraycopy(s, 1, s2, 0, s2.length);
             applet.methodArgs = new Object[]{s2};
         }
+        
+        JFrame f = new JFrame();
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.getContentPane().add(applet);
+        f.setSize(500, 400);
+        f.setLocation(200, 200);
+        applet.createGUI();
+        f.setVisible(true);
+        
         System.out.println("Starting " + applet.method.getDeclaringClass().getName()+
             "."+applet.method.getName()+"()");
-        launch(applet.method, applet.methodArgs);
+        launch(System.out, applet.method, applet.methodArgs);
     }
     
-    public static void launch(final Method m, final Object[] args) {
+    public static void initStreams(Class c, InputStream in, PrintStream out, PrintStream err) {
+        Field f;
+        try {
+            f = c.getDeclaredField("in");
+            f.set(null, in);
+        }
+        catch (NoSuchFieldException _) {}
+        catch (IllegalAccessException _) {}
+        try {
+            f = c.getDeclaredField("out");
+            f.set(null, out);
+        }
+        catch (NoSuchFieldException _) {}
+        catch (IllegalAccessException _) {}
+        try {
+            f = c.getDeclaredField("err");
+            f.set(null, err);
+        }
+        catch (NoSuchFieldException _) {}
+        catch (IllegalAccessException _) {}
+    }
+    
+    public static void launch(final PrintStream out, final Method m, final Object[] args) {
         new Thread() {
             public void run() {
                 try {
@@ -281,6 +335,8 @@ public class AppletIO extends JApplet {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
+                } finally {
+                    if (out != null) out.println("Terminated.");
                 }
             }
         }.start();

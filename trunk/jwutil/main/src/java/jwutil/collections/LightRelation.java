@@ -18,6 +18,11 @@ import java.util.Map;
 public class LightRelation extends AbstrRelationMapBased
     implements Serializable {
 
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4120851053534328370L;
+
     /** Creates a <code>RelationLight</code>. */
     public LightRelation() {
         map = new LightMap();

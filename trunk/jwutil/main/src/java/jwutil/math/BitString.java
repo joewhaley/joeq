@@ -32,6 +32,12 @@ import jwutil.util.Assert;
  * @version $Id$
  */
 public final class BitString implements Cloneable, java.io.Serializable {
+    
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257570590025265971L;
+    
     /* There are 2^BITS_PER_UNIT bits in each unit (int) */
     private static final int BITS_PER_UNIT = 5;
     private static final int MASK = (1 << BITS_PER_UNIT) - 1;

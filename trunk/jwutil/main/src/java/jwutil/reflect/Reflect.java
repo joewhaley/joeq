@@ -6,6 +6,7 @@ package jwutil.reflect;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.AccessControlException;
 
 /**
  * Reflect
@@ -48,7 +49,9 @@ public abstract class Reflect {
                     return null;
                 }
             }
-            m.setAccessible(true);
+            try {
+                m.setAccessible(true);
+            } catch (AccessControlException _) { }
         } catch (SecurityException e1) {
             System.err.println("Cannot access "+c.getName()+"."+methodName);
             e1.printStackTrace();

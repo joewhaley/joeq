@@ -19,6 +19,11 @@ import java.util.Set;
  */
 public class LightMap implements Map, Cloneable, java.io.Serializable {
     
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258407344043144246L;
+
     public static class Factory extends MapFactory {
         private Factory() { }
         public static final Factory INSTANCE = new Factory();
@@ -416,6 +421,11 @@ public class LightMap implements Map, Cloneable, java.io.Serializable {
     }
 
     private static class BinTreeNode implements java.io.Serializable {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3256442503912765744L;
+        
         final Object key;
         Object value;
         final int keyHashCode;

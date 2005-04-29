@@ -3,22 +3,54 @@
 //Licensed under the terms of the GNU LGPL; see COPYING for details.
 package jwutil.io;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.security.AccessControlException;
 
 /**
  * Read system properties from a file.
  * @version $Id$
  * @author gback
+ * @author John Whaley
  */
 public class SystemProperties {
+    
+    /**
+     * Return the value of a system property if we have access, null otherwise.
+     * 
+     * @param key  system property to get
+     * @return  value or null
+     */
+    public static String getProperty(String key) {
+        try {
+            return System.getProperty(key);
+        } catch (AccessControlException _) {
+            //System.err.println("Error: cannot access system property "+key);
+            return null;
+        }
+    }
+    
+    /**
+     * Return the value of a system property if we have access and it is defined,
+     * def otherwise.
+     * 
+     * @param key  system property to get
+     * @return  value of system property or def
+     */
+    public static String getProperty(String key, String def) {
+        try {
+            return System.getProperty(key, def);
+        } catch (AccessControlException _) {
+            return def;
+        }
+    }
     
     public static void read(String filename) {
         FileInputStream propFile = null;
@@ -28,6 +60,8 @@ public class SystemProperties {
             p.load(propFile);
             System.setProperties(p);
         } catch (IOException ie) {
+            ; // silent
+        } catch (AccessControlException _) {
             ; // silent
         } finally {
             if (propFile != null) try {

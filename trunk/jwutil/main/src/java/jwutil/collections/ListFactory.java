@@ -23,6 +23,11 @@ public abstract class ListFactory extends CollectionFactory {
     
     /** A <code>ListFactory</code> that generates <code>ArrayList</code>s. */
     public static final ListFactory arrayListFactory = new ListFactory() {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3546075861146285361L;
+
         public List makeList(java.util.Collection c) {
             return new ArrayList(c);
         }
@@ -34,6 +39,11 @@ public abstract class ListFactory extends CollectionFactory {
     
     /** A <code>ListFactory</code> that generates <code>LinkedList</code>s. */
     public static final ListFactory linkedListFactory = new ListFactory() {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3257001055735593017L;
+
         public java.util.List makeList(java.util.Collection c) {
             return new java.util.LinkedList(c);
         }
@@ -171,6 +181,11 @@ public abstract class ListFactory extends CollectionFactory {
     public static ListFactory
         synchronizedListFactory(final ListFactory lf) {
         return new SerialListFactory() {
+            /**
+             * Version ID for serialization.
+             */
+            private static final long serialVersionUID = 3760566386258555187L;
+
             public java.util.List makeList(Collection c) {
                 return Collections.synchronizedList(lf.makeList(c));
             }

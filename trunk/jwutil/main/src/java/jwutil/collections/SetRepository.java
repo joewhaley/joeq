@@ -18,6 +18,11 @@ import jwutil.util.Assert;
  */
 public class SetRepository extends SetFactory {
 
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4050480114695222065L;
+    
     public static final boolean USE_HASHCODES = true;
     public static final boolean USE_SIZES     = false;
     
@@ -26,6 +31,11 @@ public class SetRepository extends SetFactory {
     public static final PrintStream out = System.out;
 
     public static class LinkedHashSetFactory extends SetFactory {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3257854264024840501L;
+
         private LinkedHashSetFactory() { }
         public static final LinkedHashSetFactory INSTANCE = new LinkedHashSetFactory();
         
