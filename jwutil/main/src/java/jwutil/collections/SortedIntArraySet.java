@@ -19,6 +19,11 @@ import java.io.Serializable;
 public class SortedIntArraySet implements Cloneable, Serializable, RandomAccess {
 
     /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3760846774608344633L;
+
+    /**
      * The array buffer into which the elements of the SortedArraySet are stored.
      * The capacity of the SortedArraySet is the length of this array buffer.
      */

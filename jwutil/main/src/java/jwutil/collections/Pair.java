@@ -19,6 +19,11 @@ import jwutil.io.Textualizer;
 public class Pair extends AbstractList implements Serializable, Textualizable {
     
     /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3545236912383078965L;
+    
+    /**
      * The elements of the pair.
      */
     public Object left, right;

@@ -74,6 +74,11 @@ public abstract class CollectionFactory implements Serializable {
     public static CollectionFactory
         synchronizedCollectionFactory(final CollectionFactory cf) { 
         return new SerialCollectionFactory() {
+            /**
+             * Version ID for serialization.
+             */
+            private static final long serialVersionUID = 3256721775504209968L;
+
             public java.util.Collection makeCollection(Collection c) {
                 return Collections.synchronizedCollection
                     (cf.makeCollection(c));
@@ -93,6 +98,11 @@ public abstract class CollectionFactory implements Serializable {
      */
     public static CollectionFactory noNullCollectionFactory(final CollectionFactory cf) {
         return new SerialCollectionFactory() {
+            /**
+             * Version ID for serialization.
+             */
+            private static final long serialVersionUID = 3257562919112685113L;
+
             public Collection makeCollection(final Collection c) {
                 Assert._assert(noNull(c));
                 final Collection back = cf.makeCollection(c);

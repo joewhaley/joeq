@@ -30,6 +30,11 @@ public class SortedArraySet
     implements SortedSet, List, Cloneable, Serializable, RandomAccess {
 
     /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258416123022947382L;
+
+    /**
      * The array buffer into which the elements of the SortedArraySet are stored.
      * The capacity of the SortedArraySet is the length of this array buffer.
      */
@@ -184,6 +189,11 @@ public class SortedArraySet
     private class SubSet
     extends AbstractList
     implements SortedSet, List, Serializable, RandomAccess {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3690476935247770425L;
+        
         private final Object from, to;
         private int startIndex, endIndex, parentModCount;
         private final boolean fromStart, toEnd;
@@ -691,6 +701,12 @@ public class SortedArraySet
 
     public static final SortedArraySetFactory FACTORY = new SortedArraySetFactory();
     public static class SortedArraySetFactory extends SetFactory {
+        
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3258407318323475251L;
+
         private SortedArraySetFactory() {}
         
         public static final boolean TEST = false;

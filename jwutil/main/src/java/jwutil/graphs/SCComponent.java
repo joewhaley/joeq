@@ -32,6 +32,12 @@ import jwutil.util.Assert;
  * @version $Id$
  */
 public final class SCComponent implements Comparable, Serializable {
+    
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257844385516501305L;
+    
     /**
      * Default navigator through a component graph (a dag of strongly connected
      * components).

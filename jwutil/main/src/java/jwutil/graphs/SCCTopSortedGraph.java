@@ -23,6 +23,11 @@ import jwutil.util.Assert;
  * @version $Id$
  */
 public class SCCTopSortedGraph implements Graph, Serializable {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3689912890060846388L;
+    
     private SCComponent first;
     private SCComponent last;
 

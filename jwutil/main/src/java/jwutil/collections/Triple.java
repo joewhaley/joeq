@@ -9,6 +9,12 @@ package jwutil.collections;
  */
 public class Triple extends java.util.AbstractList
     implements java.io.Serializable {
+    
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258128068173706036L;
+    
     public Object left, middle, right;
     public Triple(Object left, Object middle, Object right) {
         this.left = left; this.middle = middle; this.right = right;

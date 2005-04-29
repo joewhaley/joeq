@@ -30,6 +30,11 @@ public class ResidentJava {
      */
     public static class SystemExitException extends SecurityException {
 
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3257570594202399025L;
+        
         int status;
         
         /**

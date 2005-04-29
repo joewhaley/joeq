@@ -21,17 +21,27 @@ public abstract class SetFactory extends CollectionFactory {
     
     /** A <code>SetFactory</code> that generates <code>HashSet</code>s. */
     public static final SetFactory hashSetFactory = new SerialSetFactory() {
-            public Set makeSet(Collection c) {
-                return new HashSet(c);
-            }
-            public Set makeSet(int i) {
-                return new HashSet(i);
-            }
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3689347719475246897L;
+        
+        public Set makeSet(Collection c) {
+            return new HashSet(c);
+        }
+        public Set makeSet(int i) {
+            return new HashSet(i);
+        }
     };
     
     /** A <code>SetFactory</code> that generates
         <code>LinearSet</code>s backed by <code>ArrayList</code>s. */
     public static final SetFactory linearSetFactory = new SerialSetFactory() {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3258688814758245937L;
+        
         public Set makeSet(Collection c) {
             Set ls;
             if (c instanceof Set) {
@@ -49,6 +59,11 @@ public abstract class SetFactory extends CollectionFactory {
 
     /** A <code>SetFactory</code> that generates <code>TreeSet</code>s. */
     public static final SetFactory treeSetFactory = new SerialSetFactory() {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3257008752384423731L;
+
         public Set makeSet(Collection c) {
             return new TreeSet(c);
         }
@@ -81,6 +96,11 @@ public abstract class SetFactory extends CollectionFactory {
     */
     public static SetFactory synchronizedSetFactory(final SetFactory sf) {
         return new SerialSetFactory() {
+            /**
+             * Version ID for serialization.
+             */
+            private static final long serialVersionUID = 3257286950267402040L;
+
             public java.util.Set makeSet(Collection c) {
                 return Collections.synchronizedSet(sf.makeSet(c));
             }

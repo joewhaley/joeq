@@ -27,6 +27,11 @@ public abstract class MapFactory/*<K,V>*/ {
     
     /** A <code>MapFactory</code> that generates <code>HashMap</code>s. */ 
     public static final MapFactory hashMapFactory = new SerialMapFactory() {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3834587712341947449L;
+
         public Map makeMap(java.util.Map map) {
             return new HashMap(map);
         }
@@ -34,6 +39,11 @@ public abstract class MapFactory/*<K,V>*/ {
     
     /** A <code>MapFactory</code> that generates <code>TreeMap</code>s. */
     public static final MapFactory treeMapFactory = new SerialMapFactory() {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3256446901892494136L;
+
         public Map makeMap(Map map) {
             return new TreeMap(map);
         }
@@ -64,6 +74,11 @@ public abstract class MapFactory/*<K,V>*/ {
      */
     public static MapFactory synchronizedMapFactory(final MapFactory mf) {
         return new SerialMapFactory() {
+            /**
+             * Version ID for serialization.
+             */
+            private static final long serialVersionUID = 3690472502723752496L;
+
             public Map makeMap(Map map) {
                 return Collections.synchronizedMap(mf.makeMap(map));
             }

@@ -20,6 +20,11 @@ import java.util.Set;
  */
 public class LinearSet extends AbstractSet implements Cloneable,
                                                       java.io.Serializable {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256443586294919225L;
+    
     private List list;
     private ListFactory lf;
 

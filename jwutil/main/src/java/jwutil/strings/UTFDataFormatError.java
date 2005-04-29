@@ -12,6 +12,11 @@ package jwutil.strings;
 public class UTFDataFormatError extends RuntimeException {
 
     /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257569499053110328L;
+
+    /**
      * Creates new <code>UTFDataFormatError</code> without detail message.
      */
     public UTFDataFormatError() {
