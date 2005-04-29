@@ -950,6 +950,10 @@ public class MultiPassBootImage implements ELFConstants {
     }
 
     static class UnknownObjectException extends RuntimeException {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3257002155398345015L;
         Object o; StringBuffer message;
         UnknownObjectException(Object o) {
             this.o = o;

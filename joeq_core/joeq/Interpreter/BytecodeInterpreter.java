@@ -87,6 +87,10 @@ public abstract class BytecodeInterpreter {
     }
 
     public static class WrappedException extends RuntimeException {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3977582476543866419L;
         Throwable t;
         WrappedException(Throwable t) { this.t = t; }
         public String toString() { return "WrappedException: "+t; }

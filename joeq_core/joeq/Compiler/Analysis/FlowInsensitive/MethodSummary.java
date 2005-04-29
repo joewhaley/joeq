@@ -3881,6 +3881,11 @@ outer:
         public static final boolean PROFILE = false;
     
         public static final SetFactory FACTORY = new SetFactory() {
+            /**
+             * Version ID for serialization.
+             */
+            private static final long serialVersionUID = 3257845485078459956L;
+
             public final Set makeSet(Collection c) {
                 if (TEST)
                     return new CollectionTestWrapper(new LinkedHashSet(c), new NodeSet(c));

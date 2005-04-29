@@ -612,7 +612,7 @@ outer:
     /**
      * @param fakeString
      * @param originalMethod
-     * @return
+     * @return  replacement method or null
      */
     private static jq_Method findReplacementMethod(jq_Class fakeString, jq_Method originalMethod) {
         for(Iterator iter = fakeString.getMembers().iterator(); iter.hasNext();){

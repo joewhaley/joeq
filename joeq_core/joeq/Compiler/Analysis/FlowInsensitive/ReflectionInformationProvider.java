@@ -143,9 +143,7 @@ public abstract class ReflectionInformationProvider {
     
     /** 
      * Reflective methods to be used in isReflective(...)
-     * 
-     * @see isReflective 
-     * */
+     */
     private static String[][] methodSpecs = { 
                             {"java.lang.Class", "forName"},
                             {"java.lang.Object", "newInstance"},
@@ -283,7 +281,7 @@ public abstract class ReflectionInformationProvider {
             NewInstanceTargets spec = null;
             do {
                 if(!line.startsWith("#") && line.trim().length() > 0){                    
-                    if(!Character.isSpace(line.charAt(0))){
+                    if(!Character.isWhitespace(line.charAt(0))){
                         int indexBracket = line.indexOf('(');
                         Assert._assert(indexBracket != -1, "No brackets in " + line);
                         String declaredIn = line.substring(0, indexBracket);

@@ -76,7 +76,7 @@ public abstract class Reflection {
      * Utility function to extract the argument types from a method descriptor.
      * 
      * @param desc
-     * @return
+     * @return array of argument types
      */
     public static Class[] getArgTypesFromDesc(Utf8 desc) {
         Utf8.MethodDescriptorIterator i = desc.getParamDescriptors();

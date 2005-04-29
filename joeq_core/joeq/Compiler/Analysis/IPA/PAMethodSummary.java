@@ -305,7 +305,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             
             Collection/*<jq_Method>*/ targets = null;
             if(pa.USE_REFLECTION_PROVIDER && ReflectionInformationProvider.isNewInstance(target)){                
-                targets = pa.getReflectionProvider().getNewInstanceTargets(m);
+                targets = PA.getReflectionProvider().getNewInstanceTargets(m);
                 if(targets != null){
                     if(PA.TRACE_REFLECTION)  {
                         System.out.println("Replacing a call to " + target + " with " + targets); 
@@ -392,7 +392,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                         /*new ProgramLocation.PlaceholderParameterProgramLocation(m, "forName @" + mc.getEmacsName())*/ mc, 
                         new Integer(++pa.opn));
                     pa.addToForNameMap(h, I_bdd);
-                    if(pa.TRACE_REFLECTION && pa.TRACE){
+                    if(PA.TRACE_REFLECTION && pa.TRACE){
                         System.out.println("Processing a call to forName: " + mc.getEmacsName());
                     }
                     int H_i = pa.Hmap.get(h);

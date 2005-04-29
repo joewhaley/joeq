@@ -58,7 +58,6 @@ import joeq.Scheduler.jq_NativeThread;
 import jwutil.collections.IdentityHashCodeWrapper;
 import jwutil.collections.Pair;
 import jwutil.io.DataOutputByteBuffer;
-import jwutil.io.ExtendedDataOutput;
 import jwutil.strings.Strings;
 import jwutil.util.Assert;
 
@@ -1167,6 +1166,10 @@ public class SinglePassBootImage implements ELFConstants {
     }
 
     static class UnknownObjectException extends RuntimeException {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3258695407449421621L;
         Object o; StringBuffer message;
         UnknownObjectException(Object o) {
             this.o = o;
