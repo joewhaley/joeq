@@ -16,6 +16,11 @@ import joeq.Compiler.Analysis.IPSSA.SSAIterator;
  * Strongly typed definition set.
  */
 public class DefinitionSet extends HashSet {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258130267196831288L;
+    
     public DefinitionSet(){
         super();
     }

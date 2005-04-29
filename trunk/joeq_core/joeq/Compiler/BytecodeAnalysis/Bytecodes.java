@@ -241,7 +241,12 @@ public interface Bytecodes {
  }
  
  class InstructionHandle implements Serializable {
-     InstructionHandle next, prev;  // Will be set from the outside
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3904965256957670706L;
+    
+    InstructionHandle next, prev;  // Will be set from the outside
      Instruction       instruction;
      protected int     i_position = -1; // byte code offset of instruction
      private Set       targeters;
@@ -439,7 +444,12 @@ public interface Bytecodes {
  }
  
  final class BranchHandle extends InstructionHandle {
-     private BranchInstruction bi; // An alias in fact, but saves lots of casts
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3834870291158283317L;
+    
+    private BranchInstruction bi; // An alias in fact, but saves lots of casts
      
      private BranchHandle(BranchInstruction i) {
          super(i);
@@ -521,7 +531,12 @@ public interface Bytecodes {
  }
 
  class InstructionList implements Serializable {
-     private InstructionHandle start  = null, end = null;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3832624001687433272L;
+    
+    private InstructionHandle start  = null, end = null;
      private int               length = 0; // number of elements in list
      private int[]             byte_positions; // byte code offsets corresponding to instructions
      
@@ -1807,7 +1822,12 @@ public interface Bytecodes {
  }
  
  final class TargetLostException extends Exception {
-     private List/*<InstructionHandle>*/ targets;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258132461824063281L;
+    
+    private List/*<InstructionHandle>*/ targets;
      
      TargetLostException(List/*<InstructionHandle>*/ t, String mesg) {
          super(mesg);
@@ -1833,13 +1853,20 @@ public interface Bytecodes {
  
  
  class ARRAYLENGTH extends Instruction implements ExceptionThrower, StackProducer {
-     /** Get length of array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3977863973062521397L;
+
+    /**
+     * Get length of array
+     */
      public ARRAYLENGTH() {
          super(jq_ClassFileConstants.jbc_ARRAYLENGTH, (short)1);
      }
      
-     /** @return exceptions this instruction may cause
+     /**
+      * @return exceptions this instruction may cause
       */
      public Set/*<jq_Class>*/ getExceptions() {
          //return new jq_Class[] { ClassLib.sun13.java.lang.NullPointerException._class };
@@ -1862,8 +1889,14 @@ public interface Bytecodes {
  }
  
  class AALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     /** Load reference from array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256723991774572857L;
+
+    /**
+     * Load reference from array
+     */
      public AALOAD() {
          super(jq_ClassFileConstants.jbc_AALOAD);
      }
@@ -1887,8 +1920,14 @@ public interface Bytecodes {
  }
  
  class AASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     /** Store into reference array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4123103961466286131L;
+
+    /**
+     * Store into reference array
+     */
      public AASTORE() {
          super(jq_ClassFileConstants.jbc_AASTORE);
      }
@@ -1911,7 +1950,12 @@ public interface Bytecodes {
  }
  
  class ACONST_NULL extends Instruction implements StackProducer, PushInstruction, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258688827559458096L;
+
+    /**
       * Push null reference
       */
      public ACONST_NULL() {
@@ -1941,7 +1985,12 @@ public interface Bytecodes {
  }
  
  class ALOAD extends LoadInstruction implements StackProducer, PushInstruction, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3617853079836242227L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -1977,7 +2026,12 @@ public interface Bytecodes {
  }
  
  class ANEWARRAY extends CPInstruction implements /*LoadClass,*/ AllocationInstruction, ExceptionThrower, StackProducer, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3616730495593756729L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -2031,7 +2085,12 @@ public interface Bytecodes {
  }
  
  class ARETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4050204120013355318L;
+
+    /**
       * Return reference from method
       */
      public ARETURN() {
@@ -2056,7 +2115,12 @@ public interface Bytecodes {
  }
  
  class ASTORE extends StoreInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3906086762995594038L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -2086,7 +2150,12 @@ public interface Bytecodes {
  }
  
  class ATHROW extends Instruction implements UnconditionalBranch, ExceptionThrower {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3906926768488265008L;
+
+    /**
       *  Throw exception
       */
      public ATHROW() {
@@ -2116,8 +2185,14 @@ public interface Bytecodes {
  }
  
  class BALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     /** Load byte or boolean from array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3835149541292194102L;
+
+    /**
+     * Load byte or boolean from array
+     */
      public BALOAD() {
          super(jq_ClassFileConstants.jbc_BALOAD);
      }
@@ -2140,8 +2215,14 @@ public interface Bytecodes {
  }
  
  class BASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     /** Store byte or boolean into array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3690192157323311159L;
+
+    /**
+     * Store byte or boolean into array
+     */
      public BASTORE() {
          super(jq_ClassFileConstants.jbc_BASTORE);
      }
@@ -2164,7 +2245,12 @@ public interface Bytecodes {
  }
  
  class BIPUSH extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
-     private byte b;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256999947701598520L;
+    
+    private byte b;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -2228,7 +2314,12 @@ public interface Bytecodes {
  }
  
  class BREAKPOINT extends Instruction {
-     public BREAKPOINT() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3544676178515406900L;
+
+    public BREAKPOINT() {
          super(jq_ClassFileConstants.jbc_BREAKPOINT, (short)1);
      }
      
@@ -2246,8 +2337,14 @@ public interface Bytecodes {
  }
  
  class CALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     /** Load char from array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258134643684161592L;
+
+    /**
+     * Load char from array
+     */
      public CALOAD() {
          super(jq_ClassFileConstants.jbc_CALOAD);
      }
@@ -2270,8 +2367,14 @@ public interface Bytecodes {
  }
  
  class CASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     /** Store char into array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3979272425999776057L;
+
+    /**
+     * Store char into array
+     */
      public CASTORE() {
          super(jq_ClassFileConstants.jbc_CASTORE);
      }
@@ -2294,7 +2397,12 @@ public interface Bytecodes {
  }
  
  class CHECKCAST extends CPInstruction implements LoadClass, ExceptionThrower, StackProducer, StackConsumer, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3834306250300471602L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -2351,8 +2459,14 @@ public interface Bytecodes {
  }
  
  class D2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert double to float
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3545521707369838132L;
+
+    /**
+     * Convert double to float
+     */
      public D2F() {
          super(jq_ClassFileConstants.jbc_D2F);
      }
@@ -2375,8 +2489,14 @@ public interface Bytecodes {
  }
  
  class D2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert double to int
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257282517928064057L;
+
+    /**
+     * Convert double to int
+     */
      public D2I() {
          super(jq_ClassFileConstants.jbc_D2I);
      }
@@ -2399,8 +2519,14 @@ public interface Bytecodes {
  }
  
  class D2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert double to long
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3688508792102858802L;
+
+    /**
+     * Convert double to long
+     */
      public D2L() {
          super(jq_ClassFileConstants.jbc_D2L);
      }
@@ -2423,8 +2549,14 @@ public interface Bytecodes {
  }
  
  class DADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Add doubles
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3979270244139218744L;
+
+    /**
+     * Add doubles
+     */
      public DADD() {
          super(jq_ClassFileConstants.jbc_DADD);
      }
@@ -2447,8 +2579,14 @@ public interface Bytecodes {
  }
  
  class DALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     /** Load double from array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3761124950999709239L;
+
+    /**
+     * Load double from array
+     */
      public DALOAD() {
          super(jq_ClassFileConstants.jbc_DALOAD);
      }
@@ -2471,8 +2609,14 @@ public interface Bytecodes {
  }
  
  class DASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     /** Store double into array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3618977897344414514L;
+
+    /**
+     * Store double into array
+     */
      public DASTORE() {
          super(jq_ClassFileConstants.jbc_DASTORE);
      }
@@ -2496,7 +2640,12 @@ public interface Bytecodes {
  
  class DCMPG extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
      
-     public DCMPG() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257848775023013941L;
+
+    public DCMPG() {
          super(jq_ClassFileConstants.jbc_DCMPG, (short)1);
      }
      
@@ -2524,7 +2673,12 @@ public interface Bytecodes {
  
  class DCMPL extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
      
-     public DCMPL() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258135760375984179L;
+
+    public DCMPL() {
          super(jq_ClassFileConstants.jbc_DCMPL, (short)1);
      }
      
@@ -2551,7 +2705,11 @@ public interface Bytecodes {
  }
  
  class DCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
-     private double value;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3905242312396387385L;
+    private double value;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -2598,8 +2756,14 @@ public interface Bytecodes {
  }
  
  class DDIV extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Divide doubles
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3618699703773377592L;
+
+    /**
+     * Divide doubles
+     */
      public DDIV() {
          super(jq_ClassFileConstants.jbc_DDIV);
      }
@@ -2622,7 +2786,12 @@ public interface Bytecodes {
  }
  
  class DLOAD extends LoadInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3544673992393895987L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -2652,8 +2821,14 @@ public interface Bytecodes {
  }
  
  class DMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Multiply doubles
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3689915058885047096L;
+
+    /**
+     * Multiply doubles
+     */
      public DMUL() {
          super(jq_ClassFileConstants.jbc_DMUL);
      }
@@ -2676,7 +2851,12 @@ public interface Bytecodes {
  }
  
  class DNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public DNEG() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256719585154447409L;
+
+    public DNEG() {
          super(jq_ClassFileConstants.jbc_DNEG);
      }
      
@@ -2698,8 +2878,14 @@ public interface Bytecodes {
  }
  
  class DREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Remainder of doubles
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257562893443873076L;
+
+    /**
+     * Remainder of doubles
+     */
      public DREM() {
          super(jq_ClassFileConstants.jbc_DREM);
      }
@@ -2722,8 +2908,14 @@ public interface Bytecodes {
  }
  
  class DRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-     /** Return double from method
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3618696392235758390L;
+
+    /**
+     * Return double from method
+     */
      public DRETURN() {
          super(jq_ClassFileConstants.jbc_DRETURN);
      }
@@ -2746,7 +2938,12 @@ public interface Bytecodes {
  }
  
  class DSTORE extends StoreInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3616446787167335478L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -2776,8 +2973,14 @@ public interface Bytecodes {
  }
  
  class DSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Substract doubles
-      */
+    /**
+     * Version ID for serialization
+     */
+    private static final long serialVersionUID = 3978420312960547126L;
+
+    /**
+     * Substract doubles
+     */
      public DSUB() {
          super(jq_ClassFileConstants.jbc_DSUB);
      }
@@ -2800,7 +3003,12 @@ public interface Bytecodes {
  }
  
  class DUP2 extends StackInstruction implements StackProducer, PushInstruction {
-     public DUP2() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257849900220757556L;
+
+    public DUP2() {
          super(jq_ClassFileConstants.jbc_DUP2);
      }
      
@@ -2821,7 +3029,12 @@ public interface Bytecodes {
  }
  
  class DUP2_X1 extends StackInstruction {
-     public DUP2_X1() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256442525387534902L;
+
+    public DUP2_X1() {
          super(jq_ClassFileConstants.jbc_DUP2_X1);
      }
      
@@ -2840,7 +3053,12 @@ public interface Bytecodes {
  }
  
  class DUP2_X2 extends StackInstruction {
-     public DUP2_X2() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3691038772737225011L;
+
+    public DUP2_X2() {
          super(jq_ClassFileConstants.jbc_DUP2_X2);
      }
      
@@ -2859,7 +3077,12 @@ public interface Bytecodes {
  }
  
  class DUP extends StackInstruction implements StackProducer, PushInstruction {
-     public DUP() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257571698076234552L;
+
+    public DUP() {
          super(jq_ClassFileConstants.jbc_DUP);
      }
      
@@ -2880,7 +3103,12 @@ public interface Bytecodes {
  }
  
  class DUP_X1 extends StackInstruction {
-     public DUP_X1() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258135760375986488L;
+
+    public DUP_X1() {
          super(jq_ClassFileConstants.jbc_DUP_X1);
      }
      
@@ -2899,7 +3127,12 @@ public interface Bytecodes {
  }
  
  class DUP_X2 extends StackInstruction {
-     public DUP_X2() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256720693155868723L;
+
+    public DUP_X2() {
          super(jq_ClassFileConstants.jbc_DUP_X2);
      }
      
@@ -2918,8 +3151,14 @@ public interface Bytecodes {
  }
  
  class F2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert float to double
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257853198772484147L;
+
+    /**
+     * Convert float to double
+     */
      public F2D() {
          super(jq_ClassFileConstants.jbc_F2D);
      }
@@ -2942,8 +3181,14 @@ public interface Bytecodes {
  }
  
  class F2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert float to int
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3832617404583917363L;
+
+    /**
+     * Convert float to int
+     */
      public F2I() {
          super(jq_ClassFileConstants.jbc_F2I);
      }
@@ -2966,8 +3211,14 @@ public interface Bytecodes {
  }
  
  class F2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert float to long
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256445793790406707L;
+
+    /**
+     * Convert float to long
+     */
      public F2L() {
          super(jq_ClassFileConstants.jbc_F2L);
      }
@@ -2990,8 +3241,14 @@ public interface Bytecodes {
  }
  
  class FADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Add floats
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256438110195104052L;
+
+    /**
+     * Add floats
+     */
      public FADD() {
          super(jq_ClassFileConstants.jbc_FADD);
      }
@@ -3014,8 +3271,14 @@ public interface Bytecodes {
  }
  
  class FALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     /** Load float from array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3688789167651958840L;
+
+    /**
+     * Load float from array
+     */
      public FALOAD() {
          super(jq_ClassFileConstants.jbc_FALOAD);
      }
@@ -3038,8 +3301,14 @@ public interface Bytecodes {
  }
  
  class FASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     /** Store float into array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3833747672556188983L;
+
+    /**
+     * Store float into array
+     */
      public FASTORE() {
          super(jq_ClassFileConstants.jbc_FASTORE);
      }
@@ -3062,7 +3331,12 @@ public interface Bytecodes {
  }
  
  class FCMPG extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
-     public FCMPG() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3618699716641043510L;
+
+    public FCMPG() {
          super(jq_ClassFileConstants.jbc_FCMPG, (short)1);
      }
      
@@ -3089,7 +3363,12 @@ public interface Bytecodes {
  }
  
  class FCMPL extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
-     public FCMPL() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3761688983301795896L;
+
+    public FCMPL() {
          super(jq_ClassFileConstants.jbc_FCMPL, (short)1);
      }
      
@@ -3116,7 +3395,12 @@ public interface Bytecodes {
  }
  
  class FCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
-     private float value;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258411750780383544L;
+    
+    private float value;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -3165,8 +3449,14 @@ public interface Bytecodes {
  }
  
  class FDIV extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Divide floats
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3617295618767272240L;
+
+    /**
+     * Divide floats
+     */
      public FDIV() {
          super(jq_ClassFileConstants.jbc_FDIV);
      }
@@ -3189,7 +3479,12 @@ public interface Bytecodes {
  }
  
  class FLOAD extends LoadInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256440317707497522L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3197,7 +3492,8 @@ public interface Bytecodes {
          super(jq_ClassFileConstants.jbc_FLOAD, jq_ClassFileConstants.jbc_FLOAD_0);
      }
      
-     /** Load float from local variable
+     /**
+      * Load float from local variable
       * @param n index of local variable
       */
      public FLOAD(int n) {
@@ -3219,8 +3515,14 @@ public interface Bytecodes {
  }
  
  class FMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Multiply floats
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256727298848797488L;
+
+    /**
+     * Multiply floats
+     */
      public FMUL() {
          super(jq_ClassFileConstants.jbc_FMUL);
      }
@@ -3243,7 +3545,12 @@ public interface Bytecodes {
  }
  
  class FNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public FNEG() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3544387015597831478L;
+
+    public FNEG() {
          super(jq_ClassFileConstants.jbc_FNEG);
      }
      
@@ -3265,8 +3572,14 @@ public interface Bytecodes {
  }
  
  class FREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Remainder of floats
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257850986897749561L;
+
+    /**
+     * Remainder of floats
+     */
      public FREM() {
          super(jq_ClassFileConstants.jbc_FREM);
      }
@@ -3289,8 +3602,14 @@ public interface Bytecodes {
  }
  
  class FRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-     /** Return float from method
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257286933171484213L;
+
+    /**
+     * Return float from method
+     */
      public FRETURN() {
          super(jq_ClassFileConstants.jbc_FRETURN);
      }
@@ -3313,7 +3632,12 @@ public interface Bytecodes {
  }
  
  class FSTORE extends StoreInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3833748763461432884L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3343,7 +3667,12 @@ public interface Bytecodes {
  }
  
  class FSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Substract floats
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256725069727019317L;
+
+    /** Substract floats
       */
      public FSUB() {
          super(jq_ClassFileConstants.jbc_FSUB);
@@ -3367,7 +3696,12 @@ public interface Bytecodes {
  }
  
  class GETFIELD extends FieldInstruction implements ExceptionThrower, StackConsumer, StackProducer, TypedInstruction, LoadClass {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256442503862761017L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3427,7 +3761,12 @@ public interface Bytecodes {
  }
  
  class GETSTATIC extends FieldInstruction implements ExceptionThrower, StackProducer, PushInstruction, TypedInstruction, LoadClass {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258128076763510581L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3485,7 +3824,12 @@ public interface Bytecodes {
  }
  
  class GOTO extends GotoInstruction implements VariableLengthInstruction, UnconditionalBranch {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256440322019242036L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3545,7 +3889,12 @@ public interface Bytecodes {
  }
  
  class GOTO_W extends GotoInstruction implements UnconditionalBranch {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3689912864307884082L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3591,8 +3940,14 @@ public interface Bytecodes {
  }
  
  class I2B extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert int to byte
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257572788930885170L;
+
+    /**
+     * Convert int to byte
+     */
      public I2B() {
          super(jq_ClassFileConstants.jbc_I2B);
      }
@@ -3615,8 +3970,14 @@ public interface Bytecodes {
  }
  
  class I2C extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert int to char
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257009838977331257L;
+
+    /**
+     * Convert int to char
+     */
      public I2C() {
          super(jq_ClassFileConstants.jbc_I2C);
      }
@@ -3639,8 +4000,14 @@ public interface Bytecodes {
  }
  
  class I2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert int to double
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258409538788340793L;
+
+    /**
+     * Convert int to double
+     */
      public I2D() {
          super(jq_ClassFileConstants.jbc_I2D);
      }
@@ -3663,8 +4030,14 @@ public interface Bytecodes {
  }
  
  class I2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert int to float
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256720667536732721L;
+
+    /**
+     * Convert int to float
+     */
      public I2F() {
          super(jq_ClassFileConstants.jbc_I2F);
      }
@@ -3687,8 +4060,14 @@ public interface Bytecodes {
  }
  
  class I2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Convert int to long
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3688789184748009521L;
+
+    /**
+     * Convert int to long
+     */
      public I2L() {
          super(jq_ClassFileConstants.jbc_I2L);
      }
@@ -3711,7 +4090,12 @@ public interface Bytecodes {
  }
  
  class I2S extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public I2S() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3617573790998017588L;
+
+    public I2S() {
          super(jq_ClassFileConstants.jbc_I2S);
      }
      
@@ -3733,7 +4117,12 @@ public interface Bytecodes {
  }
  
  class IADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Add ints
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4049919380911567408L;
+
+    /** Add ints
       */
      public IADD() {
          super(jq_ClassFileConstants.jbc_IADD);
@@ -3757,7 +4146,12 @@ public interface Bytecodes {
  }
  
  class IALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3977866184903242032L;
+
+    /**
       * Load int from array
       */
      public IALOAD() {
@@ -3782,7 +4176,12 @@ public interface Bytecodes {
  }
  
  class IAND extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public IAND() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3762250838071850548L;
+
+    public IAND() {
          super(jq_ClassFileConstants.jbc_IAND);
      }
      
@@ -3804,7 +4203,12 @@ public interface Bytecodes {
  }
  
  class IASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4049070549395256631L;
+
+    /**
       * Store into int array
       */
      public IASTORE() {
@@ -3829,7 +4233,12 @@ public interface Bytecodes {
  }
  
  class ICONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
-     private int value;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3760844566994892595L;
+    
+    private int value;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -3874,8 +4283,14 @@ public interface Bytecodes {
  }
  
  class IDIV extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
-     /** Divide ints
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258411746401007415L;
+
+    /**
+     * Divide ints
+     */
      public IDIV() {
          super(jq_ClassFileConstants.jbc_IDIV);
      }
@@ -3906,7 +4321,12 @@ public interface Bytecodes {
  }
  
  class IF_ACMPEQ extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257281431267718709L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3940,7 +4360,12 @@ public interface Bytecodes {
  }
  
  class IF_ACMPNE extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256718502722222130L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -3974,7 +4399,12 @@ public interface Bytecodes {
  }
  
  class IFEQ extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3906090070137058610L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4008,7 +4438,12 @@ public interface Bytecodes {
  }
  
  class IFGE extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258407335536703282L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4042,7 +4477,12 @@ public interface Bytecodes {
  }
  
  class IFGT extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3545520624970642740L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4076,7 +4516,12 @@ public interface Bytecodes {
  }
  
  class IF_ICMPEQ extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257007652906349880L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4110,7 +4555,12 @@ public interface Bytecodes {
  }
  
  class IF_ICMPGE extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3834586591372325176L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4144,7 +4594,12 @@ public interface Bytecodes {
  }
  
  class IF_ICMPGT extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4051322353537726518L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4178,7 +4633,12 @@ public interface Bytecodes {
  }
  
  class IF_ICMPLE extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257854268169008433L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4212,7 +4672,12 @@ public interface Bytecodes {
  }
  
  class IF_ICMPLT extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256718481348309561L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4246,7 +4711,12 @@ public interface Bytecodes {
  }
  
  class IF_ICMPNE extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258131340904641584L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4280,7 +4750,12 @@ public interface Bytecodes {
  }
  
  class IFLE extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3545230323870021686L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4314,7 +4789,12 @@ public interface Bytecodes {
  }
  
  class IFLT extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3689345542060913718L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4348,7 +4828,12 @@ public interface Bytecodes {
  }
  
  class IFNE extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3977582476510311735L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4382,7 +4867,12 @@ public interface Bytecodes {
  }
  
  class IFNONNULL extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257853194460608562L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4416,7 +4906,12 @@ public interface Bytecodes {
  }
  
  class IFNULL extends IfInstruction implements StackConsumer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3977298824035382320L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4450,7 +4945,12 @@ public interface Bytecodes {
  }
  
  class IINC extends LocalVariableInstruction {
-     private boolean wide;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256441395794751798L;
+    
+    private boolean wide;
      private int     c;
      
      /**
@@ -4568,7 +5068,12 @@ public interface Bytecodes {
  }
  
  class ILOAD extends LoadInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257570607070983990L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4598,8 +5103,14 @@ public interface Bytecodes {
  }
  
  class IMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Multiply ints
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4049078241681617461L;
+
+    /**
+     * Multiply ints
+     */
      public IMUL() {
          super(jq_ClassFileConstants.jbc_IMUL);
      }
@@ -4622,7 +5133,12 @@ public interface Bytecodes {
  }
  
  class INEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public INEG() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258409530181301552L;
+
+    public INEG() {
          super(jq_ClassFileConstants.jbc_INEG);
      }
      
@@ -4644,7 +5160,12 @@ public interface Bytecodes {
  }
  
  class INSTANCEOF extends CPInstruction implements LoadClass, ExceptionThrower, StackProducer, StackConsumer, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4121976949213574449L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4690,7 +5211,12 @@ public interface Bytecodes {
  }
  
  final class INVOKEINTERFACE extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
-     private int nargs; // Number of arguments on stack (number of stack slots), called "count" in vmspec2
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4049633499382493239L;
+    
+    private int nargs; // Number of arguments on stack (number of stack slots), called "count" in vmspec2
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -4796,7 +5322,12 @@ public interface Bytecodes {
  }
  
  class INVOKESPECIAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3617011949079310389L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4855,7 +5386,12 @@ public interface Bytecodes {
  }
  
  class INVOKESTATIC extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258689918497927219L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4912,7 +5448,12 @@ public interface Bytecodes {
  }
  
  class INVOKEVIRTUAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3761971579332080945L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -4971,7 +5512,12 @@ public interface Bytecodes {
  }
  
  class IOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public IOR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256441387170805305L;
+
+    public IOR() {
          super(jq_ClassFileConstants.jbc_IOR);
      }
      
@@ -4993,8 +5539,14 @@ public interface Bytecodes {
  }
  
  class IREM extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
-     /** Remainder of ints
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256446919122303286L;
+
+    /**
+     * Remainder of ints
+     */
      public IREM() {
          super(jq_ClassFileConstants.jbc_IREM);
      }
@@ -5027,8 +5579,14 @@ public interface Bytecodes {
  }
  
  class IRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-     /** Return int from method
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256723974544044343L;
+
+    /**
+     * Return int from method
+     */
      public IRETURN() {
          super(jq_ClassFileConstants.jbc_IRETURN);
      }
@@ -5050,7 +5608,12 @@ public interface Bytecodes {
  }
  
  class ISHL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public ISHL() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257562919129396537L;
+
+    public ISHL() {
          super(jq_ClassFileConstants.jbc_ISHL);
      }
      
@@ -5072,7 +5635,12 @@ public interface Bytecodes {
  }
  
  class ISHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public ISHR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258408426374902576L;
+
+    public ISHR() {
          super(jq_ClassFileConstants.jbc_ISHR);
      }
      
@@ -5094,7 +5662,12 @@ public interface Bytecodes {
  }
  
  class ISTORE extends StoreInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258410651234612016L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5124,8 +5697,14 @@ public interface Bytecodes {
  }
  
  class ISUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     /** Substract ints
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256440309167632692L;
+
+    /**
+     * Substract ints
+     */
      public ISUB() {
          super(jq_ClassFileConstants.jbc_ISUB);
      }
@@ -5148,7 +5727,12 @@ public interface Bytecodes {
  }
  
  class IUSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public IUSHR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3546923584611301680L;
+
+    public IUSHR() {
          super(jq_ClassFileConstants.jbc_IUSHR);
      }
      
@@ -5170,7 +5754,12 @@ public interface Bytecodes {
  }
  
  class IXOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public IXOR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4121136935214724919L;
+
+    public IXOR() {
          super(jq_ClassFileConstants.jbc_IXOR);
      }
      
@@ -5192,7 +5781,12 @@ public interface Bytecodes {
  }
  
  class JSR extends JsrInstruction implements StackProducer, VariableLengthInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4048789048665518649L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5249,7 +5843,12 @@ public interface Bytecodes {
  }
  
  class JSR_W extends JsrInstruction implements StackProducer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4050486720355185968L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5295,7 +5894,12 @@ public interface Bytecodes {
  }
  
  class L2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public L2D() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257291331100227385L;
+
+    public L2D() {
          super(jq_ClassFileConstants.jbc_L2D);
      }
      
@@ -5317,7 +5921,12 @@ public interface Bytecodes {
  }
  
  class L2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public L2F() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3834028043743409968L;
+
+    public L2F() {
          super(jq_ClassFileConstants.jbc_L2F);
      }
      
@@ -5339,7 +5948,12 @@ public interface Bytecodes {
  }
  
  class L2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public L2I() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257283613178344503L;
+
+    public L2I() {
          super(jq_ClassFileConstants.jbc_L2I);
      }
      
@@ -5361,7 +5975,12 @@ public interface Bytecodes {
  }
  
  class LADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LADD() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257003241907434544L;
+
+    public LADD() {
          super(jq_ClassFileConstants.jbc_LADD);
      }
      
@@ -5383,8 +6002,14 @@ public interface Bytecodes {
  }
  
  class LALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     /** Load long from array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3977016232367109688L;
+
+    /**
+     * Load long from array
+     */
      public LALOAD() {
          super(jq_ClassFileConstants.jbc_LALOAD);
      }
@@ -5407,7 +6032,12 @@ public interface Bytecodes {
  }
  
  class LAND extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LAND() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257007670069639480L;
+
+    public LAND() {
          super(jq_ClassFileConstants.jbc_LAND);
      }
      
@@ -5429,8 +6059,14 @@ public interface Bytecodes {
  }
  
  class LASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     /** Store long into array
-      */
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258417235319403575L;
+
+    /**
+     * Store long into array
+     */
      public LASTORE() {
          super(jq_ClassFileConstants.jbc_LASTORE);
      }
@@ -5453,7 +6089,12 @@ public interface Bytecodes {
  }
  
  class LCMP extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LCMP() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3544389218915923254L;
+
+    public LCMP() {
          super(jq_ClassFileConstants.jbc_LCMP, (short)1);
      }
 
@@ -5480,7 +6121,12 @@ public interface Bytecodes {
  }
  
  class LCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
-     private long value;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4050760472946882360L;
+    
+    private long value;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -5527,7 +6173,12 @@ public interface Bytecodes {
  }
  
  class LDC2_W extends CPInstruction implements StackProducer, PushInstruction, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3618978966757980470L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5565,7 +6216,12 @@ public interface Bytecodes {
  }
  
  class LDC extends CPInstruction implements PushInstruction, ExceptionThrower, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3832907645656183091L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5658,7 +6314,12 @@ public interface Bytecodes {
  }
  
  class LDC_W extends LDC {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3904680492002260018L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5683,7 +6344,12 @@ public interface Bytecodes {
  }
  
  class LDIV extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
-     public LDIV() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257572793276512304L;
+
+    public LDIV() {
          super(jq_ClassFileConstants.jbc_LDIV);
      }
      
@@ -5713,7 +6379,12 @@ public interface Bytecodes {
  }
  
  class LLOAD extends LoadInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3978425823470499637L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5740,7 +6411,12 @@ public interface Bytecodes {
  }
  
  class LMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LMUL() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3688785869033125680L;
+
+    public LMUL() {
          super(jq_ClassFileConstants.jbc_LMUL);
      }
      
@@ -5762,7 +6438,12 @@ public interface Bytecodes {
  }
  
  class LNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LNEG() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256725078350770736L;
+
+    public LNEG() {
          super(jq_ClassFileConstants.jbc_LNEG);
      }
      
@@ -5784,7 +6465,12 @@ public interface Bytecodes {
  }
  
  class LOOKUPSWITCH extends Select {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3979268049427836981L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5851,7 +6537,12 @@ public interface Bytecodes {
  }
  
  class LOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LOR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257854272497726513L;
+
+    public LOR() {
          super(jq_ClassFileConstants.jbc_LOR);
      }
      
@@ -5873,7 +6564,12 @@ public interface Bytecodes {
  }
  
  class LREM extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
-     public LREM() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256723987479148082L;
+
+    public LREM() {
          super(jq_ClassFileConstants.jbc_LREM);
      }
      
@@ -5903,7 +6599,12 @@ public interface Bytecodes {
  }
  
  class LRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-     public LRETURN() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3760561988110923576L;
+
+    public LRETURN() {
          super(jq_ClassFileConstants.jbc_LRETURN);
      }
      
@@ -5925,7 +6626,12 @@ public interface Bytecodes {
  }
  
  class LSHL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LSHL() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3256439201133310514L;
+
+    public LSHL() {
          super(jq_ClassFileConstants.jbc_LSHL);
      }
      
@@ -5947,7 +6653,12 @@ public interface Bytecodes {
  }
  
  class LSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LSHR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258412824370688816L;
+
+    public LSHR() {
          super(jq_ClassFileConstants.jbc_LSHR);
      }
      
@@ -5969,7 +6680,12 @@ public interface Bytecodes {
  }
  
  class LSTORE extends StoreInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257566204763058230L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -5996,7 +6712,12 @@ public interface Bytecodes {
  }
  
  class LSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LSUB() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3834874680631636793L;
+
+    public LSUB() {
          super(jq_ClassFileConstants.jbc_LSUB);
      }
      
@@ -6018,7 +6739,12 @@ public interface Bytecodes {
  }
  
  class LUSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LUSHR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258126938496316217L;
+
+    public LUSHR() {
          super(jq_ClassFileConstants.jbc_LUSHR);
      }
      
@@ -6040,7 +6766,12 @@ public interface Bytecodes {
  }
  
  class LXOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-     public LXOR() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257565126675870519L;
+
+    public LXOR() {
          super(jq_ClassFileConstants.jbc_LXOR);
      }
      
@@ -6062,7 +6793,12 @@ public interface Bytecodes {
  }
  
  class MONITORENTER extends Instruction implements ExceptionThrower, StackConsumer {
-     public MONITORENTER() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3761131530872960054L;
+
+    public MONITORENTER() {
          super(jq_ClassFileConstants.jbc_MONITORENTER, (short)1);
      }
      
@@ -6089,7 +6825,12 @@ public interface Bytecodes {
  }
  
  class MONITOREXIT extends Instruction implements ExceptionThrower, StackConsumer {
-     public MONITOREXIT() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3689071746502244658L;
+
+    public MONITOREXIT() {
          super(jq_ClassFileConstants.jbc_MONITOREXIT, (short)1);
      }
      
@@ -6116,7 +6857,12 @@ public interface Bytecodes {
  }
  
  class MULTIANEWARRAY extends CPInstruction implements AllocationInstruction, ExceptionThrower, TypedInstruction {
-     private short dimensions;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 4051049674586665785L;
+    
+    private short dimensions;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -6225,7 +6971,12 @@ public interface Bytecodes {
  }
  
  class NEWARRAY extends Instruction implements AllocationInstruction, ExceptionThrower, StackProducer {
-     // todo: make this serializable.
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258126964265988406L;
+    
+    // todo: make this serializable.
      private transient jq_Array type;
      
      /**
@@ -6305,7 +7056,12 @@ public interface Bytecodes {
  }
  
  class NEW extends CPInstruction implements LoadClass, AllocationInstruction, ExceptionThrower, StackProducer, TypedInstruction {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3258694316594573877L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -6354,7 +7110,12 @@ public interface Bytecodes {
  }
  
  class NOP extends Instruction {
-     public NOP() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257567299962875957L;
+
+    public NOP() {
          super(jq_ClassFileConstants.jbc_NOP, (short)1);
      }
      
@@ -6372,19 +7133,23 @@ public interface Bytecodes {
  }
  
  class POP2 extends StackInstruction implements PopInstruction {
-     public POP2() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3546360617595123251L;
+
+    public POP2() {
          super(jq_ClassFileConstants.jbc_POP2);
      }
      
-     
-/**
-* Call corresponding visitor method(s). The order is:
-* Call visitor methods of implemented interfaces first, then
-* call methods according to the class hierarchy in descending order,
-* i.e., the most specific visitXXX() call comes last.
-*
-* @param v Visitor object
-*/
+    /**
+     * Call corresponding visitor method(s). The order is:
+     * Call visitor methods of implemented interfaces first, then
+     * call methods according to the class hierarchy in descending order,
+     * i.e., the most specific visitXXX() call comes last.
+     *
+     * @param v Visitor object
+     */
      public void accept(Visitor v) {
          v.visitStackConsumer(this);
          v.visitPopInstruction(this);
@@ -6394,19 +7159,23 @@ public interface Bytecodes {
  }
  
  class POP extends StackInstruction implements PopInstruction {
-     public POP() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257002172494461239L;
+
+    public POP() {
          super(jq_ClassFileConstants.jbc_POP);
      }
      
-     
-/**
-* Call corresponding visitor method(s). The order is:
-* Call visitor methods of implemented interfaces first, then
-* call methods according to the class hierarchy in descending order,
-* i.e., the most specific visitXXX() call comes last.
-*
-* @param v Visitor object
-*/
+    /**
+     * Call corresponding visitor method(s). The order is:
+     * Call visitor methods of implemented interfaces first, then
+     * call methods according to the class hierarchy in descending order,
+     * i.e., the most specific visitXXX() call comes last.
+     *
+     * @param v Visitor object
+     */
      public void accept(Visitor v) {
          v.visitStackConsumer(this);
          v.visitPopInstruction(this);
@@ -6550,7 +7319,12 @@ public interface Bytecodes {
  }
  
  class PUTFIELD extends FieldInstruction implements ExceptionThrower, TypedInstruction, LoadClass {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257571719517777968L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -6609,7 +7383,12 @@ public interface Bytecodes {
  }
  
  class PUTSTATIC extends FieldInstruction implements ExceptionThrower, StackConsumer, PopInstruction, TypedInstruction, LoadClass {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3833745473583462711L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -6667,7 +7446,12 @@ public interface Bytecodes {
  }
  
  class RET extends Instruction implements IndexedInstruction, TypedInstruction {
-     private boolean wide;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3905525986396092729L;
+    
+    private boolean wide;
      private int     index; // index to local variable containg the return address
      
      /**
@@ -6764,7 +7548,12 @@ public interface Bytecodes {
  }
  
  class RETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-     public RETURN() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3904958664166290739L;
+
+    public RETURN() {
          super(jq_ClassFileConstants.jbc_RETURN);
      }
      
@@ -6785,7 +7574,12 @@ public interface Bytecodes {
  }
  
  class SALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-     public SALOAD() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3905518285402616886L;
+
+    public SALOAD() {
          super(jq_ClassFileConstants.jbc_SALOAD);
      }
      
@@ -6807,7 +7601,12 @@ public interface Bytecodes {
  }
  
  class SASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-     public SASTORE() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257284716884538421L;
+
+    public SASTORE() {
          super(jq_ClassFileConstants.jbc_SASTORE);
      }
      
@@ -6829,7 +7628,12 @@ public interface Bytecodes {
  }
  
  class SIPUSH extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
-     private short b;
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3978422512050845237L;
+    
+    private short b;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in
@@ -6892,7 +7696,12 @@ public interface Bytecodes {
  }
  
  class SWAP extends StackInstruction implements StackConsumer, StackProducer {
-     public SWAP() {
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257008743760803633L;
+
+    public SWAP() {
          super(jq_ClassFileConstants.jbc_SWAP);
      }
      
@@ -7031,7 +7840,12 @@ public interface Bytecodes {
  }
  
  class TABLESWITCH extends Select implements VariableLengthInstruction, StackProducer {
-     /**
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257286937416250672L;
+
+    /**
       * Empty constructor needed for the Class.newInstance() statement in
       * Instruction.readInstruction(). Not to be used otherwise.
       */
@@ -8347,7 +9161,11 @@ public interface Bytecodes {
  
  
  class BytecodeException extends RuntimeException {
-     public BytecodeException() { super(); }
+    /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3689634696422175796L;
+    public BytecodeException() { super(); }
      public BytecodeException(String s) { super(s); }
  }
 

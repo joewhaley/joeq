@@ -80,6 +80,11 @@ public class LoadedCallGraph extends CallGraph {
     public static final SortedArraySetFactory sortedArraySetFactory = new SortedArraySetFactory();
     
     public static class SortedArraySetFactory extends SetFactory {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3906646414531702833L;
+        
         public Set makeSet(Comparator c1, Collection c2) {
             Set s = SortedArraySet.FACTORY.makeSet(c1);
             s.addAll(c2);

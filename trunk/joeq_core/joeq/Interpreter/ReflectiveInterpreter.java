@@ -359,6 +359,10 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
     }
 
     static class MonitorExit extends RuntimeException {
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3835157242168096821L;
         Object o;
         MonitorExit(Object o) { this.o = o; }
     }

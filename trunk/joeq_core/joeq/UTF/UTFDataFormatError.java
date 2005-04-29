@@ -12,6 +12,11 @@ package joeq.UTF;
 public class UTFDataFormatError extends RuntimeException {
 
     /**
+     * Version ID for serialization.
+     */
+    private static final long serialVersionUID = 3257845472142964791L;
+
+    /**
      * Creates new <code>UTFDataFormatError</code> without detail message.
      */
     public UTFDataFormatError() {

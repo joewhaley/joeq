@@ -136,7 +136,12 @@ public abstract class AnalysisObjectSpec {
     }
     
     public static class UnknownAnalysisObjectExeption extends Exception {               
-         public UnknownAnalysisObjectExeption(String msg) {             
+        /**
+         * Version ID for serialization.
+         */
+        private static final long serialVersionUID = 3762257417945362481L;
+
+        public UnknownAnalysisObjectExeption(String msg) {             
              super(msg);
          }
     }
