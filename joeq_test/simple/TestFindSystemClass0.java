@@ -1,7 +1,6 @@
 package simple;
 
-import java.util.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Method;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Main.HostedVM;
 
