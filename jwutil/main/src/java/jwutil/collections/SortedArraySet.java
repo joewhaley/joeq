@@ -583,7 +583,7 @@ public class SortedArraySet
                 int r = compare(o1, o2);
                 if (r <= 0) {
                     new_e1[new_i1++] = o1;
-                    if (REDUCE_ALLOCATIONS && new_e1 == e1) e1[i1] = null;
+                    if (REDUCE_ALLOCATIONS && new_e1 == (Object)e1) e1[i1] = null;
                     i1++;
                     if (r == 0) break;
                 } else {
