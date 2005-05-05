@@ -512,4 +512,8 @@ public final class SCComponent implements Comparable, Serializable {
             return id;
         }
     }
+    
+    public boolean equals(Object o) {
+        return this == o;
+    }
 }

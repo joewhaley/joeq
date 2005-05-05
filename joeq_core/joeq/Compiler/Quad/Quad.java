@@ -177,9 +177,19 @@ public class Quad {
     
     public static final boolean DETERMINISTIC = true;
     
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     public int hashCode() {
         if (DETERMINISTIC) return getID();
         else return System.identityHashCode(this);
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    public boolean equals(Object that) {
+        return this == that;
     }
     
 }
