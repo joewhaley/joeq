@@ -82,14 +82,22 @@ public class HashCodeComparator implements Comparator {
         }
         if (a > b) return 1;
         if (a < b) return -1;
-        if (duplicate_hashcode_objects == null)
-            duplicate_hashcode_objects = Collections.synchronizedList(new LinkedList());
+        // double-check locking idiom.
+        if (duplicate_hashcode_objects == null) {
+            synchronized (this) {
+                if (duplicate_hashcode_objects == null) {
+                    duplicate_hashcode_objects = Collections.synchronizedList(new LinkedList());
+                }
+            }
+        }
         int i1 = indexOf(arg0);
         int i2 = indexOf(arg1);
         if (i1 == -1) {
             if (i2 == -1) {
-                i1 = duplicate_hashcode_objects.size();
-                if (TRACE) System.out.println("Hash code conflict: "+Strings.hex8(a)+" "+arg0+" vs. "+arg1+", allocating ("+i1+")");
+                if (TRACE) {
+                    i1 = duplicate_hashcode_objects.size();
+                    System.out.println("Hash code conflict: "+Strings.hex8(a)+" "+arg0+" vs. "+arg1+", allocating ("+i1+")");
+                }
                 if (USE_WEAK_REFERENCES) arg0 = new WeakReference(arg0, queue);
                 duplicate_hashcode_objects.add(arg0);
                 return -1;
@@ -110,6 +118,7 @@ public class HashCodeComparator implements Comparator {
             return duplicate_hashcode_objects.indexOf(o);
         }
         int index = 0;
+        // lock the object just like a call to indexOf().
         synchronized (duplicate_hashcode_objects) {
             for (Iterator i=duplicate_hashcode_objects.iterator(); i.hasNext(); ++index) {
                 WeakReference r = (WeakReference) i.next();
