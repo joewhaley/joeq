@@ -24,6 +24,9 @@ public class DeadCode extends DataflowFramework.EmptyAnalysis {
             }
             return false;
         }
+        public int hashCode() {
+            return _val ? 1 : 0;
+        }
     }
 
     public void preprocess(ControlFlowGraph cfg) {
