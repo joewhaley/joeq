@@ -92,10 +92,15 @@ public class SummaryToTuples {
     
     int last_V, last_H, last_T, last_N, last_F, last_M;
     
+    public static boolean USE_HMAP = false;
+    
     public SummaryToTuples() {
         Vmap = new IndexMap("var");
         Imap = new IndexMap("invoke");
-        Hmap = new IndexMap("heap");
+        if (USE_HMAP)
+            Hmap = new IndexMap("heap");
+        else
+            Hmap = Vmap;
         Fmap = new IndexMap("field");
         Tmap = new IndexMap("type");
         Nmap = new IndexMap("name");
@@ -144,6 +149,14 @@ public class SummaryToTuples {
         int Hsize = Hmap.size();
         for (int H_i = last_H; H_i < Hsize; ++H_i) {
             Node n = (Node) Hmap.get(H_i);
+            if (!USE_HMAP) {
+                if (n instanceof MethodSummary.FieldNode ||
+                    n instanceof MethodSummary.ParamNode ||
+                    n instanceof MethodSummary.CheckCastNode ||
+                    n instanceof MethodSummary.ReturnValueNode ||
+                    n instanceof MethodSummary.ThrownExceptionNode
+                    ) continue;
+            }
             jq_Reference type = n.getDeclaredType();
             if (type != null) type.prepare();
             hT.add(H_i, Tmap.get(type));
@@ -795,15 +808,17 @@ public class SummaryToTuples {
             if (dos != null) dos.close();
         }
         
-        dos = null;
-        try {
-            dos = new BufferedWriter(new FileWriter(dumpPath+"heap.map"));
-            for (int j = 0; j < Hmap.size(); ++j) {
-                Node o = (Node) Hmap.get(j);
-                dos.write(o.id+": "+o+"\n");
+        if (USE_HMAP) {
+            dos = null;
+            try {
+                dos = new BufferedWriter(new FileWriter(dumpPath+"heap.map"));
+                for (int j = 0; j < Hmap.size(); ++j) {
+                    Node o = (Node) Hmap.get(j);
+                    dos.write(o.id+": "+o+"\n");
+                }
+            } finally {
+                if (dos != null) dos.close();
             }
-        } finally {
-            if (dos != null) dos.close();
         }
         
         dos = null;
