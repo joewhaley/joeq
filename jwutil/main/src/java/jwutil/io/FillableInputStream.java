@@ -42,7 +42,7 @@ public class FillableInputStream extends InputStream implements DataOutput {
     }
     
     byte[] buffer;
-    volatile int start, end;
+    int start, end;
     
     public FillableInputStream() {
         buffer = new byte[1024];
