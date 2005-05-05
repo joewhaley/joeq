@@ -35,7 +35,7 @@ public class CountPaths {
                 if (d == null) continue;
                 myValue += d[0];
             }
-            if (myValue == 0.) myValue = 1L;
+            if (myValue == 0L) myValue = 1L;
             counts.put(o, new long[] { myValue });
             max = Math.max(max, myValue);
         }
