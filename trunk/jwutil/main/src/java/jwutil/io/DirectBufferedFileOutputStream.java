@@ -202,12 +202,8 @@ public class DirectBufferedFileOutputStream extends OutputStream implements Exte
     }
 
     protected void finalize() throws Throwable {
-        try {
-            this.close();
-        } catch (IOException x) {}
-        finally {
-            super.finalize();
-        }
+        super.finalize();
+        this.close();
     }
 
 }
