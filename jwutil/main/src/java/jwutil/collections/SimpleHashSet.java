@@ -116,7 +116,7 @@ public class SimpleHashSet extends AbstractMap {
                     int[] newchain = new int[chain.length<<1];
                     System.arraycopy(chain, 0, newchain, 0, chain.length);
                     int chain_index = Math.abs(hash) % shs.chains.length;
-                    Assert._assert(shs.chains[chain_index] == chain);
+                    Assert._assert(shs.chains[chain_index] == (Object)chain);
                     shs.chains[chain_index] = newchain;
                     chain = newchain;
                 } else if (chain[i]-1 != -1) {
@@ -362,13 +362,13 @@ public class SimpleHashSet extends AbstractMap {
     }
     
     public Object[] toArray(Object[] a) {
-        int size = size();
-        if (size > a.length) {
+        int this_size = size();
+        if (this_size > a.length) {
             a = (Object[])java.lang.reflect.Array.newInstance(
-                                  a.getClass().getComponentType(), size);
+                                  a.getClass().getComponentType(), this_size);
         }
         int j = -1;
-        for (Iterator i=iterator(); i.hasNext(); ) {
+        for (Iterator i = iterator(); i.hasNext(); ) {
             a[++j] = i.next();
         }
         if (++j < a.length)
