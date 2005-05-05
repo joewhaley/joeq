@@ -95,7 +95,9 @@ public interface Relation {
     /** Checks the equality of two relations */
     boolean equals(Object o);
 
-
+    /** Returns the hashCode of a relation. */
+    int hashCode();
+    
     /** Returns the subrelation of this relation that contains
         only the keys that appear in <code>selected_keys</code>. */
     Relation select(Collection selected_keys);
