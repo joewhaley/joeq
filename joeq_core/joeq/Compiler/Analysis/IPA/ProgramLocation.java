@@ -77,6 +77,7 @@ public abstract class ProgramLocation implements Textualizable {
     
     public abstract boolean isCall();
     public abstract jq_Method getTargetMethod();
+    public abstract jq_Method resolveTargetMethod();
     public abstract jq_Type[] getParamTypes();
     public abstract jq_Type getReturnType();
     public abstract boolean isSingleTarget();
@@ -131,6 +132,12 @@ public abstract class ProgramLocation implements Textualizable {
             return Invoke.getMethod(q).getMethod();
         }
         
+        public jq_Method resolveTargetMethod() {
+            Assert._assert(isCall());
+            Invoke.getMethod(q).resolve();
+            return Invoke.getMethod(q).getMethod();
+        }
+
         public jq_Type[] getParamTypes() {
             Assert._assert(isCall());
             jq_Type[] t = Invoke.getMethod(q).getMethod().getParamTypes();
@@ -310,6 +317,13 @@ public abstract class ProgramLocation implements Textualizable {
                 default:
                     return null;
             }
+        }
+        
+        
+        public jq_Method resolveTargetMethod() {
+            jq_Method m = getTargetMethod();
+            m = (jq_Method) m.resolve();
+            return m;
         }
         
         public jq_Type[] getParamTypes() {
@@ -494,6 +508,7 @@ public abstract class ProgramLocation implements Textualizable {
         public jq_Type getResultType() { return null; }
         public boolean isCall() { return false; }
         public jq_Method getTargetMethod() { return null; }
+        public jq_Method resolveTargetMethod() { return null; }
         public jq_Type[] getParamTypes() { return null; }
         public jq_Type getReturnType() { return null; }
         public boolean isSingleTarget() { return false; }
@@ -532,6 +547,7 @@ public abstract class ProgramLocation implements Textualizable {
         public jq_Type getResultType() { return null; }
         public boolean isCall() { return false; }
         public jq_Method getTargetMethod() { return null; }
+        public jq_Method resolveTargetMethod() { return null; }
         public jq_Type[] getParamTypes() { return null; }
         public jq_Type getReturnType() { return null; }
         public boolean isSingleTarget() { return false; }
