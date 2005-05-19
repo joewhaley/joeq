@@ -43,6 +43,7 @@ public class CHACallGraph extends CallGraph {
      * @see joeq.Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, joeq.Compiler.Analysis.IPA.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
+        callSite.resolveTargetMethod();
         jq_Method method = (jq_Method) callSite.getTargetMethod();
         if (callSite.isSingleTarget())
             return Collections.singleton(method);
