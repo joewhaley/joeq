@@ -8,6 +8,7 @@ package joeq.Compiler.Analysis.IPA;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,17 +38,26 @@ public class ObjectNamingSupport {
     private Set frontierNodes = new HashSet();
     private Dominators dominators;
     private DominanceFrontier df;
+    private static String DIR = "";
 
     public static void main(String[] args) {
+        if(args.length > 0){
+            DIR = args[0];
+            if(!DIR.endsWith(File.pathSeparator)){
+                DIR += File.pathSeparator;
+            }
+            System.out.println("Using directory " + DIR);
+        }
+        
         ObjectNamingSupport md = new ObjectNamingSupport();
         md.run();
     }
 
     private void run() {
         try {
-            readGraph("flows.tuples");
-            String firstLine = readNames("heap2.map");
-            readSources("source_h2.tuples");
+            readGraph(DIR + "flows.tuples");
+            String firstLine = readNames(DIR + "heap2.map");
+            readSources(DIR + "source_h2.tuples");
             //sources.addAll(Arrays.asList(new String[] { "1587" }));            
             
             g.printGraph();
@@ -55,7 +65,7 @@ public class ObjectNamingSupport {
             dominators = new Dominators(true, HEAD, g.getNavigator());
             df = new DominanceFrontier(HEAD, g.getNavigator(), dominators);
             printDF(df);
-            dumpFrontierNodes("frontier.tuples", firstLine);
+            dumpFrontierNodes(DIR + "frontier.tuples", firstLine);
         }catch(IOException e){
             System.err.println(e.getMessage());
         }
