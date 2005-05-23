@@ -50,7 +50,7 @@ public class ObjectNamingSupport {
             readSources("source_h2.tuples");
             //sources.addAll(Arrays.asList(new String[] { "1587" }));            
             
-            //g.printGraph();
+            g.printGraph();
 
             dominators = new Dominators(true, HEAD, g.getNavigator());
             df = new DominanceFrontier(HEAD, g.getNavigator(), dominators);
@@ -82,7 +82,7 @@ public class ObjectNamingSupport {
         for(Iterator iter = sources.iterator(); iter.hasNext();){
             String node = (String) iter.next();
             if(g.containsNode(node)){
-                Set frontier = df.getDominanceFrontier(node);
+                Set frontier = df.getIteratedDominanceFrontier(node);
                 
                 System.out.println("Source " + names.get(node) + "(" + node + ")");
                 System.out.println("Frontier of " + names.get(node)); 
