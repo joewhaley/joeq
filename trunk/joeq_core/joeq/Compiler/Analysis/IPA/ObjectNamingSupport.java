@@ -43,8 +43,8 @@ public class ObjectNamingSupport {
     public static void main(String[] args) {
         if(args.length > 0){
             DIR = args[0];
-            if(!DIR.endsWith(File.pathSeparator)){
-                DIR += File.pathSeparator;
+            if(!DIR.endsWith(File.separator)){
+                DIR += File.separator;
             }
             System.out.println("Using directory " + DIR);
         }
