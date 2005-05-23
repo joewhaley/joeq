@@ -87,7 +87,7 @@ public class SCCTopSortedGraph implements Graph, Serializable {
      * <code>SCComponent</code> s without any entering edge.
      */
     public static SCCTopSortedGraph topSort(Set roots) {
-        // sorting an empty component graph is realy easy!
+        // sorting an empty component graph is really easy!
         if (roots.isEmpty()) return new SCCTopSortedGraph(null, null);
         reached_sccs = new HashSet();
         // to facilitate insertions into the double linked list of SCCs,
