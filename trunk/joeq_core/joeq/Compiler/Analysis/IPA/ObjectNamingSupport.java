@@ -39,6 +39,7 @@ public class ObjectNamingSupport {
     private Dominators dominators;
     private DominanceFrontier df;
     private static String DIR = "";
+    private boolean TRACE = false;
 
     public static void main(String[] args) {
         if(args.length > 0){
@@ -60,7 +61,7 @@ public class ObjectNamingSupport {
             String firstLine = readSources(DIR + "source_h2.tuples");
             //sources.addAll(Arrays.asList(new String[] { "1587" }));            
             
-            g.printGraph();
+            //g.printGraph();
 
             dominators = new Dominators(true, HEAD, g.getNavigator());
             df = new DominanceFrontier(HEAD, g.getNavigator(), dominators);
@@ -95,13 +96,13 @@ public class ObjectNamingSupport {
             if(g.containsNode(node)){
                 Set frontier = df.getIteratedDominanceFrontier(node);
                 
-                System.out.println("Source " + names.get(node) + "(" + node + ")");
-                System.out.println("Frontier of " + names.get(node)); 
+                if(TRACE) System.out.println("Source " + names.get(node) + "(" + node + ")");
+                if(TRACE) System.out.println("Frontier of " + names.get(node)); 
                 
                 for(Iterator frontierIter = frontier.iterator(); frontierIter.hasNext();){
                     String n = (String) frontierIter.next();
                     if(!predDominatedBySources(n)){
-                        System.out.println("\t\t" + names.get(n) + 
+                        if(TRACE) System.out.println("\t\t" + names.get(n) + 
                             "(" + n + ") " + g.getPredsOf(n).size());
                         
                         frontierNodes.add(n);
@@ -112,16 +113,16 @@ public class ObjectNamingSupport {
                                 String annote = g.getEdgeAnnote(pred, n);
 
                                 if(!isDominatedBySources(pred)){
-                                    System.out.println("\t\t\t" + pred + ": " + names.get(pred) + ", " + annote);
+                                    if(TRACE) System.out.println("\t\t\t" + pred + ": " + names.get(pred) + ", " + annote);
                                 }else{
-                                    System.out.println("\t\t\t+" + pred + ": " + names.get(pred) + ", " + annote);
+                                    if(TRACE) System.out.println("\t\t\t+" + pred + ": " + names.get(pred) + ", " + annote);
                                 }
                             }
                         }
                     }
                 }
             }else{
-                System.out.println("Source " + " is missing from the graph.");
+                if(TRACE) System.out.println("Source " + " is missing from the graph.");
             }
         }        
     }
