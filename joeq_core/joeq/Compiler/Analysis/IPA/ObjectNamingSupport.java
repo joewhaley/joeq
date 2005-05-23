@@ -56,8 +56,8 @@ public class ObjectNamingSupport {
     private void run() {
         try {
             readGraph(DIR + "flows.tuples");
-            String firstLine = readNames(DIR + "heap2.map");
-            readSources(DIR + "source_h2.tuples");
+            readNames(DIR + "heap2.map");
+            String firstLine = readSources(DIR + "source_h2.tuples");
             //sources.addAll(Arrays.asList(new String[] { "1587" }));            
             
             g.printGraph();
@@ -210,24 +210,22 @@ public class ObjectNamingSupport {
         return false;
     }
 
-    String readNames(String namesFile) throws IOException {
+    void readNames(String namesFile) throws IOException {
         BufferedReader di = new BufferedReader(new FileReader(namesFile));
         int lineno = 0;
         String line = di.readLine();
-        String firstLine = line;
         
         do {
             names.put(new Integer(lineno++).toString(), line);
         } while ((line = di.readLine()) != null);
         System.out.println("Read " + names.size() + " names.");
-        
-        return firstLine;
     }
     
-    void readSources(String namesFile) throws IOException {
+    String readSources(String namesFile) throws IOException {
         BufferedReader di = new BufferedReader(new FileReader(namesFile));
         int lineno = 1;
         String line = di.readLine();
+        String firstLine = null;
         
         do {
             if (!line.startsWith("#")) {
@@ -239,10 +237,18 @@ public class ObjectNamingSupport {
                 }catch(NoSuchElementException e) {
                     line = di.readLine();
                 }
+            }else{
+                firstLine = line;
+                int idx = firstLine.indexOf("I0");
+                if(idx != -1){
+                    firstLine = firstLine.substring(0, idx-1);
+                }
             }
             
         } while ((line = di.readLine()) != null);
         System.out.println("Read " + sources.size() + " sources.");
+        
+        return firstLine;
     }
 }
 
