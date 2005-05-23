@@ -3,11 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package jwutil.graphs;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,6 +68,30 @@ public class DominanceFrontier {
             return (Set) df;
 
         return Collections.singleton(df);
+    }
+    
+    public Set getIteratedDominanceFrontier(Object node) {
+        Set idf = new HashSet();
+        //idf.add(node);
+        Set diff = new HashSet();
+        diff.add(node);
+        
+        do {
+            Set newDiff = new HashSet(); 
+            for(Iterator iter = diff.iterator(); iter.hasNext();){
+                Object diffNode = iter.next();
+                for(Iterator newIter = getDominanceFrontier(diffNode).iterator(); newIter.hasNext();){
+                    Object newNode = newIter.next();
+                    if(!idf.contains(newNode)){
+                        newDiff.add(newNode);
+                        idf.add(newNode);
+                    }
+                }
+            }
+            diff = newDiff;
+        } while(!diff.isEmpty());
+        
+        return idf;
     }
 
     /**
