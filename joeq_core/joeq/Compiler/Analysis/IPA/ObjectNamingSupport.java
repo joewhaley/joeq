@@ -76,6 +76,7 @@ public class ObjectNamingSupport {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(frontierFile));
             bw.write(firstLine);
+            bw.write("\n");
             
             for(Iterator iter = frontierNodes.iterator(); iter.hasNext();){
                 String n = (String) iter.next();
