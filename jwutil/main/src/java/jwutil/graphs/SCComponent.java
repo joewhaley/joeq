@@ -161,12 +161,11 @@ public final class SCComponent implements Comparable, Serializable {
         build_compressed_format();
         // Save the root SCComponents somewhere before activating the GC.
         Set root_sccs = new HashSet();
-        ArrayList root_sccs_vec = new ArrayList();
         for (Iterator i = roots.iterator(); i.hasNext();) {
             Object root = i.next();
             SCComponent root_scc = ((SCComponentInt) node2scc.get(root)).comp;
             if (root_scc.prevLength() == 0) {
-                if (root_sccs.add(root_scc)) root_sccs_vec.add(root_scc);
+                root_sccs.add(root_scc);
             }
         }
         nav = null; // enable the GC
