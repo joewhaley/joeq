@@ -20,7 +20,6 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
-import jwutil.collections.CollectionFactory;
 import jwutil.graphs.DominanceFrontier;
 import jwutil.graphs.Dominators;
 import jwutil.graphs.Navigator;
