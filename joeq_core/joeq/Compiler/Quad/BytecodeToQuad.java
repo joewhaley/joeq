@@ -85,7 +85,6 @@ import jwutil.util.Assert;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-
 public class BytecodeToQuad extends BytecodeVisitor {
     
     private ControlFlowGraph quad_cfg;
@@ -198,6 +197,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             if (TRACE) out.println("Blocks to regenerate: "+regenerate);
             joeq.Compiler.BytecodeAnalysis.BasicBlock bc_bb =
                 (joeq.Compiler.BytecodeAnalysis.BasicBlock)regenerate.removeFirst();
+            visited[bc_bb.id] = true;
             this.traverseBB(bc_bb);
         }
         if (quad_cfg.removeUnreachableBasicBlocks()) {
