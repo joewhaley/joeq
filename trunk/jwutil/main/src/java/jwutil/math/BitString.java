@@ -6,7 +6,8 @@ package jwutil.math;
 import jwutil.collections.UnmodifiableIterator;
 import jwutil.util.Assert;
 
-/** <code>BitString</code> implements a vector of bits much like <code>java.util.BitSet</code>,
+/**
+ * <code>BitString</code> implements a vector of bits much like <code>java.util.BitSet</code>,
  * except that this implementation actually works.  Also, <code>BitString</code>
  * has some groovy features which <code>BitSet</code> doesn't; mostly related to
  * efficient iteration over <code>true</code> and <code>false</code> components.

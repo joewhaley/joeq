@@ -4,11 +4,16 @@
 package jwutil.strings;
 
 /**
+ * A bunch of utility functions for strings.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Strings {
 
+    /**
+     * Line separator (newline character)
+     */
     public static final String lineSep = System.getProperty("line.separator");
 
     /**

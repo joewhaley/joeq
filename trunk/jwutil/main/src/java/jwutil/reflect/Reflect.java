@@ -9,13 +9,20 @@ import java.lang.reflect.Method;
 import java.security.AccessControlException;
 
 /**
- * Reflect
+ * Convenience methods for Java reflection.
  * 
  * @author jwhaley
  * @version $Id$
  */
 public abstract class Reflect {
     
+    /**
+     * Get a method by class name and method name.
+     * 
+     * @param className  class name
+     * @param methodName  method name
+     * @return  method object, or null if it does not exist
+     */
     public static Method getDeclaredMethod(String className, String methodName) {
         try {
             return getDeclaredMethod(Class.forName(className), methodName, null);
@@ -26,10 +33,25 @@ public abstract class Reflect {
         }
     }
     
+    /**
+     * Get a method by name.
+     * 
+     * @param c  class object
+     * @param methodName  method name
+     * @return  method object, or null if it does not exist
+     */
     public static Method getDeclaredMethod(Class c, String methodName) {
         return getDeclaredMethod(c, methodName, null);
     }
     
+    /**
+     * Get a method by name.
+     * 
+     * @param c  class object
+     * @param methodName  method name
+     * @param argTypes  argument types
+     * @return  method object, or null if it does not exist
+     */
     public static Method getDeclaredMethod(Class c, String methodName, Class[] argTypes) {
         Method m;
         try {
@@ -64,14 +86,40 @@ public abstract class Reflect {
         return m;
     }
 
+    /**
+     * Invoke a method by class name and method name.
+     * 
+     * @param className  class name
+     * @param methodName  method name
+     * @param argTypes  argument types of method
+     * @param args  arguments
+     * @return  return value
+     */
     public static Object invoke(String className, String methodName, Class[] argTypes, Object[] args) {
         return invoke(Reflect.class.getClassLoader(), className, methodName, argTypes, args);
     }
     
+    /**
+     * Invoke a method by class name and method name.
+     * 
+     * @param className  class name
+     * @param methodName  method name
+     * @param args  arguments
+     * @return  return value
+     */
     public static Object invoke(String className, String methodName, Object[] args) {
         return invoke(Reflect.class.getClassLoader(), className, methodName, args);
     }
     
+    /**
+     * Invoke a method by class name and method name under the given class loader.
+     * 
+     * @param cl  class loader
+     * @param className  class name
+     * @param methodName  method name
+     * @param args  arguments
+     * @return  return value
+     */
     public static Object invoke(ClassLoader cl, String className, String methodName, Object[] args) {
         return invoke(cl, className, methodName, null, args);
     }
@@ -120,6 +168,13 @@ public abstract class Reflect {
         return result;
     }
     
+    /**
+     * Set a boolean field by class name and field name.
+     * 
+     * @param classname  class name
+     * @param fieldname  field name
+     * @param value  value to set
+     */
     public static void setBooleanField(String classname, String fieldname, boolean value) {
         try {
             Class c = Class.forName(classname);

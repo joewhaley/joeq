@@ -8,20 +8,32 @@ import java.io.Reader;
 import java.io.Writer;
 
 /**
- * FillableReader
+ * An Reader that is buffered and refillable.
+ * This class is thread-safe, so different threads can be reading
+ * and writing the same stream.
  * 
  * @author jwhaley
  * @version $Id$
  */
 public class FillableReader extends Reader {
 
+    /**
+     * Get a Writer object attached to this FillableReader.
+     * 
+     * @return  writer object
+     */
     public Writer getWriter() {
         FISWriter os = new FISWriter();
         return os;
     }
 
-    public class FISWriter extends Writer {
+    private class FISWriter extends Writer {
 
+        /**
+         * Insert the given character into the buffer for this FillableReader.
+         * 
+         * @param c  character to insert
+         */
         public void write(char c) {
             FillableReader.this.write(c);
         }
@@ -48,9 +60,12 @@ public class FillableReader extends Reader {
         
     }
     
-    char[] buffer;
+    protected char[] buffer;
     volatile int start, end;
     
+    /**
+     * Construct a new FillableReader with an initial buffer size of 512 characters.
+     */
     public FillableReader() {
         buffer = new char[512];
         start = end = 0;
@@ -105,6 +120,11 @@ public class FillableReader extends Reader {
         return newEnd;
     }
     
+    /**
+     * Insert the given character into the buffer for this FillableReader.
+     * 
+     * @param b  character to insert
+     */
     public void write(int b) {
         synchronized (lock) {
             while (start == nextEnd(1)) {
@@ -118,10 +138,23 @@ public class FillableReader extends Reader {
         }
     }
     
+    /**
+     * Insert the given array of characters into the buffer for
+     * this FillableReader.
+     * 
+     * @param b  array of characters to insert
+     */
     public void write(char[] b) {
         write(b, 0, b.length);
     }
     
+    /**
+     * Inserts a portion of an array of characters.
+     * 
+     * @param b  array of characters
+     * @param off  offset from which to start writing characters
+     * @param len  number of characters to write
+     */
     public void write(char[] b, int off, int len) {
         synchronized (lock) {
             while (len > 0) {
@@ -149,6 +182,11 @@ public class FillableReader extends Reader {
         if (end == buffer.length) end = 0;
     }
 
+    /**
+     * Inserts a string.
+     * 
+     * @param s  string to insert
+     */
     public void write(String s) {
         int len = s.length();
         synchronized (lock) {
@@ -162,6 +200,11 @@ public class FillableReader extends Reader {
      * @see java.io.Reader#close()
      */
     public void close() throws IOException {
+        synchronized (lock) {
+            buffer = null;
+            start = -1;
+            end = -2;
+        }
     }
 
 }

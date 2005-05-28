@@ -11,19 +11,27 @@ import java.io.UTFDataFormatException;
 import jwutil.strings.Utf8;
 
 /**
- * FillableInputStream
+ * An InputStream that is buffered and refillable.  This class implements the
+ * DataOutput interface, so you can fill the buffer with calls to DataOutput
+ * methods.  This class is thread-safe, so different threads can be reading
+ * and writing the same stream.
  * 
  * @author jwhaley
  * @version $Id$
  */
 public class FillableInputStream extends InputStream implements DataOutput {
 
+    /**
+     * Get an OutputStream that is attached to this FillableInputStream. 
+     * 
+     * @return  attached output stream
+     */
     public OutputStream getOutputStream() {
         FISOutputStream os = new FISOutputStream();
         return os;
     }
     
-    public class FISOutputStream extends OutputStream {
+    private class FISOutputStream extends OutputStream {
 
         /* (non-Javadoc)
          * @see java.io.OutputStream#write(int)
@@ -41,9 +49,12 @@ public class FillableInputStream extends InputStream implements DataOutput {
         
     }
     
-    byte[] buffer;
-    int start, end;
+    protected byte[] buffer;
+    protected int start, end;
     
+    /**
+     * Construct a new FillableInputStream with a default buffer size of 1024 bytes.
+     */
     public FillableInputStream() {
         buffer = new byte[1024];
         start = end = 0;
