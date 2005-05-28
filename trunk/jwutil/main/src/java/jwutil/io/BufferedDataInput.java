@@ -12,7 +12,7 @@ import java.io.Reader;
 import java.io.UTFDataFormatException;
 
 /**
- * BufferedDataInput
+ * A class to convert from a Reader to a DataInput, with buffering support.
  * 
  * @author jwhaley
  * @version $Id$

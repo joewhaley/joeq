@@ -6,7 +6,10 @@ package jwutil.io;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 
-/*
+/**
+ * A version of DataInputStream backed by a byte array.
+ * It supports getIndex() and unreadByte().
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -26,7 +29,7 @@ public final class ByteSequence extends DataInputStream {
     public final int getIndex() {
         return byte_stream.getPosition();
     }
-    final void unreadByte() {
+    public final void unreadByte() {
         byte_stream.unreadByte();
     }
 
