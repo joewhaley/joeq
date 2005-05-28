@@ -1059,7 +1059,6 @@ public class IPSSABuilder implements Runnable {
         public static void main(String[] args) {
             HostedVM.initialize();
 
-            joeq.Compiler.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
             Iterator i = null; String memberName = null;
             for (int x=0; x<args.length; ++x) {
                 if (args[x].equals("-file")) {
