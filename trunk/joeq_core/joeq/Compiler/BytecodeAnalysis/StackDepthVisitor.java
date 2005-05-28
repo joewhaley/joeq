@@ -11,6 +11,8 @@ import joeq.Class.jq_Type;
 import jwutil.util.Assert;
 
 /**
+ * A simple visitor that keeps track of the bytecode stack depth.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */

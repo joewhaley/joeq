@@ -5,23 +5,60 @@ package joeq.Compiler.BytecodeAnalysis;
 
 import jwutil.util.Assert;
 
-/*
+/**
+ * A basic block in terms of bytecode indices.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class BasicBlock {
 
+    /**
+     * ID number.
+     */
     public final int id;
-    final int start;
-    int end;
-    BasicBlock[] predecessors;
-    BasicBlock[] successors;
-    ExceptionHandlerSet exception_handler_set;
-
-    boolean isSubroutineRet;
     
+    /**
+     * Start index of basic block.
+     */
+    final int start;
+    
+    /**
+     * End index of basic block.
+     */
+    int end;
+    
+    /**
+     * Predecessors of this basic block.
+     */
+    BasicBlock[] predecessors;
+    
+    /**
+     * Successors of this basic block.
+     */
+    BasicBlock[] successors;
+    
+    /**
+     * Set of exception handlers for this basic block.
+     */
+    ExceptionHandlerList exception_handler_set;
+
+    /**
+     * Starting stack depth of this basic block.
+     */
     int startingStackDepth;
     
+    /**
+     * Whether this basic block ends in a ret.
+     */
+    boolean isSubroutineRet;
+    
+    /**
+     * Construct a new basic block.  Only to be called by ControlFlowGraph.
+     * 
+     * @param id
+     * @param start
+     */
     BasicBlock(int id, int start) {
         this.id = id; this.start = start;
     }
@@ -57,16 +94,16 @@ public class BasicBlock {
         return exception_handler_set.iterator();
     }
     
-    void addExceptionHandler_first(ExceptionHandlerSet eh) {
+    void addExceptionHandler_first(ExceptionHandlerList eh) {
         Assert._assert(eh.parent == null);
         eh.parent = this.exception_handler_set;
         this.exception_handler_set = eh;
     }
-    ExceptionHandlerSet addExceptionHandler(ExceptionHandlerSet eh) {
+    ExceptionHandlerList addExceptionHandler(ExceptionHandlerList eh) {
         if (eh.parent == this.exception_handler_set)
             return this.exception_handler_set = eh;
         else
-            return this.exception_handler_set = new ExceptionHandlerSet(eh.getHandler(), this.exception_handler_set);
+            return this.exception_handler_set = new ExceptionHandlerList(eh.getHandler(), this.exception_handler_set);
     }
 
     public String toString() { return "BB"+id+" ("+start+"-"+end+")"; }

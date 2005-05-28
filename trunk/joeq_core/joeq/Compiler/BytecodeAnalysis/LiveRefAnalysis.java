@@ -19,6 +19,8 @@ import jwutil.strings.Strings;
 import jwutil.util.Assert;
 
 /**
+ * A combination liveness and type analysis for Java bytecode.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
