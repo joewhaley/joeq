@@ -16,12 +16,25 @@ public class AtomicCounter {
     
     /** Creates new AtomicCounter */
     public AtomicCounter(int initialValue) { current = initialValue-1;}
+    /** Creates new AtomicCounter, initialized to one. */
     public AtomicCounter() { this(0); }
 
+    /**
+     * Increments this counter, returning the old value.
+     */
     public synchronized int increment() { return ++current; }
+    /**
+     * Resets this counter to the given value.
+     */
     public synchronized void reset(int v) { current = v-1; }
     
+    /**
+     * Returns the current value.
+     */
     public int value() { return current+1; }
     
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     public String toString() { return Integer.toString(value()); }
 }

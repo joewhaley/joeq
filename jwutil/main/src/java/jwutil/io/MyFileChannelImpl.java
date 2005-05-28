@@ -21,14 +21,28 @@ import java.nio.channels.WritableByteChannel;
 import jwutil.util.Assert;
 
 /**
+ * An implementation of FileChannel that is backed by a FileInputStream,
+ * FileOutputStream, or RandomAccessFile.  This is useful on virtual machines
+ * that do not support the normal FileChannel methods (like JDK 1.3).
+ * 
+ * Not all functionality has been implemented yet.
+ * 
  * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
- *
  */
 public class MyFileChannelImpl
     extends FileChannel
     implements ReadableByteChannel, WritableByteChannel {
 
+    /**
+     * Gets the file channel for the given object.  Assumes the object either
+     * has a getChannel() method, or it is a FileInputStream, FileOutputStream,
+     * or RandomAccessFile.
+     * 
+     * @param o  object to get file channel from
+     * @return  the file channel
+     * @throws IOException  if an IO exception occurred while getting the channel
+     */
     public static FileChannel getFileChannel(Object o) throws IOException {
         Class c = o.getClass();
         try {
@@ -50,22 +64,22 @@ public class MyFileChannelImpl
         return null;
     }
 
-    FileInputStream fis;
-    FileOutputStream fos;
-    RandomAccessFile raf;
-    long currentPosition;
+    protected FileInputStream fis;
+    protected FileOutputStream fos;
+    protected RandomAccessFile raf;
+    protected long currentPosition;
     
-    MyFileChannelImpl(RandomAccessFile o) throws IOException {
+    private MyFileChannelImpl(RandomAccessFile o) throws IOException {
         this.raf = o;
         this.fis = new FileInputStream(o.getFD());
         this.fos = new FileOutputStream(o.getFD());
     }
     
-    MyFileChannelImpl(FileInputStream o) {
+    private MyFileChannelImpl(FileInputStream o) {
         this.fis = o;
     }
 
-    MyFileChannelImpl(FileOutputStream o) {
+    private MyFileChannelImpl(FileOutputStream o) {
         this.fos = o;
     }
     

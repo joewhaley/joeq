@@ -6,7 +6,7 @@ package jwutil.math;
 import java.math.BigInteger;
 
 /**
- * CombinationGenerator
+ * Generates combinations.
  * 
  * @author jwhaley
  * @version $Id$
@@ -19,9 +19,10 @@ public class CombinationGenerator {
     private BigInteger total;
 
     /**
+     * Create a new combination generator.
      * 
-     * @param n
-     * @param r
+     * @param n  size of universe
+     * @param r  number of elements to choose
      */
     public CombinationGenerator(int n, int r) {
         if (r > n) {
@@ -33,15 +34,15 @@ public class CombinationGenerator {
         this.n = n;
         this.r = r;
         a = new int[r];
-        BigInteger nFact = getFactorial(n);
-        BigInteger rFact = getFactorial(r);
-        BigInteger nminusrFact = getFactorial(n - r);
+        BigInteger nFact = Distributions.factorial(n);
+        BigInteger rFact = Distributions.factorial(r);
+        BigInteger nminusrFact = Distributions.factorial(n - r);
         total = nFact.divide(rFact.multiply(nminusrFact));
         reset();
     }
 
     /**
-     * 
+     * Reset this combination generator back to the start.
      */
     public void reset() {
         for (int i = 0; i < a.length; i++) {
@@ -75,20 +76,6 @@ public class CombinationGenerator {
      */
     public BigInteger getTotal() {
         return total;
-    }
-
-    /**
-     * Compute factorial.
-     * 
-     * @param n  input number
-     * @return  factorial
-     */
-    private static BigInteger getFactorial(int n) {
-        BigInteger fact = BigInteger.ONE;
-        for (int i = n; i > 1; i--) {
-            fact = fact.multiply(BigInteger.valueOf(i));
-        }
-        return fact;
     }
 
     /**

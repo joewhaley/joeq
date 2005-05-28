@@ -16,6 +16,7 @@ import java.security.AccessControlException;
 
 /**
  * Read system properties from a file.
+ * 
  * @version $Id$
  * @author gback
  * @author John Whaley
@@ -52,6 +53,9 @@ public class SystemProperties {
         }
     }
     
+    /**
+     * Read the system properties from the given file.
+     */
     public static void read(String filename) {
         FileInputStream propFile = null;
         try {
@@ -71,7 +75,7 @@ public class SystemProperties {
         }
     }
     
-    Map flags = new HashMap();
+    protected Map flags = new HashMap();
 
     public void registerFlag(String flagName, Field f) {
         flags.put(flagName, f);

@@ -6,9 +6,10 @@ package jwutil.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import jwutil.strings.Utf8;
 
 /**
- * ReaderInputStream
+ * Adapter between a Reader and an InputStream.
  * 
  * @author jwhaley
  * @version $Id$
@@ -81,7 +82,7 @@ public class ReaderInputStream extends InputStream {
         if (nChars == -1) return -1;
         int byteIndex = off, charIndex = 0, byteEnd = off + len;
         while (byteIndex < byteEnd && charIndex < nChars) {
-            int newByteIndex = toUtf8(charbuf[charIndex], b, byteIndex, byteEnd);
+            int newByteIndex = Utf8.toUtf8(charbuf[charIndex], b, byteIndex, byteEnd);
             if (newByteIndex == -1) {
                 // Overflowed the buffer!
                 break;
@@ -91,55 +92,18 @@ public class ReaderInputStream extends InputStream {
         }
         if (charIndex < nChars) {
             // More characters to do!
-            int length = lengthUtf8(charbuf, charIndex, nChars - charIndex);
+            int length = Utf8.lengthUtf8(charbuf, charIndex, nChars - charIndex);
             if (length > buf.length) {
                 buf = new byte[length];
             }
             index = buf.length - length;
             int bufIndex = index;
             while (charIndex < nChars) {
-                bufIndex = toUtf8(charbuf[charIndex++], buf, bufIndex, buf.length);
+                bufIndex = Utf8.toUtf8(charbuf[charIndex++], buf, bufIndex, buf.length);
             }
             // assert bufIndex == buf.length;
         }
         return byteIndex - off;
-    }
-    
-    static int lengthUtf8(char[] cs, int off, int len) {
-        int result = 0;
-        for (int i = 0; i < len; ++i) {
-            char c = cs[off + i];
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                ++result;
-            } else {
-                if (c > 0x07FF) {
-                    result += 3;
-                } else {
-                    result += 2;
-                }
-            }
-        }
-        return result;
-    }
-    
-    static int toUtf8(char c, byte[] to, int off, int end) {
-        int k = 0;
-        if ((c >= 0x0001) && (c <= 0x007F)) {
-            to[off++] = (byte) c;
-        } else {
-            if (c > 0x07FF) {
-                to[off++] = (byte)(0xe0 | (byte)(c >> 12));
-                if (off == end) return -1;
-                to[off++] = (byte)(0x80 | ((c & 0xfc0) >> 6));
-                if (off == end) return -1;
-                to[off++] = (byte)(0x80 | (c & 0x3f));
-            } else {
-                to[off++] = (byte)(0xc0 | (byte)(c >> 6));
-                if (off == end) return -1;
-                to[off++] = (byte)(0x80 | (c & 0x3f));
-            }
-        }
-        return off;
     }
     
 }

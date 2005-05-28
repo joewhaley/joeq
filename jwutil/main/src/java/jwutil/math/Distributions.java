@@ -17,6 +17,20 @@ import java.math.BigInteger;
 public class Distributions {
     
     /**
+     * Factorial.
+     * 
+     * @param n  input number
+     * @return  factorial
+     */
+    public static BigInteger factorial(int n) {
+        BigInteger fact = BigInteger.ONE;
+        for (int i = n; i > 1; i--) {
+            fact = fact.multiply(BigInteger.valueOf(i));
+        }
+        return fact;
+    }
+
+    /**
      * Binomial distribution.
      */
     public static BigInteger binomial(int n, int k) {

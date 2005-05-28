@@ -6,7 +6,7 @@ package jwutil.math;
 import java.math.BigInteger;
 
 /**
- * PermutationGenerator
+ * Generates permutations.
  * 
  * @author jwhaley
  * @version $Id$
@@ -17,15 +17,23 @@ public class PermutationGenerator {
     private BigInteger numLeft;
     private BigInteger total;
 
+    /**
+     * Construct a new permutation generator.
+     * 
+     * @param n  number of elements
+     */
     public PermutationGenerator(int n) {
         if (n < 1) {
             throw new IllegalArgumentException();
         }
         a = new int[n];
-        total = getFactorial(n);
+        total = Distributions.factorial(n);
         reset();
     }
 
+    /**
+     * Reset this permutation generator back to the first permutation.
+     */
     public void reset() {
         for (int i = 0; i < a.length; i++) {
             a[i] = i;
@@ -34,14 +42,14 @@ public class PermutationGenerator {
     }
 
     /**
-     * Return number of permutations not yet generated
+     * Return number of permutations not yet generated.
      */
     public BigInteger getNumLeft() {
         return numLeft;
     }
 
     /**
-     * Return total number of permutations
+     * Return total number of permutations.
      */
     public BigInteger getTotal() {
         return total;
@@ -52,17 +60,6 @@ public class PermutationGenerator {
      */
     public boolean hasMore() {
         return numLeft.compareTo(BigInteger.ZERO) == 1;
-    }
-
-    /**
-     * Compute factorial
-     */
-    public static BigInteger getFactorial(int n) {
-        BigInteger fact = BigInteger.ONE;
-        for (int i = n; i > 1; i--) {
-            fact = fact.multiply(BigInteger.valueOf(i));
-        }
-        return fact;
     }
 
     /**

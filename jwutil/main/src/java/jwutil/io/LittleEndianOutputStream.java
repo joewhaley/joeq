@@ -7,7 +7,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import jwutil.strings.Utf8;
 
-/*
+/**
+ * A wrapper for an OutputStream that outputs data in little-endian format.
+ * Little-endian means that the least-significant byte goes first.  The default
+ * for Java is big-endian, which means that the most-significant byte goes first.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
