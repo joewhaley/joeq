@@ -15,12 +15,18 @@ import jwutil.strings.UTFDataFormatError;
 import jwutil.strings.Utf8;
 import jwutil.util.Assert;
 
-/*
+/**
+ * A FileOutputStream that attempts to use the more efficient FileChannel
+ * with a direct byte buffer if possible.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class DirectBufferedFileOutputStream extends OutputStream implements ExtendedDataOutput {
 
+    /**
+     * Default initial requested size of the byte buffer.
+     */
     public static final int DEFAULT_INITIAL_SIZE = 65536;
 
     private ByteBuffer directByteBuffer;

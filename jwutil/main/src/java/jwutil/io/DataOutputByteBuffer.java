@@ -20,7 +20,7 @@ public class DataOutputByteBuffer implements DataOutput {
     protected ByteBuffer buf;
     
     /**
-     * 
+     * Construct a new DataOutputByteBuffer from the given ByteBuffer.
      */
     public DataOutputByteBuffer(ByteBuffer b) {
         super();
