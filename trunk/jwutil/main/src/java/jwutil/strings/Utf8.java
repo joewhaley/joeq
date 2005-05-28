@@ -129,6 +129,30 @@ public abstract class Utf8 {
     }
 
     /**
+     * Converts a character to utf8 in the given byte array.
+     * Returns the new offset in the byte array.
+     */
+    public static int toUtf8(char c, byte[] to, int off, int end) {
+        int k = 0;
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+            to[off++] = (byte) c;
+        } else {
+            if (c > 0x07FF) {
+                to[off++] = (byte)(0xe0 | (byte)(c >> 12));
+                if (off == end) return -1;
+                to[off++] = (byte)(0x80 | ((c & 0xfc0) >> 6));
+                if (off == end) return -1;
+                to[off++] = (byte)(0x80 | (c & 0x3f));
+            } else {
+                to[off++] = (byte)(0xc0 | (byte)(c >> 6));
+                if (off == end) return -1;
+                to[off++] = (byte)(0x80 | (c & 0x3f));
+            }
+        }
+        return off;
+    }
+    
+    /**
      * Returns the length of a string's utf8 encoded form.
      */
     public static int lengthUtf8(String s) {
@@ -145,6 +169,26 @@ public abstract class Utf8 {
         return utflen;
     }
 
+    /**
+     * Returns the length of a string's utf8 encoded form.
+     */
+    public static int lengthUtf8(char[] cs, int off, int len) {
+        int result = 0;
+        for (int i = 0; i < len; ++i) {
+            char c = cs[off + i];
+            if ((c >= 0x0001) && (c <= 0x007F)) {
+                ++result;
+            } else {
+                if (c > 0x07FF) {
+                    result += 3;
+                } else {
+                    result += 2;
+                }
+            }
+        }
+        return result;
+    }
+    
     /**
      * Check whether the given sequence of bytes is valid (pseudo-)utf8.
      *
