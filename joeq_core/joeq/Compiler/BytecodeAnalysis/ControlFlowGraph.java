@@ -52,9 +52,9 @@ public class ControlFlowGraph {
      * entry and exit blocks and modifies the given locals.  This info is
      * associated with the entry and exit blocks.
      * 
-     * @param entry
-     * @param exit
-     * @param locals
+     * @param entry  entry block
+     * @param exit  exit block
+     * @param locals  which locals are modified
      */
     public void addJSRInfo(BasicBlock entry, BasicBlock exit, boolean[] locals) {
         if (jsr_info == null) jsr_info = new HashMap();
@@ -280,7 +280,7 @@ public class ControlFlowGraph {
             ExceptionHandler eh = new ExceptionHandler(ex.getExceptionType(),
                                                        numOfProtectedBlocks,
                                                        handler_bb);
-            ExceptionHandlerSet ehs = new ExceptionHandlerSet(eh, null);
+            ExceptionHandlerList ehs = new ExceptionHandlerList(eh, null);
             bb.addExceptionHandler_first(ehs);
             int start_id = bb.id;
             while (bb.getStart() < ex.getEndPC()) {
@@ -440,7 +440,7 @@ public class ControlFlowGraph {
         }
         public void visitRET(int i) {
             super.visitRET(i);
-            // TODO
+            // RETs are handled later.
             bb.successors = new BasicBlock[0];
         }
         public void visitGOTO(int target) {

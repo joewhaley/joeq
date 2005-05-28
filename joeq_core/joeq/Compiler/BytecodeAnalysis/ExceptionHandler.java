@@ -5,7 +5,9 @@ package joeq.Compiler.BytecodeAnalysis;
 
 import joeq.Class.jq_Class;
 
-/*
+/**
+ * Exception handler for a bytecode CFG.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */

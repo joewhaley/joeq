@@ -8,7 +8,9 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import jwutil.collections.AppendListIterator;
 
-/*
+/**
+ * Iterator for exception handlers in a bytecode CFG.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -17,7 +19,7 @@ public class ExceptionHandlerIterator implements ListIterator {
     private final AppendListIterator iterator;
     
     /** Creates new ExceptionHandlerIterator */
-    public ExceptionHandlerIterator(List exs, ExceptionHandlerSet parent) {
+    public ExceptionHandlerIterator(List exs, ExceptionHandlerList parent) {
         ListIterator l2 = parent==null?null:parent.iterator();
         iterator = new AppendListIterator(exs.listIterator(), l2);
     }

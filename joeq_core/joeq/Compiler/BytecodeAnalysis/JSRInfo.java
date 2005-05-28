@@ -4,7 +4,8 @@
 package joeq.Compiler.BytecodeAnalysis;
 
 /**
- *
+ * Information for a JSR subroutine.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */

@@ -14,7 +14,9 @@ import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_StaticField;
 import jwutil.strings.Strings;
 
-/*
+/**
+ * Simple mod/ref analysis.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
