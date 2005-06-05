@@ -23,8 +23,7 @@ import org.xml.sax.SAXParseException;
  * A command-line utility to generate an invocation stub from a web.xml file. 
  * 
  * @author V. Benjamin Livshits
- * @version: $Id$
- * 
+ * @version $Id$
  */
 public class GenerateWebRoots {
     private static boolean TRACE = true;
