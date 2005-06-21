@@ -23,9 +23,9 @@ import jwutil.util.Assert;
  */
 public abstract class Solver {
     
-    CallGraph cg;
-    Map predecessors;
-    Collection roots;
+    protected CallGraph cg;
+    protected Map predecessors;
+    protected Collection roots;
     
     public static final boolean TIMINGS = false;
     public static final boolean TRACE = false;
@@ -35,7 +35,7 @@ public abstract class Solver {
     
     public abstract void dispose(jq_Method m);
     
-    void go() {
+     protected void go() {
         
         long time = System.currentTimeMillis();
         
