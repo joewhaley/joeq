@@ -363,7 +363,7 @@ public abstract class ProgramLocation implements Textualizable {
             return false;
         }
         public String toString() {
-            String s = super.m.getDeclaringClass().getName()+"."+super.m.getName()+"() @ "+bcIndex;
+            String s = super.m.getDeclaringClass().getName()+"."+super.m.getName()+" "+super.m.getDesc()+" @ "+bcIndex;
             return s;
         }
         
