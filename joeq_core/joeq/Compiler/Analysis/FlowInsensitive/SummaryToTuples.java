@@ -193,6 +193,41 @@ m_sc.tuples : (M,I,M)
     A tuple (m1,i,m2) means that m1 contains an invocation site i that
     is statically bound to call m2.
 
+vT.tuples : (V,T)
+    Contains the declared type (class or interface) of each variable.
+    
+hT.tuples : (H,T)
+    Contains the type (class) of each object creation site.
+    
+aT.tuples : (T,T)
+    Contains which types are assignable from one to another.
+    A tuple (t1,t2) means that you can assign an object of type t2 to
+    a variable of type t1 (i.e., t1 is a supertype of t2).
+
+cha.tuples : (T,N,M)
+    Contains the virtual method dispatch information.
+    A tuple (t,n,m) means that doing a virtual method call with name n
+    on an object of type t leads to target method m.
+
+methods.tuples : (T,M)
+    Contains the methods that each class defines.
+    A tuple (t,m) means that class t defines method m.
+
+fields.tuples : (T,F)
+    Contains the fields that each class defines.
+    A tuple (t,f) means that class t defines field f.
+    
+clinit.tuples : (T,M)
+    Contains the class initializers.
+    A tuple (t,m) means that class t has class initializer method m.
+    
+m_access.tuples : (M,Z)
+    Contains the access modifiers for each of the methods.
+    0 = public, 1 = private, 2 = protected, 3 = package-protected
+
+f_access.tuples : (F,Z)
+    Contains the access modifiers for each of the fields.
+    0 = public, 1 = private, 2 = protected, 3 = package-protected
 
  * 
  * @author jwhaley
