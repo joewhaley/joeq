@@ -49,6 +49,152 @@ import jwutil.util.Assert;
 /**
  * SummaryToTuples
  * 
+
+Definition of domains:
+
+V: Variables.
+   Corresponds to variable nodes in the program.  There are variable nodes
+   for each formal parameter, result of a object creation (new/newarray/etc.),
+   result of a getfield/arrayload, return value at a call site, and thrown
+   exception at a call site.  There is also a special type of 'global'
+   variable node that is used when loading or storing to static fields.
+   Primitive type variables are skipped.
+
+H: Heap.
+   Corresponds to a location on the heap.  There is a heap node for each
+   object creation site.
+
+T: Type.
+   Corresponds to a Java type (class or interface).  There is one for every
+   class or interface used in the program.
+
+F: Field.
+   Corresponds to a field.  There is one for each dereferenced field in the
+   program.  There is also a special 'array' field for array accesses.
+
+I: Invocation.
+   Corresponds to a method invocation.  There is one for each method
+   invocation in the program.  Note that object creation is not a method
+   invocation, but object initialization (a call to the "<init>" method)
+   is an invocation.
+
+Z: Integer.
+   Corresponds to an integer number.  Used for numbering parameters.
+
+N: Method name.
+   Corresponds to a method name and descriptor used for virtual method
+   dispatch.  There is one for every method name and descriptor used in
+   a virtual method call.  There is also a special 'null' method name that
+   is used for non-virtual calls.
+
+M: Methods.
+   Corresponds to a method in the program.  This differs from the N domain
+   in that this contains actual methods, whereas N simply contains names
+   that are used for virtual method lookup, and can therefore contain
+   abstract methods.
+   
+VC: Variable context.
+    Path number used for context sensitivity.
+
+Files dumped by SummaryToTuples:
+
+fielddomains.pa :
+    contains the domain definitions, sizes, and map file names.
+
+m_formal.tuples : (M,Z,V)
+    Contains formal method parameters.
+    A tuple (m,z,v) means that parameter #z of method m is represented by
+    variable v.  In static methods, parameter #0 is the special 'global'
+    variable.  For instance methods, parameter #0 is the 'this' pointer for
+    the method.  Primitive type parameters do not have variable nodes and
+    therefore are not in m_formal.
+
+m_global.tuples : (M,V)
+    Contains the 'global variable node' for each method.
+    Each method has a 'global variable node' that it uses when accessing
+    static fields.  A tuple (m,v) means that method m has global variable
+    node v.
+
+m_vP.tuples : (M,V,H)
+    Contains object creation sites within the method.
+    A tuple (m,v,h) means that method m contains an object creation site
+    that makes variable v point to new heap location h.
+
+m_A.tuples : (M,V,V)
+    Contains assignments within a method.
+    A tuple (m,v1,v2) means that method m contains an assignment "v1=v2;".
+    Note that because assignments are factored away, the only remaining
+    assignments will be caused by casts.  This is because variables can
+    only have one type, so we need to use different variables to record
+    the different types.
+
+m_L.tuples : (M,V,F,V)
+    Contains load instructions within a method.
+    A tuple (m,v1,f,v2) means that method m contains a load instruction
+    "v2=v1.f;", or if f is the special 'array' field, then m contains an
+    instruction of the form "v2=v1[_];".  Loads from static fields
+    are specified with v1 equal to the 'global variable node' for the method.
+    Loads from fields with primitive types are skipped.
+
+m_S.tuples : (M,V,F,V)
+    Contains store instructions within a method.
+    A tuple (m,v1,f,v2) means that method m contains a store instruction
+    "v1.f=v2;", or if f is the special 'array' field, then m contains an
+    instruction of the form "v1[_]=v2;".  Stores into static fields
+    are specified with v1 equal to the 'global variable node' for the method.
+    Stores to fields with primitive types are skipped.
+
+m_calls.tuples : (M,I,N)
+    Contains the method invocations within a method.
+    A tuple (m,i,n) means that a method m contains an invocation site i
+    on method name n.  If the invocation is a non-virtual invocation or can
+    be completely statically resolved, the method name is a special null
+    method name, otherwise the method name is the virtual method to do the
+    lookup upon.  Non-virtual calls will also appear in "m_sc" with their
+    real targets.
+
+m_actual.tuples : (M,I,Z,V)
+    Contains the parameters for method invocations.
+    A tuple (m,i,z,v) means that a method m contains an invocation site i
+    with variable v passed in as parameter #z.  Static calls have the
+    special 'global' variable as their 0th parameter; instance calls have
+    the base object as their 0th parameter.  Primitive-typed parameters
+    are skipped.
+
+m_Iret.tuples : (M,I,V)
+    Contains the return values for method invocations.
+    A tuple (m,i,v) means that a method m contains an invocation site i
+    with return value v.  Invocations that do not use the return value or
+    that have a primitive return value are skipped.
+    
+m_Ithr.tuples : (M,I,V)
+    Contains the thrown exceptions for method invocations.
+    A tuple (m,i,v) means that a method m contains an invocation site i
+    with thrown exception v.
+    
+m_sync.tuples : (M,V)
+    Contains the variables that are synchronized in a method.
+    A tuple (m,v) means that method m synchronizes on variable v.
+
+m_vars.tuples : (M,V)
+    Contains the set of all variables in a method.
+    A tuple (m,v) means that method m contains variable v.
+    
+m_ret.tuples : (M,V)
+    Contains the set of variables that are returned from a method.
+    A tuple (m,v) means that method m returns variable v.
+    
+m_thr.tuples : (M,V)
+    Contains the set of variables that are thrown from a method.
+    A tuple (m,v) means that method m throws variable v.
+    
+m_sc.tuples : (M,I,M)
+    Contains the statically-bound calls in a method.
+    A tuple (m1,i,m2) means that m1 contains an invocation site i that
+    is statically bound to call m2.
+
+
+ * 
  * @author jwhaley
  * @version $Id$
  */
