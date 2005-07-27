@@ -149,6 +149,7 @@ public class PA {
     boolean DUMP_DOTGRAPH = !System.getProperty("pa.dumpdotgraph", "no").equals("no");
     boolean FILTER_NULL = !System.getProperty("pa.filternull", "yes").equals("no");
     boolean LONG_LOCATIONS = !System.getProperty("pa.longlocations", "no").equals("no");
+    boolean DUMP_UNMUNGED_NAMES = !System.getProperty("pa.dumpunmunged", "no").equals("no");
     boolean INCLUDE_UNKNOWN_TYPES = !System.getProperty("pa.unknowntypes", "yes").equals("no");
     boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
     boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
@@ -5103,6 +5104,24 @@ public class PA {
             }
         } finally {
             if (dos != null) dos.close();
+        }
+        
+        if(DUMP_UNMUNGED_NAMES) {
+            dos = null;
+            try {
+                dos = new BufferedWriter(new FileWriter(dumpPath+"unmunged_method.map"));
+                for (int j = 0; j < Mmap.size(); ++j) {
+                    Object o = Mmap.get(j);
+                    if (o instanceof Dummy) {
+                        dos.write(o.toString()+"\n");
+                        continue;
+                    }
+                    jq_Method m = (jq_Method) o;
+                    dos.write(m.toString()+"\n");
+                }
+            } finally {
+                if (dos != null) dos.close();
+            }
         }
 
     }
