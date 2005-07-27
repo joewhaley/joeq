@@ -104,7 +104,7 @@ public class NameMunger {
     public static String getJavadocSignature(jq_Method method) {
         String jvmSig = method.toString();
         
-        return getJavadocSignature(jvmSig, method.getReturnType().getJDKDesc());
+        return getJavadocSignature(jvmSig, method.getReturnType().getName());
     }
     
     public static String getJavadocSignature(String jvmSig, String returnType) {
