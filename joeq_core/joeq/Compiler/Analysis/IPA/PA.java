@@ -69,6 +69,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.UTF.Utf8;
+import joeq.Util.NameMunger;
 import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
@@ -4862,84 +4863,6 @@ public class PA {
         return b;
     }
     
-    // NQueens.<clinit>
-    // java/lang/Math/doublepow(doubledouble)
-    public static String mungeMethodName(jq_Method m) {
-        if (m == null) return "null";
-        StringBuffer sb = new StringBuffer();
-        String className = mungeTypeName(m.getDeclaringClass());
-        String returnType = mungeTypeName(m.getReturnType());
-        
-        if (m instanceof jq_ClassInitializer) {
-            return className+".<clinit>";
-        }
-        sb.append(className);
-        sb.append('/');
-        sb.append(returnType);
-        if (m instanceof jq_Initializer) {
-            
-        } else {
-            sb.append(m.getName());
-        }
-        sb.append('(');
-        jq_Type[] ps = m.getParamTypes();
-        for (int i = 0; i < ps.length; ++i) {
-            if (i == 0 && !m.isStatic()) continue;
-            jq_Type p = ps[i];
-            sb.append(mungeTypeName(p));
-        }
-        sb.append(')');
-        jq_Class[] ex = m.getThrownExceptionsTable();
-        if (ex != null) {
-            for (int i = 0; i < ex.length; ++i) {
-                jq_Class x = ex[i];
-                sb.append(mungeTypeName(x));
-            }
-        }
-        return sb.toString();
-    }
-    
-    // java/lang/String/count
-    // java/lang/String$1/foo
-    // java/lang/String/Iterator/n
-    public static String mungeFieldName(jq_Field t) {
-        if (t == null) return "null";
-        return mungeTypeName(t.getDeclaringClass())+"/"+t.getName();
-    }
-    
-    public static String mungeTypeName2(jq_Type t) {
-        if (t == null) return "null";
-        if (isAnonymousClass(t.toString())) return mungeTypeName(t);
-        String s = t.toString().replace('$','.');
-        return s;
-    }
-    
-    public static String mungeTypeName(jq_Type t) {
-        if (t == null) return "null";
-        if (t instanceof jq_Primitive) {
-            return ((jq_Primitive) t).getName();
-        }
-        if (t instanceof jq_Array) {
-            jq_Array a = (jq_Array) t;
-            int depth = a.getDimensionality();
-            jq_Type elementType = a.getInnermostElementType();
-            return mungeTypeName(elementType)+depth;
-        }
-        String s = t.toString();
-        s = s.replace('.', '/');
-        if (!isAnonymousClass(s))
-            s = s.replace('$', '/');
-        return s;
-    }
-    
-    public static boolean isAnonymousClass(String s) {
-        int i = s.indexOf('$');
-        if (i == -1) return false;
-        if (i+1 == s.length()) return false;
-        char c = s.charAt(i+1);
-        return Character.isDigit(c);
-    }
-    
     void addToNmap(jq_Method m) {
         Assert._assert(!m.isStatic());
         Assert._assert(!m.isPrivate());
@@ -5126,7 +5049,7 @@ public class PA {
             dos = new BufferedWriter(new FileWriter(dumpPath+"type.map"));
             for (int j = 0; j < Tmap.size(); ++j) {
                 jq_Type o = (jq_Type) Tmap.get(j);
-                dos.write(mungeTypeName2(o)+"\n");
+                dos.write(NameMunger.mungeTypeName2(o)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -5137,7 +5060,7 @@ public class PA {
             dos = new BufferedWriter(new FileWriter(dumpPath+"field.map"));
             for (int j = 0; j < Fmap.size(); ++j) {
                 jq_Field o = (jq_Field) Fmap.get(j);
-                dos.write(mungeFieldName(o)+"\n");
+                dos.write(NameMunger.mungeFieldName(o)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -5160,7 +5083,7 @@ public class PA {
             dos = new BufferedWriter(new FileWriter(dumpPath+"name.map"));
             for (int j = 0; j < Nmap.size(); ++j) {
                 jq_Method o = (jq_Method) Nmap.get(j);
-                dos.write(mungeMethodName(o)+"\n");
+                dos.write(NameMunger.mungeMethodName(o)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -5176,7 +5099,7 @@ public class PA {
                     continue;
                 }
                 jq_Method m = (jq_Method) o;
-                dos.write(mungeMethodName(m)+"\n");
+                dos.write(NameMunger.mungeMethodName(m)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
