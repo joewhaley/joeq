@@ -5117,7 +5117,7 @@ public class PA {
                         continue;
                     }
                     jq_Method m = (jq_Method) o;
-                    dos.write(m.toString()+"\n");
+                    dos.write(NameMunger.getJavadocSignature(m) + "\n");
                 }
             } finally {
                 if (dos != null) dos.close();

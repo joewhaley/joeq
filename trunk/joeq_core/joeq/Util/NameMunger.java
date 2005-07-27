@@ -99,5 +99,45 @@ public class NameMunger {
         if (i+1 == s.length()) return false;
         char c = s.charAt(i+1);
         return Character.isDigit(c);
-    }    
+    }
+    
+    public static String getJavadocSignature(jq_Method method) {
+        String jvmSig = method.toString();
+        
+        return getJavadocSignature(jvmSig, method.getReturnType().getJDKDesc());
+    }
+    
+    public static String getJavadocSignature(String jvmSig, String returnType) {
+        int spaceIdx = jvmSig.indexOf(' ');
+        String name = jvmSig.substring(0, spaceIdx);
+        String paramSig = jvmSig.substring(spaceIdx+1,jvmSig.length());
+        String[] params = DescriptorUtil.getParameters(paramSig);
+        
+        StringBuffer result = new StringBuffer();
+        if(returnType != null) {
+            result.append(returnType);
+            result.append(" ");
+        }
+        
+        result.append(name);
+        result.append("(");
+        for (int i = 0; i < params.length; i++) {
+            String param = params[i];
+            
+            result.append(param);
+            if(i < params.length-1) result.append(", ");
+        }
+        result.append(")");
+        
+        return result.toString();        
+    }
+    
+    private static void test(String sig) {
+        System.out.println(getJavadocSignature(sig, null));
+    } 
+
+    public static void main(String[] args) {
+        test("java.util.Calendar.internalSet (II)V");
+        test("MyMockLib.MyString.substring (Ljava/lang/String;I)Ljava/lang/String;");
+    }
 }
