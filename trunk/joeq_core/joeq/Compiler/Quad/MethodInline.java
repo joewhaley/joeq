@@ -15,7 +15,6 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
-import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
@@ -33,6 +32,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import joeq.Util.NameMunger;
 import joeq.Util.Templates.ListIterator;
 import jwutil.util.Assert;
 
@@ -239,7 +239,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 return null;
             }
             
-            String mungedName = PA.mungeMethodName(target);
+            String mungedName = NameMunger.mungeMethodName(target);
             if (!knownMethods.containsKey(mungedName)){
                 return null;
             }
