@@ -102,7 +102,26 @@ public class MethodInline implements ControlFlowGraphVisitor {
             this.callee = CodeCache.getCode(target);
         }
         public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
-            inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
+            /* Insert a fake replacement method call */
+            MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
+            if(fakeOperand != null){
+                int len = fakeOperand.getMethod().getParamTypes().length;
+                Quad fakeCallQuad = Invoke.InvokeStatic.create(
+                    caller.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, 
+                    (RegisterOperand) q.getOp1().copy(), (MethodOperand) fakeOperand.copy(), 
+                    len);
+                
+                for(int i = 0; i < len; i++){
+                    Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
+                }
+                bb.appendQuad(fakeCallQuad);
+//                System.out.println(
+//                    "Replaced a call to " + Invoke.getMethod(q) + 
+//                    " with a call to " + fakeOperand.getMethod());
+                
+//                return;
+            }
+            //inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
         }
         public String toString() { return callee.getMethod().toString(); }
     }
@@ -408,7 +427,7 @@ outer:
 
     public static void inlineVirtualCallSiteWithTypeCheck(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type) {
         if (TRACE) out.println("Inlining "+q+" in "+bb+" for target "+callee.getMethod());
-
+        
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
 
@@ -430,25 +449,7 @@ outer:
         // split the basic block containing the invoke, and start splicing
         // in the callee's control flow graph.
         BasicBlock successor_bb = caller.createBasicBlock(callee.exit().getNumberOfPredecessors() + 1, bb.getNumberOfSuccessors(), bb.size() - invokeLocation, bb.getExceptionHandlers());
-        
-//        /* Insert a fake replacement method call */
-//        MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
-//        if(fakeOperand != null){
-//            int len = fakeOperand.getMethod().getParamTypes().length;
-//            Quad fakeCallQuad = Invoke.InvokeStatic.create(
-//                caller.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, 
-//                (RegisterOperand) q.getOp1().copy(), (MethodOperand) fakeOperand.copy(), 
-//                len);
-//            
-//            for(int i = 0; i < len; i++){
-//                Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
-//            }
-//            successor_bb.appendQuad(fakeCallQuad);
-////            System.out.println(
-////                "Replaced a call to " + Invoke.getMethod(q) + 
-////                " with a call to " + fakeOperand.getMethod());
-//        }
-        
+
         int bb_size = bb.size();
         for (int i=invokeLocation+1; i<bb_size; ++i) {
             successor_bb.appendQuad(bb.removeQuad(invokeLocation+1));
