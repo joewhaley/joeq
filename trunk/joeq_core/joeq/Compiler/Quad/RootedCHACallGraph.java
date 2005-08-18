@@ -3,6 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
@@ -20,6 +23,7 @@ import jwutil.graphs.SCComponent;
  */
 public class RootedCHACallGraph extends CHACallGraph {
     
+    private static final boolean DUMP_CALLGRAPH = false;
     Collection roots;
     
     public RootedCHACallGraph() { }
@@ -58,6 +62,16 @@ public class RootedCHACallGraph extends CHACallGraph {
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
         
+        if(DUMP_CALLGRAPH) {
+            String callgraphFileName = "callgraph";
+            BufferedWriter dos;
+            try {
+                dos = new BufferedWriter(new FileWriter(callgraphFileName ));
+                LoadedCallGraph.write(cg, dos);            
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         test(cg);
     }
     
