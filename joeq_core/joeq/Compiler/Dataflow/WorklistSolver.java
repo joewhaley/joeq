@@ -82,7 +82,12 @@ public abstract class WorklistSolver extends Solver {
             Fact out = problem.apply(tf, in);
             Fact old = (Fact) dataflowValues.put(c, out);
             if (!problem.compare(old, out)) {
-                if (TRACE) System.out.println("Changed!");
+                if (TRACE) {
+                    System.out.println("Changed!");
+                    System.out.println("Old: "+old);
+                    System.out.println("Out: "+out);
+                }
+                
                 Collection next = getSuccessors(c);
                 pushAll(next);
             }
