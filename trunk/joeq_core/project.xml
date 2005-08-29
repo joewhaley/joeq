@@ -4,7 +4,7 @@
   <artifactId>joeq</artifactId>
   <name>joeq</name>
   <groupId>joeq</groupId>
-  <id>javabdd</id>
+  <id>joeq</id>
   <currentVersion>1.0</currentVersion>
   <organization>
     <name>John Whaley</name>
