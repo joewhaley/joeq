@@ -175,6 +175,7 @@ public class SortedIntArraySet implements Cloneable, Serializable, RandomAccess 
         int numMoved = this.size - arg0 - 1;
         if (numMoved > 0)
             System.arraycopy(elementData, arg0+1, elementData, arg0, numMoved);
+        --size;
         return oldValue;
     }
 
