@@ -71,16 +71,24 @@ public class BogusSummaryProvider {
         }        
     }
 
+    
+    public jq_Method getReplacementMethod(jq_Method m) {
+        return getReplacementMethod(m, null);
+    }
     /**
      * Caching method to return a replacement for @param m.
+     * @param type 
      * 
      * @return replacement for m.
      * */
-    public jq_Method getReplacementMethod(jq_Method m) {
+    public jq_Method getReplacementMethod(jq_Method m, jq_Type type) {
         jq_Method replacement = (jq_Method) methodMap.get(m);
         
         if(replacement == null) {
                 jq_Class c = (jq_Class) classMap.get(m.getDeclaringClass());
+                if(c == null && type != null) {
+                    c = (jq_Class) classMap.get(type);   
+                }
                 if(c != null) {
                     replacement = findReplacementMethod(c, m);
 
