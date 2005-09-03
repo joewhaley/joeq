@@ -259,8 +259,8 @@ public class SortedIntArraySet implements Cloneable, Serializable, RandomAccess 
     }
 
     public boolean equals(Object arg0) {
-        if (arg0 instanceof SortedSet)
-            return equals((SortedSet)arg0);
+        if (arg0 instanceof SortedIntArraySet)
+            return equals((SortedIntArraySet)arg0);
         if (arg0 instanceof Collection)
             return equals((Collection)arg0);
         return false;
