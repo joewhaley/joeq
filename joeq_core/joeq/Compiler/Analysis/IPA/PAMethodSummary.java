@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +11,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.io.PrintStream;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
@@ -28,6 +28,7 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.MethodInline;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
@@ -231,6 +232,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         // build up 'mI', 'actual', 'Iret', 'Ithr'
         for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
+            Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
+            Operand.MethodOperand methodOp = Operator.Invoke.getMethod(q);
             if (TRACE) out.println("Visiting call site "+mc);
             int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
             BDD I_bdd = pa.I.ithVar(I_i);
@@ -238,7 +241,10 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
             jq_Method replacement = null;            
             if(pa.USE_BOGUS_SUMMARIES) {
-                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
+                jq_Type[] paramTypes = mc.getParamTypes();
+                Operand.ParamListOperand listOp = Operator.Invoke.getParamList(q);
+                jq_Type type = listOp.length() > 0 ? listOp.get(0).getType() : null;
+                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target, type);
                 if(replacement != null) {
                     if(pa.TRACE_BOGUS){
                         System.out.println("Replacing a call to " + target + 
@@ -247,7 +253,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     jq_Method oldTarget = target;
                     target = replacement;
                     
-                    Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
+                    
                     if(!PA.getBogusSummaryProvider().hasStaticReplacement(replacement)){                    
 //                            Assert._assert(q.getAllOperands().getOperand(base) instanceof MethodOperand,
 //                                "Operand " + 
@@ -255,14 +261,13 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 //                                " of " + mc.toStringLong() +
 //                                " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
                         
-                        Operand.MethodOperand methodOp = Operator.Invoke.getMethod(q);
+                        
                         //if(q.getAllOperands().getOperand(base) instanceof MethodOperand){
                             //Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
                             Assert._assert(methodOp.getMethod() == oldTarget);
                             methodOp.setMethod(replacement);
                             
                             if(!replacement.isStatic()){
-                                Operand.ParamListOperand listOp = Operator.Invoke.getParamList(q);
                                 if(listOp.get(0).getType() == oldTarget.getDeclaringClass()){
                                     listOp.get(0).setType(replacement.getDeclaringClass());
                                 }
