@@ -6,7 +6,6 @@ package jwutil.collections;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
-import java.util.SortedSet;
 import java.io.Serializable;
 
 /**
