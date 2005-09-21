@@ -1266,15 +1266,17 @@ public class PrimitivePA {
                 if (t1 == null || t1 instanceof jq_NullType) continue;
                 t1.prepare();
                 
-                jq_Reference t0 = (jq_Reference) t1;
-                jq_Reference t2 = t0.getDirectPrimarySupertype();
-                if (t2 != null) {
-                    t2.prepare();
-                    Tmap.get(t2);
-                }
-                jq_Class[] c = t0.getInterfaces();
-                for (int i = 0; i < c.length; ++i) {
-                    Tmap.get(c[i]);
+                if(t1 instanceof jq_Reference) {
+                    jq_Reference t0 = (jq_Reference) t1;
+                    jq_Reference t2 = t0.getDirectPrimarySupertype();
+                    if (t2 != null) {
+                        t2.prepare();
+                        Tmap.get(t2);
+                    }
+                    jq_Class[] c = t0.getInterfaces();
+                    for (int i = 0; i < c.length; ++i) {
+                        Tmap.get(c[i]);
+                    }
                 }
             }
         }
