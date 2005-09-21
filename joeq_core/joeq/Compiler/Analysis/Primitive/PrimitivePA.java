@@ -1262,15 +1262,17 @@ public class PrimitivePA {
 
         if (ADD_SUPERTYPES) {
             for (int T_i = 0; T_i < Tmap.size(); ++T_i) {
-                jq_Reference t1 = (jq_Reference) Tmap.get(T_i);
+                jq_Type t1 = (jq_Type) Tmap.get(T_i);                
                 if (t1 == null || t1 instanceof jq_NullType) continue;
                 t1.prepare();
-                jq_Reference t2 = t1.getDirectPrimarySupertype();
+                
+                jq_Reference t0 = (jq_Reference) t1;
+                jq_Reference t2 = t0.getDirectPrimarySupertype();
                 if (t2 != null) {
                     t2.prepare();
                     Tmap.get(t2);
                 }
-                jq_Class[] c = t1.getInterfaces();
+                jq_Class[] c = t0.getInterfaces();
                 for (int i = 0; i < c.length; ++i) {
                     Tmap.get(c[i]);
                 }
