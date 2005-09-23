@@ -773,7 +773,7 @@ public class PrimitiveMethodSummary {
         
         /** Visit an array store instruction. */
         public void visitAStore(Quad obj) {
-           if (TRACE_INTRA || true) out.println("Visiting: "+obj);
+           if (TRACE_INTRA) out.println("Visiting: "+obj);
             Operand val_op = AStore.getValue(obj);
             Operand base_op = AStore.getBase(obj);
             Object val, base;
