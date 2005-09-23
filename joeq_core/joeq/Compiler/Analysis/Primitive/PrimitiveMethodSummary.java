@@ -3494,7 +3494,7 @@ public class PrimitiveMethodSummary {
             for (int i=0; i<this.registers.length; ++i) {
                 Object a = this.registers[i];
                 if (a == null) continue;
-                if (a instanceof Node)
+                if (!(a instanceof Set))
                     that.registers[i] = a;
                 else
                     that.registers[i] = NodeSet.FACTORY.makeSet((Set)a);
