@@ -1127,7 +1127,7 @@ public class PrimitiveMethodSummary {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 addToSet(r, getRegister(src_r));
             } else 
-            if(src instanceof PConstOperand){
+            if(src instanceof ConstOperand){
                 // String constant
                 Node n = handleConst((ConstOperand) src, new QuadProgramLocation(method, obj));
                 r.add(n);
