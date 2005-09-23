@@ -2309,7 +2309,7 @@ public class PrimitivePA {
                 PrimitiveMethodSummary ms = PrimitiveMethodSummary.getSummary(mc.getMethod());
                 Node node = ms.getRVN(mc);
                 if (node != null) {
-                    PrimitiveMethodSummary.ConcreteTypeNode h = ConcreteTypeNode.get((jq_Reference) type, mc);
+                    PrimitiveMethodSummary.ConcreteTypeNode h = ConcreteTypeNode.get(type, mc);
                     int H_i = Hmap.get(h);
                     int V_i = Vmap.get(node);
                     BDD V_arg = V1.ithVar(V_i);
