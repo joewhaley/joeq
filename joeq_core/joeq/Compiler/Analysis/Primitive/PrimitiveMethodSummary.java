@@ -709,6 +709,13 @@ public class PrimitiveMethodSummary {
                             String value = (String) aop.getValue();
                             
                             stringNodes2Values.put(n, value);
+                            // Add a hP0 link from the String object to the underlying char[] array
+                            ConcreteTypeNode m = ConcreteTypeNode.get(jq_Type.parseType("char[]"), pl, new Integer(opn));
+                            jq_Field f = PrimordialClassLoader.JavaLangString.getDeclaredField("value");
+                            Assert._assert(f != null);
+                            FieldNode fn = FieldNode.get(n, f, pl);
+                            Set base = NodeSet.FACTORY.makeSet(Collections.singleton(m));
+                            heapLoad(base, n, f, fn);
                             //System.out.println("Saved mapping " + n + " -> " + value);
                         }
                     }
@@ -736,6 +743,7 @@ public class PrimitiveMethodSummary {
                 
                 n = ConcreteTypeNode.get(type, pl);
             }
+            //System.out.println("Got " + n);
             return n;
         }
         
@@ -762,9 +770,10 @@ public class PrimitiveMethodSummary {
                 setRegister(dest_r, UnknownTypeNode.get(dest_r.getType()));
             }
         }
+        
         /** Visit an array store instruction. */
         public void visitAStore(Quad obj) {
-           if (TRACE_INTRA) out.println("Visiting: "+obj);
+           if (TRACE_INTRA || true) out.println("Visiting: "+obj);
             Operand val_op = AStore.getValue(obj);
             Operand base_op = AStore.getBase(obj);
             Object val, base;
@@ -803,11 +812,13 @@ public class PrimitiveMethodSummary {
                 setRegister(dest_r, UnknownTypeNode.get(dest_r.getType()));
             }
         }
+        
         public void visitALength(Quad obj) {
             Register dest_r = ALength.getDest(obj).getRegister();
 
             setRegister(dest_r, UnknownTypeNode.get(dest_r.getType()));
         }
+        
         /** Visit a type cast check instruction. */
         public void visitCheckCast(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -840,6 +851,7 @@ public class PrimitiveMethodSummary {
                 setRegister(dest_r, n);
             }
         }
+        
         /** Visit a get instance field instruction. */
         public void visitGetfield(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -920,26 +932,15 @@ public class PrimitiveMethodSummary {
                 /*&& !m.getReturnType().isAddressType()*/
                 )
             {
-                if(false /* && PA.getBogusSummaryProvider().getReplacementMethod(m) != null*/) {
-//                  special case: replaced methods.
-                    RegisterOperand dest = Invoke.getDest(obj);
-                    if (dest != null) {
-                        Register dest_r = dest.getRegister();
-                        // todo: get the real type.                    
-                        Node n = ConcreteTypeNode.get(m.getReturnType(), new QuadProgramLocation(method, obj));
-                        setRegister(dest_r, n);
+                RegisterOperand dest = Invoke.getDest(obj);
+                if (dest != null) {
+                    Register dest_r = dest.getRegister();
+                    ReturnValueNode n = (ReturnValueNode)callToRVN.get(mc);
+                    if (n == null) {
+                        callToRVN.put(mc, n = new ReturnValueNode(mc));
+                        passedAsParameter.add(n);
                     }
-                } else {
-                    RegisterOperand dest = Invoke.getDest(obj);
-                    if (dest != null) {
-                        Register dest_r = dest.getRegister();
-                        ReturnValueNode n = (ReturnValueNode)callToRVN.get(mc);
-                        if (n == null) {
-                            callToRVN.put(mc, n = new ReturnValueNode(mc));
-                            passedAsParameter.add(n);
-                        }
-                        setRegister(dest_r, n);
-                    }
+                    setRegister(dest_r, n);
                 }
             }
             // exceptions are handled by visitExceptionThrower.
