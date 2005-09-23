@@ -15,7 +15,6 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
-import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.CheckCastNode;
@@ -181,11 +180,9 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             // todo: parameters passed into native methods.
             // build up 'Mret'
             jq_Type retType = m.getReturnType();
-            if (retType instanceof jq_Reference) {
-                Node node = UnknownTypeNode.get((jq_Reference) retType);
-                pa.addToMret(M_bdd, node);
-                visitNode(node);
-            }
+            Node node = UnknownTypeNode.get(retType);
+            pa.addToMret(M_bdd, node);
+            visitNode(node);
             M_bdd.free();
             return;
         }

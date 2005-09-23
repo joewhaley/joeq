@@ -1114,6 +1114,9 @@ public class PrimitiveMethodSummary {
         
         /** Visit a return/throw instruction. */
         public void visitReturn(Quad obj) {
+            if(obj.getOperator() == Operator.Return.RETURN_V.INSTANCE) {
+                return;
+            }
             Operand src = Return.getSrc(obj);
             Set r;
             if (obj.getOperator() == Return.THROW_A.INSTANCE) {
@@ -1130,7 +1133,11 @@ public class PrimitiveMethodSummary {
             if(src instanceof ConstOperand){
                 // String constant
                 Node n = handleConst((ConstOperand) src, new QuadProgramLocation(method, obj));
+                //System.err.println("Before : " + r);
                 r.add(n);
+                //System.err.println("Before : " + r);
+            } else {
+                System.err.println("Unexpected " + obj);
             }
         }
         
