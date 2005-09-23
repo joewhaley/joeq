@@ -69,6 +69,7 @@ import joeq.Compiler.Quad.Operator.Binary;
 import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Getstatic;
+import joeq.Compiler.Quad.Operator.InstanceOf;
 import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Jsr;
@@ -867,10 +868,21 @@ public class PrimitiveMethodSummary {
             ProgramLocation pl = new QuadProgramLocation(method, obj);
             heapLoad(pl, r, my_global, f);
         }
+        
         /** Visit a type instance of instruction. */
         public void visitInstanceOf(Quad obj) {
-            // skip for now.
+            Register dest_r = InstanceOf.getDest(obj).getRegister();            
+            Operand src = InstanceOf.getSrc(obj);
+            if (src instanceof RegisterOperand) {
+                RegisterOperand rop = ((RegisterOperand)src);
+                Register src_r = rop.getRegister();
+                setRegister(dest_r, src_r);
+            } else {
+                Node n = handleConst((ConstOperand) src, new QuadProgramLocation(method, obj));
+                setRegister(dest_r, Collections.singleton(n));
+            }
         }
+        
         /** Visit an invoke instruction. */
         public void visitInvoke(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -985,7 +997,7 @@ public class PrimitiveMethodSummary {
                 setRegister(dest_r, n);
             }        
         }
-        
+               
         public void visitPhi(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Set set = NodeSet.FACTORY.makeSet();
