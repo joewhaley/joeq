@@ -140,6 +140,7 @@ public class PrimitiveMethodSummary {
     public static Set ssaEntered = new HashSet();
     public static Map stringNodes2Values = new HashMap();
     
+    
     /**
      * Helper class to output method summary in dot graph format.
      * @author jwhaley
@@ -308,6 +309,7 @@ public class PrimitiveMethodSummary {
         
         /** Map from sync ops to their nodes. */
         protected final Map sync_ops;
+        protected Set/* <ConcreteTypeNode> */ string_nodes = new HashSet();
         
         /** Factory for nodes. */
         protected final HashMap nodeCache;
@@ -347,7 +349,8 @@ public class PrimitiveMethodSummary {
                                                 returned,
                                                 thrown,
                                                 passedAsParameter,
-                                                sync_ops);
+                                                sync_ops,
+                                                string_nodes);
             return s;
         }
 
@@ -709,13 +712,8 @@ public class PrimitiveMethodSummary {
                             String value = (String) aop.getValue();
                             
                             stringNodes2Values.put(n, value);
-                            // Add a hP0 link from the String object to the underlying char[] array
-                            ConcreteTypeNode m = ConcreteTypeNode.get(jq_Type.parseType("char[]"), pl, new Integer(opn));
-                            jq_Field f = PrimordialClassLoader.JavaLangString.getDeclaredField("value");
-                            Assert._assert(f != null);
-                            FieldNode fn = FieldNode.get(n, f, pl);
-                            Set base = NodeSet.FACTORY.makeSet(Collections.singleton(m));
-                            heapLoad(base, n, f, fn);
+                            string_nodes.add(n);
+                            
                             //System.out.println("Saved mapping " + n + " -> " + value);
                         }
                     }
@@ -4242,6 +4240,7 @@ outer:
     
     public static final boolean USE_PARAMETER_MAP = true;
     final Map passedParamToNodes;
+    Collection string_nodes;
 
     public PrimitiveMethodSummary(ParamNode[] param_nodes) {
         this.method = null;
@@ -4256,6 +4255,7 @@ outer:
         this.castPredecessors = Collections.EMPTY_SET;
         this.passedParamToNodes = Collections.EMPTY_MAP;
         this.sync_ops = Collections.EMPTY_MAP;
+        this.string_nodes = Collections.EMPTY_LIST;
     }
 
     public static boolean CACHE_BUILDER = true;
@@ -4272,7 +4272,8 @@ outer:
                          Set returned,
                          Set thrown,
                          Set passedAsParameters,
-                         Map sync_ops) {
+                         Map sync_ops,
+                         Collection string_nodes) {
         this.method = method;
         this.params = param_nodes;
         this.calls = methodCalls;
@@ -4280,6 +4281,7 @@ outer:
         this.callToTEN = callToTEN;
         this.passedParamToNodes = USE_PARAMETER_MAP?new HashMap():null;
         this.sync_ops = sync_ops;
+        this.string_nodes = string_nodes;
         this.castMap = castMap;
         this.castPredecessors = castPredecessors;
         this.returned = returned;
@@ -4405,7 +4407,8 @@ outer:
                           Map sync_ops,
                           Set returned,
                           Set thrown,
-                          Map nodes) {
+                          Map nodes,
+                          Collection string_nodes) {
         this.method = method;
         this.params = params;
         this.calls = methodCalls;
@@ -4419,6 +4422,7 @@ outer:
         this.thrown = thrown;
         this.nodes = nodes;
         this.builder = builder;
+        this.string_nodes = string_nodes;
     }
 
     /** Get the global node for this method. */
@@ -4579,7 +4583,21 @@ outer:
             passedParamToNodes = new HashMap(this.passedParamToNodes);
             Node.updateMap(m, passedParamToNodes.entrySet().iterator(), passedParamToNodes);
         }
-        PrimitiveMethodSummary that = new PrimitiveMethodSummary(builder, method, params, calls, callToRVN, callToTEN, castMap, castPredecessors, passedParamToNodes, sync_ops, returned, thrown, nodes);
+        PrimitiveMethodSummary that = new PrimitiveMethodSummary(
+            builder, 
+            method, 
+            params, 
+            calls, 
+            callToRVN, 
+            callToTEN, 
+            castMap, 
+            castPredecessors, 
+            passedParamToNodes, 
+            sync_ops, 
+            returned, 
+            thrown, 
+            nodes, 
+            string_nodes);
         if (VERIFY_ASSERTIONS) that.verify();
         return that;
     }
@@ -5443,7 +5461,8 @@ outer:
                          /* returned */Collections.singleton(params[0]),
                          /* thrown */Collections.EMPTY_SET,
                          /* passedAsParameters */Collections.EMPTY_SET,
-                         /* sync_ops */Collections.EMPTY_MAP);
+                         /* sync_ops */Collections.EMPTY_MAP,
+                         /* string_nodes */ Collections.EMPTY_LIST);
     }
 
     /**
@@ -5473,7 +5492,8 @@ outer:
                          /* returned */Collections.singleton(clone),
                          /* thrown */Collections.EMPTY_SET,
                          /* passedAsParameters */Collections.EMPTY_SET,
-                         /* sync_ops */Collections.EMPTY_MAP);
+                         /* sync_ops */Collections.EMPTY_MAP,
+                         /* string_nodes */ Collections.EMPTY_LIST);
     }
     
     public static class OperandToNodeMap {

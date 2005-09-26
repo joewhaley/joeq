@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
@@ -20,8 +21,10 @@ import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.CheckCastNode;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.ConcreteTypeNode;
+import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.FieldNode;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.GlobalNode;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.Node;
+import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.NodeSet;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.LoadedCallGraph;
@@ -317,6 +320,23 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             int V_i = pa.Vmap.get(to);
             BDD V_bdd = pa.V1.ithVar(V_i);
             pa.addToA(V_bdd, pa.Vmap.get(from));
+        }
+        
+        // Add a hP0 link from the String object to the underlying char[] array        
+        for(Iterator i = ms.string_nodes.iterator(); i.hasNext(); ) {
+            ConcreteTypeNode n = (ConcreteTypeNode)i.next();
+        
+            ConcreteTypeNode nestedCharArray = ConcreteTypeNode.get(jq_Type.parseType("char[]"), n.getLocation());
+            jq_Field f = PrimordialClassLoader.JavaLangString.getDeclaredField("value");
+            Assert._assert(f != null);
+            
+            // get the indices
+            int f_i = pa.Fmap.get(f);
+            int n_i = pa.Hmap.get(n);
+            int m_i = pa.Hmap.get(nestedCharArray);
+
+            // add to hP0
+            pa.addToHP(n_i, f_i, m_i);
         }
     }
     
