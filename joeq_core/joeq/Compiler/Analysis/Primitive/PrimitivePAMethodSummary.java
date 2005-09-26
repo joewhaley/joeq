@@ -26,9 +26,6 @@ import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.Node;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.LoadedCallGraph;
-import joeq.Compiler.Quad.Operand;
-import joeq.Compiler.Quad.Operator;
-import joeq.Compiler.Quad.Quad;
 import joeq.Main.HostedVM;
 import jwutil.collections.Pair;
 import jwutil.util.Assert;
@@ -227,8 +224,6 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         // build up 'mI', 'actual', 'Iret', 'Ithr'
         for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
-            Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
-            Operand.MethodOperand methodOp = Operator.Invoke.getMethod(q);
             if (TRACE) out.println("Visiting call site "+mc);
             int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
             BDD I_bdd = pa.I.ithVar(I_i);
@@ -248,8 +243,6 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             }
             pa.addToActual(I_bdd, 0, thisptr);
                     
-            
-            Collection/*<jq_Method>*/ targets = null;
             
             if ( mc.isSingleTarget()) {            
                 if (target != pa.javaLangObject_clone) {
