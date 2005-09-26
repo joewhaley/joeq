@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import joeq.Class.PrimordialClassLoader;
-import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Quad.BasicBlockVisitor;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;

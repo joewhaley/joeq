@@ -51,7 +51,6 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.ReflectionInformationProvider;
 import joeq.Compiler.Analysis.IPA.ObjectCreationGraph;
 import joeq.Compiler.Analysis.IPA.PA;
-import joeq.Compiler.Analysis.IPA.PACallGraph;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.SubtypeHelper;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.ConcreteObjectNode;
