@@ -52,7 +52,6 @@ import joeq.Compiler.Analysis.FlowInsensitive.ReflectionInformationProvider;
 import joeq.Compiler.Analysis.IPA.ObjectCreationGraph;
 import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
-import joeq.Compiler.Analysis.IPA.SubtypeHelper;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.ConcreteTypeNode;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.GlobalNode;
@@ -2040,7 +2039,7 @@ public class PrimitivePA {
     }
     private static int printed = 0;
 
-    private SubtypeHelper _subtypeHelper;
+    private PrimitiveSubtypeHelper _subtypeHelper;
     private static void fdd_printset_rec(BDDFactory bdd, StringBuffer sb, BDD r, int[] set) {
         int fdvarnum = bdd.numberOfDomains();
         
@@ -2337,10 +2336,10 @@ public class PrimitivePA {
         }
     }
     
-    SubtypeHelper retrieveSubtypeHelper(){
+    PrimitiveSubtypeHelper retrieveSubtypeHelper(){
         if(this._subtypeHelper == null){
-//            this._subtypeHelper = SubtypeHelper.newSubtypeHelper(
-//                    this, System.getProperty("pa.subtypehelpertype")); 
+            this._subtypeHelper = PrimitiveSubtypeHelper.newSubtypeHelper(
+                    this, System.getProperty("pa.subtypehelpertype")); 
         }
         
         return this._subtypeHelper;
@@ -2393,7 +2392,7 @@ public class PrimitivePA {
                 " to type " + t);
             }
             
-            SubtypeHelper subtypeHelper = retrieveSubtypeHelper();
+            PrimitiveSubtypeHelper subtypeHelper = retrieveSubtypeHelper();
             Collection subtypes = subtypeHelper.getSubtypes((jq_Class) t);
             if(subtypes == null){
                 System.err.println("No subtypes for class " + t.getName());
