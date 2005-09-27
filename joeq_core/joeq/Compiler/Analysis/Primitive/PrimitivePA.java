@@ -4102,7 +4102,7 @@ public class PrimitivePA {
         if (updateBits) {
             V_BITS = BigInteger.valueOf(vars+256).bitLength();
             I_BITS = BigInteger.valueOf(calls).bitLength();
-            H_BITS = BigInteger.valueOf(heaps).bitLength()+1;
+            H_BITS = BigInteger.valueOf(heaps).bitLength()+2;
             F_BITS = BigInteger.valueOf(fields.size()+64).bitLength();
             T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
             N_BITS = I_BITS;
