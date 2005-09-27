@@ -762,7 +762,7 @@ public class PrimitiveMethodSummary {
             if(IntIfCmp.getSrc1(obj) instanceof RegisterOperand) {
                 Register dest_r = ((RegisterOperand)IntIfCmp.getSrc1(obj)).getRegister();
             
-                setRegister(dest_r, UnknownTypeNode.get(dest_r.getType()));
+                //setRegister(dest_r, UnknownTypeNode.get(dest_r.getType()));
             }
         }
         
