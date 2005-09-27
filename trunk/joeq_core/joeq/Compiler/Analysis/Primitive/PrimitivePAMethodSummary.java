@@ -184,11 +184,20 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             // todo: parameters passed into native methods.
             // build up 'Mret'
             jq_Type retType = m.getReturnType();
+            
+            // create a return node
+            Node node = UnknownTypeNode.get(retType);
+            pa.addToMret(M_bdd, node);
+            visitNode(node);
+            
             if (retType instanceof jq_Reference) {
-                Node node = UnknownTypeNode.get((jq_Reference) retType);
-                pa.addToMret(M_bdd, node);
-                visitNode(node);
+                // create a fake points-to relation
+                Node pointee = UnknownTypeNode.get((jq_Reference) retType);
+                visitNode(pointee);
+                int H_i = pa.Hmap.get(pointee);
+                pa.addToVP(node, H_i);
             }
+            
             M_bdd.free();
             return;
         }
