@@ -193,8 +193,11 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             if (retType instanceof jq_Reference) {
                 // create a fake points-to relation
                 Node pointee = UnknownTypeNode.get((jq_Reference) retType);
-                visitNode(pointee);
+                visitNode(pointee);                
                 int H_i = pa.Hmap.get(pointee);
+                // need a type
+                pa.addToHT(H_i, retType);
+                // add points-to
                 pa.addToVP(node, H_i);
             }
             
