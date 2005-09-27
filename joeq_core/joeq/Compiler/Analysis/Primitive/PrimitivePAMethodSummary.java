@@ -14,9 +14,14 @@ import java.util.Set;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.ReflectionInformationProvider;
+import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.CheckCastNode;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.ConcreteObjectNode;
@@ -26,6 +31,9 @@ import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.Node;
 import joeq.Compiler.Analysis.Primitive.PrimitiveMethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
 import joeq.Main.HostedVM;
 import jwutil.collections.Pair;
 import jwutil.util.Assert;
@@ -161,7 +169,7 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     public void visitMethod(jq_Method m) {
         Assert._assert(m != null);
         Assert._assert(m.getDeclaringClass() != null);
-        if (PrimitivePA.VerifyAssertions)
+        if (PA.VerifyAssertions)
             Assert._assert(!pa.newMethodSummaries.containsKey(m));
         pa.newMethodSummaries.put(m, this);
         
@@ -178,9 +186,11 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             // todo: parameters passed into native methods.
             // build up 'Mret'
             jq_Type retType = m.getReturnType();
-            Node node = UnknownTypeNode.get(retType);
-            pa.addToMret(M_bdd, node);
-            visitNode(node);
+            if (retType instanceof jq_Reference) {
+                Node node = UnknownTypeNode.get((jq_Reference) retType);
+                pa.addToMret(M_bdd, node);
+                visitNode(node);
+            }
             M_bdd.free();
             return;
         }
@@ -224,27 +234,118 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         // build up 'mI', 'actual', 'Iret', 'Ithr'
         for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
+            Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
+            Operand.MethodOperand methodOp = Operator.Invoke.getMethod(q);
             if (TRACE) out.println("Visiting call site "+mc);
             int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
             BDD I_bdd = pa.I.ithVar(I_i);
             jq_Method target = mc.getTargetMethod();
-           
+
+            jq_Method replacement = null;            
+            if(pa.USE_BOGUS_SUMMARIES) {
+                Operand.ParamListOperand listOp = Operator.Invoke.getParamList(q);
+                jq_Type type = listOp.length() > 0 ? listOp.get(0).getType() : null;
+                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target, type);
+                if(replacement != null) {
+                    if(pa.TRACE_BOGUS){
+                        System.out.println("Replacing a call to " + target + 
+                                        " with a call to "+ replacement);
+                    }
+                    jq_Method oldTarget = target;
+                    target = replacement;
+                    
+                    
+                    if(!PA.getBogusSummaryProvider().hasStaticReplacement(replacement)){                    
+//                            Assert._assert(q.getAllOperands().getOperand(base) instanceof MethodOperand,
+//                                "Operand " + 
+//                                q.getAllOperands().getOperand(base) +
+//                                " of " + mc.toStringLong() +
+//                                " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
+                        
+                        
+                        //if(q.getAllOperands().getOperand(base) instanceof MethodOperand){
+                            //Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
+                            Assert._assert(methodOp.getMethod() == oldTarget);
+                            methodOp.setMethod(replacement);
+                            
+                            if(!replacement.isStatic()){
+                                if(listOp.get(0).getType() == oldTarget.getDeclaringClass()){
+                                    listOp.get(0).setType(replacement.getDeclaringClass());
+                                }
+                            }
+                        /*}else{
+                            if(pa.TRACE_BOGUS){
+                                System.err.println(
+                                    "Operand " + 
+                                    q.getAllOperands().getOperand(base) +
+                                  " of " + mc.toStringLong() +
+                                  " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
+                            }
+                        }*/
+                    }else{
+                        
+                    }
+                }
+            }            
             if (target.isStatic()){
                 pa.addClassInitializer(target.getDeclaringClass());
             }
             
             Set thisptr;
-            if (target.isStatic()) {
+            if( (replacement != null) && PA.getBogusSummaryProvider().hasStaticReplacement(replacement)) {                
                 thisptr = Collections.singleton(GlobalNode.GLOBAL);
+                pa.addToActual(I_bdd, 0, thisptr);
+                //pa.addToActual(I_bdd, 1, ms.getNodesThatCall(mc, 0));
+                
                 offset = 0;
             } else {
-                thisptr = ms.getNodesThatCall(mc, 0);
-                offset = 1;
-            }
-            pa.addToActual(I_bdd, 0, thisptr);
-                    
+                if (target.isStatic()) {
+                    thisptr = Collections.singleton(GlobalNode.GLOBAL);
+                    offset = 0;
+                } else {
+                    thisptr = ms.getNodesThatCall(mc, 0);
+                    offset = 1;
+                }
+                pa.addToActual(I_bdd, 0, thisptr);
+            }            
             
-            if ( mc.isSingleTarget()) {            
+            Collection/*<jq_Method>*/ targets = null;
+            if(pa.USE_REFLECTION_PROVIDER && ReflectionInformationProvider.isNewInstance(target)){                
+                targets = PA.getReflectionProvider().getNewInstanceTargets(m);
+                if(targets != null){
+                    if(PA.TRACE_REFLECTION)  {
+                        System.out.println("Replacing a call to " + target + " with " + targets); 
+                    }
+                
+                    for(Iterator iter = targets.iterator(); iter.hasNext();){
+                        jq_Method newTarget = (jq_Method) iter.next();
+                        
+                        if(newTarget instanceof jq_Initializer){
+                            jq_Initializer constructor = (jq_Initializer) newTarget;
+                            jq_Type type = constructor.getDeclaringClass();
+                                                        
+                            Node node = ms.getRVN(mc);
+                            if (node != null) {
+                                PrimitiveMethodSummary.ConcreteTypeNode h = ConcreteTypeNode.get((jq_Reference) type);
+                                int V_i = pa.Vmap.get(node);
+                                BDD V_arg = pa.V1.ithVar(V_i);
+                                
+                                pa.addToVP(V_arg, h);
+                            }
+                        }
+                        
+                        if(PA.TRACE_REFLECTION) {
+                            System.out.println("Adding a refective call to " + newTarget);
+                        }
+                        pa.addToMI(M_bdd, I_bdd, newTarget);
+                        pa.addToIE(I_bdd, newTarget);
+                    }
+                }            
+            }
+            
+            if ( mc.isSingleTarget() ||
+                (replacement != null && !PA.getBogusSummaryProvider().hasStaticReplacement(replacement)) ) 
+            {            
                 if (target != pa.javaLangObject_clone) {
                     // statically-bound, single target call
                     addSingleTargetCall(thisptr, mc, I_bdd, target);
@@ -280,7 +381,32 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 pa.addToIthr(I_bdd, node);
             }
             I_bdd.free();
-        } 
+        }
+       
+        if(pa.RESOLVE_REFLECTION){
+            for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
+                ProgramLocation mc = (ProgramLocation) i.next();
+                if (TRACE) out.println("Visiting call site "+mc);
+                int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
+                BDD I_bdd = pa.I.ithVar(I_i);
+                jq_Method target = mc.getTargetMethod();
+    
+                if(ReflectionInformationProvider.isForName(target)){
+                    ConcreteTypeNode h = ConcreteTypeNode.get(
+                        pa.class_class, 
+                        /*new ProgramLocation.PlaceholderParameterProgramLocation(m, "forName @" + mc.getEmacsName())*/ mc, 
+                        new Integer(++pa.opn));
+                    pa.addToForNameMap(h, I_bdd);
+                    if(PA.TRACE_REFLECTION && pa.TRACE){
+                        System.out.println("Processing a call to forName: " + mc.getEmacsName());
+                    }
+                    int H_i = pa.Hmap.get(h);
+                    pa.addToVP(ms.getRVN(mc), H_i);                    
+                    
+                    //continue;  
+                }
+            }
+        }
         
         // build up 'mV', 'vP', 'S', 'L', 'Mret', 'Mthr'
         for (Iterator i = ms.nodeIterator(); i.hasNext(); ) {
@@ -311,23 +437,6 @@ public class PrimitivePAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             int V_i = pa.Vmap.get(to);
             BDD V_bdd = pa.V1.ithVar(V_i);
             pa.addToA(V_bdd, pa.Vmap.get(from));
-        }
-        
-        // Add a hP0 link from the String object to the underlying char[] array        
-        for(Iterator i = ms.string_nodes.iterator(); i.hasNext(); ) {
-            ConcreteTypeNode n = (ConcreteTypeNode)i.next();
-        
-            ConcreteTypeNode nestedCharArray = ConcreteTypeNode.get(jq_Type.parseType("char[]"), n.getLocation());
-            jq_Field f = PrimordialClassLoader.JavaLangString.getDeclaredField("value");
-            Assert._assert(f != null);
-            
-            // get the indices
-            int f_i = pa.Fmap.get(f);
-            int n_i = pa.Hmap.get(n);
-            int m_i = pa.Hmap.get(nestedCharArray);
-
-            // add to hP0
-            pa.addToHP(n_i, f_i, m_i);
         }
     }
     
