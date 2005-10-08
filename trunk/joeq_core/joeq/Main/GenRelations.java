@@ -33,7 +33,7 @@ public class GenRelations {
         String sep = System.getProperty("file.separator");
         URL url;
         url = getFileURL("joeq" + sep + "Support" + sep + "javabdd.jar");
-        if (url == null) url = getFileURL("joeq" + sep + "Support" + sep + "javabdd_0.6.jar");
+        if (url == null) url = getFileURL("joeq" + sep + "Support" + sep + "javabdd-1.0b2.jar");
         if (url == null) url = getFileURL("javabdd.jar");
         if (url == null) {
             System.err.println("Cannot find JavaBDD library!");
