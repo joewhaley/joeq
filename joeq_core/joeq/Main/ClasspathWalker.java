@@ -126,7 +126,7 @@ public class ClasspathWalker {
             if(packageName.equals(".") || packageName.equals("")){
                 continue;
             }
-            if(packageName.endsWith("javabdd.jar") || packageName.endsWith("jwutil-1.0.jar")){
+            if(packageName.endsWith("javabdd-1.0b2.jar") || packageName.endsWith("jwutil-1.0.jar")){
                 continue;
             }            
             if(packageName.endsWith("joeq_core")){
