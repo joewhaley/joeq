@@ -8,7 +8,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -30,12 +33,7 @@ public class SystemProperties {
      * @return  value or null
      */
     public static String getProperty(String key) {
-        try {
-            return System.getProperty(key);
-        } catch (AccessControlException _) {
-            //System.err.println("Error: cannot access system property "+key);
-            return null;
-        }
+        return getProperty(key, null);
     }
     
     /**
@@ -48,6 +46,48 @@ public class SystemProperties {
     public static String getProperty(String key, String def) {
         try {
             return System.getProperty(key, def);
+        } catch (AccessControlException _) {
+            return def;
+        }
+    }
+    
+    /**
+     * Like getProperty, but also first checks in the current directory for a
+     * file with a name the same as the key.  If it exists, it returns the contents
+     * of that file, rather than the value of the system property.  This is useful
+     * when you would like to be able to easily dynamically update system properties
+     * as a program runs.
+     * 
+     * @param key  system property to get
+     * @return  value or null
+     */
+    public static String getPropertyFromFile(String key) {
+        return getPropertyFromFile(key, null);
+    }
+    
+    /**
+     * Like getProperty, but also first checks in the current directory for a
+     * file with a name the same as the key.  If it exists, it returns the contents
+     * of that file, rather than the value of the system property.  This is useful
+     * when you would like to be able to easily dynamically update system properties
+     * as a program runs.
+     * 
+     * @param key  system property to get
+     * @return  value of system property or def
+     */
+    public static String getPropertyFromFile(String key, String def) {
+        try {
+            File f = new File(key);
+            if (f.exists()) {
+                // readLine() returns null on empty file.
+                String s = new BufferedReader(new FileReader(f), 64).readLine();
+                return s == null ? "" : s;
+            }
+        } catch (IOException _) {
+            ; // silent
+        }
+        try {
+            return System.getProperty(key);
         } catch (AccessControlException _) {
             return def;
         }
