@@ -5092,6 +5092,18 @@ public class PA {
         
         dos = null;
         try {
+            dos = new BufferedWriter(new FileWriter(dumpPath+"class.map"));
+            //Imap.dumpStrings(dos);
+            for (int j = 0; j < Cmap.size(); ++j) {
+                jq_Class o = (jq_Class)Cmap.get(j);
+                dos.write(o.getName()+"\n");
+            }
+        } finally {
+            if (dos != null) dos.close();
+        }
+        
+        dos = null;
+        try {
             dos = new BufferedWriter(new FileWriter(dumpPath+"name.map"));
             for (int j = 0; j < Nmap.size(); ++j) {
                 jq_Method o = (jq_Method) Nmap.get(j);
