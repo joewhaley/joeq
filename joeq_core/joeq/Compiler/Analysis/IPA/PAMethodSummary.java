@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import com.sun.org.apache.xerces.internal.impl.dtd.models.CMAny;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
@@ -29,7 +28,6 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.LoadedCallGraph;
-import joeq.Compiler.Quad.MethodInline;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
@@ -449,7 +447,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         jq_Class c = m.getDeclaringClass();
         int c_i = pa.Cmap.get(c);
         BDD c_bdd = pa.C.ithVar(c_i);
-        pa.Cmap.get(c);
+        //pa.Cmap.get(c);
         
         BDD t = m_bdd.andWith(c_bdd);
         pa.mC.orWith(t);

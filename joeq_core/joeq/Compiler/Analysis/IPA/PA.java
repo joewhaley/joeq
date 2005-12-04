@@ -3440,6 +3440,8 @@ public class PA {
                            BigInteger.valueOf(Nmap.size()).bitLength());
         System.out.println("M = "+Mmap.size()+", bits = "+
                            BigInteger.valueOf(Mmap.size()).bitLength());
+        System.out.println("C = "+Cmap.size()+", bits = "+
+                           BigInteger.valueOf(Cmap.size()).bitLength());
     }
     
     ToString TS = new ToString();
@@ -4107,7 +4109,7 @@ public class PA {
             F_BITS = BigInteger.valueOf(fields.size()+64).bitLength();
             T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
             N_BITS = I_BITS;
-            M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
+            M_BITS = BigInteger.valueOf(methods).bitLength() + 1;            
             if (CONTEXT_SENSITIVE) {
                 System.out.println("Thread runs="+thread_runs);
                 VC_BITS = paths.bitLength();
