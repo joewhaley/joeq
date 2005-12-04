@@ -485,6 +485,7 @@ public class PA {
         Mthr = bdd.zero();
         mI = bdd.zero();
         mV = bdd.zero();
+        mC = bdd.zero();
         sync = bdd.zero();
         mSync = bdd.zero();
         IE = bdd.zero();

@@ -449,6 +449,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         jq_Class c = m.getDeclaringClass();
         int c_i = pa.Cmap.get(c);
         BDD c_bdd = pa.C.ithVar(c_i);
+        pa.Cmap.get(c);
         
         BDD t = m_bdd.andWith(c_bdd);
         pa.mC.orWith(t);
