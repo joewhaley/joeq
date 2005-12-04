@@ -34,7 +34,6 @@ import java.util.TreeSet;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
-import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
@@ -43,7 +42,6 @@ import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_NameAndDesc;
-import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
@@ -192,10 +190,10 @@ public class PA {
     
     BDDFactory bdd;
     
-    BDDDomain V1, V2, I, I2, H1, H2, Z, F, T1, T2, N, M, M2;
+    BDDDomain V1, V2, I, I2, H1, H2, Z, F, T1, T2, N, M, M2, C;
     BDDDomain V1c[], V2c[], H1c[], H2c[];
     
-    int V_BITS=19, I_BITS=19, H_BITS=16, Z_BITS=6, F_BITS=14, T_BITS=14, N_BITS=16, M_BITS=16;
+    int V_BITS=19, I_BITS=19, H_BITS=16, Z_BITS=6, F_BITS=14, T_BITS=14, N_BITS=16, M_BITS=16, C_BITS=10;
     int VC_BITS=0, HC_BITS=0;
     int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "61"));
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "0"));
@@ -207,6 +205,7 @@ public class PA {
     IndexMap/*jq_Reference*/ Tmap;
     IndexMap/*jq_Method*/ Nmap;
     IndexMap/*jq_Method*/ Mmap;
+    IndexMap/*jq_Method*/ Cmap;
     PathNumbering vCnumbering; // for context-sensitive
     PathNumbering hCnumbering; // for context-sensitive
     PathNumbering oCnumbering; // for object-sensitive
@@ -227,6 +226,7 @@ public class PA {
     BDD Mthr;   // MxV2, method thrown value            (no context)
     BDD mI;     // MxIxN, method invocations            (no context)
     BDD mV;     // MxV, method variables                (no context)
+    BDD mC;     // MxC, method class                    (no context)
     BDD sync;   // V, synced locations                  (no context)
     BDD mSync;  // M, synchronized, non-static methods  (no context)
 
@@ -258,7 +258,7 @@ public class PA {
     BDDPairing V1ctoV2c, V1cV2ctoV2cV1c, V1cH1ctoV2cV1c;
     BDDPairing T2toT1, T1toT2;
     BDDPairing H1toV1c[], V1ctoH1[]; BDD V1csets[], V1cH1equals[];
-    BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, I2set, Zset;
+    BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Cset, Iset, I2set, Zset;
     BDD V1V2set, V1Fset, V2Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1H2set, H1FH2set;
     BDD IMset, INset, INH1set, INT2set, T2Nset, MZset;
     BDD V1cset, V2cset, H1cset, H2cset, V1cV2cset, V1cH1cset, H1cH2cset;
@@ -300,6 +300,7 @@ public class PA {
         T2 = makeDomain("T2", T_BITS);
         N = makeDomain("N", N_BITS);
         M = makeDomain("M", M_BITS);
+        C = makeDomain("N", C_BITS);
         M2 = makeDomain("M2", M_BITS);
         
         if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) {
@@ -437,6 +438,7 @@ public class PA {
         Fset = F.set();
         Mset = M.set();
         Nset = N.set();
+        Cset = C.set();
         Iset = I.set();
         I2set = I2.set();
         Zset = Z.set();
@@ -545,6 +547,7 @@ public class PA {
         Tmap = makeMap("Types", T_BITS);
         Nmap = makeMap("Names", N_BITS);
         Mmap = makeMap("Methods", M_BITS);
+        Cmap = makeMap("Classes", C_BITS);
         Mmap.get(new Dummy());
         if (ADD_THREADS) {
             PrimordialClassLoader.getJavaLangThread().prepare();
@@ -3639,6 +3642,8 @@ public class PA {
         bdd_save(dumpfilename+".mI", mI);
         System.out.println("mV: "+(long) mV.satCount(Mset.and(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
         bdd_save(dumpfilename+".mV", mV);
+        System.out.println("mC: "+(long) mC.satCount(Mset.and(C.set()))+" relations, "+mC.nodeCount()+" nodes");
+        bdd_save(dumpfilename+".mC", mC);
         System.out.println("sync: "+(long) sync.satCount(V1.set())+" relations, "+sync.nodeCount()+" nodes");
         bdd_save(dumpfilename+".sync", sync);
         
@@ -3839,6 +3844,8 @@ public class PA {
             ((TypedBDD) pa.mI).setDomains(pa.M, pa.I, pa.N);
         if (pa.mV instanceof TypedBDD)
             ((TypedBDD) pa.mV).setDomains(pa.M, pa.V1);
+        if (pa.mC instanceof TypedBDD)
+            ((TypedBDD) pa.mC).setDomains(pa.M, pa.C);
         if (pa.sync instanceof TypedBDD)
             ((TypedBDD) pa.sync).setDomains(pa.V1);
         if (pa.mSync instanceof TypedBDD)
@@ -4826,6 +4833,7 @@ public class PA {
     BDD mvP;
     BDD mIE;
     BDD visitedFly;
+
     void initFly() {
         mS = bdd.zero();
         mL = bdd.zero();
@@ -4930,6 +4938,8 @@ public class PA {
                     dos.write("Z\n");
                 else if (d == N)
                     dos.write("N\n");
+                else if (d == C)
+                    dos.write("C\n");
                 else if (d == M || d == M2)
                     dos.write("M\n");
                 else if (Arrays.asList(V1c).contains(d)
@@ -4958,6 +4968,7 @@ public class PA {
             dos.write("Z "+(1L<<Z_BITS)+"\n");
             dos.write("N "+(1L<<N_BITS)+" name.map\n");
             dos.write("M "+(1L<<M_BITS)+" method.map\n");
+            dos.write("C "+(1L<<C_BITS)+" class.map\n");
             dos.write("VC "+(1L<<VC_BITS)+"\n");
             dos.write("HC "+(1L<<HC_BITS)+"\n");
             if (bddIRBuilder != null) bddIRBuilder.dumpFieldDomains(dos);

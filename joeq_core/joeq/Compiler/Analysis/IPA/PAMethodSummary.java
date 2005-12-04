@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import com.sun.org.apache.xerces.internal.impl.dtd.models.CMAny;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
@@ -199,6 +200,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             pa.addToSync(ms.getParamNode(0));
         }
         
+        addToMethodToClass(m);
         pa.addClassInitializer(ms.getMethod().getDeclaringClass());
         
         // build up 'formal'
@@ -440,6 +442,18 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         }
     }
     
+    void addToMethodToClass(jq_Method m) {
+        int m_i = pa.Mmap.get(m);
+        BDD m_bdd = pa.M.ithVar(m_i);
+
+        jq_Class c = m.getDeclaringClass();
+        int c_i = pa.Cmap.get(c);
+        BDD c_bdd = pa.C.ithVar(c_i);
+        
+        BDD t = m_bdd.andWith(c_bdd);
+        pa.mC.orWith(t);
+    }
+
     void addSingleTargetCall(Set thisptr, ProgramLocation mc, BDD I_bdd, jq_Method target) {
         if (pa.DUMP_FLY) {
             BDD bdd1 = I_bdd.id();
