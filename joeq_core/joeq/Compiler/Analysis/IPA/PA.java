@@ -300,7 +300,7 @@ public class PA {
         T2 = makeDomain("T2", T_BITS);
         N = makeDomain("N", N_BITS);
         M = makeDomain("M", M_BITS);
-        C = makeDomain("N", C_BITS);
+        C = makeDomain("C", C_BITS);
         M2 = makeDomain("M2", M_BITS);
         
         if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) {
