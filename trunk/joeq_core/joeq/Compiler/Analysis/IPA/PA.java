@@ -151,6 +151,7 @@ public class PA {
     boolean INCLUDE_UNKNOWN_TYPES = !System.getProperty("pa.unknowntypes", "yes").equals("no");
     boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
     boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
+    boolean ADD_HEAP_FILTER = !System.getProperty("pa.addheapfilter", "no").equals("no");
     int ADD_ROOT_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.addrootplaceholders", "0"));
     int PUBLIC_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.publicplaceholders", "0"));
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
@@ -3066,6 +3067,7 @@ public class PA {
         // Now we know domain sizes, so initialize the BDD package.
         initializeBDD(bddfactory);        
         initializeMaps();
+        if(ADD_HEAP_FILTER) initializeHeapLocations();
         this.rootMethods.addAll(rootMethods);
         
         if (DUMP_SSA) {
@@ -3209,6 +3211,21 @@ public class PA {
         }
     }
    
+    /**
+     * This routine reads locations from a file and adds them to Hmap sequentially.
+     * */
+    private void initializeHeapLocations() throws IOException {
+        BufferedReader r = null;
+        r = new BufferedReader(new FileReader("heap_filter.txt"));
+        String s = null;
+        while ((s = r.readLine()) != null) {
+            int index = Hmap.get(s);
+            if(TRACE) {
+                System.out.println("Location '" + s + "' matches " + index);
+            }
+        }            
+    }
+    
     void saveReflectionStats() throws IOException {
         PrintWriter w = null;
         try {
@@ -5310,6 +5327,6 @@ public class PA {
                 + " relations, " + fMember.nodeCount() + " nodes");
         bdd_save(dumpPath + "/fMember.bdd", fMember);
         //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
-        //bdd_save(resultsFileName+".hQuad", sync);
     }    
+        //bdd_save(resultsFileName+".hQuad", sync);
 }
