@@ -84,7 +84,6 @@ import jwutil.graphs.PathNumbering.Selector;
 import jwutil.io.SystemProperties;
 import jwutil.io.Textualizable;
 import jwutil.io.Textualizer;
-import jwutil.io.Textualizer.Simple;
 import jwutil.util.Assert;
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDBitVector;
@@ -5069,7 +5068,7 @@ public class PA {
         try {
             dos = new BufferedWriter(new FileWriter(dumpPath+"heap.map"));
             //Hmap.dumpStrings(dos);
-            Textualizer.Simple t = new Simple(dos);
+            Textualizer.Map t = new Textualizer.Map(dos, Hmap);
             for (int j = 0; j < Hmap.size(); ++j) {
                 Node o = (Node) Hmap.get(j);
                 //dos.write(o.id+": "+o+"\n");
