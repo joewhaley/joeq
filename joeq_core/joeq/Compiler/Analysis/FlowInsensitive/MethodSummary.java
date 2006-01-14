@@ -2347,7 +2347,8 @@ public class MethodSummary {
             return /*Integer.toHexString(this.hashCode())+": "+*/ toString_short()+super.toString_long();
         }
         public String toString_short() {
-            return (q==null?"":q.getEmacsName())+" Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
+            //return (q==null?"":q.getEmacsName())+" Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
+            return getDeclaredType() + ":" + q.toString() + ":" + opn;            
         }
 
         public void write(Textualizer t) throws IOException {
@@ -2362,6 +2363,10 @@ public class MethodSummary {
             super.write(t);
         }
         
+        public static void main(String[] args) {
+            readToStringResult("Character.java:738 Concrete: Character$UnicodeBlock @ 126");
+        }
+        
         public static ConcreteTypeNode read(StringTokenizer st) {
             jq_Reference type = (jq_Reference) jq_Type.read(st);
             String opns = st.nextToken();
@@ -2369,6 +2374,18 @@ public class MethodSummary {
             ProgramLocation pl = ProgramLocation.read(st);
             ConcreteTypeNode n = ConcreteTypeNode.get(type, pl, opn);
             //n.readEdges(map, st);
+            return n;
+        }
+        
+        public static ConcreteTypeNode readToStringResult(String str) {
+            StringTokenizer tok = new StringTokenizer(str, " ");
+            ProgramLocation pl = ProgramLocation.read(tok);
+            tok.nextToken();
+            jq_Reference type = (jq_Reference) jq_Type.read(tok);
+            String opns = tok.nextToken();
+            Integer opn = opns.equals("null") ? null : Integer.decode(opns);
+            
+            ConcreteTypeNode n = ConcreteTypeNode.get(type, pl, opn);
             return n;
         }
     }

@@ -5068,11 +5068,9 @@ public class PA {
         try {
             dos = new BufferedWriter(new FileWriter(dumpPath+"heap.map"));
             //Hmap.dumpStrings(dos);
-            Textualizer.Map t = new Textualizer.Map(dos, Hmap);
             for (int j = 0; j < Hmap.size(); ++j) {
                 Node o = (Node) Hmap.get(j);
-                //dos.write(o.id+": "+o+"\n");
-                o.write(t);                
+                dos.write(o.id+": "+o+"\n");
             }
         } finally {
             if (dos != null) dos.close();
