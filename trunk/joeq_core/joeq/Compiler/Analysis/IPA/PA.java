@@ -3223,6 +3223,10 @@ public class PA {
         String s = null;
         while ((s = r.readLine()) != null) {
             ConcreteTypeNode cn = readToStringResult(s);
+            if(cn == null) {
+                System.err.println("Can't convert " + s + " to a valid node");
+                continue;
+            }
 
             int index = Hmap.get(cn);
             if(TRACE) {
@@ -3235,6 +3239,7 @@ public class PA {
         StringTokenizer tok = new StringTokenizer(str, ":");
         //String ID = tok.nextToken();
         jq_Reference type = (jq_Reference) jq_Type.parseType(tok.nextToken());
+        if(type == null) return null;
         //ProgramLocation pl = ProgramLocation.read(tok);
         String methodName = tok.nextToken();
         jq_Method m = (jq_Method) jq_Method.parseMember(methodName);
@@ -3255,6 +3260,7 @@ public class PA {
                 }
             }
         }
+        if(pl == null) return null;
         
         String opns = tok.nextToken();
         Integer opn = opns.equals("null") ? null : Integer.decode(opns);
