@@ -2348,12 +2348,12 @@ public class MethodSummary {
             return /*Integer.toHexString(this.hashCode())+": "+*/ toString_short()+super.toString_long();
         }
         public String toString_short() {
-            //return (q==null?"":q.getEmacsName())+" Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
-            return 
-                getDeclaredType() + ":" + 
-                getDefiningMethod().toString() + ":" + 
-                q.toString() + ":" + 
-                opn;            
+            return (q==null?"":q.getEmacsName())+" Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
+//            return 
+//                getDeclaredType() + ":" + 
+//                getDefiningMethod().toString() + ":" + 
+//                q.toString() + ":" + 
+//                opn;            
         }
 
         public void write(Textualizer t) throws IOException {
