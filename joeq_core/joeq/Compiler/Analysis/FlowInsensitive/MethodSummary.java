@@ -3,6 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.FlowInsensitive;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,11 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -47,6 +47,7 @@ import joeq.Compiler.Quad.JSRInfo;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
@@ -2348,7 +2349,11 @@ public class MethodSummary {
         }
         public String toString_short() {
             //return (q==null?"":q.getEmacsName())+" Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
-            return getDeclaredType() + ":" + q.toString() + ":" + opn;            
+            return 
+                getDeclaredType() + ":" + 
+                getDefiningMethod().toString() + ":" + 
+                ((QuadProgramLocation)q).getID() + ":" + 
+                opn;            
         }
 
         public void write(Textualizer t) throws IOException {
@@ -2364,7 +2369,12 @@ public class MethodSummary {
         }
         
         public static void main(String[] args) {
-            readToStringResult("Character.java:738 Concrete: Character$UnicodeBlock @ 126");
+            HostedVM.initialize();
+            joeq.ClassLib.ClassLibInterface.useJoeqClasslib(true);
+            
+            //readToStringResult("Character.java:738 Concrete: Character$UnicodeBlock @ 126");
+            readToStringResult("5047: java.lang.Character$UnicodeBlock:java.lang.Character$UnicodeBlock.<clinit>() quad 21:0");
+            //jq_Reference.parseType("java.lang.String");
         }
         
         public static ConcreteTypeNode read(StringTokenizer st) {
@@ -2378,10 +2388,26 @@ public class MethodSummary {
         }
         
         public static ConcreteTypeNode readToStringResult(String str) {
-            StringTokenizer tok = new StringTokenizer(str, " ");
-            ProgramLocation pl = ProgramLocation.read(tok);
-            tok.nextToken();
-            jq_Reference type = (jq_Reference) jq_Type.read(tok);
+            StringTokenizer tok = new StringTokenizer(str, ": ");
+            String ID = tok.nextToken();
+            jq_Reference type = (jq_Reference) jq_Type.parseType(tok.nextToken());
+            //ProgramLocation pl = ProgramLocation.read(tok);
+            String methodName = tok.nextToken() + " ";
+            jq_Method m = (jq_Method) jq_Method.parseMember(methodName);
+            if (m == null) return null;
+            QuadProgramLocation pl = null;
+            if (tok.nextToken().equals("quad")) {
+                int id = new Integer(tok.nextToken()).intValue();
+                if (m.getBytecode() == null) return null;
+                ControlFlowGraph cfg = CodeCache.getCode(m);                
+                for (QuadIterator i = new QuadIterator(cfg); i.hasNext(); ) {
+                    Quad q = i.nextQuad();
+                    if (q.getID() == id) {
+                        pl = new QuadProgramLocation(m, q);
+                    }
+                }
+            }
+            
             String opns = tok.nextToken();
             Integer opn = opns.equals("null") ? null : Integer.decode(opns);
             
