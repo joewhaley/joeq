@@ -197,7 +197,7 @@ public class PA {
     BDDDomain V1, V2, I, I2, H1, H2, Z, F, T1, T2, N, M, M2, C;
     BDDDomain V1c[], V2c[], H1c[], H2c[];
     
-    int V_BITS=19, I_BITS=19, H_BITS=16, Z_BITS=6, F_BITS=14, T_BITS=14, N_BITS=16, M_BITS=16, C_BITS=10;
+    int V_BITS=19, I_BITS=19, H_BITS=16, Z_BITS=6, F_BITS=14, T_BITS=14, N_BITS=16, M_BITS=16, C_BITS=12;
     int VC_BITS=0, HC_BITS=0;
     int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "61"));
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "0"));
