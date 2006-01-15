@@ -3221,7 +3221,9 @@ public class PA {
         BufferedReader r = null;
         r = new BufferedReader(new FileReader("heap_filter.txt"));
         String s = null;
+        int lineCount = 0;
         while ((s = r.readLine()) != null) {
+            lineCount++;
             ConcreteTypeNode cn = readToStringResult(s);
             if(cn == null) {
                 System.err.println("Can't convert " + s + " to a valid node");
@@ -3233,6 +3235,7 @@ public class PA {
                 System.out.println("Location '" + s + "' matches " + index);
             }
         }            
+        System.out.println("Read and initialized " + lineCount + " locations.");
     }
     
     public static ConcreteTypeNode readToStringResult(String str) {
@@ -5113,7 +5116,8 @@ public class PA {
             //Hmap.dumpStrings(dos);
             for (int j = 0; j < Hmap.size(); ++j) {
                 Node o = (Node) Hmap.get(j);
-                dos.write(/*o.id+": "+*/ o+"\n");
+                //dos.write(/*o.id+": "+*/ o+"\n");
+                dos.write(o.id+": "+ o+"\n");
             }
         } finally {
             if (dos != null) dos.close();
