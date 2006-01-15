@@ -2352,7 +2352,7 @@ public class MethodSummary {
             return 
                 getDeclaredType() + ":" + 
                 getDefiningMethod().toString() + ":" + 
-                ((QuadProgramLocation)q).getID() + ":" + 
+                q.toString() + ":" + 
                 opn;            
         }
 
