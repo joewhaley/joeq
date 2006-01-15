@@ -2373,7 +2373,8 @@ public class MethodSummary {
             joeq.ClassLib.ClassLibInterface.useJoeqClasslib(true);
             
             //readToStringResult("Character.java:738 Concrete: Character$UnicodeBlock @ 126");
-            readToStringResult("5047: java.lang.Character$UnicodeBlock:java.lang.Character$UnicodeBlock.<clinit>() quad 21:0");
+            //readToStringResult("10612: java.lang.String:java.io.BufferedInputStream.<clinit> ()V:java.io.BufferedInputStream.<clinit>() quad 3:0");
+            //readToStringResult("5047: java.lang.Character$UnicodeBlock:java.lang.Character$UnicodeBlock.<clinit> ()V:java.lang.Character$UnicodeBlock.<clinit>() quad 21:0");
             //jq_Reference.parseType("java.lang.String");
         }
         
@@ -2384,34 +2385,6 @@ public class MethodSummary {
             ProgramLocation pl = ProgramLocation.read(st);
             ConcreteTypeNode n = ConcreteTypeNode.get(type, pl, opn);
             //n.readEdges(map, st);
-            return n;
-        }
-        
-        public static ConcreteTypeNode readToStringResult(String str) {
-            StringTokenizer tok = new StringTokenizer(str, ": ");
-            String ID = tok.nextToken();
-            jq_Reference type = (jq_Reference) jq_Type.parseType(tok.nextToken());
-            //ProgramLocation pl = ProgramLocation.read(tok);
-            String methodName = tok.nextToken() + " ";
-            jq_Method m = (jq_Method) jq_Method.parseMember(methodName);
-            if (m == null) return null;
-            QuadProgramLocation pl = null;
-            if (tok.nextToken().equals("quad")) {
-                int id = new Integer(tok.nextToken()).intValue();
-                if (m.getBytecode() == null) return null;
-                ControlFlowGraph cfg = CodeCache.getCode(m);                
-                for (QuadIterator i = new QuadIterator(cfg); i.hasNext(); ) {
-                    Quad q = i.nextQuad();
-                    if (q.getID() == id) {
-                        pl = new QuadProgramLocation(m, q);
-                    }
-                }
-            }
-            
-            String opns = tok.nextToken();
-            Integer opn = opns.equals("null") ? null : Integer.decode(opns);
-            
-            ConcreteTypeNode n = ConcreteTypeNode.get(type, pl, opn);
             return n;
         }
     }

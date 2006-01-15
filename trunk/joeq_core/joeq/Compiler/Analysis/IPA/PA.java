@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
@@ -55,6 +56,7 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.Quad.CachedCallGraph;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.CodeCache;
@@ -62,6 +64,7 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
@@ -3219,11 +3222,45 @@ public class PA {
         r = new BufferedReader(new FileReader("heap_filter.txt"));
         String s = null;
         while ((s = r.readLine()) != null) {
-            int index = Hmap.get(s);
+            ConcreteTypeNode cn = readToStringResult(s);
+
+            int index = Hmap.get(cn);
             if(TRACE) {
                 System.out.println("Location '" + s + "' matches " + index);
             }
         }            
+    }
+    
+    public static ConcreteTypeNode readToStringResult(String str) {
+        StringTokenizer tok = new StringTokenizer(str, ":");
+        //String ID = tok.nextToken();
+        jq_Reference type = (jq_Reference) jq_Type.parseType(tok.nextToken());
+        //ProgramLocation pl = ProgramLocation.read(tok);
+        String methodName = tok.nextToken();
+        jq_Method m = (jq_Method) jq_Method.parseMember(methodName);
+        if (m == null) return null;
+        QuadProgramLocation pl = null;
+        String pls = tok.nextToken();
+        StringTokenizer t = new StringTokenizer(pls, " ");
+        t.nextToken();
+        if (t.nextToken().equals("quad")) {
+            int id = new Integer(t.nextToken()).intValue();
+            if (m.getBytecode() == null) return null;
+            ControlFlowGraph cfg = CodeCache.getCode(m);                
+            for (QuadIterator i = new QuadIterator(cfg); i.hasNext(); ) {
+                Quad q = i.nextQuad();
+                
+                if (q.getID() == id) {
+                    pl = new QuadProgramLocation(m, q);
+                }
+            }
+        }
+        
+        String opns = tok.nextToken();
+        Integer opn = opns.equals("null") ? null : Integer.decode(opns);
+        
+        ConcreteTypeNode n = ConcreteTypeNode.get(type, pl, opn);
+        return n;
     }
     
     void saveReflectionStats() throws IOException {
@@ -5070,7 +5107,7 @@ public class PA {
             //Hmap.dumpStrings(dos);
             for (int j = 0; j < Hmap.size(); ++j) {
                 Node o = (Node) Hmap.get(j);
-                dos.write(o.id+": "+o+"\n");
+                dos.write(/*o.id+": "+*/ o+"\n");
             }
         } finally {
             if (dos != null) dos.close();
