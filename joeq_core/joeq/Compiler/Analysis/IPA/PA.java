@@ -3430,9 +3430,10 @@ public class PA {
         PA dis = new PA();
         dis.cg = null;
         
-        if(dis.INLINE_MAPS) {
+        if (dis.INLINE_MAPS) {
             CodeCache.addDefaultPass(new MethodInline());
         }
+        
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
             if (dis.cg == null && dis.AUTODISCOVER_CALL_GRAPH) {
@@ -3463,6 +3464,22 @@ public class PA {
                 rootMethods = dis.cg.getRoots();
                 dis.cg = new CachedCallGraph(dis.cg);
             }
+        }
+        
+        if (dis.INLINE_MAPS) {
+            CodeCache.invalidate();
+            
+            //((CachedCallGraph) dis.cg).invalidateCache();
+            System.out.println("Writing call graph...");
+            long time = System.currentTimeMillis();
+            BufferedWriter dos = null;
+            try {
+                dos = new BufferedWriter(new FileWriter(callgraphFileName + "2"));
+                LoadedCallGraph.write(dis.cg, dos);
+            } finally {
+                if (dos != null) dos.close();
+            }
+            System.out.println("Time spent writing: " + (System.currentTimeMillis() - time) / 1000.);
         }
  
         dis.run(dis.cg, rootMethods);

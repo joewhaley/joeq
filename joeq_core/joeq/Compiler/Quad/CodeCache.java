@@ -76,4 +76,13 @@ public class CodeCache {
         map.remove(m);
         bcmap.remove(m);
     }
+    
+    public void invalidateCache() {
+        map.clear();
+        bcmap.clear();
+    }
+    
+    static public void invalidate() {
+        cache.invalidateCache();
+    }
 }
