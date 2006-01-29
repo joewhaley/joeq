@@ -103,6 +103,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
         }
         public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
             /* Insert a fake replacement method call */
+            /*
             MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
             if(fakeOperand != null){
                 int len = fakeOperand.getMethod().getParamTypes().length;
@@ -121,7 +122,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 
 //                return;
             }
-            //inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
+            */
+            inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
         }
         public String toString() { return callee.getMethod().toString(); }
     }
@@ -227,7 +229,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             }
         }
 
-        public InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite) {
+        public InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite) {         
             if (TRACE_ORACLE) out.println("Oracle evaluating "+callSite);
             Invoke i = (Invoke) callSite.getOperator();
             jq_Method target;
@@ -253,10 +255,10 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 return null;
             }
             // HACK: for interpreter.
-            if (!joeq.Interpreter.QuadInterpreter.interpret_filter.isElement(target)) {
-                if (TRACE_ORACLE) out.println("Skipping because the interpreter cannot handle the target method.");
-                return null;
-            }
+//            if (!joeq.Interpreter.QuadInterpreter.interpret_filter.isElement(target)) {
+//                if (TRACE_ORACLE) out.println("Skipping because the interpreter cannot handle the target method.");
+//                return null;
+//            }
             
             String mungedName = NameMunger.mungeMethodName(target);
             if (!knownMethods.containsKey(mungedName)){

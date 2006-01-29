@@ -63,6 +63,7 @@ import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.MethodInline;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -182,6 +183,7 @@ public class PA {
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
+    static final boolean INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
     
     boolean USE_VCONTEXT;
     boolean USE_HCONTEXT;
@@ -341,8 +343,8 @@ public class PA {
                     varorder = "C_N_F_Z_I_I2_M2_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c";
                 } else {
                     //varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2_T2_H1";
-                    ///varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
-                    varorder = "C0_N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1";
+                    varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
+//                    varorder = "C0_N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1";
                 }
             } else if (CARTESIAN_PRODUCT && false) {
                 varorder = "C_N_F_Z_I_I2_M2_M_T1_V2xV1_T2_H2xH1";
@@ -3427,6 +3429,9 @@ public class PA {
         
         PA dis = new PA();
         dis.cg = null;
+        if(dis.INLINE_MAPS) {
+            CodeCache.addDefaultPass(new MethodInline());
+        }
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
             if (dis.cg == null && dis.AUTODISCOVER_CALL_GRAPH) {
@@ -3456,7 +3461,7 @@ public class PA {
             } else if (dis.cg != null) {
                 rootMethods = dis.cg.getRoots();
             }
-        }
+        }        
         dis.run(dis.cg, rootMethods);
 
         if (WRITE_PARESULTS_BATCHFILE)
