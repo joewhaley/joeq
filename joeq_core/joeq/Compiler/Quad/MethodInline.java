@@ -271,8 +271,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
             }
             
             if (TRACE_ORACLE) out.println("Oracle says to inline " + target);
-            //return new NoCheckInliningDecision(target);
-            return new TypeCheckInliningDecision(target);
+            return new NoCheckInliningDecision(target);
+//            return new TypeCheckInliningDecision(target);
         }
     }
     

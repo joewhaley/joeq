@@ -183,7 +183,7 @@ public class PA {
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
-    static final boolean INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
+    final boolean INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
     
     boolean USE_VCONTEXT;
     boolean USE_HCONTEXT;
@@ -3429,6 +3429,7 @@ public class PA {
         
         PA dis = new PA();
         dis.cg = null;
+        
         if(dis.INLINE_MAPS) {
             CodeCache.addDefaultPass(new MethodInline());
         }
@@ -3452,7 +3453,7 @@ public class PA {
                     System.out.println("Finished discovering call graph.");
                     dis = new PA();
                     initialCallgraphFileName = callgraphFileName;
-                    dis.cg = loadCallGraph(rootMethods);
+                    dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
                     rootMethods = dis.cg.getRoots();
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
@@ -3460,8 +3461,10 @@ public class PA {
                 }
             } else if (dis.cg != null) {
                 rootMethods = dis.cg.getRoots();
+                dis.cg = new CachedCallGraph(dis.cg);
             }
-        }        
+        }
+ 
         dis.run(dis.cg, rootMethods);
 
         if (WRITE_PARESULTS_BATCHFILE)
