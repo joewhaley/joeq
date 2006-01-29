@@ -37,6 +37,10 @@ public class CodeCache {
     public static boolean TRACE = false;
     public static boolean AlwaysMap = false;
     
+    public static void addDefaultPass(ControlFlowGraphVisitor pass) {
+        passes.add(pass);
+    }
+    
     protected ControlFlowGraph _get(jq_Method m) {
         ControlFlowGraph cfg = (ControlFlowGraph)map.get(m);
         if (cfg == null) {
