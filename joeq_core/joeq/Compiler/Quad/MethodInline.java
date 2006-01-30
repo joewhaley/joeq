@@ -9,12 +9,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
@@ -49,6 +51,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 
     Oracle oracle;
     CallGraph cg;
+    private PA pa;
     private static Map fakeMethodOperand = new HashMap();
 
     public MethodInline(Oracle o) {
@@ -62,6 +65,13 @@ public class MethodInline implements ControlFlowGraphVisitor {
     public MethodInline() {
 //        this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
         this(new InlineSelectedCalls(CHACallGraph.INSTANCE));
+        this.cg = CHACallGraph.INSTANCE;
+    }
+
+    public MethodInline(PA pa) {
+        this(new InlineSelectedCalls(CHACallGraph.INSTANCE));
+        
+        this.pa = pa;        
         this.cg = CHACallGraph.INSTANCE;
     }
 
@@ -191,7 +201,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
      * */
     public static class InlineSelectedCalls implements Oracle {        
         protected CallGraph cg;
-        protected HashMap/*<String,null>*/ knownMethods = new HashMap(10);
+        protected HashSet/*<String>*/ knownMethods = new HashSet(10);
         public static final String methodNameFile = "methods.txt";
           
         public InlineSelectedCalls(CallGraph cg) {
@@ -213,7 +223,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                         s = s.substring(s.length()-1);
                     }
                     
-                    knownMethods.put(s, null);
+                    knownMethods.add(s);
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -227,6 +237,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                         e1.printStackTrace();
                     }
             }
+            System.err.println("Inlining " + knownMethods.size() + " methods");
         }
 
         public InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite) {         
@@ -261,7 +272,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 //            }
             
             String mungedName = NameMunger.mungeMethodName(target);
-            if (!knownMethods.containsKey(mungedName)){
+            if (!knownMethods.contains(mungedName)){
                 return null;
             }
             
@@ -312,6 +323,15 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
                 jq_Method callee = ((NoCheckInliningDecision) d).callee.getMethod();
                 ccg.inlineEdge(caller, pl, callee);
+                System.err.println("Removing a call to [" + callee + "] at " + pl);
+            }
+            if(pa != null && d instanceof NoCheckInliningDecision) {
+                // remove this edge from the pa
+                jq_Method caller = cfg.getMethod();
+                ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
+                jq_Method callee = ((NoCheckInliningDecision) d).callee.getMethod();
+                pa.removeCall(pl, callee);
+                System.err.println("Removing a call to [" + callee + "] at " + pl); 
             }
         }
     }
