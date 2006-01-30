@@ -248,6 +248,8 @@ public class PA {
     BDD IEfilter; // V2cxIxV1cxM, context-sensitive edge filter
     
     BDD visited; // M, visited methods
+    BDD removeCalls;
+    
     // maps to SSA form
     BDD forNameMap; // IxH1, heap allocation sites for forClass.Name
     BuildBDDIR bddIRBuilder;
@@ -498,6 +500,9 @@ public class PA {
         IE = bdd.zero();
         hP = bdd.zero();
         visited = bdd.zero();
+        if(INLINE_MAPS) {
+            removeCalls = bdd.zero();
+        }
         forNameMap =  bdd.zero();
         
         if (OBJECT_SENSITIVE || CARTESIAN_PRODUCT) staticCalls = bdd.zero();
@@ -3190,6 +3195,11 @@ public class PA {
             assumeKnownCallGraph();
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         }
+        if(INLINE_MAPS) {
+            System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
+            //IE.orWith(removeCalls.not());
+            //System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
+        }
         
         if(FIX_NO_DEST){
             analyzeIE();
@@ -3431,14 +3441,13 @@ public class PA {
         dis.cg = null;
         
         if (dis.INLINE_MAPS) {
-            CodeCache.addDefaultPass(new MethodInline());
+            CodeCache.addDefaultPass(new MethodInline(dis));
         }
         
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
             if (dis.cg == null && dis.AUTODISCOVER_CALL_GRAPH) {
-                if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE || dis.THREAD_SENSITIVE ||
-                        dis.SKIP_SOLVE) {
+                if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE || dis.THREAD_SENSITIVE || dis.SKIP_SOLVE) {
                     System.out.println("Discovering call graph first...");
                     dis.CONTEXT_SENSITIVE = false;
                     dis.OBJECT_SENSITIVE = false;
@@ -3454,7 +3463,8 @@ public class PA {
                     System.out.println("Finished discovering call graph.");
                     dis = new PA();
                     initialCallgraphFileName = callgraphFileName;
-                    dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
+                    dis.cg = loadCallGraph(rootMethods);
+                    //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
@@ -3465,22 +3475,24 @@ public class PA {
                 dis.cg = new CachedCallGraph(dis.cg);
             }
         }
+        //return;
         
-        if (dis.INLINE_MAPS) {
-            CodeCache.invalidate();
-            
-            //((CachedCallGraph) dis.cg).invalidateCache();
-            System.out.println("Writing call graph...");
-            long time = System.currentTimeMillis();
-            BufferedWriter dos = null;
-            try {
-                dos = new BufferedWriter(new FileWriter(callgraphFileName + "2"));
-                LoadedCallGraph.write(dis.cg, dos);
-            } finally {
-                if (dos != null) dos.close();
-            }
-            System.out.println("Time spent writing: " + (System.currentTimeMillis() - time) / 1000.);
-        }
+//        if (dis.INLINE_MAPS) {
+////            CodeCache.invalidate();
+////            
+////            //((CachedCallGraph) dis.cg).invalidateCache();
+////            System.out.println("Writing call graph...");
+////            long time = System.currentTimeMillis();
+////            BufferedWriter dos = null;
+////            try {
+////                dos = new BufferedWriter(new FileWriter(callgraphFileName + "2"));
+////                LoadedCallGraph.write(dis.cg, dos);
+////            } finally {
+////                if (dos != null) dos.close();
+////            }
+////            System.out.println("Time spent writing: " + (System.currentTimeMillis() - time) / 1000.);
+////            dis.cg = new PACallGraph(dis);
+//        }
  
         dis.run(dis.cg, rootMethods);
 
@@ -3627,7 +3639,7 @@ public class PA {
 
     public void dumpCallGraph() throws IOException {
         //CallGraph callgraph = CallGraph.makeCallGraph(roots, new PACallTargetMap());
-        CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
+        CachedCallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
         //CallGraph callgraph = callGraph;
         BufferedWriter dos = null;
         try {
@@ -4926,6 +4938,7 @@ public class PA {
     BDD mIE;
     BDD visitedFly;
 
+
     void initFly() {
         mS = bdd.zero();
         mL = bdd.zero();
@@ -4962,6 +4975,17 @@ public class PA {
             b.orWith(M.ithVar(Mmap.get(m)));
         }
         return b;
+    }
+    
+    public void removeCall(ProgramLocation pl, jq_Method callee) {
+        Assert._assert(Imap != null);
+        Assert._assert(Mmap != null);
+        
+        int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
+        int m_i = Mmap.get(callee);
+        
+        BDD notCalls = I.ithVar(i_i).andWith(M.ithVar(m_i));
+        removeCalls.orWith(notCalls);
     }
     
     void addToNmap(jq_Method m) {
