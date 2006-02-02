@@ -5019,7 +5019,7 @@ public class PA {
         }
     }
     
-    public void addInlinedSiteToMap(Quad alloc, Quad call, jq_Method callerMethod) {
+    public void addInlinedSiteToMap(Quad alloc, ProgramLocation pl, jq_Method callerMethod) {
 //        if(Imap != null) {
 //            System.out.println("Inlined an allocation site " + alloc);
 //        
@@ -5027,7 +5027,7 @@ public class PA {
 //            int h_i = Hmap.get(q);
 //            inlinedSites.orWith(H1.ithVar(h_i).andWith(I.ithVar(i_i)));
 //        }
-        inlinedSites.add(new Triple(alloc, call, callerMethod));
+        inlinedSites.add(new Triple(alloc, pl, callerMethod));
     }
     
     Set inlinedSites = new HashSet();
@@ -5186,7 +5186,7 @@ public class PA {
             for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
                 Triple t = (Triple) iter.next();
                 Quad alloc = (Quad) t.left;
-                Quad call = (Quad) t.middle;
+                ProgramLocation callSite = (ProgramLocation) t.middle;
                 jq_Method method = (jq_Method) t.right;
                 
                 for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
@@ -5198,7 +5198,6 @@ public class PA {
                             Quad q = ((QuadProgramLocation) pl).getQuad();
                             if(q == alloc) {
                                 System.out.println("Found an inlined allocation site in method " + method);
-                                ProgramLocation callSite = new QuadProgramLocation(method, call);
                                 int c_i = Imap.get(callSite);
                                 int h_i = Hmap.get(node);
                                 
