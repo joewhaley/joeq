@@ -113,6 +113,7 @@ public class PA {
 
     public static final boolean VerifyAssertions = false;
 
+
     static boolean WRITE_PARESULTS_BATCHFILE = !System.getProperty("pa.writeparesults", "yes").equals("no");
 
     boolean TRACE = !System.getProperty("pa.trace", "no").equals("no");
@@ -169,6 +170,7 @@ public class PA {
     boolean USE_CASTS_FOR_REFLECTION = !System.getProperty("pa.usecastsforreflection", "no").equals("no");
     boolean RESOLVE_FORNAME = !System.getProperty("pa.resolveforname", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
+    boolean TRACE_INLINING = true;
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
@@ -3461,9 +3463,12 @@ public class PA {
                
                     dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
+                    PA old = dis;
                     dis = new PA();
                     initialCallgraphFileName = callgraphFileName;
                     dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
+                    dis.removeCalls = old.removeCalls; 
+                    old = null;
                     if (dis.INLINE_MAPS) {
                         CodeCache.addDefaultPass(new MethodInline(dis));
                         //CodeCache.invalidate();
@@ -4992,6 +4997,7 @@ public class PA {
         int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
         
         removeCalls.orWith(I.ithVar(i_i));
+        if(TRACE_INLINING) System.out.println("Removing invocation site " + i_i);
     }
     
     void addToNmap(jq_Method m) {
@@ -5137,6 +5143,7 @@ public class PA {
         bdd_save(dumpPath+"sync.bdd", sync);
         bdd_save(dumpPath+"mSync.bdd", mSync);
         if(INLINE_MAPS) {
+            if(TRACE_INLINING) System.out.println("Dumping removeCalls"); 
             bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
         }
         if (threadRuns != null)
