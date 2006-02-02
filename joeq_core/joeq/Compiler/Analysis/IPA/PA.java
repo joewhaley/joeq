@@ -3470,6 +3470,7 @@ public class PA {
                     dis.removeCalls = old.removeCalls; 
                     old = null;
                     if (dis.INLINE_MAPS) {
+                        System.out.println("Addin the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
                         //CodeCache.invalidate();
                     }
@@ -3479,6 +3480,7 @@ public class PA {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
                     dis.DISCOVER_CALL_GRAPH = true;
                     if (dis.INLINE_MAPS) {
+                        System.out.println("Addin the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
                         //CodeCache.invalidate();
                     }
