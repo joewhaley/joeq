@@ -5027,6 +5027,7 @@ public class PA {
 //            int h_i = Hmap.get(q);
 //            inlinedSites.orWith(H1.ithVar(h_i).andWith(I.ithVar(i_i)));
 //        }
+        pl = LoadedCallGraph.mapCall(pl);
         inlinedSites.add(new Triple(alloc, pl, callerMethod));
     }
     
@@ -5200,6 +5201,8 @@ public class PA {
                                 System.out.println("Found an inlined allocation site in method " + method);
                                 int c_i = Imap.get(callSite);
                                 int h_i = Hmap.get(node);
+                                
+                                System.out.println("Mapping " + c_i + " to " + h_i);
                                 
                                 inlineSites.orWith(I.ithVar(c_i).andWith(H1.ithVar(h_i)));
                             }
