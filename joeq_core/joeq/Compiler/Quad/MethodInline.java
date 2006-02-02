@@ -144,18 +144,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 //                return;
             }
             */
-            inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
-            if(mi.pa != null) {                    
-                for(Iterator iter = newlyInserted.iterator(); iter.hasNext();) {
-                    BasicBlock block = (BasicBlock) iter.next();
-                    for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
-                        Quad quad = (Quad) quadIter.next();
-                        if(quad.getOperator() instanceof Operator.New) {
-                            mi.pa.addInlinedSiteToMap(quad, q, caller.getMethod());                            
-                        }
-                    }
-                }
-            }
+            inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);            
         }
         public String toString() { return callee.getMethod().toString(); }
     }
@@ -353,6 +342,17 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
                 jq_Method callee = ((TypeCheckInliningDecision) d).callee.getMethod();
                 pa.removeCall(pl, callee);
+                if(pa != null) {                    
+                    for(Iterator iter = newlyInserted.iterator(); iter.hasNext();) {
+                        BasicBlock block = (BasicBlock) iter.next();
+                        for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
+                            Quad quad = (Quad) quadIter.next();
+                            if(quad.getOperator() instanceof Operator.New) {
+                                pa.addInlinedSiteToMap(quad, pl, cfg.getMethod());                            
+                            }
+                        }
+                    }
+                }
                 System.err.println("Removing a call to [" + callee + "] at " + pl); 
             }
         }
