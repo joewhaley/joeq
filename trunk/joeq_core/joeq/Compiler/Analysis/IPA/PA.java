@@ -172,7 +172,7 @@ public class PA {
     boolean USE_CASTS_FOR_REFLECTION = !System.getProperty("pa.usecastsforreflection", "no").equals("no");
     boolean RESOLVE_FORNAME = !System.getProperty("pa.resolveforname", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
-    boolean TRACE_INLINING = !System.getProperty("pa.traceinlining", "no").equals("no");;
+    public boolean TRACE_INLINING = !System.getProperty("pa.traceinlining", "no").equals("no");;
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
@@ -5331,7 +5331,7 @@ public class PA {
     }
     
     void saveInlinedSites(String dumpPath) throws IOException {
-        if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " pairs");
+        if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " triples");
         for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
             Triple t = (Triple) iter.next();
             Quad alloc = (Quad) t.left;
