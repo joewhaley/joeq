@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import org.omg.IOP.Codec;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -95,6 +96,8 @@ import net.sf.javabdd.BDDDomain;
 import net.sf.javabdd.BDDFactory;
 import net.sf.javabdd.BDDPairing;
 import net.sf.javabdd.TypedBDDFactory;
+import net.sf.javabdd.BDDFactory.BDDOp;
+import net.sf.javabdd.TryVarOrder.BDDOperation;
 import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 /**
  * Pointer analysis using BDDs.  Includes both context-insensitive and context-sensitive
@@ -248,7 +251,7 @@ public class PA {
     BDD IEfilter; // V2cxIxV1cxM, context-sensitive edge filter
     
     BDD visited; // M, visited methods
-    BDD removeCalls;
+    BDD removeCalls;    // I, calls to remove from consideration because of inlining
     
     // maps to SSA form
     BDD forNameMap; // IxH1, heap allocation sites for forClass.Name
@@ -3197,8 +3200,8 @@ public class PA {
         }
         if(INLINE_MAPS) {
             System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
-            //IE.orWith(removeCalls.not());
-            //System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
+            IE.applyWith(removeCalls.not(), BDDFactory.and);
+            System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
         }
         
         if(FIX_NO_DEST){
@@ -3440,10 +3443,6 @@ public class PA {
         PA dis = new PA();
         dis.cg = null;
         
-        if (dis.INLINE_MAPS) {
-            CodeCache.addDefaultPass(new MethodInline(dis));
-        }
-        
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
             if (dis.cg == null && dis.AUTODISCOVER_CALL_GRAPH) {
@@ -3459,16 +3458,25 @@ public class PA {
                     dis.DUMP_RESULTS = false;
                     dis.SKIP_SOLVE = false;
                     dis.DUMP_FLY = false;
+               
                     dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
                     dis = new PA();
                     initialCallgraphFileName = callgraphFileName;
-                    dis.cg = loadCallGraph(rootMethods);
+                    dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
+                    if (dis.INLINE_MAPS) {
+                        CodeCache.addDefaultPass(new MethodInline(dis, dis.cg));
+                        //CodeCache.invalidate();
+                    }
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
                     dis.DISCOVER_CALL_GRAPH = true;
+                    if (dis.INLINE_MAPS) {
+                        CodeCache.addDefaultPass(new MethodInline(dis));
+                        //CodeCache.invalidate();
+                    }
                 }
             } else if (dis.cg != null) {
                 rootMethods = dis.cg.getRoots();
@@ -4982,10 +4990,8 @@ public class PA {
         Assert._assert(Mmap != null);
         
         int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
-        int m_i = Mmap.get(callee);
         
-        BDD notCalls = I.ithVar(i_i).andWith(M.ithVar(m_i));
-        removeCalls.orWith(notCalls);
+        removeCalls.orWith(I.ithVar(i_i));
     }
     
     void addToNmap(jq_Method m) {
@@ -5130,6 +5136,9 @@ public class PA {
         bdd_save(dumpPath+"IE0.bdd", IE0);
         bdd_save(dumpPath+"sync.bdd", sync);
         bdd_save(dumpPath+"mSync.bdd", mSync);
+        if(INLINE_MAPS) {
+            bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
+        }
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null)
