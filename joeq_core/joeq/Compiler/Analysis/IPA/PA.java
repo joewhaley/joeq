@@ -3465,7 +3465,7 @@ public class PA {
                     initialCallgraphFileName = callgraphFileName;
                     dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
                     if (dis.INLINE_MAPS) {
-                        CodeCache.addDefaultPass(new MethodInline(dis, dis.cg));
+                        CodeCache.addDefaultPass(new MethodInline(dis));
                         //CodeCache.invalidate();
                     }
                     //dis.cg = new PACallGraph(dis);

@@ -326,7 +326,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 ccg.inlineEdge(caller, pl, callee);
                 System.err.println("Removing a call to [" + callee + "] at " + pl);
             }
-            if(pa != null && d instanceof NoCheckInliningDecision) {
+            if(pa != null /*&& d instanceof NoCheckInliningDecision*/) {
                 // remove this edge from the pa
                 jq_Method caller = cfg.getMethod();
                 ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
