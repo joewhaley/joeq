@@ -172,7 +172,7 @@ public class PA {
     boolean USE_CASTS_FOR_REFLECTION = !System.getProperty("pa.usecastsforreflection", "no").equals("no");
     boolean RESOLVE_FORNAME = !System.getProperty("pa.resolveforname", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
-    boolean TRACE_INLINING = true;
+    boolean TRACE_INLINING = !System.getProperty("pa.traceinlining", "no").equals("no");;
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
@@ -5175,42 +5175,8 @@ public class PA {
         bdd_save(dumpPath+"sync.bdd", sync);
         bdd_save(dumpPath+"mSync.bdd", mSync);
         if(INLINE_MAPS) {
-            if(TRACE_INLINING) System.out.println("Dumping removeCalls: " + removedCalls.size() + " calls"); 
-            for(Iterator iter = removedCalls.iterator(); iter.hasNext();){
-                ProgramLocation call = (ProgramLocation) iter.next();
-                int i = Imap.get(call);
-
-                removeCalls.orWith(I.ithVar(i));
-            }
-            bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
-            
-            for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
-                Triple t = (Triple) iter.next();
-                Quad alloc = (Quad) t.left;
-                ProgramLocation callSite = (ProgramLocation) t.middle;
-                jq_Method method = (jq_Method) t.right;
-                
-                for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
-                    MethodSummary.Node node = (Node) heapIter.next();
-                    
-                    if(node instanceof ConcreteTypeNode) {
-                        ProgramLocation pl = ((ConcreteTypeNode)node).getLocation();
-                        if(pl instanceof QuadProgramLocation) {
-                            Quad q = ((QuadProgramLocation) pl).getQuad();
-                            if(q == alloc) {
-                                System.out.println("Found an inlined allocation site in method " + method);
-                                int c_i = Imap.get(callSite);
-                                int h_i = Hmap.get(node);
-                                
-                                System.out.println("Mapping " + c_i + " to " + h_i);
-                                
-                                inlineSites.orWith(I.ithVar(c_i).andWith(H1.ithVar(h_i)));
-                            }
-                        }
-                    }
-                }
-            }
-            bdd_save(dumpPath+"inlineSites.bdd", inlineSites);
+            saveRemovedCalls(dumpPath);            
+            saveInlinedSites(dumpPath);            
         }
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
@@ -5348,6 +5314,48 @@ public class PA {
 
     }
     
+    void saveRemovedCalls(String dumpPath) throws IOException {
+        if(TRACE_INLINING) System.out.println("Dumping removeCalls: " + removedCalls.size() + " calls"); 
+        for(Iterator iter = removedCalls.iterator(); iter.hasNext();){
+            ProgramLocation call = (ProgramLocation) iter.next();
+            int i = Imap.get(call);
+
+            removeCalls.orWith(I.ithVar(i));
+        }
+        bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
+    }
+    
+    void saveInlinedSites(String dumpPath) throws IOException {
+        if(TRACE_INLINING) System.out.println("Dumping inlinedSites: " + inlinedSites.size() + " pairs");
+        for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
+            Triple t = (Triple) iter.next();
+            Quad alloc = (Quad) t.left;
+            ProgramLocation callSite = (ProgramLocation) t.middle;
+            jq_Method method = (jq_Method) t.right;
+            
+            for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
+                MethodSummary.Node node = (Node) heapIter.next();
+                
+                if(node instanceof ConcreteTypeNode) {
+                    ProgramLocation pl = ((ConcreteTypeNode)node).getLocation();
+                    if(pl instanceof QuadProgramLocation) {
+                        Quad q = ((QuadProgramLocation) pl).getQuad();
+                        if(q == alloc) {
+                            if(TRACE_INLINING) System.out.println("Found an inlined allocation site in method " + method);
+                            int c_i = Imap.get(callSite);
+                            int h_i = Hmap.get(node);
+                            
+                            if(TRACE_INLINING) System.out.println("Mapping " + c_i + " to " + h_i);
+                            
+                            inlineSites.orWith(I.ithVar(c_i).andWith(H1.ithVar(h_i)));
+                        }
+                    }
+                }
+            }
+        }
+        bdd_save(dumpPath+"inlineSites.bdd", inlineSites);        
+    }
+
     class Dummy implements Textualizable {
         public void addEdge(String edge, Textualizable t) {
         }
