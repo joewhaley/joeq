@@ -62,10 +62,11 @@ public class MethodInline implements ControlFlowGraphVisitor {
         this(new InlineSelectedCalls(cg));
         this.cg = cg;
     }
-    public MethodInline() {
+    public MethodInline(PA pa, CallGraph cg) {
 //        this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
         this(new InlineSelectedCalls(CHACallGraph.INSTANCE));
-        this.cg = CHACallGraph.INSTANCE;
+        this.pa = pa;
+        this.cg = cg;
     }
 
     public MethodInline(PA pa) {
@@ -282,8 +283,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
             }
             
             if (TRACE_ORACLE) out.println("Oracle says to inline " + target);
-            return new NoCheckInliningDecision(target);
-//            return new TypeCheckInliningDecision(target);
+//            return new NoCheckInliningDecision(target);
+            return new TypeCheckInliningDecision(target);
         }
     }
     
