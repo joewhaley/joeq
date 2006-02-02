@@ -5015,7 +5015,7 @@ public class PA {
             removeCalls.orWith(I.ithVar(i_i));
             */
             removedCalls.add((ProgramLocation) Imap.get(i_i));
-            if(TRACE_INLINING) System.out.println("Removing invocation site " + i_i);
+            if(TRACE_INLINING) System.out.println("INLINING: Removing invocation site " + i_i);
         }
     }
     
@@ -5028,6 +5028,11 @@ public class PA {
 //            inlinedSites.orWith(H1.ithVar(h_i).andWith(I.ithVar(i_i)));
 //        }
         pl = LoadedCallGraph.mapCall(pl);
+        if(TRACE_INLINING) {
+            System.out.println("INLINING: Adding " + 
+            alloc + ", " + pl + ", " + callerMethod + " to the inline map");
+        }
+            
         inlinedSites.add(new Triple(alloc, pl, callerMethod));
     }
     
@@ -5315,7 +5320,7 @@ public class PA {
     }
     
     void saveRemovedCalls(String dumpPath) throws IOException {
-        if(TRACE_INLINING) System.out.println("Dumping removeCalls: " + removedCalls.size() + " calls"); 
+        if(TRACE_INLINING) System.out.println("INLINING: Dumping removeCalls: " + removedCalls.size() + " calls"); 
         for(Iterator iter = removedCalls.iterator(); iter.hasNext();){
             ProgramLocation call = (ProgramLocation) iter.next();
             int i = Imap.get(call);
@@ -5326,7 +5331,7 @@ public class PA {
     }
     
     void saveInlinedSites(String dumpPath) throws IOException {
-        if(TRACE_INLINING) System.out.println("Dumping inlinedSites: " + inlinedSites.size() + " pairs");
+        if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " pairs");
         for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
             Triple t = (Triple) iter.next();
             Quad alloc = (Quad) t.left;
@@ -5341,11 +5346,11 @@ public class PA {
                     if(pl instanceof QuadProgramLocation) {
                         Quad q = ((QuadProgramLocation) pl).getQuad();
                         if(q == alloc) {
-                            if(TRACE_INLINING) System.out.println("Found an inlined allocation site in method " + method);
+                            if(TRACE_INLINING) System.out.println("INLINING: Found an inlined allocation site in method " + method);
                             int c_i = Imap.get(callSite);
                             int h_i = Hmap.get(node);
                             
-                            if(TRACE_INLINING) System.out.println("Mapping " + c_i + " to " + h_i);
+                            if(TRACE_INLINING) System.out.println("INLINING: Mapping " + c_i + " to " + h_i);
                             
                             inlineSites.orWith(I.ithVar(c_i).andWith(H1.ithVar(h_i)));
                         }
