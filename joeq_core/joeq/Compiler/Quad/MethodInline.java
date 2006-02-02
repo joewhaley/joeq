@@ -50,7 +50,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 
     public static final boolean TRACE = false;
     public static final boolean TRACE_ORACLE = false;
-    public static final boolean TRACE_DECISIONS = true;
+    public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
 
     Oracle oracle;
@@ -336,24 +336,31 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 ccg.inlineEdge(caller, pl, callee);
                 System.err.println("Removing a call to [" + callee + "] at " + pl);
             }
-            if(/*pa != null &&*/ d instanceof TypeCheckInliningDecision) {
+            if(pa != null && d instanceof TypeCheckInliningDecision) {
                 // remove this edge from the pa
                 jq_Method caller = cfg.getMethod();
                 ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
                 jq_Method callee = ((TypeCheckInliningDecision) d).callee.getMethod();
-                pa.removeCall(pl, callee);
-                if(pa != null) {                    
-                    for(Iterator iter = newlyInserted.iterator(); iter.hasNext();) {
-                        BasicBlock block = (BasicBlock) iter.next();
-                        for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
-                            Quad quad = (Quad) quadIter.next();
-                            if(quad.getOperator() instanceof Operator.New) {
-                                pa.addInlinedSiteToMap(quad, pl, cfg.getMethod());                            
-                            }
+                pa.removeCall(pl, callee);                
+                int found = 0;                
+                for(Iterator iter = newlyInserted.iterator(); iter.hasNext();) {
+                    BasicBlock block = (BasicBlock) iter.next();
+                    for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
+                        Quad quad = (Quad) quadIter.next();
+                        if(quad.getOperator() instanceof Operator.New) {
+                            pa.addInlinedSiteToMap(quad, pl, cfg.getMethod());
+                            found++;
                         }
                     }
                 }
-                System.err.println("Removing a call to [" + callee + "] at " + pl); 
+                if(pa.TRACE_INLINING) {
+                    if(found > 0) {
+                        System.err.println("INLINING: Inlining " + found + " allocation sites found in the call to " + callee);
+                    } else {
+                        System.err.println("INLINING: Warning: no allocation sites found in the call to " + callee);
+                    }
+                    System.err.println("Removing a call to [" + callee + "] at " + pl);
+                }
             }
         }
     }
