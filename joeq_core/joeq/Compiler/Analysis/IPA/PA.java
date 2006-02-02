@@ -3444,6 +3444,15 @@ public class PA {
         
         PA dis = new PA();
         dis.cg = null;
+        if(dis.INLINE_MAPS){
+             System.out.println("=========================================================");
+        }
+
+        if (dis.INLINE_MAPS) {
+            System.out.println("Addin the inlining pass");
+            CodeCache.addDefaultPass(new MethodInline(dis));
+            //CodeCache.invalidate();
+        }
         
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
@@ -3465,15 +3474,11 @@ public class PA {
                     System.out.println("Finished discovering call graph.");
                     PA old = dis;
                     dis = new PA();
+
                     initialCallgraphFileName = callgraphFileName;
                     dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
-                    dis.removeCalls = old.removeCalls; 
+                    dis.removedCalls = old.removedCalls; 
                     old = null;
-                    if (dis.INLINE_MAPS) {
-                        System.out.println("Addin the inlining pass");
-                        CodeCache.addDefaultPass(new MethodInline(dis));
-                        //CodeCache.invalidate();
-                    }
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
@@ -4993,14 +4998,19 @@ public class PA {
     }
     
     public void removeCall(ProgramLocation pl, jq_Method callee) {
+        int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
+        /*
         Assert._assert(Imap != null);
         Assert._assert(Mmap != null);
         
-        int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
-        
+      
         removeCalls.orWith(I.ithVar(i_i));
+        */
+        removedCalls.add((ProgramLocation) Imap.get(i_i));
         if(TRACE_INLINING) System.out.println("Removing invocation site " + i_i);
     }
+
+    Collection removedCalls = new ArrayList();
     
     void addToNmap(jq_Method m) {
         Assert._assert(!m.isStatic());
@@ -5145,7 +5155,13 @@ public class PA {
         bdd_save(dumpPath+"sync.bdd", sync);
         bdd_save(dumpPath+"mSync.bdd", mSync);
         if(INLINE_MAPS) {
-            if(TRACE_INLINING) System.out.println("Dumping removeCalls"); 
+            if(TRACE_INLINING) System.out.println("Dumping removeCalls: " + removedCalls.size() + " calls"); 
+            for(Iterator iter = removedCalls.iterator(); iter.hasNext();){
+                ProgramLocation call = (ProgramLocation) iter.next();
+                int i = Imap.get(call);
+
+                removeCalls.orWith(I.ithVar(i));
+            }
             bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
         }
         if (threadRuns != null)
