@@ -11,7 +11,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
@@ -32,10 +34,12 @@ import joeq.Compiler.Quad.Operator.InstanceOf;
 import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.NameMunger;
 import joeq.Util.Templates.ListIterator;
+import jwutil.graphs.Navigator;
 import jwutil.util.Assert;
 
 /**
@@ -53,6 +57,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
     CallGraph cg;
     private PA pa;
     private static Map fakeMethodOperand = new HashMap();
+    private static HashSet newlyInserted;
 
     public MethodInline(Oracle o) {
         this.oracle = o;
@@ -61,12 +66,14 @@ public class MethodInline implements ControlFlowGraphVisitor {
 //        this(new InlineSmallSingleTargetCalls(cg));\
         this(new InlineSelectedCalls(cg));
         this.cg = cg;
+        TypeCheckInliningDecision.mi = this;
     }
     public MethodInline(PA pa, CallGraph cg) {
 //        this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
         this(new InlineSelectedCalls(CHACallGraph.INSTANCE));
         this.pa = pa;
         this.cg = cg;
+        TypeCheckInliningDecision.mi = this;        
     }
 
     public MethodInline(PA pa) {
@@ -74,6 +81,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
         
         this.pa = pa;        
         this.cg = CHACallGraph.INSTANCE;
+        TypeCheckInliningDecision.mi = this;       
     }
 
     public static interface Oracle {
@@ -108,6 +116,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
     public static class TypeCheckInliningDecision extends InliningDecision {
         jq_Class expectedType;
         ControlFlowGraph callee;
+        static MethodInline mi;
+        
         public TypeCheckInliningDecision(jq_Method target) {
             this.expectedType = target.getDeclaringClass();
             this.callee = CodeCache.getCode(target);
@@ -135,6 +145,17 @@ public class MethodInline implements ControlFlowGraphVisitor {
             }
             */
             inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
+            if(mi.pa != null) {                    
+                for(Iterator iter = newlyInserted.iterator(); iter.hasNext();) {
+                    BasicBlock block = (BasicBlock) iter.next();
+                    for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
+                        Quad quad = (Quad) quadIter.next();
+                        if(quad.getOperator() instanceof Operator.New) {
+                            mi.pa.addInlinedSiteToMap(quad, q);                            
+                        }
+                    }
+                }
+            }
         }
         public String toString() { return callee.getMethod().toString(); }
     }
@@ -407,7 +428,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
         if (dest != null) {
             dest_r = dest.getRegister();
             op = Move.getMoveOp(callee.getMethod().getReturnType());
-        }
+        }        
 outer:
         for (ListIterator.BasicBlock it = callee.exit().getPredecessors().basicBlockIterator();
              it.hasNext(); ) {
@@ -438,7 +459,7 @@ outer:
             pred_bb.removeAllSuccessors(); pred_bb.addSuccessor(successor_bb);
             successor_bb.addPredecessor(pred_bb);
         }
-        
+       
         if (TRACE) out.println("Final result:");
         if (TRACE) out.println(caller.fullDump());
         if (TRACE) out.println(caller.getRegisterFactory().fullDump());
@@ -553,6 +574,23 @@ outer:
         if (dest != null) {
             dest_r = dest.getRegister();
             op = Move.getMoveOp(callee.getMethod().getReturnType());
+        }
+        
+        newlyInserted = new HashSet();
+        Navigator nav = callee.getNavigator();
+        LinkedList worklist = new LinkedList();
+        worklist.add(callee.entry());
+        newlyInserted.add(callee.entry());
+        while( !worklist.isEmpty() ) {
+            BasicBlock node = (BasicBlock) worklist.removeFirst();
+            Collection next = nav.next(node);
+            newlyInserted.addAll(next);
+            for(Iterator iter = next.iterator(); iter.hasNext();) {
+                BasicBlock nextNode = (BasicBlock) iter.next();
+                if (!worklist.contains(nextNode)) {
+                    worklist.add(nextNode);
+                }
+            }
         }
 outer:
         for (ListIterator.BasicBlock it = callee.exit().getPredecessors().basicBlockIterator();
