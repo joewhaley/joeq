@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 import org.omg.IOP.Codec;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
@@ -254,6 +255,7 @@ public class PA {
     
     BDD visited; // M, visited methods
     BDD removeCalls;    // I, calls to remove from consideration because of inlining
+    BDD inlineSites;    // HxI, allocation sites that were created as a result of inlining
     
     // maps to SSA form
     BDD forNameMap; // IxH1, heap allocation sites for forClass.Name
@@ -507,6 +509,7 @@ public class PA {
         visited = bdd.zero();
         if(INLINE_MAPS) {
             removeCalls = bdd.zero();
+            inlineSites = bdd.zero();
         }
         forNameMap =  bdd.zero();
         
@@ -3477,7 +3480,8 @@ public class PA {
 
                     initialCallgraphFileName = callgraphFileName;
                     dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
-                    dis.removedCalls = old.removedCalls; 
+                    dis.removedCalls = old.removedCalls;
+                    dis.inlinedSites = old.inlinedSites;
                     old = null;
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
@@ -4997,20 +5001,35 @@ public class PA {
         return b;
     }
     
-    public void removeCall(ProgramLocation pl, jq_Method callee) {
-        int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
-        /*
-        Assert._assert(Imap != null);
-        Assert._assert(Mmap != null);
-        
-      
-        removeCalls.orWith(I.ithVar(i_i));
-        */
-        removedCalls.add((ProgramLocation) Imap.get(i_i));
-        if(TRACE_INLINING) System.out.println("Removing invocation site " + i_i);
-    }
-
     Collection removedCalls = new ArrayList();
+
+    public void removeCall(ProgramLocation pl, jq_Method callee) {
+        if(Imap != null) {
+            int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
+            /*
+            Assert._assert(Imap != null);
+            Assert._assert(Mmap != null);
+            
+          
+            removeCalls.orWith(I.ithVar(i_i));
+            */
+            removedCalls.add((ProgramLocation) Imap.get(i_i));
+            if(TRACE_INLINING) System.out.println("Removing invocation site " + i_i);
+        }
+    }
+    
+    public void addInlinedSiteToMap(Quad alloc, Quad call) {
+//        if(Imap != null) {
+//            System.out.println("Inlined an allocation site " + alloc);
+//        
+//            int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
+//            int h_i = Hmap.get(q);
+//            inlinedSites.orWith(H1.ithVar(h_i).andWith(I.ithVar(i_i)));
+//        }
+        inlinedSites.put(alloc, call);
+    }
+    
+    Map inlinedSites = new HashMap();
     
     void addToNmap(jq_Method m) {
         Assert._assert(!m.isStatic());
@@ -5030,7 +5049,6 @@ public class PA {
     }
     
     public void dumpBDDRelations() throws IOException {
-        
         if (FULL_CHA) {
             for (Iterator i = Mmap.iterator(); i.hasNext(); ) {
                 Object o = i.next();
@@ -5163,6 +5181,26 @@ public class PA {
                 removeCalls.orWith(I.ithVar(i));
             }
             bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
+            
+            for(Iterator iter = inlinedSites.entrySet().iterator(); iter.hasNext();){
+                Map.Entry e = (Entry) iter.next();
+                Quad alloc = (Quad) e.getKey();
+                Quad call  = (Quad) e.getValue();
+                
+                for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
+                    MethodSummary.Node node = (Node) heapIter.next();
+                    
+                    if(node instanceof ConcreteTypeNode) {
+                        ProgramLocation pl = ((ConcreteTypeNode)node).getLocation();
+                        if(pl instanceof QuadProgramLocation) {
+                            Quad q = ((QuadProgramLocation) pl).getQuad();
+                            if(q == alloc) {
+                                System.out.println("Found an inlined allocation site");
+                            }
+                        }
+                    }
+                }
+            }            
         }
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
