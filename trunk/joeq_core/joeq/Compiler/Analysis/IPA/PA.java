@@ -3199,9 +3199,9 @@ public class PA {
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         }
         if(INLINE_MAPS) {
-            System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
-            IE.applyWith(removeCalls.not(), BDDFactory.and);
-            System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
+            //System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
+            //IE.applyWith(removeCalls.not(), BDDFactory.and);
+            //System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
         }
         
         if(FIX_NO_DEST){
