@@ -151,7 +151,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                     for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
                         Quad quad = (Quad) quadIter.next();
                         if(quad.getOperator() instanceof Operator.New) {
-                            mi.pa.addInlinedSiteToMap(quad, q);                            
+                            mi.pa.addInlinedSiteToMap(quad, q, caller.getMethod());                            
                         }
                     }
                 }

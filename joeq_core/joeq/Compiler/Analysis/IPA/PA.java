@@ -77,6 +77,7 @@ import joeq.Util.NameMunger;
 import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
+import jwutil.collections.Triple;
 import jwutil.graphs.GlobalPathNumbering;
 import jwutil.graphs.Navigator;
 import jwutil.graphs.PathNumbering;
@@ -5018,7 +5019,7 @@ public class PA {
         }
     }
     
-    public void addInlinedSiteToMap(Quad alloc, Quad call) {
+    public void addInlinedSiteToMap(Quad alloc, Quad call, jq_Method callerMethod) {
 //        if(Imap != null) {
 //            System.out.println("Inlined an allocation site " + alloc);
 //        
@@ -5026,10 +5027,10 @@ public class PA {
 //            int h_i = Hmap.get(q);
 //            inlinedSites.orWith(H1.ithVar(h_i).andWith(I.ithVar(i_i)));
 //        }
-        inlinedSites.put(alloc, call);
+        inlinedSites.add(new Triple(alloc, call, callerMethod));
     }
     
-    Map inlinedSites = new HashMap();
+    Set inlinedSites = new HashSet();
     
     void addToNmap(jq_Method m) {
         Assert._assert(!m.isStatic());
@@ -5182,10 +5183,11 @@ public class PA {
             }
             bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
             
-            for(Iterator iter = inlinedSites.entrySet().iterator(); iter.hasNext();){
-                Map.Entry e = (Entry) iter.next();
-                Quad alloc = (Quad) e.getKey();
-                Quad call  = (Quad) e.getValue();
+            for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
+                Triple t = (Triple) iter.next();
+                Quad alloc = (Quad) t.left;
+                Quad call = (Quad) t.middle;
+                jq_Method method = (jq_Method) t.right;
                 
                 for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
                     MethodSummary.Node node = (Node) heapIter.next();
@@ -5195,12 +5197,18 @@ public class PA {
                         if(pl instanceof QuadProgramLocation) {
                             Quad q = ((QuadProgramLocation) pl).getQuad();
                             if(q == alloc) {
-                                System.out.println("Found an inlined allocation site");
+                                System.out.println("Found an inlined allocation site in method " + method);
+                                ProgramLocation callSite = new QuadProgramLocation(method, call);
+                                int c_i = Imap.get(callSite);
+                                int h_i = Hmap.get(node);
+                                
+                                inlineSites.orWith(I.ithVar(c_i).andWith(H1.ithVar(h_i)));
                             }
                         }
                     }
                 }
-            }            
+            }
+            bdd_save(dumpPath+"inlineSites.bdd", inlineSites);
         }
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
