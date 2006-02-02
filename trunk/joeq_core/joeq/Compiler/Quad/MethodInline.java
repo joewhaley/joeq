@@ -46,7 +46,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 
     public static final boolean TRACE = false;
     public static final boolean TRACE_ORACLE = false;
-    public static final boolean TRACE_DECISIONS = false;
+    public static final boolean TRACE_DECISIONS = true;
     public static final java.io.PrintStream out = System.out;
 
     Oracle oracle;
@@ -326,7 +326,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 ccg.inlineEdge(caller, pl, callee);
                 System.err.println("Removing a call to [" + callee + "] at " + pl);
             }
-            if(pa != null && d instanceof TypeCheckInliningDecision) {
+            if(/*pa != null &&*/ d instanceof TypeCheckInliningDecision) {
                 // remove this edge from the pa
                 jq_Method caller = cfg.getMethod();
                 ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
