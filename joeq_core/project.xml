@@ -142,7 +142,6 @@
     <report>
       maven-junit-report-plugin
     </report>
-    <!-- CVS STUFF
     <report>
       maven-file-activity-plugin
     </report>
@@ -152,7 +151,6 @@
     <report>
       maven-statcvs-plugin
     </report>
--->
     <!-- TOO EXPENSIVE
     <report>
       maven-checkstyle-plugin
