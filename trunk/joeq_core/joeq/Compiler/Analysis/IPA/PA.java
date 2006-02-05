@@ -5023,13 +5023,6 @@ public class PA {
     }
     
     public void addInlinedSiteToMap(ProgramLocation pl, Quad alloc, Quad quad, jq_Method callerMethod) {
-//        if(Imap != null) {
-//            System.out.println("Inlined an allocation site " + alloc);
-//        
-//            int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
-//            int h_i = Hmap.get(q);
-//            inlinedSites.orWith(H1.ithVar(h_i).andWith(I.ithVar(i_i)));
-//        }
         //pl = LoadedCallGraph.mapCall(pl);
         if(TRACE_INLINING) {
             System.out.println("INLINING: Adding " + 
@@ -5161,6 +5154,10 @@ public class PA {
             }
             mC.orWith(m);
         }
+        if(INLINE_MAPS) {
+            saveRemovedCalls(dumpPath);            
+            saveInlinedSites(dumpPath, vP0);            
+        }
         
         bdd_save(dumpPath+"vP0.bdd", vP0);
         bdd_save(dumpPath+"hP0.bdd", hP);
@@ -5187,10 +5184,7 @@ public class PA {
         bdd_save(dumpPath+"IE0.bdd", IE0);
         bdd_save(dumpPath+"sync.bdd", sync);
         bdd_save(dumpPath+"mSync.bdd", mSync);
-        if(INLINE_MAPS) {
-            saveRemovedCalls(dumpPath);            
-            saveInlinedSites(dumpPath);            
-        }
+
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null)
@@ -5346,31 +5340,31 @@ public class PA {
     return i.intValue();
     }
     
-    void saveInlinedSites(String dumpPath) throws IOException {
+    void saveInlinedSites(String dumpPath, BDD vP0) throws IOException {
         if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " triples");
         for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
             Triple t = (Triple) iter.next();
             Quad alloc = (Quad) t.left;
             Quad callSite = (Quad) t.middle;
             jq_Method method = (jq_Method) t.right;
-        int bc = getBytecodeIndex(method, callSite);
-        ProgramLocation callLoc = null;
+            int bc = getBytecodeIndex(method, callSite);
+            ProgramLocation callLoc = null;
             for(Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
-        ProgramLocation loc = (ProgramLocation) iMapIter.next();
+                ProgramLocation loc = (ProgramLocation) iMapIter.next();
 
-        if(loc instanceof BCProgramLocation){
-            BCProgramLocation qpl = (BCProgramLocation) loc;
-            if(qpl.getBytecodeIndex() == bc && qpl.getMethod() == method){
-            callLoc = qpl;
-            break;
+                if(loc instanceof BCProgramLocation){
+                    BCProgramLocation qpl = (BCProgramLocation) loc;
+                    if(qpl.getBytecodeIndex() == bc && qpl.getMethod() == method){
+                        callLoc = qpl;
+                        break;
+                    }
+                }
             }
-        }
-        }
-        Assert._assert(callLoc != null, "No match for " + callSite + ", " + method);
-        if(callLoc == null){
-        callLoc = new QuadProgramLocation(method, callSite);
-        Imap.get(callLoc);
-        }
+            Assert._assert(callLoc != null, "No match for " + callSite + ", " + method);
+            if(callLoc == null){
+                callLoc = new QuadProgramLocation(method, callSite);
+                Imap.get(callLoc);
+            }
             
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
                 MethodSummary.Node node = (Node) heapIter.next();
@@ -5386,15 +5380,32 @@ public class PA {
                             
                             if(TRACE_INLINING) System.out.println("INLINING: Mapping " + c_i + " to " + h_i);
                             
-                            inlineSites.orWith(I.ithVar(c_i).andWith(H1.ithVar(h_i)));
+                            BDD h = H1.ithVar(h_i);
+                            inlineSites.orWith(I.ithVar(c_i).andWith(h));
+                            // patch up mV
+                            BDD v_bdd = vP0.and(h);
+                            BDD m_bdd = M.ithVar(Mmap.get(method));
+                            BDD m_old = mV.and(v_bdd);
+                            
+                            mV.orWith(m_bdd.and(v_bdd));
+                            mV.andWith(m_bdd.and(v_bdd).not());
+                            
+                            if(TRACE_INLINING) {
+                                System.out.println("Changing from " +
+                                    m_old.scanVar(V1) + " to " + m_bdd.scanVar(V1));
+                            }
+                            m_old.free(); m_bdd.free(); v_bdd.free();
                         }
                     }
                 }
             }
+            
+
+            
         }
         bdd_save(dumpPath+"inlineSites.bdd", inlineSites);        
-    //System.out.println("498:\t" + Imap.get(498).getClass());
-    //System.out.println("1163:\t" + Imap.get(1163).getClass());
+        //System.out.println("498:\t" + Imap.get(498).getClass());
+        //System.out.println("1163:\t" + Imap.get(1163).getClass());
     }
 
     class Dummy implements Textualizable {
