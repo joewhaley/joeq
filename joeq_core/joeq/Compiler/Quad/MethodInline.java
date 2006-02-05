@@ -35,7 +35,9 @@ import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Return;
+import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.NameMunger;
 import joeq.Util.Templates.ListIterator;
@@ -48,7 +50,7 @@ import jwutil.util.Assert;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = false;
+    public static final boolean TRACE = true;
     public static final boolean TRACE_ORACLE = false;
     public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
@@ -144,7 +146,12 @@ public class MethodInline implements ControlFlowGraphVisitor {
 //                return;
             }
             */
-            inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);            
+            //inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);            
+            if(q.getOperator() instanceof InvokeStatic) {
+                inlineNonVirtualCallSite(caller, bb, q, callee);
+            } else {
+                inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
+            }
         }
         public String toString() { return callee.getMethod().toString(); }
     }
@@ -327,6 +334,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             Quad q = (Quad)li2.previous();
             InliningDecision d = (InliningDecision)li3.previous();
             if (TRACE_DECISIONS) out.println("Performing inlining "+d + " using " + d.getClass());
+           // this fills newlyInserted
             d.inlineCall(cfg, bb, q);
             if (cg instanceof CachedCallGraph && d instanceof NoCheckInliningDecision) {
                 CachedCallGraph ccg = (CachedCallGraph) cg;
@@ -337,37 +345,57 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 System.err.println("Removing a call to [" + callee + "] at " + pl);
             }
             if(pa != null && d instanceof TypeCheckInliningDecision) {
+                //System.out.println("HERE");
                 // remove this edge from the pa
                 jq_Method caller = cfg.getMethod();
                 ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
                 jq_Method callee = ((TypeCheckInliningDecision) d).callee.getMethod();
                 pa.removeCall(pl, callee);                
-                int found = 0;                
+                int found = 0;           
                 for(Iterator iter = newlyInserted.iterator(); iter.hasNext();) {
                     BasicBlock block = (BasicBlock) iter.next();
                     for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
                         Quad quad = (Quad) quadIter.next();
-                        if(quad.getOperator() instanceof Operator.New) {
-                            pa.addInlinedSiteToMap(quad, pl, cfg.getMethod());
+                        if(
+                           quad.getOperator() instanceof Operator.New ||
+                           quad.getOperator() instanceof Operator.NewArray
+                          )
+                    {
+                            pa.addInlinedSiteToMap(pl, quad, q, caller);
                             found++;
+                            //System.out.println("Allocation site: " + quad + " in " + caller);
                         }
                     }
                 }
-                if(pa.TRACE_INLINING) {
-                    if(found > 0) {
-                        System.err.println("INLINING: Inlining " + found + " allocation sites found in the call to " + callee);
+             if(found == 0){
+            System.err.println("INLINING: Warning: no allocation sites found in the call to " + callee);
+        }
+                if (pa.TRACE_INLINING) {
+                    if (found > 0) {
+                        System.err.println("INLINING: Inlining " + found + " allocation sites found in the call to " + callee + " consisting of " + newlyInserted.size() + " blocks.");
+            System.out.println(((TypeCheckInliningDecision) d).callee.fullDump());
                     } else {
-                        System.err.println("INLINING: Warning: no allocation sites found in the call to " + callee);
-                    }
+            //System.out.println("Existing quads: " + newlyInserted);
+            for(Iterator iter = newlyInserted.iterator(); iter.hasNext();) {
+                BasicBlock block = (BasicBlock) iter.next();
+                System.out.println("Block: " + block);
+                for(Iterator quadIter = block.iterator(); quadIter.hasNext();) {
+                Quad quad = (Quad) quadIter.next();
+                System.out.println("Existing quads: " + quad);
+                }
+            }
+            }
                     System.err.println("Removing a call to [" + callee + "] at " + pl);
                 }
             }
+        newlyInserted.clear();
         }
     }
     
     public static void inlineNonVirtualCallSite(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee) {
         if (TRACE) out.println("Inlining "+q+" target "+callee.getMethod()+" in "+bb);
-
+    makeNewlyInserted(callee);
+    
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
 
@@ -476,8 +504,31 @@ outer:
         if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).getRegisterFactory().fullDump());
     }
 
+    static void makeNewlyInserted(ControlFlowGraph callee){
+        newlyInserted = new HashSet();
+    //System.out.println("newlyInserted: " + newlyInserted.size() + " for " + callee.getMethod());
+        Navigator nav = callee.getNavigator();
+        LinkedList worklist = new LinkedList();
+        worklist.add(callee.entry());
+        newlyInserted.add(callee.entry());
+        while( !worklist.isEmpty() ) {
+            BasicBlock node = (BasicBlock) worklist.removeFirst();
+            Collection next = nav.next(node);
+            newlyInserted.addAll(next);
+        //System.out.println("newlyInserted: " + newlyInserted.size() + " for " + callee.getMethod());
+            for(Iterator iter = next.iterator(); iter.hasNext();) {
+                BasicBlock nextNode = (BasicBlock) iter.next();
+                if (!worklist.contains(nextNode)) {
+                    worklist.add(nextNode);
+                }
+            }
+        }
+    }
+
     public static void inlineVirtualCallSiteWithTypeCheck(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type) {
         if (TRACE) out.println("Inlining "+q+" in "+bb+" for target "+callee.getMethod());
+
+    makeNewlyInserted(callee);
         
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
@@ -583,22 +634,8 @@ outer:
             op = Move.getMoveOp(callee.getMethod().getReturnType());
         }
         
-        newlyInserted = new HashSet();
-        Navigator nav = callee.getNavigator();
-        LinkedList worklist = new LinkedList();
-        worklist.add(callee.entry());
-        newlyInserted.add(callee.entry());
-        while( !worklist.isEmpty() ) {
-            BasicBlock node = (BasicBlock) worklist.removeFirst();
-            Collection next = nav.next(node);
-            newlyInserted.addAll(next);
-            for(Iterator iter = next.iterator(); iter.hasNext();) {
-                BasicBlock nextNode = (BasicBlock) iter.next();
-                if (!worklist.contains(nextNode)) {
-                    worklist.add(nextNode);
-                }
-            }
-        }
+    //if(pa.TRACE_INLINING) 
+    System.out.println("Inlining " + newlyInserted.size() + " blocks.");
 outer:
         for (ListIterator.BasicBlock it = callee.exit().getPredecessors().basicBlockIterator();
              it.hasNext(); ) {
