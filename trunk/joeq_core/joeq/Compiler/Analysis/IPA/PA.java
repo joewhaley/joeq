@@ -5381,7 +5381,7 @@ public class PA {
                             if(TRACE_INLINING) System.out.println("INLINING: Mapping " + c_i + " to " + h_i);
                             
                             BDD h = H1.ithVar(h_i);
-                            inlineSites.orWith(I.ithVar(c_i).andWith(h));
+                            inlineSites.orWith(I.ithVar(c_i).and(h));
                             // patch up mV
                             BDD v_bdd = vP0.and(h);
                             BDD m_bdd = M.ithVar(Mmap.get(method));
@@ -5394,7 +5394,7 @@ public class PA {
                                 System.out.println("Changing from " +
                                     m_old.scanVar(V1) + " to " + m_bdd.scanVar(V1));
                             }
-                            m_old.free(); m_bdd.free(); v_bdd.free();
+                            m_old.free(); m_bdd.free(); v_bdd.free(); h.free();
                         }
                     }
                 }
