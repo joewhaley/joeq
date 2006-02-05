@@ -86,6 +86,12 @@
       <type>jar</type>
       <url>http://javabdd.sourceforge.net</url>
     </dependency>
+    <dependency>
+      <groupId>statcvs</groupId>
+      <artifactId>maven-statcvs-plugin</artifactId>
+      <version>2.5</version>
+      <type>plugin</type>
+    </dependency>
   </dependencies>
   <build>
     <nagEmailAddress>joewhaley@users.sourceforge.net</nagEmailAddress>
