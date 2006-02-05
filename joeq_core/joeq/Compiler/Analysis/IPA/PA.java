@@ -5392,7 +5392,7 @@ public class PA {
                             
                             if(TRACE_INLINING) {
                                 System.out.println("Changing from " +
-                                    m_old.scanVar(V1) + " to " + m_bdd.scanVar(V1));
+                                    m_old.scanVar(M) + " to " + m_bdd.scanVar(M));
                             }
                             m_old.free(); m_bdd.free(); v_bdd.free(); h.free();
                         }
