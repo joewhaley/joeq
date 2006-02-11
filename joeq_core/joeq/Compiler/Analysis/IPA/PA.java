@@ -32,8 +32,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-import java.util.Map.Entry;
-import org.omg.IOP.Codec;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -58,8 +56,8 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.BCProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.Quad.CachedCallGraph;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.CodeCache;
@@ -99,8 +97,6 @@ import net.sf.javabdd.BDDDomain;
 import net.sf.javabdd.BDDFactory;
 import net.sf.javabdd.BDDPairing;
 import net.sf.javabdd.TypedBDDFactory;
-import net.sf.javabdd.BDDFactory.BDDOp;
-import net.sf.javabdd.TryVarOrder.BDDOperation;
 import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 /**
  * Pointer analysis using BDDs.  Includes both context-insensitive and context-sensitive
@@ -184,6 +180,7 @@ public class PA {
     public static boolean TRACE_REFLECTION_DOMAINS = !System.getProperty("pa.tracereflectiondomains", "no").equals("no");
     boolean TRACE_FORNAME = !System.getProperty("pa.traceforname", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
+    boolean SPECIAL_MAP_INFO = !System.getProperty("pa.specialmapinfo", "no").equals("no");
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "200000"));
@@ -204,10 +201,11 @@ public class PA {
     
     BDDFactory bdd;
     
-    BDDDomain V1, V2, I, I2, H1, H2, Z, F, T1, T2, N, M, M2, C;
+    BDDDomain V1, V2, I, I2, H1, H2, Z, F, T1, T2, N, M, M2, C, STR;
     BDDDomain V1c[], V2c[], H1c[], H2c[];
     
     int V_BITS=19, I_BITS=19, H_BITS=16, Z_BITS=6, F_BITS=14, T_BITS=14, N_BITS=16, M_BITS=16, C_BITS=12;
+    int STR_BITS=H_BITS;
     int VC_BITS=0, HC_BITS=0;
     int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "61"));
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "0"));
@@ -220,6 +218,7 @@ public class PA {
     IndexMap/*jq_Method*/ Nmap;
     IndexMap/*jq_Method*/ Mmap;
     IndexMap/*jq_Method*/ Cmap;
+    IndexMap/*String*/ STRmap;
     PathNumbering vCnumbering; // for context-sensitive
     PathNumbering hCnumbering; // for context-sensitive
     PathNumbering oCnumbering; // for object-sensitive
@@ -243,6 +242,7 @@ public class PA {
     BDD mC;     // MxC, method class                    (no context)
     BDD sync;   // V, synced locations                  (no context)
     BDD mSync;  // M, synchronized, non-static methods  (no context)
+    
 
     BDD fT;     // FxT2, field types                    (no context)
     BDD fC;     // FxT2, field containing types         (no context)
@@ -267,7 +267,11 @@ public class PA {
     BDD hQuad; // Hxquad
     BDD fMember; //Fxmember
     BDD staticCalls; // V1xIxM, statically-bound calls, only used for object-sensitive and cartesian product
-    
+
+    // For analysis of maps
+    BDD stringConstant; // H1xSTR, string constants     (no context)
+    BDD overridesEqualsOrHashcode; // T1                (no context) 
+
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     String varorder = System.getProperty("bddordering");
     
@@ -343,7 +347,7 @@ public class PA {
         } else {
             H1c = H2c = new BDDDomain[0];
         }
-        
+                
         if (TRACE) out.println("Variable context domains: "+V1c.length);
         if (TRACE) out.println("Heap context domains: "+H1c.length);
         
@@ -366,6 +370,11 @@ public class PA {
                 //varorder = "N_F_Z_I_M2_M_T1_V2xV1_H2_T2_H1";
                 varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_T1_H2_T2_H1";
             }
+        }
+
+        if (SPECIAL_MAP_INFO) {
+            STR = makeDomain("STR0", STR_BITS);
+            varorder += "_STR0";
         }
         
         System.out.println("Using variable ordering "+varorder);
@@ -571,6 +580,10 @@ public class PA {
         Nmap = makeMap("Names", N_BITS);
         Mmap = makeMap("Methods", M_BITS);
         Cmap = makeMap("Classes", C_BITS);
+        if (SPECIAL_MAP_INFO) {
+            STRmap = makeMap("Strings", STR_BITS);
+            STRmap.get(new Dummy());
+        }
         Mmap.get(new Dummy());
         if (ADD_THREADS) {
             PrimordialClassLoader.getJavaLangThread().prepare();
@@ -3104,6 +3117,7 @@ public class PA {
             bddIRBuilder = null;
         }
         
+        
         // Use the existing call graph to calculate IE filter
         if (cg != null) {
             System.out.print("Calculating call graph relation...");
@@ -3193,6 +3207,8 @@ public class PA {
         } else {
             if (DUMP_INITIAL) {
                 buildTypes();
+                if (SPECIAL_MAP_INFO) buildSpecialMapInfo();
+
                 try {
                     long time2 = System.currentTimeMillis();
                     dumpBDDRelations();
@@ -5108,6 +5124,8 @@ public class PA {
                     dos.write("C\n");
                 else if (d == M || d == M2)
                     dos.write("M\n");
+                else if (d == STR)
+                    dos.write("STR\n");
                 else if (Arrays.asList(V1c).contains(d)
                         || Arrays.asList(V2c).contains(d))
                     dos.write("VC\n");
@@ -5137,6 +5155,9 @@ public class PA {
             dos.write("C "+(1L<<C_BITS)+" class.map\n");
             dos.write("VC "+(1L<<VC_BITS)+"\n");
             dos.write("HC "+(1L<<HC_BITS)+"\n");
+            if (SPECIAL_MAP_INFO) {
+                dos.write("STR "+(1L<<STR_BITS)+" string.map\n");
+            }
             if (bddIRBuilder != null) bddIRBuilder.dumpFieldDomains(dos);
         } finally {
             if (dos != null) dos.close();
@@ -5184,6 +5205,10 @@ public class PA {
         bdd_save(dumpPath+"IE0.bdd", IE0);
         bdd_save(dumpPath+"sync.bdd", sync);
         bdd_save(dumpPath+"mSync.bdd", mSync);
+        if (SPECIAL_MAP_INFO) {
+            bdd_save(dumpPath+"stringConstant.bdd", stringConstant);
+            bdd_save(dumpPath+"overridesEqualsOrHashcode.bdd", overridesEqualsOrHashcode);
+        }
 
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
@@ -5264,18 +5289,6 @@ public class PA {
         
         dos = null;
         try {
-            dos = new BufferedWriter(new FileWriter(dumpPath+"class.map"));
-            //Imap.dumpStrings(dos);
-            for (int j = 0; j < Cmap.size(); ++j) {
-                jq_Class o = (jq_Class)Cmap.get(j);
-                dos.write(o.getName()+"\n");
-            }
-        } finally {
-            if (dos != null) dos.close();
-        }
-        
-        dos = null;
-        try {
             dos = new BufferedWriter(new FileWriter(dumpPath+"name.map"));
             for (int j = 0; j < Nmap.size(); ++j) {
                 jq_Method o = (jq_Method) Nmap.get(j);
@@ -5319,6 +5332,31 @@ public class PA {
             }
         }
 
+        if(SPECIAL_MAP_INFO) {
+            dos = null;
+            try {
+                dos = new BufferedWriter(new FileWriter(dumpPath+"string.map"));
+                for (int j = 0; j < STRmap.size(); ++j) {
+                    String s = STRmap.get(j).toString();
+
+                    // suppress nonprintables in the output
+                    StringBuffer sb = new StringBuffer(s);
+                    for (int i=0; i<sb.length(); ++i) {
+                        if (sb.charAt(i) < 32) {
+                            sb.setCharAt(i, ' ');
+                        }
+                        else if (sb.charAt(i) > 127) {
+                            sb.setCharAt(i, ' ');
+                        }
+                    }
+
+                    dos.write(sb.toString());
+                    dos.write("\n");
+                }
+            } finally {
+                if (dos != null) dos.close();
+            }
+        }
     }
     
     void saveRemovedCalls(String dumpPath) throws IOException {
@@ -5566,6 +5604,62 @@ public class PA {
                 + " relations, " + fMember.nodeCount() + " nodes");
         bdd_save(dumpPath + "/fMember.bdd", fMember);
         //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
-    }    
+
         //bdd_save(resultsFileName+".hQuad", sync);
+    }    
+    
+    private void buildSpecialMapInfo() {
+       stringConstant = bdd.zero();
+        
+        Object dummy = STRmap.get(0);
+        
+        for (Iterator i=Hmap.iterator(); i.hasNext();) {
+            Node node = (Node) i.next();
+            if(!(node instanceof ConcreteTypeNode)) {
+                continue;
+            }
+            ConcreteTypeNode ctn = (ConcreteTypeNode) node;
+            if (!(ctn.getDeclaredType() instanceof jq_Class)) {
+                continue;
+            }
+            jq_Class c = (jq_Class) ctn.getDeclaredType();
+            if (!c.getName().equals("java.lang.String")) {
+                continue;
+            }
+            
+            Object stringConst = MethodSummary.stringNodes2Values.get(node);
+            if (stringConst == null) {
+                stringConst = dummy;
+            }
+            
+            stringConstant.orWith(       H1.ithVar( Hmap.get(node) )
+                                   .and( STR.ithVar( STRmap.get(stringConst) ) ) );
+        }
+
+        jq_NameAndDesc equalsNd = new jq_NameAndDesc("equals", "(Ljava/lang/Object;)Z");
+        jq_NameAndDesc hashCodeNd = new jq_NameAndDesc("hashCode", "()I");
+        
+        overridesEqualsOrHashcode = bdd.zero();
+        for (Iterator i=Tmap.iterator(); i.hasNext();) {
+            jq_Reference r = (jq_Reference) i.next();
+            if (!(r instanceof jq_Class)) continue;
+            jq_Class c = (jq_Class) r;
+            boolean hasOverride = false;
+            
+            // These should happen at the same, but check both anyway.
+            jq_Method equalsMethod = c.getInstanceMethod(equalsNd);
+            if (!equalsMethod.getDeclaringClass().getName().equals("java.lang.Object")) {
+                hasOverride = true;
+            }
+            
+            jq_Method hashCodeMethod = c.getInstanceMethod(hashCodeNd); 
+            if (!hashCodeMethod.getDeclaringClass().getName().equals("java.lang.Object")) {
+                hasOverride = true;
+            }
+            
+            if (hasOverride) {
+                overridesEqualsOrHashcode.orWith( T1.ithVar( Tmap.get(r) ) );
+            }
+        }
+    }
 }
