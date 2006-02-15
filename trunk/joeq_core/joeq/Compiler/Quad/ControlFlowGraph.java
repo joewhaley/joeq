@@ -14,6 +14,8 @@ import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
+import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
@@ -397,9 +399,13 @@ public class ControlFlowGraph implements Graph {
         updateOperand(map, that_q.getOp2());
         updateOperand(map, that_q.getOp3());
         updateOperand(map, that_q.getOp4());
+        if(this_q.getOperator() instanceof Operator.New || this_q.getOperator() instanceof Operator.NewArray) {
+            System.err.println("Mapping " + this_q + " to " + that_q);
+            MethodInline.newlyInserted.put(this_q, that_q);
+        }
         return that_q;
     }
-
+    
     private BasicBlock copier(Map map, BasicBlock this_bb) {
         BasicBlock that_bb = (BasicBlock)map.get(this_bb);
         if (that_bb != null) return that_bb;
