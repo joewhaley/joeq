@@ -373,8 +373,8 @@ public class PA {
         }
 
         if (SPECIAL_MAP_INFO) {
-            STR = makeDomain("STR0", STR_BITS);
-            varorder += "_STR0";
+            STR = makeDomain("STR", STR_BITS);
+            varorder += "_STR";
         }
         
         System.out.println("Using variable ordering "+varorder);
