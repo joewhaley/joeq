@@ -3756,7 +3756,6 @@ public class PA {
     }
     
     public void dumpResults(String dumpfilename) throws IOException {
-
         System.out.println("A: "+(long) A.satCount(V1V2set)+" relations, "+A.nodeCount()+" nodes");
         bdd_save(dumpfilename+".A", A);
         System.out.println("vP: "+(long) vP.satCount(V1H1set)+" relations, "+vP.nodeCount()+" nodes");
@@ -4570,6 +4569,10 @@ public class PA {
             mc = LoadedCallGraph.mapCall(mc);
 
             int I_i = Imap.get(mc);
+            if(removedCalls.contains(mc)){
+                System.out.println("Skipping " + mc);
+                continue;
+            }
             for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method) j.next();
                 int M_i = Mmap.get(callee);
@@ -4578,8 +4581,8 @@ public class PA {
                     Pair p = new Pair(mc, callee);
                     Range r_edge = vCnumbering.getEdge(p);
                     Range r_caller = vCnumbering.getRange(mc.getMethod());
-                    Assert._assert(r_edge != null, "No edge for " + p);
-                    Assert._assert(r_caller != null, "No range for " + mc.getMethod());
+                    Assert._assert(r_edge != null, "No edge for " + p + " when considering " + mc);
+                    Assert._assert(r_caller != null, "No range for " + mc.getMethod() + " when considering " + mc);
                     context = buildContextMap(V2c[0],
                                               PathNumbering.toBigInt(r_caller.low),
                                               PathNumbering.toBigInt(r_caller.high),
@@ -5196,7 +5199,7 @@ public class PA {
         bdd_save(dumpPath+"actual.bdd", actual);
         bdd_save(dumpPath+"formal.bdd", formal);
         bdd_save(dumpPath+"mV.bdd", mV);
-        bdd_save(dumpPath+"mC.bdd", mC);
+        bdd_save(dumpPath+"mC.bdd", this.mC);
         bdd_save(dumpPath+"mI.bdd", mI);
         bdd_save(dumpPath+"Mret.bdd", Mret);
         bdd_save(dumpPath+"Mthr.bdd", Mthr);
@@ -5281,8 +5284,12 @@ public class PA {
             //Imap.dumpStrings(dos);
             for (int j = 0; j < Imap.size(); ++j) {
                 ProgramLocation o = (ProgramLocation)Imap.get(j);
-                dos.write(o.hashCode()+": "+o+"\n");
-            }
+                if(!removedCalls.contains(o)){
+                    dos.write(o.hashCode()+": "+o+"\n");
+            }else{
+                    System.out.println("Skipping " + o);
+                 }
+           }
         } finally {
             if (dos != null) dos.close();
         }
@@ -5420,6 +5427,7 @@ public class PA {
                             
                             BDD h = H1.ithVar(h_i);
                             inlineSites.orWith(I.ithVar(c_i).and(h));
+    /*
                             // patch up mV
                             BDD v_bdd = vP0.and(h);
                             BDD m_bdd = M.ithVar(Mmap.get(method));
@@ -5433,6 +5441,7 @@ public class PA {
                                     m_old.scanVar(M) + " to " + m_bdd.scanVar(M));
                             }
                             m_old.free(); m_bdd.free(); v_bdd.free(); h.free();
+   */
                         }
                     }
                 }
