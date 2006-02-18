@@ -5056,8 +5056,10 @@ public class PA {
         Assert._assert(pl instanceof QuadProgramLocation);
         QuadProgramLocation qpl = (QuadProgramLocation) pl;
         Assert._assert(qpl.getQuad() == quad && qpl.getMethod() == callerMethod);
-        int index = Imap.get(pl);
-        if(TRACE_INLINING) System.out.println(qpl.getQuad() + ", " + qpl.getMethod() + " index is " + index);
+        if(Imap != null) {
+            int index = Imap.get(pl);
+            if(TRACE_INLINING) System.out.println(qpl.getQuad() + ", " + qpl.getMethod() + " index is " + index);
+        }
     }
     
     Set inlinedSites = new HashSet();
