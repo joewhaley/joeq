@@ -367,8 +367,8 @@ public class PA {
                     varorder += "xV1c"+i+"xV2c"+i;
                 }
             } else {
-                varorder = "N_F_Z_I_M2_M_T1_V2xV1_H2_T2_H1";
-//                varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_T1_H2_T2_H1";
+//                varorder = "N_F_Z_I_M2_M_T1_V2xV1_H2_T2_H1";
+                varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_T1_H2_T2_H1";
             }
         }
 
