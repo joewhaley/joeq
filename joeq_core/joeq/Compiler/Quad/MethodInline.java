@@ -11,9 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -35,14 +33,11 @@ import joeq.Compiler.Quad.Operator.InstanceOf;
 import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
-import joeq.Compiler.Quad.Operator.New;
-import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.NameMunger;
 import joeq.Util.Templates.ListIterator;
-import jwutil.graphs.Navigator;
 import jwutil.util.Assert;
 
 /**
@@ -92,12 +87,12 @@ public class MethodInline implements ControlFlowGraphVisitor {
     }
     
     public static abstract class InliningDecision {
-        public abstract void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q);
+        public abstract void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q, boolean preserveCallSite);
     }
     
     public static final class DontInline extends InliningDecision {
         private DontInline() {}
-        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
+        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q, boolean preserveCallSite) {
         }
         public static final DontInline INSTANCE = new DontInline();
     }
@@ -110,8 +105,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
         public NoCheckInliningDecision(ControlFlowGraph target) {
             this.callee = target;
         }
-        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
-            inlineNonVirtualCallSite(caller, bb, q, callee);
+        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q, boolean preserveCallSite) {
+            inlineNonVirtualCallSite(caller, bb, q, callee, preserveCallSite);
         }
         public String toString() { return callee.getMethod().toString(); }
     }
@@ -125,7 +120,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             this.expectedType = target.getDeclaringClass();
             this.callee = CodeCache.getCode(target);
         }
-        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
+        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q, boolean preserveCallSite) {
             /* Insert a fake replacement method call */
             /*
             MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
@@ -149,9 +144,9 @@ public class MethodInline implements ControlFlowGraphVisitor {
             */
             //inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);            
             if(q.getOperator() instanceof InvokeStatic) {
-                inlineNonVirtualCallSite(caller, bb, q, callee);
+                inlineNonVirtualCallSite(caller, bb, q, callee, preserveCallSite);
             } else {
-                inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
+                inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType, preserveCallSite);
             }
         }
         public String toString() { return callee.getMethod().toString(); }
@@ -308,6 +303,13 @@ public class MethodInline implements ControlFlowGraphVisitor {
 //            return new NoCheckInliningDecision(target);
             return new TypeCheckInliningDecision(target);
         }
+
+        /**
+         * TODO: fill this in!
+         * */
+        public boolean removeCallsTo(jq_Method callee) {            
+            return true;
+        }
     }
     
     public void visitCFG(ControlFlowGraph cfg) {
@@ -344,19 +346,21 @@ public class MethodInline implements ControlFlowGraphVisitor {
             InliningDecision d = (InliningDecision) li3.previous();
             if (TRACE_DECISIONS) out.println("Performing inlining " + d
                 + " using " + d.getClass());
+            boolean preserveCallSite = false;
+            if(oracle instanceof InlineSelectedCalls) {
+                jq_Method callee = getMethod(d);
+                InlineSelectedCalls isc = (InlineSelectedCalls) oracle;
+                preserveCallSite = isc.removeCallsTo(callee);
+            }
             // this fills newlyInserted
-            d.inlineCall(cfg, bb, q);
-            if (cg instanceof CachedCallGraph
-                && d instanceof NoCheckInliningDecision) {
+            d.inlineCall(cfg, bb, q, preserveCallSite);
+            if (cg instanceof CachedCallGraph && d instanceof NoCheckInliningDecision) {
                 CachedCallGraph ccg = (CachedCallGraph) cg;
                 jq_Method caller = cfg.getMethod();
-                ProgramLocation pl = new ProgramLocation.QuadProgramLocation(
-                    caller, q);
-                jq_Method callee = ((NoCheckInliningDecision) d).callee
-                    .getMethod();
+                ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
+                jq_Method callee = ((NoCheckInliningDecision) d).callee.getMethod();
                 ccg.inlineEdge(caller, pl, callee);
-                System.err.println("Removing a call to [" + callee + "] at "
-                    + pl);
+                System.err.println("Removing a call to [" + callee + "] at " + pl);
             }
             if (pa != null && d instanceof TypeCheckInliningDecision) {
                 // System.out.println("HERE");
@@ -404,7 +408,18 @@ public class MethodInline implements ControlFlowGraphVisitor {
         }
     }
     
-    public static void inlineNonVirtualCallSite(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee) {
+    private jq_Method getMethod(InliningDecision d) {
+        if(d instanceof NoCheckInliningDecision) {
+            return ((NoCheckInliningDecision) d).callee.getMethod();
+        }
+        if(d instanceof TypeCheckInliningDecision) {
+            return ((TypeCheckInliningDecision) d).callee.getMethod();
+        }
+        Assert._assert(false, "Unhandled case");
+        return null;
+    }
+    
+    public static void inlineNonVirtualCallSite(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, boolean preserveCallSite) {
         if (TRACE) out.println("Inlining "+q+" target "+callee.getMethod()+" in "+bb);
     
         int invokeLocation = bb.getQuadIndex(q);
@@ -431,10 +446,12 @@ public class MethodInline implements ControlFlowGraphVisitor {
         int bb_size = bb.size();
         for (int i=invokeLocation+1; i<bb_size; ++i) {
             successor_bb.appendQuad(bb.removeQuad(invokeLocation+1));
+        }                
+        if(!preserveCallSite) {
+            Quad invokeQuad = bb.removeQuad(invokeLocation);
+            Assert._assert(invokeQuad == q);
+            Assert._assert(bb.size() == invokeLocation);
         }
-        Quad invokeQuad = bb.removeQuad(invokeLocation);
-        Assert._assert(invokeQuad == q);
-        Assert._assert(bb.size() == invokeLocation);
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
         if (TRACE) out.println(successor_bb.fullDump());
@@ -515,7 +532,7 @@ outer:
         if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).getRegisterFactory().fullDump());
     }
 
-    public static void inlineVirtualCallSiteWithTypeCheck(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type) {
+    public static void inlineVirtualCallSiteWithTypeCheck(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type, boolean preserveCallSite) {
         if (TRACE) out.println("Inlining "+q+" in "+bb+" for target "+callee.getMethod());
 
         int invokeLocation = bb.getQuadIndex(q);
@@ -544,9 +561,14 @@ outer:
         for (int i=invokeLocation+1; i<bb_size; ++i) {
             successor_bb.appendQuad(bb.removeQuad(invokeLocation+1));
         }
-        Quad invokeQuad = bb.removeQuad(invokeLocation);
-        Assert._assert(invokeQuad == q);
-        Assert._assert(bb.size() == invokeLocation);
+        Quad invokeQuad = null;
+        if(!preserveCallSite) {                    
+            invokeQuad = bb.removeQuad(invokeLocation);
+            Assert._assert(invokeQuad == q);
+            Assert._assert(bb.size() == invokeLocation);
+        } else {
+            invokeQuad = bb.getQuad(invokeLocation);
+        }
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
         if (TRACE) out.println(successor_bb.fullDump());

@@ -112,7 +112,6 @@ public class PA {
 
     public static final boolean VerifyAssertions = false;
 
-
     static boolean WRITE_PARESULTS_BATCHFILE = !System.getProperty("pa.writeparesults", "yes").equals("no");
 
     boolean TRACE = !System.getProperty("pa.trace", "no").equals("no");
@@ -149,6 +148,7 @@ public class PA {
     boolean USE_STRING_METHOD_SELECTOR = !System.getProperty("pa.stringmethodselector", "no").equals("no");
     boolean CS_CALLGRAPH = !System.getProperty("pa.cscg", "no").equals("no");
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
+    boolean ALWAYS_START_WITH_A_FRESH_CALLGRAPH = !System.getProperty("pa.startwithfreshcg", "no").equals("no");
     boolean PRINT_CALL_GRAPH_SCCS = !System.getProperty("pa.printsccs", "no").equals("no");
     boolean AUTODISCOVER_CALL_GRAPH = !System.getProperty("pa.autodiscover", "yes").equals("no");
     boolean DUMP_DOTGRAPH = !System.getProperty("pa.dumpdotgraph", "no").equals("no");
@@ -358,8 +358,8 @@ public class PA {
                     varorder = "C_N_F_Z_I_I2_M2_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c";
                 } else {
                     //varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2_T2_H1";
-                    varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
-//                    varorder = "C0_N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1";
+//                    varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
+                    varorder = "C0_N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1";
                 }
             } else if (CARTESIAN_PRODUCT && false) {
                 varorder = "C_N_F_Z_I_I2_M2_M_T1_V2xV1_T2_H2xH1";
@@ -367,8 +367,8 @@ public class PA {
                     varorder += "xV1c"+i+"xV2c"+i;
                 }
             } else {
-                //varorder = "N_F_Z_I_M2_M_T1_V2xV1_H2_T2_H1";
-                varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_T1_H2_T2_H1";
+                varorder = "N_F_Z_I_M2_M_T1_V2xV1_H2_T2_H1";
+//                varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_T1_H2_T2_H1";
             }
         }
 
@@ -3044,7 +3044,7 @@ public class PA {
                 CallGraph cg = new LoadedCallGraph(initialCallgraphFileName);
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
-                if (cg.getRoots().containsAll(roots)) {
+                if (cg.getRoots().containsAll(roots)) {    // TODO
                     roots = cg.getRoots();
                     //LOADED_CALLGRAPH = true;
                     return cg;
@@ -3470,13 +3470,17 @@ public class PA {
         }
 
         if (dis.INLINE_MAPS) {
-            System.out.println("Addin the inlining pass");
+            System.out.println("Adding the inlining pass");
             CodeCache.addDefaultPass(new MethodInline(dis));
             //CodeCache.invalidate();
         }
         
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
-            dis.cg = loadCallGraph(rootMethods);
+            if(dis.ALWAYS_START_WITH_A_FRESH_CALLGRAPH) {
+                dis.cg = null; //loadCallGraph(rootMethods);
+            } else {
+                dis.cg = loadCallGraph(rootMethods);
+            }
             if (dis.cg == null && dis.AUTODISCOVER_CALL_GRAPH) {
                 if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE || dis.THREAD_SENSITIVE || dis.SKIP_SOLVE) {
                     System.out.println("Discovering call graph first...");
@@ -3497,7 +3501,7 @@ public class PA {
                     dis = new PA();
 
                     initialCallgraphFileName = callgraphFileName;
-                    dis.cg = new CachedCallGraph(loadCallGraph(rootMethods));
+                    dis.cg = loadCallGraph(rootMethods);
                     dis.removedCalls = old.removedCalls;
                     dis.inlinedSites = old.inlinedSites;
                     dis.Imap = old.Imap;
