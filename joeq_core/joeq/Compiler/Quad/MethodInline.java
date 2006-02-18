@@ -236,6 +236,10 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 String s;
                 while ((s = r.readLine()) != null) {
                     if(s.startsWith("#")) continue;
+                    if(s.indexOf("__END__") != -1) {
+                        System.err.println("Encounted a terminator.");
+                        break;
+                    }
                     if(s.trim().length() == 0) continue;
                     
                     if(s.charAt(s.length()-1) == '\n'){
@@ -384,7 +388,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                             + " allocation sites found in the call to "
                             + callee + " consisting of " + newlyInserted.size()
                             + " blocks.");
-                        System.out.println(((TypeCheckInliningDecision) d).callee.fullDump());
+                        //System.out.println(((TypeCheckInliningDecision) d).callee.fullDump());
                     } else {
                         // System.out.println("Existing quads: " +
                         // newlyInserted);
