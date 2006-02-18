@@ -358,8 +358,8 @@ public class PA {
                     varorder = "C_N_F_Z_I_I2_M2_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c";
                 } else {
                     //varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2_T2_H1";
-//                    varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
-                    varorder = "C0_N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1";
+                    varorder = "C_N_F_I_I2_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
+//                    varorder = "C0_N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1";
                 }
             } else if (CARTESIAN_PRODUCT && false) {
                 varorder = "C_N_F_Z_I_I2_M2_M_T1_V2xV1_T2_H2xH1";
@@ -4573,10 +4573,10 @@ public class PA {
             mc = LoadedCallGraph.mapCall(mc);
 
             int I_i = Imap.get(mc);
-            if(removedCalls.contains(mc)){
-                System.out.println("Skipping " + mc);
-                continue;
-            }
+//            if(removedCalls.contains(mc)){
+//                System.out.println("Skipping " + mc);
+//                continue;
+//            }
             for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method) j.next();
                 int M_i = Mmap.get(callee);
@@ -5288,11 +5288,11 @@ public class PA {
             //Imap.dumpStrings(dos);
             for (int j = 0; j < Imap.size(); ++j) {
                 ProgramLocation o = (ProgramLocation)Imap.get(j);
-                if(!removedCalls.contains(o)){
-                    dos.write(o.hashCode()+": "+o+"\n");
-            }else{
-                    System.out.println("Skipping " + o);
-                 }
+                //if(!removedCalls.contains(o)){
+                dos.write(o.hashCode()+": "+o+"\n");
+//                }else{
+//                    System.out.println("Skipping " + o);
+//                }
            }
         } finally {
             if (dos != null) dos.close();
