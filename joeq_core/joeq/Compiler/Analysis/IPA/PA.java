@@ -65,6 +65,8 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.MethodInline;
+import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -5411,10 +5413,11 @@ public class PA {
                     }
                 }
             }
-            Assert._assert(callLoc != null, "No match for " + callSite + ", " + method);
+            
             if(callLoc == null){
-                callLoc = new QuadProgramLocation(method, callSite);
-                Imap.get(callLoc);
+                //Assert._assert(callLoc != null, "No match for " + callSite + ", " + method);
+                // TODO: check that these are the calls that neen not be preserved
+                break;
             }
             
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
