@@ -23,7 +23,6 @@ import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.Quad.Operand.ConditionOperand;
 import joeq.Compiler.Quad.Operand.IConstOperand;
-import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
@@ -54,7 +53,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
     Oracle oracle;
     CallGraph cg;
     private PA pa;
-    private static Map fakeMethodOperand = new HashMap();
+    //private static Map fakeMethodOperand = new HashMap();
     static HashMap/*<Quad, Quad>*/ newlyInserted = new HashMap();
 
     public MethodInline(Oracle o) {
@@ -216,6 +215,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
     public static class InlineSelectedCalls implements Oracle {        
         protected CallGraph cg;
         protected HashSet/*<String>*/ knownMethods = new HashSet(10);
+        protected HashSet/*<String>*/ preserveCallsTo = new HashSet(10);
         public static final String methodNameFile = "methods.txt";
           
         public InlineSelectedCalls(CallGraph cg) {
@@ -230,15 +230,20 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 
                 String s;
                 while ((s = r.readLine()) != null) {
+                    s = s.trim(); 
                     if(s.startsWith("#")) continue;
                     if(s.indexOf("__END__") != -1) {
                         System.err.println("Encounted a terminator.");
                         break;
                     }
-                    if(s.trim().length() == 0) continue;
+                    if(s.length() == 0) continue;
                     
                     if(s.charAt(s.length()-1) == '\n'){
                         s = s.substring(s.length()-1);
+                    }
+                    if(s.charAt(0) == '*') {
+                        s = s.substring(1, s.length());
+                        preserveCallsTo.add(s);
                     }
                     
                     knownMethods.add(s);
@@ -305,10 +310,11 @@ public class MethodInline implements ControlFlowGraphVisitor {
         }
 
         /**
-         * TODO: fill this in!
+         * Returns whether to preserve calls to the given method
          * */
-        public boolean removeCallsTo(jq_Method callee) {            
-            return true;
+        public boolean preserveCallsTo(jq_Method callee) {
+            String mungedName = NameMunger.mungeMethodName(callee);
+            return preserveCallsTo.contains(mungedName);
         }
     }
     
@@ -350,7 +356,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             if(oracle instanceof InlineSelectedCalls) {
                 jq_Method callee = getMethod(d);
                 InlineSelectedCalls isc = (InlineSelectedCalls) oracle;
-                preserveCallSite = isc.removeCallsTo(callee);
+                preserveCallSite = isc.preserveCallsTo(callee);
             }
             // this fills newlyInserted
             d.inlineCall(cfg, bb, q, preserveCallSite);
@@ -372,7 +378,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 int found = 0;
                 for (Iterator iter = newlyInserted.entrySet().iterator(); iter.hasNext();) {
                     Map.Entry e = (Entry) iter.next();
-                    Quad old_q = (Quad) e.getKey();
+                    //Quad old_q = (Quad) e.getKey();
                     Quad new_q = (Quad) e.getValue();
                     
                     pa.addInlinedSiteToMap(pl, new_q, q, caller);
@@ -688,75 +694,75 @@ outer:
      * Get replacement method for @param originalMethod.
      * This method caches the result it returns.
      * */
-    private static MethodOperand getFakeMethodOperand(jq_Method originalMethod) {
-        if(fakeMethodOperand.get(originalMethod) == null){
-            jq_Method newMethod = null;
-            
-            jq_Class fakeString       = getClassByName("MyMockLib.MyString");
-            jq_Class fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");            
-            
-            String className = originalMethod.getDeclaringClass().getName();
-            if(className.equals("java.lang.String")){
-                newMethod = findReplacementMethod(fakeString, originalMethod);                
-                Assert._assert(newMethod != null, "Missing method " + originalMethod + " in " + fakeString);
-            }else
-            if(className.equals("java.lang.StringBuffer")){  
-                newMethod = findReplacementMethod(fakeStringBuffer, originalMethod); 
-                Assert._assert(newMethod != null, "Missing method " + originalMethod + " in " + fakeStringBuffer);
-            }else{
-                System.err.println("Unexpected method " + originalMethod);
-                return null;
-            }
-            System.out.println("Replacing " + originalMethod + " with " + newMethod);
-            
-            // cache for later reuse
-            fakeMethodOperand.put(originalMethod, new MethodOperand(newMethod));
-        }
-        
-        return (MethodOperand) fakeMethodOperand.get(originalMethod);
-    }
+//    private static MethodOperand getFakeMethodOperand(jq_Method originalMethod) {
+//        if(fakeMethodOperand.get(originalMethod) == null){
+//            jq_Method newMethod = null;
+//            
+//            jq_Class fakeString       = getClassByName("MyMockLib.MyString");
+//            jq_Class fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");            
+//            
+//            String className = originalMethod.getDeclaringClass().getName();
+//            if(className.equals("java.lang.String")){
+//                newMethod = findReplacementMethod(fakeString, originalMethod);                
+//                Assert._assert(newMethod != null, "Missing method " + originalMethod + " in " + fakeString);
+//            }else
+//            if(className.equals("java.lang.StringBuffer")){  
+//                newMethod = findReplacementMethod(fakeStringBuffer, originalMethod); 
+//                Assert._assert(newMethod != null, "Missing method " + originalMethod + " in " + fakeStringBuffer);
+//            }else{
+//                System.err.println("Unexpected method " + originalMethod);
+//                return null;
+//            }
+//            System.out.println("Replacing " + originalMethod + " with " + newMethod);
+//            
+//            // cache for later reuse
+//            fakeMethodOperand.put(originalMethod, new MethodOperand(newMethod));
+//        }
+//        
+//        return (MethodOperand) fakeMethodOperand.get(originalMethod);
+//    }
     
-    private static jq_Class getClassByName(String className) {
-        jq_Class theClass = (jq_Class)jq_Type.parseType(className);
-        Assert._assert(theClass != null, className + " is not available.");
-        theClass.prepare();
-        
-        return theClass;
-    }
-    /**
-     * @param fakeString
-     * @param originalMethod
-     * @return  replacement method or null
-     */
-    private static jq_Method findReplacementMethod(jq_Class fakeString, jq_Method originalMethod) {
-        for(Iterator iter = fakeString.getMembers().iterator(); iter.hasNext();){
-            Object o = iter.next();
-            if(!(o instanceof jq_Method)) continue;
-            jq_Method m = (jq_Method) o;
-            
-            if(!m.getName().toString().equals(originalMethod.getName().toString())){
-                continue;
-            }
-            
-            if(m.getParamTypes().length != originalMethod.getParamTypes().length){
-                continue;            
-            }
-            
-            boolean allMatch = true;
-            for(int i = 0; i < originalMethod.getParamTypes().length; i++){
-                if(m.getParamTypes()[i] != originalMethod.getParamTypes()[i]){
-                    allMatch = false;
-                    break;
-                }
-            }
-            if(!allMatch) {
-                continue;
-            }
-         
-            // done with the tests: m is good
-            return m;
-        }
-        
-        return null;
-    }
+//    private static jq_Class getClassByName(String className) {
+//        jq_Class theClass = (jq_Class)jq_Type.parseType(className);
+//        Assert._assert(theClass != null, className + " is not available.");
+//        theClass.prepare();
+//        
+//        return theClass;
+//    }
+//    /**
+//     * @param fakeString
+//     * @param originalMethod
+//     * @return  replacement method or null
+//     */
+//    private static jq_Method findReplacementMethod(jq_Class fakeString, jq_Method originalMethod) {
+//        for(Iterator iter = fakeString.getMembers().iterator(); iter.hasNext();){
+//            Object o = iter.next();
+//            if(!(o instanceof jq_Method)) continue;
+//            jq_Method m = (jq_Method) o;
+//            
+//            if(!m.getName().toString().equals(originalMethod.getName().toString())){
+//                continue;
+//            }
+//            
+//            if(m.getParamTypes().length != originalMethod.getParamTypes().length){
+//                continue;            
+//            }
+//            
+//            boolean allMatch = true;
+//            for(int i = 0; i < originalMethod.getParamTypes().length; i++){
+//                if(m.getParamTypes()[i] != originalMethod.getParamTypes()[i]){
+//                    allMatch = false;
+//                    break;
+//                }
+//            }
+//            if(!allMatch) {
+//                continue;
+//            }
+//         
+//            // done with the tests: m is good
+//            return m;
+//        }
+//        
+//        return null;
+//    }
 }
