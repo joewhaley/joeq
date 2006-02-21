@@ -5415,7 +5415,7 @@ public class PA {
             }
             
             if(callLoc == null){
-                System.err.println(callLoc != null, "No match for " + callSite + ", " + method);
+                System.err.println("No match for " + callSite + ", " + method);
                 // TODO: check that these are the calls that neen not be preserved
                 continue;
             }
