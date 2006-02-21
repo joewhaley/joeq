@@ -4576,8 +4576,8 @@ public class PA {
 
             int I_i = Imap.get(mc);
 //            if(removedCalls.contains(mc)){
-//                System.out.println("Skipping " + mc);
 //                continue;
+//                System.out.println("Skipping " + mc);
 //            }
             for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method) j.next();
@@ -5415,9 +5415,9 @@ public class PA {
             }
             
             if(callLoc == null){
-                //Assert._assert(callLoc != null, "No match for " + callSite + ", " + method);
+                System.err.println(callLoc != null, "No match for " + callSite + ", " + method);
                 // TODO: check that these are the calls that neen not be preserved
-                break;
+                continue;
             }
             
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
