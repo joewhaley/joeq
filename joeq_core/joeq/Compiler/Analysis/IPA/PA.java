@@ -63,6 +63,7 @@ import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.InlineMapping;
 import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.MethodInline;
 import joeq.Compiler.Quad.Operand;
@@ -3223,11 +3224,6 @@ public class PA {
             assumeKnownCallGraph();
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         }
-        if(INLINE_MAPS) {
-            //System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
-            //IE.applyWith(removeCalls.not(), BDDFactory.and);
-            //System.out.println(IE.satCount(Iset.and(Mset)) + ": " + IE.toStringWithDomains());
-        }
         
         if(FIX_NO_DEST){
             analyzeIE();
@@ -3506,8 +3502,8 @@ public class PA {
                     dis.cg = loadCallGraph(rootMethods);
                     dis.removedCalls = old.removedCalls;
                     dis.inlinedSites = old.inlinedSites;
-                    dis.Imap = old.Imap;
-                    dis.mV = old.mV;
+                    //dis.Imap = old.Imap;
+                    //dis.mV = old.mV;
                     old = null;
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
@@ -3515,7 +3511,7 @@ public class PA {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
                     dis.DISCOVER_CALL_GRAPH = true;
                     if (dis.INLINE_MAPS) {
-                        System.out.println("Addin the inlining pass");
+                        System.out.println("Adding the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
                         //CodeCache.invalidate();
                     }
@@ -5293,9 +5289,11 @@ public class PA {
             for (int j = 0; j < Imap.size(); ++j) {
                 ProgramLocation o = (ProgramLocation)Imap.get(j);
                 //if(!removedCalls.contains(o)){
-                dos.write(o.hashCode()+": "+o+"\n");
+                    dos.write(o.hashCode()+": "+o+"\n");
 //                }else{
 //                    System.out.println("Skipping " + o);
+//                    ProgramLocation o2 = LoadedCallGraph.mapCall(o);
+//                    dos.write(o2.hashCode()+": "+o2+"\n");
 //                }
            }
         } finally {
@@ -5386,11 +5384,11 @@ public class PA {
     }
 
     private int getBytecodeIndex(jq_Method method, Quad quad) {
-    Map map = CodeCache.getBCMap((jq_Method) method);
-    if (map == null) return -1;
-    Integer i = (Integer) map.get(quad);
-    if (i == null) return -1;
-    return i.intValue();
+        Map map = CodeCache.getBCMap((jq_Method) method);
+        if (map == null) return -1;
+        Integer i = (Integer) map.get(quad);
+        if (i == null) return -1;
+        return i.intValue();
     }
     
     void saveInlinedSites(String dumpPath, BDD vP0) throws IOException {
@@ -5400,8 +5398,10 @@ public class PA {
             Quad alloc = (Quad) t.left;
             Quad callSite = (Quad) t.middle;
             jq_Method method = (jq_Method) t.right;
+//            
+            ProgramLocation callLoc = null; //InlineMapping.getOriginalQuad(callSite);
+//            
             int bc = getBytecodeIndex(method, callSite);
-            ProgramLocation callLoc = null;
             for(Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
                 ProgramLocation loc = (ProgramLocation) iMapIter.next();
 
@@ -5409,7 +5409,23 @@ public class PA {
                     BCProgramLocation qpl = (BCProgramLocation) loc;
                     if(qpl.getBytecodeIndex() == bc && qpl.getMethod() == method){
                         callLoc = qpl;
+                        System.out.println("Found " + callSite);
                         break;
+                    }
+                }
+            }
+//          
+            if(callLoc == null) {
+                Quad newQuad = InlineMapping.getOriginalQuad(callSite);
+                for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
+                    ProgramLocation loc = (ProgramLocation) iMapIter.next();
+    
+                    if (loc instanceof QuadProgramLocation) {
+                        QuadProgramLocation qpl = (QuadProgramLocation) loc;
+                        if(qpl.getQuad() == newQuad && qpl.getMethod() == method){
+                            callLoc = qpl;
+                            break;
+                        }
                     }
                 }
             }
@@ -5419,6 +5435,7 @@ public class PA {
                 // TODO: check that these are the calls that neen not be preserved
                 continue;
             }
+            
             
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
                 MethodSummary.Node node = (Node) heapIter.next();
