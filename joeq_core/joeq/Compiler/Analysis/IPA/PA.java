@@ -3467,12 +3467,6 @@ public class PA {
              System.out.println("=========================================================");
         }
 
-        if (dis.INLINE_MAPS) {
-            System.out.println("Adding the inlining pass");
-            CodeCache.addDefaultPass(new MethodInline(dis));
-            //CodeCache.invalidate();
-        }
-        
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             if(dis.ALWAYS_START_WITH_A_FRESH_CALLGRAPH) {
                 dis.cg = null; //loadCallGraph(rootMethods);
@@ -3500,11 +3494,16 @@ public class PA {
 
                     initialCallgraphFileName = callgraphFileName;
                     dis.cg = loadCallGraph(rootMethods);
-                    dis.removedCalls = old.removedCalls;
-                    dis.inlinedSites = old.inlinedSites;
+//                    dis.removedCalls = old.removedCalls;
+//                    dis.inlinedSites = old.inlinedSites;
                     //dis.Imap = old.Imap;
                     //dis.mV = old.mV;
                     old = null;
+                    if (dis.INLINE_MAPS) {
+                        System.out.println("Adding the inlining pass");
+                        CodeCache.addDefaultPass(new MethodInline(dis));
+                        CodeCache.invalidate();
+                    }
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
@@ -5029,18 +5028,21 @@ public class PA {
     Collection removedCalls = new ArrayList();
 
     public void removeCall(ProgramLocation pl, jq_Method callee) {
-        if(Imap != null) {
-            int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
-            /*
-            Assert._assert(Imap != null);
-            Assert._assert(Mmap != null);
-            
-          
-            removeCalls.orWith(I.ithVar(i_i));
-            */
-            removedCalls.add((ProgramLocation) Imap.get(i_i));
-            if(TRACE_INLINING) System.out.println("INLINING: Removing invocation site " + i_i);
-        }
+//        if(Imap != null) {
+//            int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
+//            /*
+//            Assert._assert(Imap != null);
+//            Assert._assert(Mmap != null);
+//            
+//          
+//            removeCalls.orWith(I.ithVar(i_i));
+//            */
+//            removedCalls.add((ProgramLocation) Imap.get(i_i));
+//            if(TRACE_INLINING) System.out.println("INLINING: Removing invocation site " + i_i);
+//        }
+        
+        removedCalls.add(pl);
+        if(TRACE_INLINING) System.out.println("INLINING: Removing invocation site " + pl);
     }
     
     public void addInlinedSiteToMap(ProgramLocation pl, Quad alloc, Quad quad, jq_Method callerMethod) {
@@ -5054,10 +5056,10 @@ public class PA {
         Assert._assert(pl instanceof QuadProgramLocation);
         QuadProgramLocation qpl = (QuadProgramLocation) pl;
         Assert._assert(qpl.getQuad() == quad && qpl.getMethod() == callerMethod);
-        if(Imap != null) {
-            int index = Imap.get(pl);
-            if(TRACE_INLINING) System.out.println(qpl.getQuad() + ", " + qpl.getMethod() + " index is " + index);
-        }
+//        if(Imap != null) {
+//            int index = Imap.get(pl);
+//            if(TRACE_INLINING) System.out.println(qpl.getQuad() + ", " + qpl.getMethod() + " index is " + index);
+//        }
     }
     
     Set inlinedSites = new HashSet();
@@ -5401,22 +5403,23 @@ public class PA {
 //            
             ProgramLocation callLoc = null; //InlineMapping.getOriginalQuad(callSite);
 //            
-            int bc = getBytecodeIndex(method, callSite);
-            for(Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
-                ProgramLocation loc = (ProgramLocation) iMapIter.next();
-
-                if(loc instanceof BCProgramLocation){
-                    BCProgramLocation qpl = (BCProgramLocation) loc;
-                    if(qpl.getBytecodeIndex() == bc && qpl.getMethod() == method){
-                        callLoc = qpl;
-                        System.out.println("Found " + callSite);
-                        break;
-                    }
-                }
-            }
+//            int bc = getBytecodeIndex(method, callSite);
+//            for(Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
+//                ProgramLocation loc = (ProgramLocation) iMapIter.next();
+//
+//                if(loc instanceof BCProgramLocation){
+//                    BCProgramLocation qpl = (BCProgramLocation) loc;
+//                    if(qpl.getBytecodeIndex() == bc && qpl.getMethod() == method){
+//                        callLoc = qpl;
+//                        System.out.println("Found " + callSite);
+//                        break;
+//                    }
+//                }
+//            }
 //          
             if(callLoc == null) {
-                Quad newQuad = InlineMapping.getOriginalQuad(callSite);
+                //Quad newQuad = InlineMapping.getOriginalQuad(callSite);
+                Quad newQuad = callSite;
                 for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
                     ProgramLocation loc = (ProgramLocation) iMapIter.next();
     
@@ -5436,6 +5439,11 @@ public class PA {
                 continue;
             }
             
+            int c_i = Imap.get(callLoc);            
+            BDD retBDD = Iret.andWith(I.ithVar(c_i));
+            //BigInteger i = retBDD.scanVar(V1);
+            System.out.println("Iret for " + c_i + " is " + 
+                callLoc + " -> " + retBDD.toStringWithDomains());            
             
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
                 MethodSummary.Node node = (Node) heapIter.next();
@@ -5445,8 +5453,7 @@ public class PA {
                     if(pl instanceof QuadProgramLocation) {
                         Quad q = ((QuadProgramLocation) pl).getQuad();
                         if(q == alloc) {
-                            if(TRACE_INLINING) System.out.println("INLINING: Found an inlined allocation site in method " + method);
-                            int c_i = Imap.get(callLoc);
+                            if(TRACE_INLINING) System.out.println("INLINING: Found an inlined allocation site in method " + method);                            
                             int h_i = Hmap.get(node);
                             
                             if(TRACE_INLINING) System.out.println("INLINING: Mapping " + c_i + " to " + h_i);

@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -437,34 +439,56 @@ public class ControlFlowGraph implements Graph {
      * given control flow graph (with appropriate renumberings) is
      * returned.
      */
+    Map correspondenceMap = null; 
     public ControlFlowGraph merge(ControlFlowGraph from) {
         int nLocal = this.rf.numberOfLocalRegisters() + from.rf.numberOfLocalRegisters();
         int nStack = this.rf.numberOfStackRegisters() + from.rf.numberOfStackRegisters();
         RegisterFactory that_rf = new RegisterFactory(nStack, nLocal);
-        Map map = from.rf.deepCopyInto(that_rf);
+        correspondenceMap = from.rf.deepCopyInto(that_rf);
         this.rf.addAll(that_rf);
         ControlFlowGraph that = new ControlFlowGraph(from.getMethod(),
                                                      from.exit().getNumberOfPredecessors(),
                                                      from.exception_handlers.size(),
                                                      that_rf);
         
-        map.put(from.entry(), that.entry());
-        map.put(from.exit(), that.exit());
+        correspondenceMap.put(from.entry(), that.entry());
+        correspondenceMap.put(from.exit(), that.exit());
 
         for (ListIterator.ExceptionHandler exs = from.getExceptionHandlers().exceptionHandlerIterator();
              exs.hasNext(); ) {
-            that.addExceptionHandler(copier(map, exs.nextExceptionHandler()));
+            that.addExceptionHandler(copier(correspondenceMap, exs.nextExceptionHandler()));
         }
 
-        that.entry().addSuccessor(copier(map, from.entry().getFallthroughSuccessor()));
+        that.entry().addSuccessor(copier(correspondenceMap, from.entry().getFallthroughSuccessor()));
         for (ListIterator.BasicBlock bbs = from.exit().getPredecessors().basicBlockIterator();
              bbs.hasNext(); ) {
-            that.exit().addPredecessor(copier(map, bbs.nextBasicBlock()));
+            that.exit().addPredecessor(copier(correspondenceMap, bbs.nextBasicBlock()));
         }
 
         that.bb_counter = this.bb_counter;
         that.quad_counter = this.quad_counter;
-
+        
+//        Map calleeMap = CodeCache.getBCMap(from.getMethod());
+//        Map callerMap = CodeCache.getBCMap(this.getMethod());
+//        
+//        Map newCallerMap = new HashMap();
+//        for(Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
+//            Map.Entry e = (Entry) iter.next();
+//            Quad old_quad = (Quad) e.getKey();
+//            Quad new_quad = (Quad) e.getValue();
+//            
+//            Object bc = null;
+//            if((bc = callerMap.get(old_quad)) != null) {
+//                newCallerMap.put(new_quad, bc);
+//            } else 
+//            if((bc = calleeMap.get(old_quad)) != null) {
+//                newCallerMap.put(new_quad, bc);
+//            } else {
+//                Assert.UNREACHABLE();
+//            } 
+//        }
+//        CodeCache
+     
         return that;
     }
 
