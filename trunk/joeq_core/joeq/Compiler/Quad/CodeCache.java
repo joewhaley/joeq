@@ -85,4 +85,15 @@ public class CodeCache {
     static public void invalidate() {
         cache.invalidateCache();
     }
+
+    public static void invalidateBCMap(jq_Method m) {
+        cache._invalidateBCMap(m);        
+    }
+
+    private void _invalidateBCMap(jq_Method m) {
+        if(bcmap.get(m) != null) {
+            System.err.println("Replacing " + m);
+        }
+        bcmap.put(m, null);        
+    }
 }
