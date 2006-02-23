@@ -64,7 +64,7 @@ public class LoadedCallGraph extends CallGraph {
             int i2 = p2.getBytecodeIndex();
             if (i1 < i2) return -1;
             if (i1 > i2) return 1;
-            Assert._assert(o1 == o2);
+//            Assert._assert(o1 == o2);
             return 0;
         }
     };
@@ -137,7 +137,7 @@ public class LoadedCallGraph extends CallGraph {
     protected MultiMap/*<jq_Method,Integer>*/ callSites;
     protected InvertibleMultiMap/*<ProgramLocation,jq_Method>*/ edges;
     protected boolean bcCallSites;
-    private static final boolean MAPPING_OFF = false;
+    private static final boolean MAPPING_OFF = true;
 
     public LoadedCallGraph(String filename) throws IOException {
         this.methods = new LinkedHashSet();
@@ -354,13 +354,15 @@ public class LoadedCallGraph extends CallGraph {
             if (callSite instanceof ProgramLocation.QuadProgramLocation) {
                 jq_Method m = (jq_Method) callSite.getMethod();
                 Map map = CodeCache.getBCMap(m);
+                CodeCache.invalidateBCMap(m);
                 Quad q = ((ProgramLocation.QuadProgramLocation) callSite).getQuad();
                 if (q == null) {
                     Assert.UNREACHABLE("Error: cannot find call site "+callSite);
                 }
                 Integer i = (Integer) map.get(q);
                 if (i == null) {
-                    Assert.UNREACHABLE("Error: no mapping for quad "+q);
+//                    Assert.UNREACHABLE("Error: no mapping for quad "+q);
+                    return new ProgramLocation.FakeProgramLocation(m, "Fake location " + callSite.toString());
                 }
                 int bcIndex = i.intValue();
                 callSite = new ProgramLocation.BCProgramLocation(m, bcIndex);

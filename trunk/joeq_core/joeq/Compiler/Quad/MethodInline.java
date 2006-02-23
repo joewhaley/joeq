@@ -45,7 +45,7 @@ import jwutil.util.Assert;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = false;
+    public static final boolean TRACE = true;
     public static final boolean TRACE_ORACLE = false;
     public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
@@ -147,6 +147,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             } else {
                 inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType, preserveCallSite);
             }
+            //CodeCache.invalidateBCMap(caller.getMethod());
         }
         public String toString() { return callee.getMethod().toString(); }
     }
@@ -314,7 +315,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
          * */
         public boolean preserveCallsTo(jq_Method callee) {
             String mungedName = NameMunger.mungeMethodName(callee);
-            return preserveCallsTo.contains(mungedName);
+            //return preserveCallsTo.contains(mungedName);
+            return true;
         }
     }
     
@@ -438,6 +440,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
         // copy the callee's control flow graph, renumbering the basic blocks,
         // registers and quads, and add the exception handlers.
         callee = caller.merge(callee);
+
         if (TRACE) out.println("After renumbering:");
         if (TRACE) out.println(callee.fullDump());
         if (TRACE) out.println(callee.getRegisterFactory().fullDump());
@@ -452,12 +455,15 @@ public class MethodInline implements ControlFlowGraphVisitor {
         int bb_size = bb.size();
         for (int i=invokeLocation+1; i<bb_size; ++i) {
             successor_bb.appendQuad(bb.removeQuad(invokeLocation+1));
-        }                
+        }
+        Quad newInvoke = bb.getQuad(invokeLocation);
         if(!preserveCallSite) {
             Quad invokeQuad = bb.removeQuad(invokeLocation);
             Assert._assert(invokeQuad == q);
             Assert._assert(bb.size() == invokeLocation);
         }
+        InlineMapping.add(q, newInvoke);
+        
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
         if (TRACE) out.println(successor_bb.fullDump());
@@ -551,6 +557,7 @@ outer:
         // copy the callee's control flow graph, renumbering the basic blocks,
         // registers and quads, and add the exception handlers.
         callee = caller.merge(callee);
+        
         if (TRACE) out.println("After renumbering:");
         if (TRACE) out.println(callee.fullDump());
         if (TRACE) out.println(callee.getRegisterFactory().fullDump());
@@ -575,6 +582,8 @@ outer:
         } else {
             invokeQuad = bb.getQuad(invokeLocation);
         }
+        InlineMapping.add(q, invokeQuad);
+        
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
         if (TRACE) out.println(successor_bb.fullDump());
