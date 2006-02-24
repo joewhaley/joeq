@@ -5096,8 +5096,7 @@ public class PA {
         
         // difference in compatibility
         BDD S0 = S.exist(V1cV2cset);
-        BDD L0 = L.exist(V1cV2cset);
-        BDD IE0 = IE.exist(V1cV2cset);
+        BDD L0 = L.exist(V1cV2cset);        
         BDD vP0 = vP.exist(V1cH1cset);
         
         String dumpPath = System.getProperty("pa.dumppath", "");
@@ -5190,6 +5189,7 @@ public class PA {
             saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath, vP0);            
         }
+        bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));
         
         bdd_save(dumpPath+"vP0.bdd", vP0);
         bdd_save(dumpPath+"hP0.bdd", hP);
@@ -5213,7 +5213,6 @@ public class PA {
         bdd_save(dumpPath+"Mthr.bdd", Mthr);
         bdd_save(dumpPath+"Iret.bdd", Iret);
         bdd_save(dumpPath+"Ithr.bdd", Ithr);
-        bdd_save(dumpPath+"IE0.bdd", IE0);
         bdd_save(dumpPath+"sync.bdd", sync);
         bdd_save(dumpPath+"mSync.bdd", mSync);
         if (SPECIAL_MAP_INFO) {
