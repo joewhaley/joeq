@@ -5447,6 +5447,9 @@ public class PA {
             //BigInteger i = retBDD.scanVar(V1);
             System.out.println("Iret for " + c_i + " is " + 
                 callLoc + " -> " + retBDD.toStringWithDomains());            
+            BDD mBDD = IE.andWith(I.ithVar(c_i));
+            System.out.println("IE for " + c_i + " is " + 
+                callLoc + " -> " + mBDD.toStringWithDomains());
             
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
                 MethodSummary.Node node = (Node) heapIter.next();
