@@ -358,6 +358,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             } else {                
                 // virtual call
                 pa.addToMI(M_bdd, I_bdd, target);
+                boolean isSingleTarget = mc.isSingleTarget();
             }
             
             jq_Type[] params = mc.getParamTypes();
