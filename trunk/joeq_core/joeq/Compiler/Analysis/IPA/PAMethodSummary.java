@@ -376,14 +376,14 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             Node node = ms.getRVN(mc);
             if (node != null) {
                 pa.addToIret(I_bdd, node);
-                if(pa.CONTEXT_SENSITIVE) System.out.println("Iret for " + I_i + " is " + pa.Vmap.get(node));
+                //if(pa.CONTEXT_SENSITIVE) System.out.println("Iret for " + I_i + " is " + pa.Vmap.get(node));
             } else {
 //                if(!pa.inlineSites.and(I_bdd).isZero()) {
 //                    // inlined allocation size
 //                    pa.addToIret(I_bdd, FakeParamNode.getFake(
 //                        ms.getMethod(), 0, (jq_Reference) mc.getReturnType()));
 //                }
-                if(pa.CONTEXT_SENSITIVE) System.out.println("No Iret for " + I_i + "(" + mc + ") " + mc.getClass());
+                //if(pa.CONTEXT_SENSITIVE) System.out.println("No Iret for " + I_i + "(" + mc + ") " + mc.getClass());
             }
             node = ms.getTEN(mc);
             if (!pa.IGNORE_EXCEPTIONS && node != null) {
