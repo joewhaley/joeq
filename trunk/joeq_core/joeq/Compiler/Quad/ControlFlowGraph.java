@@ -404,6 +404,7 @@ public class ControlFlowGraph implements Graph {
         if(this_q.getOperator() instanceof Operator.New || this_q.getOperator() instanceof Operator.NewArray) {
             System.err.println("Mapping " + this_q + " to " + that_q);
             MethodInline.newlyInserted.put(this_q, that_q);
+            //InlineMapping.add(this_q, that_q);
         }
         return that_q;
     }
@@ -439,7 +440,7 @@ public class ControlFlowGraph implements Graph {
      * given control flow graph (with appropriate renumberings) is
      * returned.
      */
-    Map correspondenceMap = null; 
+    public static Map/*<Object, Object>*/ correspondenceMap = null; 
     public ControlFlowGraph merge(ControlFlowGraph from) {
         int nLocal = this.rf.numberOfLocalRegisters() + from.rf.numberOfLocalRegisters();
         int nStack = this.rf.numberOfStackRegisters() + from.rf.numberOfStackRegisters();
