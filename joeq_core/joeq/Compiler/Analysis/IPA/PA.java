@@ -3728,6 +3728,7 @@ public class PA {
     }
     
     public static void bdd_save(String filename, BDD b, List ds) throws IOException {
+        //System.err.println("Saving " + filename + " of size " + b.satCount());
         BufferedWriter out = null;
         try {
             out = new BufferedWriter(new FileWriter(filename));
@@ -5184,13 +5185,10 @@ public class PA {
             mC.orWith(m);
         }
         if(INLINE_MAPS) {
-            //InlineMapping.update();
-            //
             saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath, vP0);            
         }
-        bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));
-        
+        bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
         bdd_save(dumpPath+"vP0.bdd", vP0);
         bdd_save(dumpPath+"hP0.bdd", hP);
         bdd_save(dumpPath+"L.bdd", L0);
@@ -5425,12 +5423,13 @@ public class PA {
             
             int c_i = Imap.get(callLoc);
             jq_Method target = Invoke.getMethod(newQuad).getMethod();
-            addToIE(I.ithVar(Imap.get(callLoc)), target);
-            BDD retBDD = Iret.andWith(I.ithVar(c_i));
+            addToIE(I.ithVar(c_i), target);
+            BDD retBDD = Iret.and(I.ithVar(c_i));
+            System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            
             //BigInteger i = retBDD.scanVar(V1);
             System.out.println("Iret for " + c_i + " is " + 
                 callLoc + " -> " + retBDD.toStringWithDomains());            
-            BDD mBDD = IE.andWith(I.ithVar(c_i));
+            BDD mBDD = IE.and(I.ithVar(c_i));
             System.out.println("IE for " + c_i + " is " + 
                 callLoc + " -> " + mBDD.toStringWithDomains());
             
@@ -5449,27 +5448,10 @@ public class PA {
                             
                             BDD h = H1.ithVar(h_i);
                             inlineSites.orWith(I.ithVar(c_i).and(h));
-    /*
-                            // patch up mV
-                            BDD v_bdd = vP0.and(h);
-                            BDD m_bdd = M.ithVar(Mmap.get(method));
-                            BDD m_old = mV.and(v_bdd);
-                            
-                            mV.orWith(m_bdd.and(v_bdd));
-                            mV.andWith(m_bdd.and(v_bdd).not());
-                            
-                            if(TRACE_INLINING) {
-                                System.out.println("Changing from " +
-                                    m_old.scanVar(M) + " to " + m_bdd.scanVar(M));
-                            }
-                            m_old.free(); m_bdd.free(); v_bdd.free(); h.free();
-   */
                         }
                     }
                 }
             }
-            
-
             
         }
         bdd_save(dumpPath+"inlineSites.bdd", inlineSites);        
