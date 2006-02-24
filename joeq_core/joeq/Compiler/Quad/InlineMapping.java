@@ -19,11 +19,11 @@ public class InlineMapping {
     public static Quad getOriginalQuad(Quad newQuad) {
         Quad oldQuad = null;
         do {
-            newQuad = oldQuad;
-            oldQuad = (Quad) _map.get(newQuad);            
-        } while(oldQuad != null);
+            oldQuad = newQuad;
+            newQuad = (Quad) _map.get(newQuad);            
+        } while(newQuad != null && newQuad != oldQuad);
         
-        return newQuad;
+        return oldQuad;
     }
 
     /**
