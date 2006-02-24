@@ -5405,33 +5405,15 @@ public class PA {
             jq_Method method = (jq_Method) t.right;
 //            
             ProgramLocation callLoc = null; //InlineMapping.getOriginalQuad(callSite);
-//            
-//            int bc = getBytecodeIndex(method, callSite);
-//            for(Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
-//                ProgramLocation loc = (ProgramLocation) iMapIter.next();
-//
-//                if(loc instanceof BCProgramLocation){
-//                    BCProgramLocation qpl = (BCProgramLocation) loc;
-//                    if(qpl.getBytecodeIndex() == bc && qpl.getMethod() == method){
-//                        callLoc = qpl;
-//                        System.out.println("Found " + callSite);
-//                        break;
-//                    }
-//                }
-//            }
-//          
-            if(callLoc == null) {
-                Quad newQuad = InlineMapping.getOriginalQuad(callSite);
-//                Quad newQuad = callSite;
-                for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
-                    ProgramLocation loc = (ProgramLocation) iMapIter.next();
-    
-                    if (loc instanceof QuadProgramLocation) {
-                        QuadProgramLocation qpl = (QuadProgramLocation) loc;
-                        if(qpl.getQuad() == newQuad/* && qpl.getMethod() == method*/){
-                            callLoc = qpl;
-                            break;
-                        }
+            Quad newQuad = InlineMapping.getOriginalQuad(callSite);
+            for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
+                ProgramLocation loc = (ProgramLocation) iMapIter.next();
+   
+                if (loc instanceof QuadProgramLocation) {
+                    QuadProgramLocation qpl = (QuadProgramLocation) loc;
+                    if(qpl.getQuad() == newQuad/* && qpl.getMethod() == method*/){
+                        callLoc = qpl;                            
+                        break;
                     }
                 }
             }
@@ -5442,7 +5424,9 @@ public class PA {
                 continue;
             }
             
-            int c_i = Imap.get(callLoc);            
+            int c_i = Imap.get(callLoc);
+            jq_Method target = Invoke.getMethod(newQuad).getMethod();
+            addToIE(I.ithVar(Imap.get(callLoc)), target);
             BDD retBDD = Iret.andWith(I.ithVar(c_i));
             //BigInteger i = retBDD.scanVar(V1);
             System.out.println("Iret for " + c_i + " is " + 
