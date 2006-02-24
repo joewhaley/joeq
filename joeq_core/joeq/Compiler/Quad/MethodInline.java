@@ -315,8 +315,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
          * */
         public boolean preserveCallsTo(jq_Method callee) {
             String mungedName = NameMunger.mungeMethodName(callee);
-            //return preserveCallsTo.contains(mungedName);
-            return true;
+            return preserveCallsTo.contains(mungedName);
         }
     }
     
@@ -377,39 +376,41 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
                 jq_Method callee = ((TypeCheckInliningDecision) d).callee.getMethod();
                 pa.removeCall(pl, callee);
-                int found = 0;
-                for (Iterator iter = newlyInserted.entrySet().iterator(); iter.hasNext();) {
-                    Map.Entry e = (Entry) iter.next();
-                    //Quad old_q = (Quad) e.getKey();
-                    Quad new_q = (Quad) e.getValue();
-                    
-                    pa.addInlinedSiteToMap(pl, new_q, q, caller);
-                    found++;
-                    if(pa.TRACE_INLINING) {
-                        System.out.println("Allocation site: " + new_q + " in " + caller);
-                    }
-                }
-                if (found == 0) {
-                    System.err
-                        .println("INLINING: Warning: no allocation sites found in the call to "
-                            + callee);
-                }
-                if (pa.TRACE_INLINING) {
-                    if (found > 0) {
-                        System.err.println("INLINING: Inlining " + found
-                            + " allocation sites found in the call to "
-                            + callee + " consisting of " + newlyInserted.size()
-                            + " blocks.");
-                        //System.out.println(((TypeCheckInliningDecision) d).callee.fullDump());
-                    } else {
-                        // System.out.println("Existing quads: " +
-                        // newlyInserted);
-                        for (Iterator iter = newlyInserted.values().iterator(); iter.hasNext();) {
-                            Quad quad = (Quad) iter.next();
-                            System.out.println("Inserted quad: " + quad);
+                if(preserveCallSite) {
+                    int found = 0;
+                    for (Iterator iter = newlyInserted.entrySet().iterator(); iter.hasNext();) {
+                        Map.Entry e = (Entry) iter.next();
+                        //Quad old_q = (Quad) e.getKey();
+                        Quad new_q = (Quad) e.getValue();
+                        
+                        pa.addInlinedSiteToMap(pl, new_q, q, caller);
+                        found++;
+                        if(pa.TRACE_INLINING) {
+                            System.out.println("Allocation site: " + new_q + " in " + caller);
                         }
                     }
-                    System.err.println("Removing a call to [" + callee + "] at " + pl);
+                    if (found == 0) {
+                        System.err
+                            .println("INLINING: Warning: no allocation sites found in the call to "
+                                + callee);
+                    }
+                    if (pa.TRACE_INLINING) {
+                        if (found > 0) {
+                            System.err.println("INLINING: Inlining " + found
+                                + " allocation sites found in the call to "
+                                + callee + " consisting of " + newlyInserted.size()
+                                + " blocks.");
+                            //System.out.println(((TypeCheckInliningDecision) d).callee.fullDump());
+                        } else {
+                            // System.out.println("Existing quads: " +
+                            // newlyInserted);
+                            for (Iterator iter = newlyInserted.values().iterator(); iter.hasNext();) {
+                                Quad quad = (Quad) iter.next();
+                                System.out.println("Inserted quad: " + quad);
+                            }
+                        }
+                        System.err.println("Removing a call to [" + callee + "] at " + pl);
+                    }
                 }
             }
             newlyInserted.clear();
@@ -462,7 +463,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
             Assert._assert(invokeQuad == q);
             Assert._assert(bb.size() == invokeLocation);
         }
-        InlineMapping.add(q, newInvoke);
+        InlineMapping.add(q);
+        InlineMapping.update();
         
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
@@ -582,7 +584,8 @@ outer:
         } else {
             invokeQuad = bb.getQuad(invokeLocation);
         }
-        InlineMapping.add(q, invokeQuad);
+        InlineMapping.add(q);
+        InlineMapping.update();
         
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());

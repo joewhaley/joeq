@@ -5185,6 +5185,8 @@ public class PA {
             mC.orWith(m);
         }
         if(INLINE_MAPS) {
+            //InlineMapping.update();
+            //
             saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath, vP0);            
         }
@@ -5385,13 +5387,13 @@ public class PA {
         bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
     }
 
-    private int getBytecodeIndex(jq_Method method, Quad quad) {
-        Map map = CodeCache.getBCMap((jq_Method) method);
-        if (map == null) return -1;
-        Integer i = (Integer) map.get(quad);
-        if (i == null) return -1;
-        return i.intValue();
-    }
+//    private int getBytecodeIndex(jq_Method method, Quad quad) {
+//        Map map = CodeCache.getBCMap((jq_Method) method);
+//        if (map == null) return -1;
+//        Integer i = (Integer) map.get(quad);
+//        if (i == null) return -1;
+//        return i.intValue();
+//    }
     
     void saveInlinedSites(String dumpPath, BDD vP0) throws IOException {
         if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " triples");
@@ -5399,6 +5401,7 @@ public class PA {
             Triple t = (Triple) iter.next();
             Quad alloc = (Quad) t.left;
             Quad callSite = (Quad) t.middle;
+            callSite = InlineMapping.map(callSite);
             jq_Method method = (jq_Method) t.right;
 //            
             ProgramLocation callLoc = null; //InlineMapping.getOriginalQuad(callSite);
@@ -5425,7 +5428,7 @@ public class PA {
     
                     if (loc instanceof QuadProgramLocation) {
                         QuadProgramLocation qpl = (QuadProgramLocation) loc;
-                        if(qpl.getQuad() == newQuad && qpl.getMethod() == method){
+                        if(qpl.getQuad() == newQuad/* && qpl.getMethod() == method*/){
                             callLoc = qpl;
                             break;
                         }
