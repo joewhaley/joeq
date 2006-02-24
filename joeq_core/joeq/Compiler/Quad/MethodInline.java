@@ -457,15 +457,18 @@ public class MethodInline implements ControlFlowGraphVisitor {
         for (int i=invokeLocation+1; i<bb_size; ++i) {
             successor_bb.appendQuad(bb.removeQuad(invokeLocation+1));
         }
-        Quad newInvoke = bb.getQuad(invokeLocation);
+        //Quad newInvoke = bb.getQuad(invokeLocation);
         if(!preserveCallSite) {
+            // remove the site
             Quad invokeQuad = bb.removeQuad(invokeLocation);
             Assert._assert(invokeQuad == q);
             Assert._assert(bb.size() == invokeLocation);
+        }else {
+            // remember
+            InlineMapping.add(q);
+            InlineMapping.update();
         }
-        InlineMapping.add(q);
-        InlineMapping.update();
-        
+            
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
         if (TRACE) out.println(successor_bb.fullDump());
@@ -583,9 +586,10 @@ outer:
             Assert._assert(bb.size() == invokeLocation);
         } else {
             invokeQuad = bb.getQuad(invokeLocation);
-        }
-        InlineMapping.add(q);
-        InlineMapping.update();
+            // update the correspondence
+            InlineMapping.add(q);
+            InlineMapping.update();
+        }        
         
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
