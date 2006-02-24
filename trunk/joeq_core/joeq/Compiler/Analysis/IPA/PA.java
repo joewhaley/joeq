@@ -5421,8 +5421,8 @@ public class PA {
 //            }
 //          
             if(callLoc == null) {
-                //Quad newQuad = InlineMapping.getOriginalQuad(callSite);
-                Quad newQuad = callSite;
+                Quad newQuad = InlineMapping.getOriginalQuad(callSite);
+//                Quad newQuad = callSite;
                 for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
                     ProgramLocation loc = (ProgramLocation) iMapIter.next();
     
