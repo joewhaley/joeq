@@ -11,7 +11,7 @@ import joeq.UTF.Utf8;
  * @author  Godmar Back <gback@stanford.edu>
  * @version $Id$
  */
-public class jq_FakeInstanceMethod extends jq_InstanceMethod {
+public class jq_FakeStaticMethod extends jq_StaticMethod {
     private static HashMap cache = new HashMap();
 
     public static jq_Member read(StringTokenizer st) {
@@ -23,7 +23,7 @@ public class jq_FakeInstanceMethod extends jq_InstanceMethod {
         return fakeMethod(c, name, desc);
     }
 
-    protected jq_FakeInstanceMethod(jq_Class clazz, jq_NameAndDesc nd) {
+    protected jq_FakeStaticMethod(jq_Class clazz, jq_NameAndDesc nd) {
         super(clazz, 
             new jq_NameAndDesc(
                 Utf8.get("fake_" + nd.getName().toString()), nd.getDesc()));
@@ -31,20 +31,20 @@ public class jq_FakeInstanceMethod extends jq_InstanceMethod {
         state = STATE_PREPARED;
     }
 
-    public static jq_InstanceMethod fakeMethod(jq_Class clazz, jq_NameAndDesc nd) {
+    public static jq_StaticMethod fakeMethod(jq_Class clazz, jq_NameAndDesc nd) {
         return fakeMethod(clazz, nd, true);
     }
 
-    public static jq_InstanceMethod fakeMethod(jq_Class clazz, jq_NameAndDesc nd, boolean create) {
+    public static jq_StaticMethod fakeMethod(jq_Class clazz, jq_NameAndDesc nd, boolean create) {
         jq_MemberReference mr = new jq_MemberReference(clazz, nd);
-        jq_FakeInstanceMethod m = (jq_FakeInstanceMethod)cache.get(mr);
+        jq_FakeStaticMethod m = (jq_FakeStaticMethod)cache.get(mr);
         if (m == null && create) {
-            cache.put(mr, m = new jq_FakeInstanceMethod(clazz, nd));
+            cache.put(mr, m = new jq_FakeStaticMethod(clazz, nd));
         }
         return m;
     }
 
-    public static jq_InstanceMethod fakeMethod(jq_Class clazz, String name, String desc) {
+    public static jq_StaticMethod fakeMethod(jq_Class clazz, String name, String desc) {
         return fakeMethod(clazz, new jq_NameAndDesc(name, desc));
     }
 
