@@ -50,7 +50,7 @@ import jwutil.util.Assert;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = false;
+    public static final boolean TRACE = true;
     public static final boolean TRACE_ORACLE = false;
     public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
@@ -737,8 +737,7 @@ outer:
         if (TRACE) out.println(bb.fullDump());
         if (TRACE) out.println(successor_bb.fullDump());
         
-        {
-          // create failsafe case block
+        // create failsafe case block
           BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
           bb_fail.appendQuad(replacementQuad);
           Quad q2 = Goto.create(caller.getNewQuadID(),
@@ -767,7 +766,6 @@ outer:
           TargetOperand success_op = new TargetOperand(bb_success);
           q2 = IntIfCmp.create(caller.getNewQuadID(), IntIfCmp.IFCMP_I.INSTANCE, res_op, zero_op, ne_op, success_op);
           bb.appendQuad(q2);
-        }
 
         // add instructions to set parameters.
         ParamListOperand plo = Invoke.getParamList(q);
@@ -778,8 +776,8 @@ outer:
             RegisterOperand dest = new RegisterOperand(dest_r, params[i]);
             Register src_r = plo.get(i).getRegister();
             RegisterOperand src = new RegisterOperand(src_r, params[i]);
-            Quad q2 = Move.create(caller.getNewQuadID(), op, dest, src);
-            bb.appendQuad(q2);
+            Quad q3 = Move.create(caller.getNewQuadID(), op, dest, src);
+            bb.appendQuad(q3);
             if (params[i].getReferenceSize() == 8) ++j;
         }
         if (TRACE) out.println("Result after adding parameter moves:");
@@ -794,17 +792,21 @@ outer:
             next_bb.addPredecessor(successor_bb);
             successor_bb.addSuccessor(next_bb);
         }
-        bb.removeAllSuccessors();
-        bb.addSuccessor(callee.entry().getFallthroughSuccessor());
+        bb_success.addSuccessor(callee.entry().getFallthroughSuccessor());
         callee.entry().getFallthroughSuccessor().removeAllPredecessors();
-        callee.entry().getFallthroughSuccessor().addPredecessor(bb);
+        callee.entry().getFallthroughSuccessor().addPredecessor(bb_success);
+        bb.removeAllSuccessors();
+        bb.addSuccessor(bb_fail);
+        bb_fail.addPredecessor(bb);
+        bb.addSuccessor(bb_success);
+        bb_success.addPredecessor(bb);
         RegisterOperand dest = Invoke.getDest(q);
         Register dest_r = null;
         Move op = null;
         if (dest != null) {
             dest_r = dest.getRegister();
             op = Move.getMoveOp(callee.getMethod().getReturnType());
-        }        
+        }       
 outer:
         for (ListIterator.BasicBlock it = callee.exit().getPredecessors().basicBlockIterator();
              it.hasNext(); ) {
@@ -828,10 +830,10 @@ outer:
                 Quad q3 = Move.create(caller.getNewQuadID(), op, ldest, src);
                 pred_bb.appendQuad(q3);
             }
-            Quad q2 = Goto.create(caller.getNewQuadID(),
+            Quad q4 = Goto.create(caller.getNewQuadID(),
                                   Goto.GOTO.INSTANCE,
                                   new TargetOperand(successor_bb));
-            pred_bb.appendQuad(q2);
+            pred_bb.appendQuad(q4);
             pred_bb.removeAllSuccessors(); pred_bb.addSuccessor(successor_bb);
             successor_bb.addPredecessor(pred_bb);
         }
@@ -1032,7 +1034,7 @@ outer:
                 newMethod = jq_FakeStaticMethod.fakeMethod(originalMethod.getDeclaringClass(), originalMethod.getNameAndDesc());
             }
             if(pa != null) {
-                pa.addToFakeMethods(newMethod);
+                pa.addToFakeMethods(originalMethod, newMethod);
             }
             System.out.println("Replacing " + originalMethod + " with " + newMethod);
             

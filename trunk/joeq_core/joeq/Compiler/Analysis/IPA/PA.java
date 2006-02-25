@@ -37,6 +37,7 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_FakeStaticMethod;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
 import joeq.Class.jq_InstanceField;
@@ -575,7 +576,7 @@ public class PA {
         }
     }
     
-    Set fakeMethods = new HashSet();
+    Map fakeMethods = new HashMap();
     
     void initializeMaps() {
         Vmap = makeMap("Vars", V_BITS);
@@ -591,7 +592,7 @@ public class PA {
             STRmap.get(new Dummy());
         }
         Mmap.get(new Dummy());
-        for(Iterator iter = fakeMethods.iterator(); iter.hasNext();) {
+        for(Iterator iter = fakeMethods.keySet().iterator(); iter.hasNext();) {
             jq_Method fakeMethod = (jq_Method) iter.next();
             Mmap.get(fakeMethod);
         }
@@ -1078,6 +1079,7 @@ public class PA {
     Map rangeMap;
     
     public BDD getV1V2Context(jq_Method m) {
+        m = unfake(m);
         if (THREAD_SENSITIVE) {
             BDD b = (BDD) V1H1correspondence.get(m);
             BDD c = b.replace(V1ctoV2c);
@@ -4611,6 +4613,7 @@ public class PA {
     
     BDDPairing V1ctoH1c;
     public BDD getV1H1Context(jq_Method m) {
+        m = unfake(m);
         if (THREAD_SENSITIVE) {
             BDD b = (BDD) V1H1correspondence.get(m);
             if (b == null) System.out.println("Unknown method "+m);
@@ -5089,9 +5092,18 @@ public class PA {
         }
     }
     
-    public void addToFakeMethods(jq_Method m) {
-        Assert._assert(m != null);
-        fakeMethods.add(m);
+    public void addToFakeMethods(jq_Method m, jq_Method newMethod) {
+        Assert._assert(m != null && newMethod != null);
+        // fake -> unfake
+        fakeMethods.put(newMethod, m);
+    }
+    
+    jq_Method unfake(jq_Method m) {
+        if(m instanceof jq_FakeInstanceMethod || m instanceof jq_FakeStaticMethod) {
+            return (jq_Method) fakeMethods.get(m);
+        } else {
+            return m;
+        }
     }
     
     public void dumpBDDRelations() throws IOException {
