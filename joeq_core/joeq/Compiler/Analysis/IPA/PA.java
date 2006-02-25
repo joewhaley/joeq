@@ -4584,14 +4584,18 @@ public class PA {
 //                continue;
 //                System.out.println("Skipping " + mc);
 //            }
-            for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
-                jq_Method callee = (jq_Method) j.next();
+            Collection callees = new LinkedList();
+            callees.addAll(cg.getTargetMethods(mc));
+            //callees.addAll(fakeMethods.keySet());
+            for (Iterator j = callees.iterator(); j.hasNext(); ) {
+                jq_Method callee = unfake((jq_Method) j.next());
                 int M_i = Mmap.get(callee);
                 BDD context;
                 if (CONTEXT_SENSITIVE) {
                     Pair p = new Pair(mc, callee);
                     Range r_edge = vCnumbering.getEdge(p);
-                    Range r_caller = vCnumbering.getRange(mc.getMethod());
+                    jq_Method m = unfake(mc.getMethod());
+                    Range r_caller = vCnumbering.getRange(m);
                     Assert._assert(r_edge != null, "No edge for " + p + " when considering " + mc);
                     Assert._assert(r_caller != null, "No range for " + mc.getMethod() + " when considering " + mc);
                     context = buildContextMap(V2c[0],
