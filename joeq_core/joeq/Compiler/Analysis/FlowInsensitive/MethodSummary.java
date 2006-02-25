@@ -26,6 +26,7 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_FakeStaticMethod;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Member;
@@ -198,6 +199,9 @@ public class MethodSummary {
      * @return null if method has no bytecode and we do not know how to fake it
      */
     public static MethodSummary getSummary(jq_Method m) {
+        if(m instanceof jq_FakeStaticMethod || m instanceof jq_FakeInstanceMethod) {
+            return null;
+        }
         MethodSummary hasFake = fakeMethodSummary(m);
         if (hasFake != null)
             return hasFake;
