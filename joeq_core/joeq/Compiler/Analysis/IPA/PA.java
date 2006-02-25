@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -574,6 +575,8 @@ public class PA {
         }
     }
     
+    Set fakeMethods = new HashSet();
+    
     void initializeMaps() {
         Vmap = makeMap("Vars", V_BITS);
         Imap = makeMap("Invokes", I_BITS);
@@ -588,6 +591,10 @@ public class PA {
             STRmap.get(new Dummy());
         }
         Mmap.get(new Dummy());
+        for(Iterator iter = fakeMethods.iterator(); iter.hasNext();) {
+            jq_Method fakeMethod = (jq_Method) iter.next();
+            Mmap.get(fakeMethod);
+        }
         if (ADD_THREADS) {
             PrimordialClassLoader.getJavaLangThread().prepare();
             PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;").prepare();
@@ -5082,6 +5089,11 @@ public class PA {
         }
     }
     
+    public void addToFakeMethods(jq_Method m) {
+        Assert._assert(m != null);
+        fakeMethods.add(m);
+    }
+    
     public void dumpBDDRelations() throws IOException {
         if (FULL_CHA) {
             for (Iterator i = Mmap.iterator(); i.hasNext(); ) {
@@ -5184,10 +5196,10 @@ public class PA {
             }
             mC.orWith(m);
         }
-        if(INLINE_MAPS) {
-            saveRemovedCalls(dumpPath);            
-            saveInlinedSites(dumpPath, vP0);            
-        }
+//        if(INLINE_MAPS) {
+//            saveRemovedCalls(dumpPath);            
+//            saveInlinedSites(dumpPath, vP0);            
+//        }
         bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
         bdd_save(dumpPath+"vP0.bdd", vP0);
         bdd_save(dumpPath+"hP0.bdd", hP);

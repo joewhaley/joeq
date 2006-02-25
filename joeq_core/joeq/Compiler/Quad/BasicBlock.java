@@ -196,6 +196,14 @@ public class BasicBlock {
         instructions.add(q);
     }
     
+    /**
+     * Replace the quad at position pos.
+     * */
+    public void replaceQuad(int pos, Quad q) {
+        Assert._assert(instructions != null, "Cannot add instructions to entry/exit basic block");
+        instructions.set(pos, q);
+    }
+    
     /** Add a predecessor basic block to this basic block.
      * Cannot add predecessors to the entry basic block.
      * @param b  basic block to add as a predecessor */
