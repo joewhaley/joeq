@@ -12,6 +12,7 @@ import joeq.UTF.Utf8;
  * @version $Id$
  */
 public class jq_FakeStaticMethod extends jq_StaticMethod {
+    private static final String FAKE_POSTFIX = "_fake";
     private static HashMap cache = new HashMap();
 
     public static jq_Member read(StringTokenizer st) {
@@ -26,7 +27,7 @@ public class jq_FakeStaticMethod extends jq_StaticMethod {
     protected jq_FakeStaticMethod(jq_Class clazz, jq_NameAndDesc nd) {
         super(clazz, 
             new jq_NameAndDesc(
-                Utf8.get("fake_" + nd.getName().toString()), nd.getDesc()));
+                Utf8.get((nd.getName() + FAKE_POSTFIX)), nd.getDesc()));
         parseMethodSignature();
         state = STATE_PREPARED;
     }
