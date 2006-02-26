@@ -50,7 +50,7 @@ import jwutil.util.Assert;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = false;
+    public static final boolean TRACE = true;
     public static final boolean TRACE_ORACLE = false;
     public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
@@ -128,22 +128,25 @@ public class MethodInline implements ControlFlowGraphVisitor {
         public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q, boolean preserveCallSite) {            
             //inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
 
-            /* Insert a fake replacement method call */
-            MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod(), mi.pa);
-            Assert._assert(fakeOperand != null);
-            int len = fakeOperand.getMethod().getParamTypes().length;
-            Quad fakeCallQuad = Invoke.InvokeStatic.create(
-                caller.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, 
-                (RegisterOperand) (q.getOp1() != null ? q.getOp1().copy() : null), 
-                (MethodOperand) fakeOperand.copy(), len);
-            
-            for(int i = 0; i < len; i++){
-                Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
+            jq_Method method = Invoke.getMethod(q).getMethod();
+            Quad fakeCallQuad = null;
+            if(mi.oracle instanceof InlineSelectedCalls && ((InlineSelectedCalls) mi.oracle).preserveCallsTo(method)) {
+                /* Insert a fake replacement method call */
+                MethodOperand fakeOperand = getFakeMethodOperand(method, mi.pa);
+                Assert._assert(fakeOperand != null);
+                int len = fakeOperand.getMethod().getParamTypes().length;
+                fakeCallQuad = Invoke.InvokeStatic.create(
+                    caller.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, 
+                    (RegisterOperand) (q.getOp1() != null ? q.getOp1().copy() : null), 
+                    (MethodOperand) fakeOperand.copy(), len);
+                
+                for(int i = 0; i < len; i++){
+                    Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
+                }
+                System.out.println(
+                    "Replaced a call to " + Invoke.getMethod(q) + 
+                    " with a call to " + fakeOperand.getMethod());
             }
-            System.out.println(
-                "Replaced a call to " + Invoke.getMethod(q) + 
-                " with a call to " + fakeOperand.getMethod());
-
             if(q.getOperator() instanceof InvokeStatic) {
                 inlineNonVirtualCallSiteReplacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
             } else {
@@ -590,7 +593,9 @@ outer:
 
         // create failsafe case block
         BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
-        bb_fail.appendQuad(replacementQuad);
+        if(replacementQuad != null) {
+            bb_fail.appendQuad(replacementQuad);
+        }
         Quad q2 = Goto.create(caller.getNewQuadID(),
                               Goto.GOTO.INSTANCE,
                               new TargetOperand(successor_bb));
@@ -739,7 +744,9 @@ outer:
         
         // create failsafe case block
           BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
-          bb_fail.appendQuad(replacementQuad);
+          if(replacementQuad != null) {
+              bb_fail.appendQuad(replacementQuad);
+          }
           Quad q2 = Goto.create(caller.getNewQuadID(),
                                 Goto.GOTO.INSTANCE,
                                 new TargetOperand(successor_bb));

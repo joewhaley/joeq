@@ -3,11 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.FlowInsensitive;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -48,7 +48,6 @@ import joeq.Compiler.Quad.JSRInfo;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
@@ -673,6 +672,7 @@ public class MethodSummary {
         static final boolean GLOBAL_TYPE_CONSTANTS = false;
         // use a single node for all like constants within a method.
         static final boolean MERGE_LOCAL_CONSTANTS = false;
+        public static boolean PATCH_UP_FAKE = false;
         Node handleConst(Const4Operand op, ProgramLocation pl) {
             return handleConst(op, pl, 0);
         }
@@ -996,11 +996,40 @@ public class MethodSummary {
             }
             
             // TODO: special-case allocations of HashMaps
-            
-            
-            
             Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
             setRegister(dest_r, n);
+
+            if(PATCH_UP_FAKE) {
+                joeq.Util.Templates.List.BasicBlock preds = bb.getPredecessors(); 
+                if(preds.size() == 1) {
+                    BasicBlock pred = preds.getBasicBlock(0);
+                    preds = pred.getPredecessors();
+                    if(preds.size() == 1) {
+                        pred = preds.getBasicBlock(0);
+                        joeq.Util.Templates.List.BasicBlock successors = pred.getSuccessors();
+                        if(successors.size() == 2) {
+                            Assert._assert(successors.contains(bb.getPredecessors().getBasicBlock(0)));
+                            BasicBlock other_bb = null;
+                            if(successors.getBasicBlock(0) == bb.getPredecessors().getBasicBlock(0)) {
+                                other_bb = successors.getBasicBlock(1);
+                            } else {
+                                other_bb = successors.getBasicBlock(0);
+                            }
+                            
+                            if(other_bb.size() == 2) {
+                                Quad quad = other_bb.getQuad(0);
+                                if(quad.getOperator() instanceof Operator.Invoke) {
+                                    jq_Method target = Operator.Invoke.getMethod(quad).getMethod();
+                                    if(target instanceof jq_FakeInstanceMethod || target instanceof jq_FakeStaticMethod) {
+                                        System.out.println("Setting return result of " + quad + " to " + n);
+                                        setRegister(Operator.Invoke.getDest(quad).getRegister(), n);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         /** Visit an array allocation instruction. */
@@ -2349,15 +2378,10 @@ public class MethodSummary {
         public jq_Reference getDeclaredType() { return type; }
         
         public String toString_long() {
-            return /*Integer.toHexString(this.hashCode())+": "+*/ toString_short()+super.toString_long();
+            return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long();
         }
         public String toString_short() {
             return (q==null?"":q.getEmacsName())+" Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
-//            return 
-//                getDeclaredType() + ":" + 
-//                getDefiningMethod().toString() + ":" + 
-//                q.toString() + ":" + 
-//                opn;            
         }
 
         public void write(Textualizer t) throws IOException {
@@ -2370,16 +2394,6 @@ public class MethodSummary {
             else t.writeString(opn.toString()+" ");
             t.writeObject(q);
             super.write(t);
-        }
-        
-        public static void main(String[] args) {
-            HostedVM.initialize();
-            joeq.ClassLib.ClassLibInterface.useJoeqClasslib(true);
-            
-            //readToStringResult("Character.java:738 Concrete: Character$UnicodeBlock @ 126");
-            //readToStringResult("10612: java.lang.String:java.io.BufferedInputStream.<clinit> ()V:java.io.BufferedInputStream.<clinit>() quad 3:0");
-            //readToStringResult("5047: java.lang.Character$UnicodeBlock:java.lang.Character$UnicodeBlock.<clinit> ()V:java.lang.Character$UnicodeBlock.<clinit>() quad 21:0");
-            //jq_Reference.parseType("java.lang.String");
         }
         
         public static ConcreteTypeNode read(StringTokenizer st) {

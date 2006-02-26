@@ -3512,6 +3512,7 @@ public class PA {
                         System.out.println("Adding the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
                         CodeCache.invalidate();
+                        MethodSummary.BuildMethodSummary.PATCH_UP_FAKE = true;
                     }
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
