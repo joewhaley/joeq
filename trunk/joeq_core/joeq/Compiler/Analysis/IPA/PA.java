@@ -5472,6 +5472,7 @@ public class PA {
                             
                             BDD h = H1.ithVar(h_i);
                             inlineSites.orWith(I.ithVar(c_i).and(h));
+                            addToVP(retBDD, node);
                         }
                     }
                 }
