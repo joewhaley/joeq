@@ -39,7 +39,6 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
-import joeq.Compiler.Quad.Operator.Move.MOVE_A;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.NameMunger;
 import joeq.Util.Templates.ListIterator;
@@ -51,7 +50,7 @@ import jwutil.util.Assert;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = true;
+    public static final boolean TRACE = false;
     public static final boolean TRACE_ORACLE = false;
     public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
