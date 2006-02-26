@@ -5206,7 +5206,7 @@ public class PA {
             }
             mC.orWith(m);
         }
-        if(INLINE_MAPS) {
+        if(INLINE_MAPS && CONTEXT_SENSITIVE) {
 //            saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath);            
         }
@@ -5438,11 +5438,7 @@ public class PA {
                 }
             }
             
-            if(callLoc == null){
-                System.err.println("No match for " + callSite);
-                // TODO: check that these are the calls that neen not be preserved
-                continue;
-            }
+            Assert._assert(callLoc != null);
             jq_Method method = callLoc.getMethod();
             int c_i = Imap.get(callLoc);
             jq_Method target = Invoke.getMethod(callSite).getMethod();
@@ -5465,8 +5461,7 @@ public class PA {
                         Quad q = ((QuadProgramLocation) pl).getQuad();
                         if(q == alloc) {
                             if(TRACE_INLINING) System.out.println("INLINING: Found an inlined allocation site in method " + method);                            
-                            int h_i = Hmap.get(node);
-                            
+                            int h_i = Hmap.get(node);                            
                             if(TRACE_INLINING) System.out.println("INLINING: Mapping " + c_i + " to " + h_i);
                             
                             BDD h = H1.ithVar(h_i);
@@ -5476,11 +5471,8 @@ public class PA {
                     }
                 }
             }
-            
         }
-        bdd_save(dumpPath+"inlineSites.bdd", inlineSites);        
-        //System.out.println("498:\t" + Imap.get(498).getClass());
-        //System.out.println("1163:\t" + Imap.get(1163).getClass());
+        bdd_save(dumpPath+"inlineSites.bdd", inlineSites);
     }
 
     class Dummy implements Textualizable {
