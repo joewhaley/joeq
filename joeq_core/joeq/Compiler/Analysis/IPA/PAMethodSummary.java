@@ -32,6 +32,7 @@ import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.MethodInline.InlineSelectedCalls;
 import joeq.Main.HostedVM;
 import jwutil.collections.Pair;
 import jwutil.util.Assert;
@@ -193,7 +194,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             return;
         }
         
-        if (TRACE) out.println("Visiting method summary "+ms);
+        if (TRACE) 
+            out.println("Visiting method summary "+ms);
         
         if (m.isSynchronized() && !m.isStatic()) {
             pa.addToSync(ms.getParamNode(0));
@@ -308,6 +310,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 }
                 pa.addToActual(I_bdd, 0, thisptr);
             }            
+            
+            //if(InlineSelectedCalls.)
             
             Collection/*<jq_Method>*/ targets = null;
             if(pa.USE_REFLECTION_PROVIDER && ReflectionInformationProvider.isNewInstance(target)){                
