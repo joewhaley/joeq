@@ -39,6 +39,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
+import joeq.Compiler.Quad.Operator.Move.MOVE_A;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.NameMunger;
 import joeq.Util.Templates.ListIterator;
@@ -595,6 +596,17 @@ outer:
         BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
         if(replacementQuad != null) {
             bb_fail.appendQuad(replacementQuad);
+        
+            // add an extra assignement quad
+            {
+                RegisterOperand src_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
+                RegisterOperand dst_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
+                Quad extra_move = Move.create(
+                                        caller.getNewQuadID(), 
+                                        Operator.Move.MOVE_A.INSTANCE, 
+                                        dst_op, src_op);
+                bb_fail.appendQuad(extra_move);
+            }
         }
         Quad q2 = Goto.create(caller.getNewQuadID(),
                               Goto.GOTO.INSTANCE,
@@ -746,6 +758,16 @@ outer:
           BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
           if(replacementQuad != null) {
               bb_fail.appendQuad(replacementQuad);
+              // add an extra assignment quad
+              {
+              RegisterOperand src_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
+              RegisterOperand dst_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
+              Quad extra_move = Move.create(
+                                      caller.getNewQuadID(), 
+                                      Operator.Move.MOVE_A.INSTANCE, 
+                                      dst_op, src_op);
+              bb_fail.appendQuad(extra_move);
+              }
           }
           Quad q2 = Goto.create(caller.getNewQuadID(),
                                 Goto.GOTO.INSTANCE,
@@ -902,7 +924,7 @@ outer:
 
         // create failsafe case block
         BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
-        bb_fail.appendQuad(invokeQuad);
+        bb_fail.appendQuad(invokeQuad);    
         Quad q2 = Goto.create(caller.getNewQuadID(),
                               Goto.GOTO.INSTANCE,
                               new TargetOperand(successor_bb));

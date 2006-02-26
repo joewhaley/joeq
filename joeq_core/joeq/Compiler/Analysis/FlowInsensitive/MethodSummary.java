@@ -1000,6 +1000,7 @@ public class MethodSummary {
             setRegister(dest_r, n);
 
             if(PATCH_UP_FAKE) {
+                // pattern-match inlined allocation sites
                 joeq.Util.Templates.List.BasicBlock preds = bb.getPredecessors(); 
                 if(preds.size() == 1) {
                     BasicBlock pred = preds.getBasicBlock(0);
@@ -1016,13 +1017,16 @@ public class MethodSummary {
                                 other_bb = successors.getBasicBlock(0);
                             }
                             
-                            if(other_bb.size() == 2) {
+                            if(other_bb.size() == 3) {
                                 Quad quad = other_bb.getQuad(0);
                                 if(quad.getOperator() instanceof Operator.Invoke) {
                                     jq_Method target = Operator.Invoke.getMethod(quad).getMethod();
                                     if(target instanceof jq_FakeInstanceMethod || target instanceof jq_FakeStaticMethod) {
-                                        System.out.println("Setting return result of " + quad + " to " + n);
-                                        setRegister(Operator.Invoke.getDest(quad).getRegister(), n);
+                                        Quad moveQuad = other_bb.getQuad(1);
+                                        Assert._assert(moveQuad.getOperator() instanceof Operator.Move);
+                                        Register src_reg = ((RegisterOperand)Operator.Move.getSrc(moveQuad)).getRegister();
+                                        setRegister(src_reg, n);
+                                        System.out.println("Setting return result of " + moveQuad + " to " + n);                                        
                                     }
                                 }
                             }
