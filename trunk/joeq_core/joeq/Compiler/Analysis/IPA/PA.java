@@ -33,6 +33,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -5206,10 +5207,10 @@ public class PA {
             }
             mC.orWith(m);
         }
-//        if(INLINE_MAPS) {
+        if(INLINE_MAPS) {
 //            saveRemovedCalls(dumpPath);            
-//            saveInlinedSites(dumpPath, vP0);            
-//        }
+            saveInlinedSites(dumpPath);            
+        }
         bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
         bdd_save(dumpPath+"vP0.bdd", vP0);
         bdd_save(dumpPath+"hP0.bdd", hP);
@@ -5418,23 +5419,20 @@ public class PA {
 //        return i.intValue();
 //    }
     
-    void saveInlinedSites(String dumpPath, BDD vP0) throws IOException {
+    void saveInlinedSites(String dumpPath) throws IOException {
         if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " triples");
-        for(Iterator iter = inlinedSites.iterator(); iter.hasNext();){
-            Triple t = (Triple) iter.next();
-            Quad alloc = (Quad) t.left;
-            Quad callSite = (Quad) t.middle;
-            callSite = InlineMapping.map(callSite);
-            jq_Method method = (jq_Method) t.right;
-//            
-            ProgramLocation callLoc = null; //InlineMapping.getOriginalQuad(callSite);
-            Quad newQuad = InlineMapping.getOriginalQuad(callSite);
+        for(Iterator iter = InlineMapping.fakeMap.entrySet().iterator(); iter.hasNext();){
+            Map.Entry e     = (Entry) iter.next(); 
+            Quad alloc      = (Quad) e.getValue();
+            Quad callSite   = (Quad) e.getKey();
+            
+            ProgramLocation callLoc = null;
             for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
                 ProgramLocation loc = (ProgramLocation) iMapIter.next();
    
                 if (loc instanceof QuadProgramLocation) {
                     QuadProgramLocation qpl = (QuadProgramLocation) loc;
-                    if(qpl.getQuad() == newQuad/* && qpl.getMethod() == method*/){
+                    if(qpl.getQuad() == callSite /* && qpl.getMethod() == method*/){
                         callLoc = qpl;                            
                         break;
                     }
@@ -5442,13 +5440,13 @@ public class PA {
             }
             
             if(callLoc == null){
-                System.err.println("No match for " + callSite + ", " + method);
+                System.err.println("No match for " + callSite);
                 // TODO: check that these are the calls that neen not be preserved
                 continue;
             }
-            
+            jq_Method method = callLoc.getMethod();
             int c_i = Imap.get(callLoc);
-            jq_Method target = Invoke.getMethod(newQuad).getMethod();
+            jq_Method target = Invoke.getMethod(callSite).getMethod();
             addToIE(I.ithVar(c_i), target);
             BDD retBDD = Iret.and(I.ithVar(c_i));
             System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            

@@ -44,6 +44,7 @@ import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.ExceptionHandler;
+import joeq.Compiler.Quad.InlineMapping;
 import joeq.Compiler.Quad.JSRInfo;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
@@ -51,6 +52,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
+import joeq.Compiler.Quad.MethodInline.InliningDecision;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.Const4Operand;
 import joeq.Compiler.Quad.Operand.PConstOperand;
@@ -1017,16 +1019,15 @@ public class MethodSummary {
                                 other_bb = successors.getBasicBlock(0);
                             }
                             
-                            if(other_bb.size() == 3) {
+                            if(other_bb.size() == 2) {
                                 Quad quad = other_bb.getQuad(0);
                                 if(quad.getOperator() instanceof Operator.Invoke) {
                                     jq_Method target = Operator.Invoke.getMethod(quad).getMethod();
                                     if(target instanceof jq_FakeInstanceMethod || target instanceof jq_FakeStaticMethod) {
-                                        Quad moveQuad = other_bb.getQuad(1);
-                                        Assert._assert(moveQuad.getOperator() instanceof Operator.Move);
-                                        Register src_reg = ((RegisterOperand)Operator.Move.getSrc(moveQuad)).getRegister();
-                                        setRegister(src_reg, n);
-                                        System.out.println("Setting return result of " + moveQuad + " to " + n);                                        
+                                        Quad callQuad = other_bb.getQuad(0);
+                                        Assert._assert(callQuad.getOperator() instanceof Operator.Invoke);                                        
+                                        System.out.println("Found return result of " + callQuad);
+                                        InlineMapping.rememberFake(callQuad, obj);
                                     }
                                 }
                             }

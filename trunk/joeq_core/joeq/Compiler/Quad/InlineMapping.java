@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 
 public class InlineMapping {
     private static Map _map = new HashMap();
+    public static HashMap fakeMap = new HashMap();
 
     public static Quad getOriginalQuad(Quad newQuad) {
         Quad oldQuad = null;
@@ -56,5 +57,10 @@ public class InlineMapping {
 
     public static Quad map(Quad callSite) {
         return (Quad) _map.get(callSite);
+    }
+
+    public static void rememberFake(Quad callQuad, Quad newQuad) {
+        fakeMap.put(callQuad, newQuad);
+        
     }
 }
