@@ -595,18 +595,8 @@ outer:
         // create failsafe case block
         BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
         if(replacementQuad != null) {
-            bb_fail.appendQuad(replacementQuad);
-        
-            // add an extra assignement quad
-            {
-                RegisterOperand src_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
-                RegisterOperand dst_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
-                Quad extra_move = Move.create(
-                                        caller.getNewQuadID(), 
-                                        Operator.Move.MOVE_A.INSTANCE, 
-                                        dst_op, src_op);
-                bb_fail.appendQuad(extra_move);
-            }
+            bb_fail.appendQuad(replacementQuad);        
+            
         }
         Quad q2 = Goto.create(caller.getNewQuadID(),
                               Goto.GOTO.INSTANCE,
@@ -758,16 +748,6 @@ outer:
           BasicBlock bb_fail = caller.createBasicBlock(1, 1, 2, bb.getExceptionHandlers());
           if(replacementQuad != null) {
               bb_fail.appendQuad(replacementQuad);
-              // add an extra assignment quad
-              {
-              RegisterOperand src_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
-              RegisterOperand dst_op = new RegisterOperand(Invoke.getDest(replacementQuad).getRegister(), Invoke.getDest(replacementQuad).getType());
-              Quad extra_move = Move.create(
-                                      caller.getNewQuadID(), 
-                                      Operator.Move.MOVE_A.INSTANCE, 
-                                      dst_op, src_op);
-              bb_fail.appendQuad(extra_move);
-              }
           }
           Quad q2 = Goto.create(caller.getNewQuadID(),
                                 Goto.GOTO.INSTANCE,
