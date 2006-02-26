@@ -5121,7 +5121,6 @@ public class PA {
         // difference in compatibility
         BDD S0 = S.exist(V1cV2cset);
         BDD L0 = L.exist(V1cV2cset);        
-        BDD vP0 = vP.exist(V1cH1cset);
         
         String dumpPath = System.getProperty("pa.dumppath", "");
         if (dumpPath.length() > 0) {
@@ -5212,7 +5211,7 @@ public class PA {
             saveInlinedSites(dumpPath);            
         }
         bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
-        bdd_save(dumpPath+"vP0.bdd", vP0);
+        bdd_save(dumpPath+"vP0.bdd", vP.exist(V1cH1cset));
         bdd_save(dumpPath+"hP0.bdd", hP);
         bdd_save(dumpPath+"L.bdd", L0);
         bdd_save(dumpPath+"S.bdd", S0);
