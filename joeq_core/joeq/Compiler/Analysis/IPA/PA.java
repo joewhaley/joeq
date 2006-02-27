@@ -5244,7 +5244,7 @@ public class PA {
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null) {
             CallGraph cg = new PACallGraph(this);
-            numberPaths(cg, ocg, false);
+            //numberPaths(cg, ocg, false);
             calculateIEfilter(cg);
             bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
         }
@@ -5441,16 +5441,16 @@ public class PA {
             Assert._assert(callLoc != null);
             jq_Method method = callLoc.getMethod();
             int c_i = Imap.get(callLoc);
-            jq_Method target = Invoke.getMethod(callSite).getMethod();
-            addToIE(I.ithVar(c_i), target);
+            //jq_Method target = Invoke.getMethod(callSite).getMethod();
+            //addToIE(I.ithVar(c_i), target);
             BDD retBDD = Iret.and(I.ithVar(c_i));
             System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            
             //BigInteger i = retBDD.scanVar(V1);
             System.out.println("Iret for " + c_i + " is " + 
                 callLoc + " -> " + retBDD.toStringWithDomains());            
-            BDD mBDD = IE.and(I.ithVar(c_i));
-            System.out.println("IE for " + c_i + " is " + 
-                callLoc + " -> " + mBDD.toStringWithDomains());
+            //BDD mBDD = IE.and(I.ithVar(c_i));
+            //System.out.println("IE for " + c_i + " is " + 
+            //    callLoc + " -> " + mBDD.toStringWithDomains());
             
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
                 MethodSummary.Node node = (Node) heapIter.next();
@@ -5466,7 +5466,7 @@ public class PA {
                             
                             BDD h = H1.ithVar(h_i);
                             inlineSites.orWith(I.ithVar(c_i).and(h));
-                            addToVP(retBDD, node);
+                            //addToVP(retBDD, node);
                         }
                     }
                 }
