@@ -5243,10 +5243,10 @@ public class PA {
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null) {
-            CallGraph cg = new PACallGraph(this);
-            //numberPaths(cg, ocg, false);
-            calculateIEfilter(cg);
-            bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
+//            cg = new PACallGraph(this);            
+//            numberPaths(cg, ocg, true);
+//            calculateIEfilter(cg);
+//            bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
         }
         bdd_save(dumpPath+"roots.bdd", getRoots());
         
