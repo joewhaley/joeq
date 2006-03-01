@@ -3510,7 +3510,7 @@ public class PA {
                         CodeCache.addDefaultPass(new MethodInline(dis));
                         CodeCache.invalidate();
                         MethodSummary.BuildMethodSummary.PATCH_UP_FAKE = true;
-                        SCCPathNumbering.TRACE_NUMBERING = false;
+                        //SCCPathNumbering.TRACE_NUMBERING = false;
 //                        dis.DISCOVER_CALL_GRAPH = true;
                         dis.DUMP_INITIAL        = false;
                         dis.SKIP_SOLVE          = false;
