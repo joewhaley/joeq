@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.Map.Entry;
+import java.io.IOException;
 import java.math.BigInteger;
 import jwutil.collections.IndexMap;
 import jwutil.collections.Pair;
@@ -32,9 +34,8 @@ import jwutil.util.Assert;
  * @author jwhaley
  */
 public class SCCPathNumbering extends PathNumbering {
-
     public static final boolean PRINT_BIGGEST = false;
-    public static final boolean TRACE_NUMBERING = false;
+    public static /*final*/ boolean TRACE_NUMBERING = false;
     public static final boolean TRACE_PATH = false;
     public static final boolean VERIFY_ASSERTIONS = false;
 
@@ -84,6 +85,16 @@ public class SCCPathNumbering extends PathNumbering {
         this.navigator = navigator;
         graph = SCCTopSortedGraph.topSort(sccs);
         if (TRACE_NUMBERING) System.out.print("done.");
+        if (TRACE_NUMBERING) System.out.print("Root SCCs: " + sccs);
+        
+        DumpDotGraph ddg = new DumpDotGraph();
+        ddg.setNavigator(graph.getNavigator());
+        ddg.setNodeSet(new HashSet(graph.list()));
+        try {
+            ddg.dump("out.txt");
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
         
         SCComponent scc = graph.getFirst();
         while (scc != null) {
@@ -93,6 +104,13 @@ public class SCCPathNumbering extends PathNumbering {
             ++num_scc;
         }
         if (TRACE_NUMBERING) System.out.println("Max SCC="+max_scc+", Num SCC="+num_scc);
+        
+        if (TRACE_NUMBERING) {
+            for(Iterator iter = this.nodeToScc.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry e = (Entry) iter.next();
+                System.out.println(e.getKey() + "\t->\t" + e.getValue());
+            }
+        }
         
         /* Walk through SCCs in forward order. */
         scc = graph.getFirst();
@@ -180,6 +198,9 @@ public class SCCPathNumbering extends PathNumbering {
     }
     
     private void addEdges(SCComponent scc1) {
+        if(scc1.getId() == 36 || scc1.getId() == 14) {
+            System.out.println("HERE");
+        }
         if (TRACE_NUMBERING) System.out.println("Adding edges SCC"+scc1.getId());
         Range r1 = (Range) sccNumbering.get(scc1);
         if (scc1.prevLength() == 0) {
