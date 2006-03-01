@@ -40,11 +40,11 @@ public class PACallGraph extends CallGraph {
     
     public PACallGraph(PA pa) {
         this.bdd = pa.bdd;
-        this.M = pa.M;
+        this.M = pa.M; 
         this.I = pa.I;
         this.roots = pa.rootMethods;
         this.visited = pa.visited;
-        //this.IE = pa.IE.exist(pa.V1cV2cset);
+        //this.IE = pa.IEcs.exist(pa.V1cV2cset);
         this.IE = pa.IE;
         this.Mmap = pa.Mmap;
         this.Imap = pa.Imap;

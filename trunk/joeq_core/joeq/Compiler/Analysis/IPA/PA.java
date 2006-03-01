@@ -83,6 +83,7 @@ import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
 import jwutil.collections.Triple;
+import jwutil.graphs.DumpDotGraph;
 import jwutil.graphs.GlobalPathNumbering;
 import jwutil.graphs.Navigator;
 import jwutil.graphs.PathNumbering;
@@ -1086,6 +1087,7 @@ public class PA {
             BDD c = b.replace(V1ctoV2c);
             return c.andWith(b.id());
         } else if (CONTEXT_SENSITIVE) {
+            Assert._assert(vCnumbering != null);
             Range r = vCnumbering.getRange(m);
             if (r == null) {
                 System.out.println("Warning: "+m+" is not in the call graph. The call graph might not match the code.");
@@ -3212,7 +3214,7 @@ public class PA {
         
         System.out.println("Time spent initializing: "+(System.currentTimeMillis()-time)/1000.);
         
-        if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE || CARTESIAN_PRODUCT && false) {
+        if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE || CARTESIAN_PRODUCT) {
             Assert._assert(!SKIP_SOLVE);
             time = System.currentTimeMillis();
             iterate();
@@ -3499,21 +3501,21 @@ public class PA {
                
                     dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
-                    PA old = dis;
                     dis = new PA();
 
                     initialCallgraphFileName = callgraphFileName;
                     dis.cg = loadCallGraph(rootMethods);
-//                    dis.removedCalls = old.removedCalls;
-//                    dis.inlinedSites = old.inlinedSites;
-                    //dis.Imap = old.Imap;
-                    //dis.mV = old.mV;
-                    old = null;
                     if (dis.INLINE_MAPS) {
                         System.out.println("Adding the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
                         CodeCache.invalidate();
                         MethodSummary.BuildMethodSummary.PATCH_UP_FAKE = true;
+                        SCCPathNumbering.TRACE_NUMBERING = false;
+//                        dis.DISCOVER_CALL_GRAPH = true;
+                        dis.DUMP_INITIAL        = false;
+                        dis.SKIP_SOLVE          = false;
+                        dis.DUMP_RESULTS        = true;
+                        dis.DISCOVER_CALL_GRAPH = true;
                     }
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
@@ -4257,6 +4259,14 @@ public class PA {
         Map initialCounts = null; //new ThreadRootMap(thread_runs);
         BigInteger paths = null;
         if (pn != null) {
+            DumpDotGraph ddg = new DumpDotGraph();
+            ddg.setNavigator(cg.getNavigator());
+            ddg.setNodeSet(new HashSet(cg.getAllMethods()));
+            try {
+                ddg.dump("cg.txt");
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
             paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         }
         if (updateBits) {
@@ -4577,6 +4587,7 @@ public class PA {
     void calculateIEfilter(CallGraph cg) {
         IEfilter = bdd.zero();
         IEcs = bdd.zero();
+        if(TRACE) System.out.println("Roots: " + cg.getRoots());
         for (Iterator i = cg.getAllCallSites().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
             mc = LoadedCallGraph.mapCall(mc);
@@ -4591,6 +4602,13 @@ public class PA {
                     Range r_edge = vCnumbering.getEdge(p);
                     jq_Method m = mc.getMethod();
                     Range r_caller = vCnumbering.getRange(m);
+                    if(r_edge == null) {
+                        SCCPathNumbering sccNumbering = (SCCPathNumbering) vCnumbering;
+                        SCComponent scc = sccNumbering.getSCC(callee);
+                        SCComponent sccCallee = sccNumbering.getSCC(mc.getMethod());
+                        System.out.println("SCC: " + scc);
+                        System.out.println("SCCCalee: " + sccCallee);
+                    }
                     Assert._assert(r_edge != null, "No edge for " + p + " when considering " + mc);
                     Assert._assert(r_caller != null, "No range for " + mc.getMethod() + " when considering " + mc);
                     context = buildContextMap(V2c[0],
@@ -5243,10 +5261,14 @@ public class PA {
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null) {
-//            cg = new PACallGraph(this);            
-//            numberPaths(cg, ocg, true);
-//            calculateIEfilter(cg);
-//            bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
+            System.out.println(IE.toStringWithDomains());
+            
+            cg = new CachedCallGraph(new PACallGraph(this));
+            callgraphFileName = "callgraph2";
+            dumpCallGraph();
+            numberPaths(cg, ocg, true);
+            calculateIEfilter(cg);
+            bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
         }
         bdd_save(dumpPath+"roots.bdd", getRoots());
         
@@ -5443,6 +5465,7 @@ public class PA {
             int c_i = Imap.get(callLoc);
             jq_Method target = Invoke.getMethod(callSite).getMethod();
             addToIE(I.ithVar(c_i), target);
+            addToMI(M.ithVar(Mmap.get(target)), I.ithVar(c_i), target);
             BDD retBDD = Iret.and(I.ithVar(c_i));
             System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            
             //BigInteger i = retBDD.scanVar(V1);
