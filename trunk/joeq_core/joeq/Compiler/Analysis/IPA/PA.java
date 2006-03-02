@@ -3254,7 +3254,7 @@ public class PA {
                     dumpBDDRelations();
                     System.out.println("Dump took "+(System.currentTimeMillis()-time2)/1000.+"s");
                     if (DUMP_SSA) dumpSSA();
-                } catch (IOException x) {}
+                } catch (IOException x) {  }
             }
             if (SKIP_SOLVE) return;
             time = System.currentTimeMillis();
@@ -3532,7 +3532,8 @@ public class PA {
 
                     initialCallgraphFileName = callgraphFileName;                    
                     dis.cg = loadCallGraph(rootMethods);
-                                        
+                    rootMethods = dis.cg.getRoots();                    
+                    
                     if (dis.INLINE_MAPS) {
                         System.out.println("Adding the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
@@ -3544,11 +3545,15 @@ public class PA {
                         dis.SKIP_SOLVE          = false;
                         dis.DUMP_RESULTS        = true;
                         dis.DUMP_FLY            = false;
-                        dis.DISCOVER_CALL_GRAPH = false;
+                        dis.DISCOVER_CALL_GRAPH = true;
+                        dis.CONTEXT_SENSITIVE   = false;
+                        
+                        dis.run(null, rootMethods);
+                        return;                        
                     }
                     
                     //dis.cg = new PACallGraph(dis);
-                    rootMethods = dis.cg.getRoots();
+                    
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
                     dis.DISCOVER_CALL_GRAPH = true;
@@ -5248,7 +5253,7 @@ public class PA {
 //            saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath);            
         }
-        bdd_save(dumpPath+"IE0.bdd", IEcs.exist(V1cV2cset));        
+        bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
         bdd_save(dumpPath+"vP0.bdd", vP.exist(V1cH1cset));
         bdd_save(dumpPath+"hP0.bdd", hP);
         bdd_save(dumpPath+"L.bdd", L0);
@@ -5280,7 +5285,7 @@ public class PA {
 
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
-        if (IEfilter != null && CONTEXT_SENSITIVE) {
+        //if (IEfilter != null && CONTEXT_SENSITIVE) {
             //System.out.println(IE.toStringWithDomains());
          
             if(INLINE_MAPS) {
@@ -5291,7 +5296,7 @@ public class PA {
                 calculateIEfilter(cg);
             }
             bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
-        }
+        //}
         bdd_save(dumpPath+"roots.bdd", getRoots());
         
         if (V1c.length > 0 && H1c.length > 0) {
