@@ -693,20 +693,33 @@ public class PA {
         iterate();
         
         if(TRACE_NO_DEST) {
-            // find methods still without targets
-            for(Iterator iter = Imap.iterator(); iter.hasNext();){
-                ProgramLocation mc = (ProgramLocation) iter.next();
-                int I_i = Imap.get(mc);
-                BDD I_bdd = (BDD) I.ithVar(I_i);
-                BDD t = IE.relprod(I_bdd, Iset); 
+            traceNoDestanation();
+        }
+    }
+    /**
+     *  Finds invocation sites with no destinations.
+     */
+    void traceNoDestanation() {
+        System.out.println("IE consists of " + IE.satCount(Iset.and(Mset)) + " elements.");
+        for(Iterator iter = IE.iterator(Iset.and(Mset)); iter.hasNext(); ) {
+            BDD b = (BDD) iter.next();
+            int I_i = b.scanVar(I).intValue();
+            int M_i = b.scanVar(M).intValue();
+            System.out.println("\t" + I_i + "(" + Imap.get(I_i) + ")\t->\t" + "(" + Mmap.get(M_i) + ")");
+            b.free();
+        }
+        for(Iterator iter = Imap.iterator(); iter.hasNext();){
+            ProgramLocation mc = (ProgramLocation) iter.next();
+            int I_i = Imap.get(mc);
+            BDD I_bdd = (BDD) I.ithVar(I_i);
+            BDD t = IE.relprod(I_bdd, Iset); 
+            
+            if(t.isZero()){                
+                System.out.println("No destination for " + I_i + "(" + mc.toStringLong() + ")");
                 
-                if(t.isZero()){                
-                    System.out.println("Still no destination for " + mc.toStringLong());
-                    
-                }
-                t.free();
-                I_bdd.free();
             }
+            t.free();
+            I_bdd.free();
         }
     }
     
@@ -1067,6 +1080,10 @@ public class PA {
         for (Iterator i = newMethodSummaries.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             jq_Method m = (jq_Method) e.getKey();
+            if(m instanceof jq_FakeInstanceMethod || m instanceof jq_FakeStaticMethod) {
+                System.out.println("Skipping fake " + m);
+                continue;
+            }
             PAMethodSummary s = (PAMethodSummary) e.getValue();
             BDD V1V2context = getV1V2Context(m);
             BDD V1H1context = getV1H1Context(m);
@@ -1081,7 +1098,7 @@ public class PA {
     Map rangeMap;
     
     public BDD getV1V2Context(jq_Method m) {
-        m = unfake(m);
+        //m = unfake(m);
         if (THREAD_SENSITIVE) {
             BDD b = (BDD) V1H1correspondence.get(m);
             BDD c = b.replace(V1ctoV2c);
@@ -2844,7 +2861,10 @@ public class PA {
         if (TRACE_SOLVER) out.println("Handling new target methods...");
         BDD targets = IE.exist(Iset); // IxM -> M
         targets.applyWith(visited.id(), BDDFactory.diff);
-        if (targets.isZero()) return false;
+        if (targets.isZero()) {
+            //System.err.println("No targets");
+            return false;  
+        } 
         if (TRACE_SOLVER) out.println("New target methods: "+targets.satCount(Mset));
         while (!targets.isZero()) {
             BDD target = targets.satOne(Mset, false);
@@ -3097,7 +3117,8 @@ public class PA {
     }
     
     public void run(CallGraph cg, Collection rootMethods) throws IOException {
-        run(null, cg, rootMethods);
+        //run(null, cg, rootMethods);
+        run("buddy", cg, rootMethods);
     }
     public void run(String bddfactory, CallGraph cg, Collection rootMethods) throws IOException {
         addDefaults();
@@ -3217,8 +3238,12 @@ public class PA {
         if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE || CARTESIAN_PRODUCT) {
             Assert._assert(!SKIP_SOLVE);
             time = System.currentTimeMillis();
+            if(CONTEXT_SENSITIVE) {
+                //visited = bdd.zero();
+            }
             iterate();
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
+            traceNoDestanation();
         } else {
             if (DUMP_INITIAL) {
                 buildTypes();
@@ -3258,7 +3283,8 @@ public class PA {
         if (DUMP_RESULTS) {
             System.out.println("Writing results...");
             time = System.currentTimeMillis();
-            dumpResults(resultsFileName);
+            //dumpResults(resultsFileName);
+            dumpBDDRelations();
             System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
         }
     }
@@ -3499,12 +3525,14 @@ public class PA {
                     dis.SKIP_SOLVE = false;
                     dis.DUMP_FLY = false;
                
-                    dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
+                    dis.run("java", dis.cg, rootMethods);
+                    dis.traceNoDestanation();
                     dis = new PA();
 
-                    initialCallgraphFileName = callgraphFileName;
+                    initialCallgraphFileName = callgraphFileName;                    
                     dis.cg = loadCallGraph(rootMethods);
+                                        
                     if (dis.INLINE_MAPS) {
                         System.out.println("Adding the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
@@ -3515,8 +3543,10 @@ public class PA {
                         dis.DUMP_INITIAL        = false;
                         dis.SKIP_SOLVE          = false;
                         dis.DUMP_RESULTS        = true;
-                        dis.DISCOVER_CALL_GRAPH = true;
+                        dis.DUMP_FLY            = false;
+                        dis.DISCOVER_CALL_GRAPH = false;
                     }
+                    
                     //dis.cg = new PACallGraph(dis);
                     rootMethods = dis.cg.getRoots();
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
@@ -3533,24 +3563,7 @@ public class PA {
                 dis.cg = new CachedCallGraph(dis.cg);
             }
         }
-        //return;
-        
-//        if (dis.INLINE_MAPS) {
-////            CodeCache.invalidate();
-////            
-////            //((CachedCallGraph) dis.cg).invalidateCache();
-////            System.out.println("Writing call graph...");
-////            long time = System.currentTimeMillis();
-////            BufferedWriter dos = null;
-////            try {
-////                dos = new BufferedWriter(new FileWriter(callgraphFileName + "2"));
-////                LoadedCallGraph.write(dis.cg, dos);
-////            } finally {
-////                if (dos != null) dos.close();
-////            }
-////            System.out.println("Time spent writing: " + (System.currentTimeMillis() - time) / 1000.);
-////            dis.cg = new PACallGraph(dis);
-//        }
+        //return;        
  
         dis.run(dis.cg, rootMethods);
 
@@ -4594,7 +4607,7 @@ public class PA {
 
             int I_i = Imap.get(mc);
             for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
-                jq_Method callee = (jq_Method) j.next();
+                jq_Method callee = /*unfake*/((jq_Method) j.next());
                 int M_i = Mmap.get(callee);
                 BDD context;
                 if (CONTEXT_SENSITIVE) {
@@ -4608,6 +4621,10 @@ public class PA {
                         SCComponent sccCallee = sccNumbering.getSCC(mc.getMethod());
                         System.out.println("SCC: " + scc);
                         System.out.println("SCCCalee: " + sccCallee);
+                        BDD t = IE.andWith(M.ithVar(Mmap.get(callee)).andWith(I.ithVar(Imap.get(mc))));
+                        if(t.isZero()) {
+                            System.err.println("Edge " + p + " is missing from IE");
+                        }
                     }
                     Assert._assert(r_edge != null, "No edge for " + p + " when considering " + mc);
                     Assert._assert(r_caller != null, "No range for " + mc.getMethod() + " when considering " + mc);
@@ -4630,7 +4647,7 @@ public class PA {
     
     BDDPairing V1ctoH1c;
     public BDD getV1H1Context(jq_Method m) {
-        m = unfake(m);
+        //m = unfake(m);
         if (THREAD_SENSITIVE) {
             BDD b = (BDD) V1H1correspondence.get(m);
             if (b == null) System.out.println("Unknown method "+m);
@@ -5115,13 +5132,16 @@ public class PA {
         fakeMethods.put(newMethod, m);
     }
     
-    jq_Method unfake(jq_Method m) {
-        if(m instanceof jq_FakeInstanceMethod || m instanceof jq_FakeStaticMethod) {
-            return (jq_Method) fakeMethods.get(m);
-        } else {
-            return m;
-        }
-    }
+    /**
+     * Converts a fake methods to the original one it came from.
+     * */
+//    jq_Method unfake(jq_Method m) {
+//        if(m instanceof jq_FakeInstanceMethod || m instanceof jq_FakeStaticMethod) {
+//            return (jq_Method) fakeMethods.get(m);
+//        } else {
+//            return m;
+//        }
+//    }
     
     public void dumpBDDRelations() throws IOException {
         if (FULL_CHA) {
@@ -5228,7 +5248,7 @@ public class PA {
 //            saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath);            
         }
-        bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
+        bdd_save(dumpPath+"IE0.bdd", IEcs.exist(V1cV2cset));        
         bdd_save(dumpPath+"vP0.bdd", vP.exist(V1cH1cset));
         bdd_save(dumpPath+"hP0.bdd", hP);
         bdd_save(dumpPath+"L.bdd", L0);
@@ -5260,14 +5280,16 @@ public class PA {
 
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
-        if (IEfilter != null) {
-            System.out.println(IE.toStringWithDomains());
-            
-            cg = new CachedCallGraph(new PACallGraph(this));
-            callgraphFileName = "callgraph2";
-            dumpCallGraph();
-            numberPaths(cg, ocg, true);
-            calculateIEfilter(cg);
+        if (IEfilter != null && CONTEXT_SENSITIVE) {
+            //System.out.println(IE.toStringWithDomains());
+         
+            if(INLINE_MAPS) {
+                cg = new CachedCallGraph(new PACallGraph(this));
+    //            callgraphFileName = "callgraph2";
+    //            dumpCallGraph();
+                numberPaths(cg, ocg, true);
+                calculateIEfilter(cg);
+            }
             bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
         }
         bdd_save(dumpPath+"roots.bdd", getRoots());
@@ -5465,7 +5487,7 @@ public class PA {
             int c_i = Imap.get(callLoc);
             jq_Method target = Invoke.getMethod(callSite).getMethod();
             addToIE(I.ithVar(c_i), target);
-            addToMI(M.ithVar(Mmap.get(target)), I.ithVar(c_i), target);
+            //addToMI(M.ithVar(Mmap.get(target)), I.ithVar(c_i), target);
             BDD retBDD = Iret.and(I.ithVar(c_i));
             System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            
             //BigInteger i = retBDD.scanVar(V1);
