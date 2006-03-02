@@ -5291,8 +5291,8 @@ public class PA {
          
             if(INLINE_MAPS) {
                 cg = new CachedCallGraph(new PACallGraph(this));
-    //            callgraphFileName = "callgraph2";
-    //            dumpCallGraph();
+                callgraphFileName = "callgraph_inlined";
+                dumpCallGraph();
                 numberPaths(cg, ocg, true);
                 calculateIEfilter(cg);
             }
