@@ -195,7 +195,7 @@ public class PA {
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
-    final boolean INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
+    boolean INLINE_MAPS = false;
     
     boolean USE_VCONTEXT;
     boolean USE_HCONTEXT;
@@ -3534,10 +3534,11 @@ public class PA {
                     dis.cg = loadCallGraph(rootMethods);
                     rootMethods = dis.cg.getRoots();                    
                     
+                    dis.INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
                     if (dis.INLINE_MAPS) {
                         System.out.println("Adding the inlining pass");
                         CodeCache.addDefaultPass(new MethodInline(dis));
-                        CodeCache.invalidate();
+                        CodeCache.invalidate();                        
                         MethodSummary.BuildMethodSummary.PATCH_UP_FAKE = true;
                         //SCCPathNumbering.TRACE_NUMBERING = false;
 //                        dis.DISCOVER_CALL_GRAPH = true;
@@ -5249,7 +5250,7 @@ public class PA {
             }
             mC.orWith(m);
         }
-        if(INLINE_MAPS && CONTEXT_SENSITIVE) {
+        if(INLINE_MAPS/* && CONTEXT_SENSITIVE*/) {
 //            saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath);            
         }
