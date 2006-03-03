@@ -44,6 +44,7 @@ public class CodeCache {
     protected ControlFlowGraph _get(jq_Method m) {
         ControlFlowGraph cfg = (ControlFlowGraph)map.get(m);
         if (cfg == null) {
+            System.out.println("Creating representation for " + m);
             if (TRACE) System.out.println("Generating quads for "+m);
             BytecodeToQuad b2q = new BytecodeToQuad(m);
             cfg = b2q.convert();
