@@ -3550,7 +3550,7 @@ public class PA {
                         dis.DISCOVER_CALL_GRAPH = true;
                         dis.CONTEXT_SENSITIVE   = false;
                         
-                        dis.run(null, rootMethods);
+                        dis.run("java", null, rootMethods);
                         
                         // remember the methods
                         List methods = Traversals.postOrder(dis.cg.getNavigator(), rootMethods);
