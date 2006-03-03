@@ -3556,6 +3556,7 @@ public class PA {
                         List methods = Traversals.postOrder(dis.cg.getNavigator(), rootMethods);
                         
                         dis = new PA();
+                        dis.INLINE_MAPS         = true;
                         dis.DUMP_INITIAL        = false;
                         dis.SKIP_SOLVE          = false;
                         dis.DUMP_RESULTS        = true;
@@ -3564,6 +3565,7 @@ public class PA {
                         dis.CONTEXT_SENSITIVE   = false;                        
                         
                         CodeCache.invalidate();
+                        InlineMapping.invalidate();
                         for(Iterator iter = methods.iterator(); iter.hasNext();) {
                             jq_Method m = (jq_Method) iter.next();
                             if(m.getBytecode() != null) {
@@ -5509,7 +5511,7 @@ public class PA {
                 }
             }
             
-            Assert._assert(callLoc != null);
+            Assert._assert(callLoc != null, "No location corresponds to " + callSite);
             jq_Method method = callLoc.getMethod();
             int c_i = Imap.get(callLoc);
             jq_Method target = Invoke.getMethod(callSite).getMethod();
