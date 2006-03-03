@@ -3565,6 +3565,8 @@ public class PA {
                         dis.CONTEXT_SENSITIVE   = false;                        
                         
                         CodeCache.invalidate();
+                        CodeCache.clearDefaultPasses();
+                        CodeCache.addDefaultPass(new MethodInline(dis));
                         InlineMapping.invalidate();
                         for(Iterator iter = methods.iterator(); iter.hasNext();) {
                             jq_Method m = (jq_Method) iter.next();
@@ -5274,7 +5276,7 @@ public class PA {
             mC.orWith(m);
         }
         if(INLINE_MAPS/* && CONTEXT_SENSITIVE*/) {
-//            saveRemovedCalls(dumpPath);            
+            saveRemovedCalls(dumpPath);            
             saveInlinedSites(dumpPath);            
         }
         bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
@@ -5477,7 +5479,7 @@ public class PA {
         for(Iterator iter = removedCalls.iterator(); iter.hasNext();){
             ProgramLocation call = (ProgramLocation) iter.next();
             int i = Imap.get(call);
-
+            if(TRACE_INLINING) System.out.println("Removing " + call);
             removeCalls.orWith(I.ithVar(i));
         }
         bdd_save(dumpPath+"removeCalls.bdd", removeCalls);

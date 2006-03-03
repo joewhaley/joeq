@@ -40,6 +40,10 @@ public class CodeCache {
     public static void addDefaultPass(ControlFlowGraphVisitor pass) {
         passes.add(pass);
     }
+
+    public static void clearDefaultPasses() {
+        passes.clear();        
+    }
     
     protected ControlFlowGraph _get(jq_Method m) {
         ControlFlowGraph cfg = (ControlFlowGraph)map.get(m);
@@ -57,6 +61,7 @@ public class CodeCache {
             }
             System.out.println("Done creating representation for " + m);            
         }
+        //if(m.getName().toString().)
         return cfg;
     }
 
