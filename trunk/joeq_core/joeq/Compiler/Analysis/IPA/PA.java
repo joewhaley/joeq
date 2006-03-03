@@ -1092,8 +1092,6 @@ public class PA {
             if (V1H1context != null) V1H1context.free();
             s.free();
             i.remove();
-            // print the method summary
-            System.out.println(s.toString());
         }
     }
     
