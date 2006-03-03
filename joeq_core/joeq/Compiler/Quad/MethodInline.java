@@ -50,7 +50,7 @@ import jwutil.util.Assert;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = false;
+    public static final boolean TRACE = true;
     public static final boolean TRACE_ORACLE = false;
     public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
@@ -148,9 +148,17 @@ public class MethodInline implements ControlFlowGraphVisitor {
                     " with a call to " + fakeOperand.getMethod());
             }
             if(q.getOperator() instanceof InvokeStatic) {
-                inlineNonVirtualCallSiteReplacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
+                if(fakeCallQuad != null) {
+                    inlineNonVirtualCallSiteReplacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
+                } else {
+                    inlineNonVirtualCallSite(caller, bb, q, callee, false);
+                }
             } else {
-                inlineVirtualCallSiteWithTypeCheckRepacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
+                if(fakeCallQuad != null) {
+                    inlineVirtualCallSiteWithTypeCheckRepacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
+                } else {
+                    inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType, false);
+                }
             }
         }
         public String toString() { return callee.getMethod().toString(); }
