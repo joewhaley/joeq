@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.Map.Entry;
+import org.omg.IOP.Codec;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -3243,7 +3244,7 @@ public class PA {
             }
             iterate();
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
-            traceNoDestanation();
+            //traceNoDestanation();
         } else {
             if (DUMP_INITIAL) {
                 buildTypes();
@@ -3527,7 +3528,7 @@ public class PA {
                
                     System.out.println("Finished discovering call graph.");
                     dis.run("java", dis.cg, rootMethods);
-                    dis.traceNoDestanation();
+                    //dis.traceNoDestanation();
                     dis = new PA();
 
                     initialCallgraphFileName = callgraphFileName;                    
@@ -3544,11 +3545,31 @@ public class PA {
 //                        dis.DISCOVER_CALL_GRAPH = true;
                         dis.DUMP_INITIAL        = false;
                         dis.SKIP_SOLVE          = false;
-                        dis.DUMP_RESULTS        = true;
+                        dis.DUMP_RESULTS        = false;
                         dis.DUMP_FLY            = false;
                         dis.DISCOVER_CALL_GRAPH = true;
                         dis.CONTEXT_SENSITIVE   = false;
                         
+                        dis.run(null, rootMethods);
+                        
+                        // remember the methods
+                        List methods = Traversals.postOrder(dis.cg.getNavigator(), rootMethods);
+                        
+                        dis = new PA();
+                        dis.DUMP_INITIAL        = false;
+                        dis.SKIP_SOLVE          = false;
+                        dis.DUMP_RESULTS        = true;
+                        dis.DUMP_FLY            = false;
+                        dis.DISCOVER_CALL_GRAPH = true;
+                        dis.CONTEXT_SENSITIVE   = false;                        
+                        
+                        CodeCache.invalidate();
+                        for(Iterator iter = methods.iterator(); iter.hasNext();) {
+                            jq_Method m = (jq_Method) iter.next();
+                            if(m.getBytecode() != null) {
+                                CodeCache.getCode(m);
+                            }
+                        }
                         dis.run(null, rootMethods);
                         return;                        
                     }
@@ -5293,10 +5314,10 @@ public class PA {
                 cg = new CachedCallGraph(new PACallGraph(this));
                 callgraphFileName = "results/callgraph_inlined";
                 dumpCallGraph();
-                numberPaths(cg, ocg, true);
-                calculateIEfilter(cg);
+//                numberPaths(cg, ocg, true);
+//                calculateIEfilter(cg);
             }
-            bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
+            //bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
         //}
         bdd_save(dumpPath+"roots.bdd", getRoots());
         
