@@ -190,7 +190,7 @@ public class MethodSummary {
                 }
             }            
         }
-        System.out.println("Summary for " + cfg.getMethod() + ": " + s.toString());
+        //System.out.println("Summary for " + cfg.getMethod() + ": " + s.toString());
         return s;
     }
 
