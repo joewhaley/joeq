@@ -713,6 +713,8 @@ outer:
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
 
+        if (TRACE) out.println("Original CFG to inline into:");
+        if (TRACE) out.println(caller.fullDump());
         if (TRACE) out.println("Code to inline:");
         if (TRACE) out.println(callee.fullDump());
         if (TRACE) out.println(callee.getRegisterFactory().fullDump());
