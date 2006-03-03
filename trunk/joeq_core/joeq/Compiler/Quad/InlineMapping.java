@@ -63,4 +63,9 @@ public class InlineMapping {
         fakeMap.put(callQuad, newQuad);
         
     }
+    
+    public static void invalidate() {
+        _map.clear();
+        fakeMap.clear();
+    }
 }
