@@ -1092,6 +1092,8 @@ public class PA {
             if (V1H1context != null) V1H1context.free();
             s.free();
             i.remove();
+            // print the method summary
+            System.out.println(s.toString());
         }
     }
     
@@ -5291,7 +5293,7 @@ public class PA {
          
             if(INLINE_MAPS) {
                 cg = new CachedCallGraph(new PACallGraph(this));
-                callgraphFileName = "callgraph_inlined";
+                callgraphFileName = "results/callgraph_inlined";
                 dumpCallGraph();
                 numberPaths(cg, ocg, true);
                 calculateIEfilter(cg);
