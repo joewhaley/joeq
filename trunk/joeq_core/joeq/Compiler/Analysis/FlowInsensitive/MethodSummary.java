@@ -136,7 +136,7 @@ public class MethodSummary {
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
             MethodSummary s = getSummary(cfg);
-            System.out.println("Summary for " + cfg.getMethod() + ": " + s.toString());
+            //System.out.println("Summary for " + cfg.getMethod() + ": " + s.toString());
             try {
                 BufferedWriter dos = new BufferedWriter(new OutputStreamWriter(System.out));
                 s.dotGraph(dos);
@@ -190,6 +190,7 @@ public class MethodSummary {
                 }
             }            
         }
+        System.out.println("Summary for " + cfg.getMethod() + ": " + s.toString());
         return s;
     }
 
