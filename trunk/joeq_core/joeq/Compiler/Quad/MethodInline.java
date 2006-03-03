@@ -148,17 +148,9 @@ public class MethodInline implements ControlFlowGraphVisitor {
                     " with a call to " + fakeOperand.getMethod());
             }
             if(q.getOperator() instanceof InvokeStatic) {
-                if(fakeCallQuad != null) {
-                    inlineNonVirtualCallSiteReplacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
-                } else {
-                    inlineNonVirtualCallSite(caller, bb, q, callee, false);
-                }
+                inlineNonVirtualCallSiteReplacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
             } else {
-                if(fakeCallQuad != null) {
-                    inlineVirtualCallSiteWithTypeCheckRepacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
-                } else {
-                    inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType, false);
-                }
+                inlineVirtualCallSiteWithTypeCheckRepacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
             }
         }
         public String toString() { return callee.getMethod().toString(); }
@@ -566,6 +558,8 @@ outer:
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
 
+        if (TRACE) out.println("Original CFG to inline into:");
+        if (TRACE) out.println(caller.fullDump());
         if (TRACE) out.println("Code to inline:");
         if (TRACE) out.println(callee.fullDump());
         if (TRACE) out.println(callee.getRegisterFactory().fullDump());
