@@ -133,6 +133,7 @@ public class PA {
     PrintStream out = System.out;
     boolean DUMP_INITIAL = !System.getProperty("pa.dumpinitial", "no").equals("no");
     boolean DUMP_RESULTS = !System.getProperty("pa.dumpresults", "yes").equals("no");
+    boolean DUMP_CALLGRAPH = true;
     boolean DUMP_FLY = !System.getProperty("pa.dumpfly", "no").equals("no");
     boolean DUMP_SSA = !System.getProperty("pa.dumpssa", "no").equals("no");
     boolean SKIP_SOLVE = !System.getProperty("pa.skipsolve", "no").equals("no");
@@ -3276,10 +3277,12 @@ public class PA {
 
         printSizes();
         
-        System.out.println("Writing call graph...");
-        time = System.currentTimeMillis();
-        dumpCallGraph();
-        System.out.println("Time spent writing: " + (System.currentTimeMillis() - time) / 1000.);
+        if (DUMP_CALLGRAPH) {
+            System.out.println("Writing call graph...");
+            time = System.currentTimeMillis();
+            dumpCallGraph();
+            System.out.println("Time spent writing: " + (System.currentTimeMillis() - time) / 1000.);
+        }
 
         if (DUMP_RESULTS) {
             System.out.println("Writing results...");
@@ -3515,9 +3518,11 @@ public class PA {
              dis.DUMP_FLY            = false;
              dis.DISCOVER_CALL_GRAPH = true;
              dis.CONTEXT_SENSITIVE   = false;
+             dis.DUMP_CALLGRAPH      = false;
              
              System.out.println("===================== First pass ========================");
              dis.run("java", null, rootMethods);
+             dis.cg = new PACallGraph(dis);
              
              // remember the methods
              List methods = Traversals.postOrder(dis.cg.getNavigator(), rootMethods);
