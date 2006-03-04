@@ -50,7 +50,7 @@ import jwutil.util.Assert;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = true;
+    public static final boolean TRACE = false;
     public static final boolean TRACE_ORACLE = false;
     public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
