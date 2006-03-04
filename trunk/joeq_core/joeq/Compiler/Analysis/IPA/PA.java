@@ -3502,8 +3502,50 @@ public class PA {
         
         PA dis = new PA();
         dis.cg = null;
+        dis.INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
         if(dis.INLINE_MAPS){
-             System.out.println("=========================================================");
+             System.out.println("===================== Starting ========================");
+             CodeCache.addDefaultPass(new MethodInline(dis));
+             CodeCache.invalidate();                        
+             MethodSummary.BuildMethodSummary.PATCH_UP_FAKE = true;
+
+             dis.DUMP_INITIAL        = false;
+             dis.SKIP_SOLVE          = false;
+             dis.DUMP_RESULTS        = false;
+             dis.DUMP_FLY            = false;
+             dis.DISCOVER_CALL_GRAPH = true;
+             dis.CONTEXT_SENSITIVE   = false;
+             
+             System.out.println("===================== First pass ========================");
+             dis.run("java", null, rootMethods);
+             
+             // remember the methods
+             List methods = Traversals.postOrder(dis.cg.getNavigator(), rootMethods);
+             
+             dis = new PA();
+             dis.INLINE_MAPS         = true;
+             dis.DUMP_INITIAL        = false;
+             dis.SKIP_SOLVE          = false;
+             dis.DUMP_RESULTS        = true;
+             dis.DUMP_FLY            = false;
+             dis.DISCOVER_CALL_GRAPH = true;
+             dis.CONTEXT_SENSITIVE   = false;                        
+             
+             CodeCache.invalidate();
+             CodeCache.clearDefaultPasses();
+             CodeCache.addDefaultPass(new MethodInline(dis));
+             InlineMapping.invalidate();
+             for(Iterator iter = methods.iterator(); iter.hasNext();) {
+                 jq_Method m = (jq_Method) iter.next();
+                 if(m.getBytecode() != null) {
+                     CodeCache.getCode(m);
+                 }
+             }
+             System.out.println("===================== Second pass ========================");
+             dis.run(null, rootMethods);
+             
+             System.out.println("===================== Done ========================");
+             return;             
         }
 
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
@@ -3535,51 +3577,7 @@ public class PA {
                     dis.cg = loadCallGraph(rootMethods);
                     rootMethods = dis.cg.getRoots();                    
                     
-                    dis.INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
-                    if (dis.INLINE_MAPS) {
-                        System.out.println("Adding the inlining pass");
-                        CodeCache.addDefaultPass(new MethodInline(dis));
-                        CodeCache.invalidate();                        
-                        MethodSummary.BuildMethodSummary.PATCH_UP_FAKE = true;
-                        //SCCPathNumbering.TRACE_NUMBERING = false;
-//                        dis.DISCOVER_CALL_GRAPH = true;
-                        dis.DUMP_INITIAL        = false;
-                        dis.SKIP_SOLVE          = false;
-                        dis.DUMP_RESULTS        = false;
-                        dis.DUMP_FLY            = false;
-                        dis.DISCOVER_CALL_GRAPH = true;
-                        dis.CONTEXT_SENSITIVE   = false;
-                        
-                        dis.run("java", null, rootMethods);
-                        
-                        // remember the methods
-                        List methods = Traversals.postOrder(dis.cg.getNavigator(), rootMethods);
-                        
-                        dis = new PA();
-                        dis.INLINE_MAPS         = true;
-                        dis.DUMP_INITIAL        = false;
-                        dis.SKIP_SOLVE          = false;
-                        dis.DUMP_RESULTS        = true;
-                        dis.DUMP_FLY            = false;
-                        dis.DISCOVER_CALL_GRAPH = true;
-                        dis.CONTEXT_SENSITIVE   = false;                        
-                        
-                        CodeCache.invalidate();
-                        CodeCache.clearDefaultPasses();
-                        CodeCache.addDefaultPass(new MethodInline(dis));
-                        InlineMapping.invalidate();
-                        for(Iterator iter = methods.iterator(); iter.hasNext();) {
-                            jq_Method m = (jq_Method) iter.next();
-                            if(m.getBytecode() != null) {
-                                CodeCache.getCode(m);
-                            }
-                        }
-                        dis.run(null, rootMethods);
-                        return;                        
-                    }
-                    
-                    //dis.cg = new PACallGraph(dis);
-                    
+                    //dis.cg = new PACallGraph(dis);                    
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
                     dis.DISCOVER_CALL_GRAPH = true;
