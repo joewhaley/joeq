@@ -1082,7 +1082,7 @@ public class PA {
             Map.Entry e = (Map.Entry) i.next();
             jq_Method m = (jq_Method) e.getKey();
             if(m instanceof jq_FakeInstanceMethod || m instanceof jq_FakeStaticMethod) {
-                System.out.println("Skipping fake " + m);
+                //System.out.println("Skipping fake " + m);
                 continue;
             }
             PAMethodSummary s = (PAMethodSummary) e.getValue();
