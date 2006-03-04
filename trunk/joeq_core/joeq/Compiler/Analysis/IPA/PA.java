@@ -5518,7 +5518,7 @@ public class PA {
             int c_i = Imap.get(callLoc);
             jq_Method target = Invoke.getMethod(callSite).getMethod();
             addToIE(I.ithVar(c_i), target);
-            //addToMI(M.ithVar(Mmap.get(target)), I.ithVar(c_i), target);
+            addToMI(M.ithVar(Mmap.get(target)), I.ithVar(c_i), target);
             BDD retBDD = Iret.and(I.ithVar(c_i));
             System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            
             //BigInteger i = retBDD.scanVar(V1);
