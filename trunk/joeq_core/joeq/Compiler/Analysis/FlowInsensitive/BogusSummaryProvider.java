@@ -18,7 +18,7 @@ public class BogusSummaryProvider {
     HashMap classMap              = new HashMap();
     HashMap methodMap             = new HashMap();
 
-    static boolean INLINE_MAPS = !System.getProperty("inline.maps", "yes").equals("no");
+    static boolean INLINE_MAPS = !System.getProperty("inline.maps", "no").equals("no");
     
     private static final boolean TRACE = !System.getProperty("pa.tracebogus", "no").equals("no");
     private static jq_Class realString;
