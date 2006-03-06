@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_FakeStaticMethod;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
 import joeq.Class.jq_Method;
@@ -184,13 +186,17 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         if (m.getBytecode() == null && ms == null) {
             // todo: parameters passed into native methods.
             // build up 'Mret'
-            jq_Type retType = m.getReturnType();
-            if (retType instanceof jq_Reference) {
-                Node node = UnknownTypeNode.get((jq_Reference) retType);
-                pa.addToMret(M_bdd, node);
-                visitNode(node);
+            if(!(m instanceof jq_FakeInstanceMethod || m instanceof jq_FakeStaticMethod)) {
+                jq_Type retType = m.getReturnType();
+                if (retType instanceof jq_Reference) {
+                    Node node = UnknownTypeNode.get((jq_Reference) retType);
+                    pa.addToMret(M_bdd, node);
+                    visitNode(node);
+                }
+                M_bdd.free();
+            } else {
+                // skipping fake methods here
             }
-            M_bdd.free();
             return;
         }
         
