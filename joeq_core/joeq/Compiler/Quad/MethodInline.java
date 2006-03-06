@@ -129,6 +129,12 @@ public class MethodInline implements ControlFlowGraphVisitor {
             //inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
 
             jq_Method method = Invoke.getMethod(q).getMethod();
+            if(mi.pa != null) {
+                jq_Method replacement = PA.getBogusSummaryProvider().getReplacementMethod(method);
+                if(replacement != null) {
+                    method = replacement;
+                }
+            }
             Quad fakeCallQuad = null;
             if(mi.oracle instanceof InlineSelectedCalls && ((InlineSelectedCalls) mi.oracle).preserveCallsTo(method)) {
                 /* Insert a fake replacement method call */
