@@ -20,7 +20,7 @@ public class BogusSummaryProvider {
 
     static boolean INLINE_MAPS = !System.getProperty("inline.maps", "yes").equals("no");
     
-    private static final boolean TRACE = !System.getProperty("pa.tracebogus").equals("no");
+    private static final boolean TRACE = !System.getProperty("pa.tracebogus", "no").equals("no");
     private static jq_Class realString;
     private static jq_Class realStringBuffer;
     private static jq_Class realHashMap;
@@ -61,7 +61,9 @@ public class BogusSummaryProvider {
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
         if(INLINE_MAPS){
-            System.out.println("Inlining maps, etc.");
+            if(TRACE) {
+                System.out.println("Inlining maps, etc.");
+            }
             classMap.put(realHashMap, fakeHashMap);
             classMap.put(realVector, fakeVector);
             classMap.put(realHashtable, fakeHashtable);

@@ -298,6 +298,13 @@ public class MethodInline implements ControlFlowGraphVisitor {
 //                return null;
 //            }
             
+            if(TypeCheckInliningDecision.mi.pa != null) {
+                jq_Method replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
+                if (replacement != null) {
+                    target = replacement;
+                }
+            }
+            
             String mungedName = NameMunger.mungeMethodName(target);
             if (!knownMethods.contains(mungedName)){
                 return null;
