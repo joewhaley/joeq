@@ -5322,11 +5322,12 @@ public class PA {
             for (int j = 0; j < Hmap.size(); ++j) {
                 Node o = (Node) Hmap.get(j);
 
-                if(o instanceof ConcreteTypeNode) {
-                    ConcreteTypeNode ctn = (ConcreteTypeNode) o;
-                    if(ctn.getLocation() instanceof QuadProgramLocation) {
-                        dos.write(o.id+": "+ ctn.getLocation().getEmacsName()+"\n");
-                        continue;
+                if(true || o instanceof ConcreteTypeNode) {
+                    BDD iBDD = inlineSites.andWith(H1.ithVar(j));
+                    if(!iBDD.isZero()) {
+                        ProgramLocation invoke = (ProgramLocation) Imap.get(iBDD.scanVar(I).intValue()); 
+                        dos.write(o.id+": "+ invoke.getEmacsName()+"\n");
+                        continue;                        
                     }
                 }
                 
