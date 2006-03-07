@@ -152,6 +152,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 System.out.println(
                     "Replaced a call to " + Invoke.getMethod(q) + 
                     " with a call to " + fakeOperand.getMethod());
+                String location = getEmacsName(caller.getMethod(), q);
+                InlineMapping.saveOldLocation(fakeCallQuad, location);
             }
             if(q.getOperator() instanceof InvokeStatic) {
                 inlineNonVirtualCallSiteReplacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
@@ -159,6 +161,16 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 inlineVirtualCallSiteWithTypeCheckRepacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
             }
         }
+        private String getEmacsName(jq_Method method, Quad q) {
+            String source = method.getDeclaringClass().getSourceFile().toString();
+            Integer i = (Integer) CodeCache.getBCMap(method).get(q);
+            if(i != null) {
+                return source + ":" + method.getLineNumber(i.intValue());
+            } else {
+                return source + ":" + "-1";
+            }
+        }
+        
         public String toString() { return callee.getMethod().toString(); }
     }
     
@@ -321,8 +333,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
               return null;
             }
             
-            //if (TRACE_ORACLE) 
-            out.println("Oracle says to inline " + target);
+            if (TRACE_ORACLE) 
+                out.println("Oracle says to inline " + target);
 //            return new NoCheckInliningDecision(target);
             return new TypeCheckInliningDecision(target);
         }

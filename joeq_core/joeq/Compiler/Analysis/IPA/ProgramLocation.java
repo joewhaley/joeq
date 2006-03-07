@@ -18,11 +18,13 @@ import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.InlineMapping;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.UTF.Utf8;
+import jwutil.collections.Pair;
 import jwutil.io.ByteSequence;
 import jwutil.io.Textualizable;
 import jwutil.io.Textualizer;
@@ -207,6 +209,10 @@ public abstract class ProgramLocation implements Textualizable {
                 if (isSingleTarget())
                     sb.append("*");
             }
+            sb.append(" [");
+            sb.append(getEmacsName());
+            sb.append("]");
+            
             return sb.toString();
         }
         
@@ -253,6 +259,14 @@ public abstract class ProgramLocation implements Textualizable {
             t.writeObject(m);
         }
         
+        public String getEmacsName() {
+            String oldLocation = InlineMapping.getOldLocation(getQuad());
+            if(oldLocation != null) {
+                return "Inlined from " + oldLocation;
+            }
+            
+            return super.getEmacsName();
+        }
     }
     
     public static class BCProgramLocation extends ProgramLocation {
@@ -363,7 +377,7 @@ public abstract class ProgramLocation implements Textualizable {
             return false;
         }
         public String toString() {
-            String s = super.m.getDeclaringClass().getName()+"."+super.m.getName()+" "+super.m.getDesc()+" @ "+bcIndex;
+            String s = super.m.getDeclaringClass().getName()+"."+super.m.getName()+"() @ "+bcIndex;
             return s;
         }
         

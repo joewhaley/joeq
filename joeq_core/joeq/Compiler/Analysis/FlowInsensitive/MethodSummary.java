@@ -1051,9 +1051,9 @@ public class MethodSummary {
                                     Quad callQuad = other_bb.getQuad(0);
                                     Assert._assert(callQuad.getOperator() instanceof Operator.Invoke);                                        
                                     System.out.println("Found return result of " + callQuad);
-                                    InlineMapping.rememberFake(
-                                        new Pair(method, alloc), 
-                                        new Pair(target, callQuad));
+                                    InlineMapping.rememberFake(                                         
+                                        new Pair(target, callQuad),
+                                        new Pair(method, alloc));
                                 }
                             }
                         }
