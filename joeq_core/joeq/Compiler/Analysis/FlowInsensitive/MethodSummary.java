@@ -1005,39 +1005,7 @@ public class MethodSummary {
 
             if(PATCH_UP_FAKE) {
                 // pattern-match inlined allocation sites
-                joeq.Util.Templates.List.BasicBlock preds = bb.getPredecessors(); 
-                if(preds.size() == 1) {
-                    BasicBlock pred = preds.getBasicBlock(0);
-                    preds = pred.getPredecessors();
-                    if(preds.size() == 1) {
-                        pred = preds.getBasicBlock(0);
-                        joeq.Util.Templates.List.BasicBlock successors = pred.getSuccessors();
-                        if(successors.size() == 2) {
-                            Assert._assert(successors.contains(bb.getPredecessors().getBasicBlock(0)));
-                            BasicBlock other_bb = null;
-                            if(successors.getBasicBlock(0) == bb.getPredecessors().getBasicBlock(0)) {
-                                other_bb = successors.getBasicBlock(1);
-                            } else {
-                                other_bb = successors.getBasicBlock(0);
-                            }
-                            
-                            if(other_bb.size() == 2) {
-                                Quad quad = other_bb.getQuad(0);
-                                if(quad.getOperator() instanceof Operator.Invoke) {
-                                    jq_Method target = Operator.Invoke.getMethod(quad).getMethod();
-                                    if(target instanceof jq_FakeInstanceMethod || target instanceof jq_FakeStaticMethod) {
-                                        Quad callQuad = other_bb.getQuad(0);
-                                        Assert._assert(callQuad.getOperator() instanceof Operator.Invoke);                                        
-                                        System.out.println("Found return result of " + callQuad);
-                                        InlineMapping.rememberFake(
-                                            new Pair(method, obj), 
-                                            new Pair(target, callQuad));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                patchUpFake(obj);
             }
         }
         
@@ -1048,7 +1016,52 @@ public class MethodSummary {
             jq_Reference type = (jq_Reference)NewArray.getType(obj).getType();
             Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
             setRegister(dest_r, n);
+            
+            if(PATCH_UP_FAKE) {
+                // pattern-match inlined allocation sites
+                patchUpFake(obj);
+            }
         }
+        
+        /**
+         * @param alloc -- allocation site
+         */
+        private void patchUpFake(Quad alloc) {
+            joeq.Util.Templates.List.BasicBlock preds = bb.getPredecessors(); 
+            if(preds.size() == 1) {
+                BasicBlock pred = preds.getBasicBlock(0);
+                preds = pred.getPredecessors();
+                if(preds.size() == 1) {
+                    pred = preds.getBasicBlock(0);
+                    joeq.Util.Templates.List.BasicBlock successors = pred.getSuccessors();
+                    if(successors.size() == 2) {
+                        Assert._assert(successors.contains(bb.getPredecessors().getBasicBlock(0)));
+                        BasicBlock other_bb = null;
+                        if(successors.getBasicBlock(0) == bb.getPredecessors().getBasicBlock(0)) {
+                            other_bb = successors.getBasicBlock(1);
+                        } else {
+                            other_bb = successors.getBasicBlock(0);
+                        }
+                        
+                        if(other_bb.size() == 2) {
+                            Quad quad = other_bb.getQuad(0);
+                            if(quad.getOperator() instanceof Operator.Invoke) {
+                                jq_Method target = Operator.Invoke.getMethod(quad).getMethod();
+                                if(target instanceof jq_FakeInstanceMethod || target instanceof jq_FakeStaticMethod) {
+                                    Quad callQuad = other_bb.getQuad(0);
+                                    Assert._assert(callQuad.getOperator() instanceof Operator.Invoke);                                        
+                                    System.out.println("Found return result of " + callQuad);
+                                    InlineMapping.rememberFake(
+                                        new Pair(method, alloc), 
+                                        new Pair(target, callQuad));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         /** Visit a put instance field instruction. */
         public void visitPutfield(Quad obj) {
             if (obj.getOperator() instanceof Operator.Putfield.PUTFIELD_A
