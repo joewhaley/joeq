@@ -5325,8 +5325,7 @@ public class PA {
                 if(o instanceof ConcreteTypeNode) {
                     ConcreteTypeNode ctn = (ConcreteTypeNode) o;
                     if(ctn.getLocation() instanceof QuadProgramLocation) {
-                        dos.write(o.id+": "+ InlineMapping.getEmacsName(
-                            (QuadProgramLocation) ctn.getLocation())+"\n");
+                        dos.write(o.id+": "+ ctn.getLocation().getEmacsName()+"\n");
                         continue;
                     }
                 }
@@ -5472,8 +5471,8 @@ public class PA {
         if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " triples");
         for(Iterator iter = InlineMapping.fakeMap.entrySet().iterator(); iter.hasNext();){
             Map.Entry e     = (Entry) iter.next(); 
-            Quad alloc      = (Quad) ((Pair) e.getKey()).right;
-            Quad callSite   = (Quad) ((Pair) e.getValue()).right;
+            Quad alloc      = (Quad) ((Pair) e.getValue()).right;
+            Quad callSite   = (Quad) ((Pair) e.getKey()).right;
             
             ProgramLocation callLoc = null;
             for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {

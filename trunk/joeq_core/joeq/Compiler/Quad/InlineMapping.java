@@ -23,6 +23,7 @@ import jwutil.util.Assert;
 public class InlineMapping {
     private static Map _map = new HashMap();
     public static HashMap fakeMap = new HashMap();
+    public static HashMap oldLocationMap = new HashMap();
 
 //    public static Quad getOriginalQuad(Quad newQuad) {
 //        Quad oldQuad = null;
@@ -66,36 +67,28 @@ public class InlineMapping {
         return (Quad) _map.get(callSite);
     }
 
-    public static void rememberFake(Pair newPair, Pair callPair) {
-        fakeMap.put(newPair, callPair);        
+    public static void rememberFake(Pair callPair, Pair allocPair) {
+        jq_Method allocMethod = (jq_Method) allocPair.left;
+        Quad allocQuad = (Quad) allocPair.right;
+        Integer i = (Integer) CodeCache.getBCMap(allocMethod).get(allocQuad);
+        String source = allocMethod.getDeclaringClass().getSourceFile().toString(); 
+        String oldLocation = source + ":" + (i != null ? allocMethod.getLineNumber(i.intValue()) : -1);
+        // old -> new
+        fakeMap.put(callPair, allocPair);
     }
     
-    public static String getEmacsName(QuadProgramLocation pl) {
-        Pair oldPair  = new Pair(pl.getMethod(), pl.getQuad()); 
-        Pair callPair = (Pair) fakeMap.get(oldPair);
-        if(callPair != null) {
-            jq_Method method = unfake((jq_Method) callPair.left);
-            //Quad quad = (Quad) callPair.right;
-            Utf8 source = method.getDeclaringClass().getSourceFile();
-            if (source != null) {
-//                Map map = CodeCache.getBCMap(method);
-//                if(map != null) {
-//                    Integer i = (Integer) map.get(pl.getQuad());
-//                    if(i != null) {
-//                        int bc = i.intValue();
-//                        return source + ":" + method.getLineNumber(bc);
-//                    }
-//                }
-                return source + ":" + method.getName() + " (fake)";
-            }
-        }
-        
-        return pl.getEmacsName();
+    public static void saveOldLocation(Quad quad, String location) {
+        oldLocationMap.put(quad, location);
+    }
+    
+    public static String getOldLocation(Quad quad) {
+        return (String) oldLocationMap.get(quad);
     }
     
     public static void invalidate() {
         _map.clear();
         fakeMap.clear();
+        oldLocationMap.clear();
     }
     
     public static Map fakeMethods = new HashMap();
