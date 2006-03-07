@@ -129,7 +129,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             //inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
 
             jq_Method method = Invoke.getMethod(q).getMethod();
-            if(mi.pa != null) {
+            if(mi.pa != null && mi.pa.USE_BOGUS_SUMMARIES) {
                 jq_Method replacement = PA.getBogusSummaryProvider().getReplacementMethod(method);
                 if(replacement != null) {
                     method = replacement;
@@ -304,7 +304,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 //                return null;
 //            }
             
-            if(TypeCheckInliningDecision.mi.pa != null) {
+            if(TypeCheckInliningDecision.mi.pa != null && TypeCheckInliningDecision.mi.pa.USE_BOGUS_SUMMARIES) {
                 jq_Method replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
                 if (replacement != null) {
                     target = replacement;
@@ -321,7 +321,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
               return null;
             }
             
-            if (TRACE_ORACLE) out.println("Oracle says to inline " + target);
+            //if (TRACE_ORACLE) 
+            out.println("Oracle says to inline " + target);
 //            return new NoCheckInliningDecision(target);
             return new TypeCheckInliningDecision(target);
         }
@@ -1059,7 +1060,7 @@ outer:
                 newMethod = jq_FakeStaticMethod.fakeMethod(originalMethod.getDeclaringClass(), originalMethod.getNameAndDesc());
             }
             if(pa != null) {
-                pa.addToFakeMethods(originalMethod, newMethod);
+                InlineMapping.addToFakeMethods(originalMethod, newMethod);
             }
             System.out.println("Replacing " + originalMethod + " with " + newMethod);
             

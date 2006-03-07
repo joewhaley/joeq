@@ -167,7 +167,7 @@ public class PA {
     int PUBLIC_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.publicplaceholders", "0"));
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
-    boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
+    public boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
     boolean USE_CASTS_FOR_REFLECTION = !System.getProperty("pa.usecastsforreflection", "no").equals("no");
@@ -575,8 +575,6 @@ public class PA {
         }
     }
     
-    Map fakeMethods = new HashMap();
-    
     void initializeMaps() {
         Vmap = makeMap("Vars", V_BITS);
         Imap = makeMap("Invokes", I_BITS);
@@ -591,7 +589,7 @@ public class PA {
             STRmap.get(new Dummy());
         }
         Mmap.get(new Dummy());
-        for(Iterator iter = fakeMethods.keySet().iterator(); iter.hasNext();) {
+        for(Iterator iter = InlineMapping.fakeMethods.keySet().iterator(); iter.hasNext();) {
             jq_Method fakeMethod = (jq_Method) iter.next();
             Mmap.get(fakeMethod);
         }
@@ -5102,19 +5100,6 @@ public class PA {
     Collection removedCalls = new ArrayList();
 
     public void removeCall(ProgramLocation pl, jq_Method callee) {
-//        if(Imap != null) {
-//            int i_i = Imap.get(LoadedCallGraph.mapCall(pl));
-//            /*
-//            Assert._assert(Imap != null);
-//            Assert._assert(Mmap != null);
-//            
-//          
-//            removeCalls.orWith(I.ithVar(i_i));
-//            */
-//            removedCalls.add((ProgramLocation) Imap.get(i_i));
-//            if(TRACE_INLINING) System.out.println("INLINING: Removing invocation site " + i_i);
-//        }
-        
         removedCalls.add(pl);
         if(TRACE_INLINING) System.out.println("INLINING: Removing invocation site " + pl);
     }
@@ -5154,23 +5139,6 @@ public class PA {
             if (m3 != null) addToNmap(m3);
         }
     }
-    
-    public void addToFakeMethods(jq_Method m, jq_Method newMethod) {
-        Assert._assert(m != null && newMethod != null);
-        // fake -> unfake
-        fakeMethods.put(newMethod, m);
-    }
-    
-    /**
-     * Converts a fake methods to the original one it came from.
-     * */
-//    jq_Method unfake(jq_Method m) {
-//        if(m instanceof jq_FakeInstanceMethod || m instanceof jq_FakeStaticMethod) {
-//            return (jq_Method) fakeMethods.get(m);
-//        } else {
-//            return m;
-//        }
-//    }
     
     public void dumpBDDRelations() throws IOException {
         if (FULL_CHA) {
@@ -5353,7 +5321,16 @@ public class PA {
             //Hmap.dumpStrings(dos);
             for (int j = 0; j < Hmap.size(); ++j) {
                 Node o = (Node) Hmap.get(j);
-                //dos.write(/*o.id+": "+*/ o+"\n");
+
+                if(o instanceof ConcreteTypeNode) {
+                    ConcreteTypeNode ctn = (ConcreteTypeNode) o;
+                    if(ctn.getLocation() instanceof QuadProgramLocation) {
+                        dos.write(o.id+": "+ InlineMapping.getEmacsName(
+                            (QuadProgramLocation) ctn.getLocation())+"\n");
+                        continue;
+                    }
+                }
+                
                 dos.write(o.id+": "+ o+"\n");
             }
         } finally {
@@ -5495,8 +5472,8 @@ public class PA {
         if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " triples");
         for(Iterator iter = InlineMapping.fakeMap.entrySet().iterator(); iter.hasNext();){
             Map.Entry e     = (Entry) iter.next(); 
-            Quad alloc      = (Quad) e.getValue();
-            Quad callSite   = (Quad) e.getKey();
+            Quad alloc      = (Quad) ((Pair) e.getKey()).right;
+            Quad callSite   = (Quad) ((Pair) e.getValue()).right;
             
             ProgramLocation callLoc = null;
             for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
@@ -5517,15 +5494,13 @@ public class PA {
             jq_Method target = Invoke.getMethod(callSite).getMethod();
             addToIE(I.ithVar(c_i), target);
             addToMI(M.ithVar(Mmap.get(target)), I.ithVar(c_i), target);
+            /*
             BDD retBDD = Iret.and(I.ithVar(c_i));
             System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            
-            //BigInteger i = retBDD.scanVar(V1);
             System.out.println("Iret for " + c_i + " is " + 
-                callLoc + " -> " + retBDD.toStringWithDomains());            
-            //BDD mBDD = IE.and(I.ithVar(c_i));
-            //System.out.println("IE for " + c_i + " is " + 
-            //    callLoc + " -> " + mBDD.toStringWithDomains());
-            
+                callLoc + " -> " + retBDD.toStringWithDomains());
+            */            
+       
             for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
                 MethodSummary.Node node = (Node) heapIter.next();
                 

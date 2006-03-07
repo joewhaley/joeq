@@ -36,6 +36,7 @@ import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Analysis.IPA.LoopAnalysis;
+import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.FakeProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
@@ -1028,7 +1029,9 @@ public class MethodSummary {
                                         Quad callQuad = other_bb.getQuad(0);
                                         Assert._assert(callQuad.getOperator() instanceof Operator.Invoke);                                        
                                         System.out.println("Found return result of " + callQuad);
-                                        InlineMapping.rememberFake(callQuad, obj);
+                                        InlineMapping.rememberFake(
+                                            new Pair(method, obj), 
+                                            new Pair(target, callQuad));
                                     }
                                 }
                             }
