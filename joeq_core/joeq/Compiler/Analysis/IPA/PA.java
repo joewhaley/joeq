@@ -5323,15 +5323,16 @@ public class PA {
                 Node o = (Node) Hmap.get(j);
 
                 if(true || o instanceof ConcreteTypeNode) {
-                    BDD iBDD = inlineSites.andWith(H1.ithVar(j));
+                    BDD h = H1.ithVar(j);
+                    BDD iBDD = inlineSites.and(h);
                     if(!iBDD.isZero()) {
                         ProgramLocation invoke = (ProgramLocation) Imap.get(iBDD.scanVar(I).intValue()); 
-                        dos.write(o.id+": "+ invoke.getEmacsName()+"\n");
-                        continue;                        
+                        dos.write(o.id+": "+ "Heap object " + invoke.getEmacsName()+"\n");
+                    } else {
+                        dos.write(o.id+": "+ o+"\n");
                     }
+                    iBDD.free(); h.free();
                 }
-                
-                dos.write(o.id+": "+ o+"\n");
             }
         } finally {
             if (dos != null) dos.close();
