@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+import sun.security.krb5.internal.be;
 import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_FakeStaticMethod;
 import joeq.Class.jq_Method;
@@ -24,6 +25,7 @@ public class InlineMapping {
     private static Map _map = new HashMap();
     public static HashMap fakeMap = new HashMap();
     public static HashMap oldLocationMap = new HashMap();
+    static HashMap/*<Quad, Quad>*/ newlyInserted = new HashMap();    
 
 //    public static Quad getOriginalQuad(Quad newQuad) {
 //        Quad oldQuad = null;
@@ -40,6 +42,7 @@ public class InlineMapping {
      * */
     public static void add(Quad q) {
         _map.put(q, q);
+        
     }
     
     public static void update() {
@@ -89,6 +92,7 @@ public class InlineMapping {
         _map.clear();
         fakeMap.clear();
         oldLocationMap.clear();
+        newlyInserted.clear();
     }
     
     public static Map fakeMethods = new HashMap();
@@ -109,4 +113,25 @@ public class InlineMapping {
             return m;
         }
     }
+
+    public static void add(Quad oldQuad, Quad newQuad, jq_Method newMethod) {        
+        newlyInserted.put(oldQuad, newQuad);
+        jq_Method beingInlined = MethodInline.beingInlined;
+        Assert._assert(beingInlined != null);
+        String location = getEmacsName(beingInlined, oldQuad);
+        
+        oldLocationMap.put(oldQuad, location);
+        oldLocationMap.put(newQuad, location);
+    }
+    
+    public static String getEmacsName(jq_Method method, Quad q) {
+        String source = method.getDeclaringClass().getSourceFile().toString();
+        Integer i = (Integer) CodeCache.getBCMap(method).get(q);
+        if(i != null) {
+            return source + ":" + method.getLineNumber(i.intValue());
+        } else {
+            return source + ":" + "-1";
+        }
+    }
+
 }
