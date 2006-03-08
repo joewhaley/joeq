@@ -58,9 +58,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
     Oracle oracle;
     CallGraph cg;
     private PA pa;
-    //private static Map fakeMethodOperand = new HashMap();
-    static HashMap/*<Quad, Quad>*/ newlyInserted = new HashMap();
     private static HashMap/*<jq_Method, jq_Method>*/ fakeMethodOperand = new HashMap();
+    static jq_Method beingInlined;
 
     public MethodInline(Oracle o) {
         this.oracle = o;
@@ -152,22 +151,13 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 System.out.println(
                     "Replaced a call to " + Invoke.getMethod(q) + 
                     " with a call to " + fakeOperand.getMethod());
-                String location = getEmacsName(caller.getMethod(), q);
+                String location = InlineMapping.getEmacsName(caller.getMethod(), q);
                 InlineMapping.saveOldLocation(fakeCallQuad, location);
             }
             if(q.getOperator() instanceof InvokeStatic) {
                 inlineNonVirtualCallSiteReplacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
             } else {
                 inlineVirtualCallSiteWithTypeCheckRepacingCall(caller, bb, q, callee, expectedType, fakeCallQuad);
-            }
-        }
-        private String getEmacsName(jq_Method method, Quad q) {
-            String source = method.getDeclaringClass().getSourceFile().toString();
-            Integer i = (Integer) CodeCache.getBCMap(method).get(q);
-            if(i != null) {
-                return source + ":" + method.getLineNumber(i.intValue());
-            } else {
-                return source + ":" + "-1";
             }
         }
         
@@ -407,7 +397,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 pa.removeCall(pl, callee);
                 if(preserveCallSite) {
                     int found = 0;
-                    for (Iterator iter = newlyInserted.entrySet().iterator(); iter.hasNext();) {
+                    for (Iterator iter = InlineMapping.newlyInserted.entrySet().iterator(); iter.hasNext();) {
                         Map.Entry e = (Entry) iter.next();
                         //Quad old_q = (Quad) e.getKey();
                         Quad new_q = (Quad) e.getValue();
@@ -427,13 +417,13 @@ public class MethodInline implements ControlFlowGraphVisitor {
                         if (found > 0) {
                             System.err.println("INLINING: Inlining " + found
                                 + " allocation sites found in the call to "
-                                + callee + " consisting of " + newlyInserted.size()
+                                + callee + " consisting of " + InlineMapping.newlyInserted.size()
                                 + " blocks.");
                             //System.out.println(((TypeCheckInliningDecision) d).callee.fullDump());
                         } else {
                             // System.out.println("Existing quads: " +
                             // newlyInserted);
-                            for (Iterator iter = newlyInserted.values().iterator(); iter.hasNext();) {
+                            for (Iterator iter = InlineMapping.newlyInserted.values().iterator(); iter.hasNext();) {
                                 Quad quad = (Quad) iter.next();
                                 System.out.println("Inserted quad: " + quad);
                             }
@@ -442,7 +432,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                     }
                 }
             }
-            newlyInserted.clear();
+            InlineMapping.newlyInserted.clear();
         }
     }
     
@@ -459,6 +449,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
     
     public static void inlineNonVirtualCallSite(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, boolean preserveCallSite) {
         if (TRACE) out.println("Inlining "+q+" target "+callee.getMethod()+" in "+bb);
+        beingInlined = callee.getMethod();
     
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
@@ -580,7 +571,8 @@ outer:
     
     public static void inlineVirtualCallSiteWithTypeCheckRepacingCall(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type, Quad replacementQuad) {
         if (TRACE) out.println("Inlining "+q+" in "+bb+" for target "+callee.getMethod());
-
+        beingInlined = callee.getMethod();
+        
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
 
@@ -735,7 +727,8 @@ outer:
     
     public static void inlineNonVirtualCallSiteReplacingCall(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type, Quad replacementQuad) {
         if (TRACE) out.println("Inlining "+q+" target "+callee.getMethod()+" in "+bb);
-    
+        beingInlined = callee.getMethod();
+        
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
 
@@ -887,7 +880,8 @@ outer:
 
     public static void inlineVirtualCallSiteWithTypeCheck(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type, boolean preserveCallSite) {
         if (TRACE) out.println("Inlining "+q+" in "+bb+" for target "+callee.getMethod());
-
+        beingInlined = callee.getMethod();
+        
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
 
