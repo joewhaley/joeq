@@ -17,7 +17,6 @@ import jwutil.util.Assert;
 public class BogusSummaryProvider {
     HashMap classMap              = new HashMap();
     HashMap methodMap             = new HashMap();
-
     static boolean INLINE_MAPS = !System.getProperty("inline.maps", "no").equals("no");
     
     private static final boolean TRACE = !System.getProperty("pa.tracebogus", "no").equals("no");
@@ -28,6 +27,7 @@ public class BogusSummaryProvider {
     private static jq_Class realHashtable;
     private static jq_Class realArrayList;
     private static jq_Class realLinkedList;
+    private static jq_Class realCookie;
     
     private static jq_Class fakeString;
     private static jq_Class fakeStringBuffer;
@@ -36,6 +36,7 @@ public class BogusSummaryProvider {
     private static jq_Class fakeHashtable;
     private static jq_Class fakeArrayList;
     private static jq_Class fakeLinkedList;
+    private static jq_Class fakeCookie;
     
     public BogusSummaryProvider() {
         realString       = getClassByName("java.lang.String");
@@ -45,6 +46,7 @@ public class BogusSummaryProvider {
         realHashtable    = getClassByName("java.util.Hashtable");
         realArrayList    = getClassByName("java.util.ArrayList");
         realLinkedList   = getClassByName("java.util.LinkedList");
+        realCookie       = getClassByName("javax.servlet.http.Cookie");
         Assert._assert(realString != null && realStringBuffer != null && realHashMap != null && realVector != null && realHashtable != null);
         realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare(); realHashtable.prepare(); realArrayList.prepare(); realLinkedList.prepare();
         
@@ -60,6 +62,9 @@ public class BogusSummaryProvider {
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
+        if(realCookie != null && fakeCookie != null) {
+            classMap.put(realCookie, fakeCookie);
+        }
         if(INLINE_MAPS){
             if(TRACE) {
                 System.out.println("Inlining maps, etc.");
@@ -151,12 +156,27 @@ public class BogusSummaryProvider {
         return null;
     }
     
-    private static jq_Class getClassByName(String className) {
+    private static jq_Class getClassByName(String className, boolean strict) {
         jq_Class theClass = (jq_Class)jq_Type.parseType(className);
-        Assert._assert(theClass != null, className + " is not available.");
-        theClass.prepare();
+        if(strict) {
+            Assert._assert(theClass != null, className + " is not available.");
+        } else {
+            return null;
+        }
+        try {
+            theClass.prepare();
+        } catch (Exception e) {
+            if(strict) {
+                e.printStackTrace();
+            }
+            return null;
+        }
         
         return theClass;
+    }
+    
+    private static jq_Class getClassByName(String className) {
+        return getClassByName(className, true);
     }
 
     public boolean hasStaticReplacement(jq_Method replacement) {
