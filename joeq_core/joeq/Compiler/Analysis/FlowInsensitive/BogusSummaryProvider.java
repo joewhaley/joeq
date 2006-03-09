@@ -58,7 +58,9 @@ public class BogusSummaryProvider {
         fakeArrayList    = getClassByName("MyMockLib.MyArrayList");
         fakeLinkedList   = getClassByName("MyMockLib.MyLinkedList");
         Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null && fakeVector != null && fakeHashtable != null);        
-        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare(); fakeHashtable.prepare(); fakeArrayList.prepare(); fakeLinkedList.prepare();  
+        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare(); fakeHashtable.prepare(); fakeArrayList.prepare(); fakeLinkedList.prepare();
+        if(fakeCookie != null) fakeCookie.prepare();
+        if(realCookie != null) realCookie.prepare();
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
@@ -73,11 +75,10 @@ public class BogusSummaryProvider {
             classMap.put(realVector, fakeVector);
             classMap.put(realHashtable, fakeHashtable);
             classMap.put(realArrayList, fakeArrayList);
-        }else{
+        } else {
             System.out.println("Not inlining maps, etc.");
         }        
     }
-
     
     public jq_Method getReplacementMethod(jq_Method m) {
         return getReplacementMethod(m, null);
