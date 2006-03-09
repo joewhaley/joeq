@@ -3,6 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.FlowInsensitive;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,11 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -36,7 +36,6 @@ import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Analysis.IPA.LoopAnalysis;
-import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.FakeProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
@@ -45,7 +44,6 @@ import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.ExceptionHandler;
-import joeq.Compiler.Quad.InlineMapping;
 import joeq.Compiler.Quad.JSRInfo;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
@@ -53,7 +51,6 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
-import joeq.Compiler.Quad.MethodInline.InliningDecision;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.Const4Operand;
 import joeq.Compiler.Quad.Operand.PConstOperand;
@@ -1002,11 +999,6 @@ public class MethodSummary {
             // TODO: special-case allocations of HashMaps
             Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
             setRegister(dest_r, n);
-
-            if(PATCH_UP_FAKE) {
-                // pattern-match inlined allocation sites
-                patchUpFake(obj);
-            }
         }
         
         /** Visit an array allocation instruction. */
@@ -1016,50 +1008,6 @@ public class MethodSummary {
             jq_Reference type = (jq_Reference)NewArray.getType(obj).getType();
             Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
             setRegister(dest_r, n);
-            
-            if(PATCH_UP_FAKE) {
-                // pattern-match inlined allocation sites
-                patchUpFake(obj);
-            }
-        }
-        
-        /**
-         * @param alloc -- allocation site
-         */
-        private void patchUpFake(Quad alloc) {
-            joeq.Util.Templates.List.BasicBlock preds = bb.getPredecessors(); 
-            if(preds.size() == 1) {
-                BasicBlock pred = preds.getBasicBlock(0);
-                preds = pred.getPredecessors();
-                if(preds.size() == 1) {
-                    pred = preds.getBasicBlock(0);
-                    joeq.Util.Templates.List.BasicBlock successors = pred.getSuccessors();
-                    if(successors.size() == 2) {
-                        Assert._assert(successors.contains(bb.getPredecessors().getBasicBlock(0)));
-                        BasicBlock other_bb = null;
-                        if(successors.getBasicBlock(0) == bb.getPredecessors().getBasicBlock(0)) {
-                            other_bb = successors.getBasicBlock(1);
-                        } else {
-                            other_bb = successors.getBasicBlock(0);
-                        }
-                        
-                        if(other_bb.size() == 2) {
-                            Quad quad = other_bb.getQuad(0);
-                            if(quad.getOperator() instanceof Operator.Invoke) {
-                                jq_Method target = Operator.Invoke.getMethod(quad).getMethod();
-                                if(target instanceof jq_FakeInstanceMethod || target instanceof jq_FakeStaticMethod) {
-                                    Quad callQuad = other_bb.getQuad(0);
-                                    Assert._assert(callQuad.getOperator() instanceof Operator.Invoke);                                        
-                                    System.out.println("Found return result of " + callQuad);
-                                    InlineMapping.rememberFake(                                         
-                                        new Pair(target, callQuad),
-                                        new Pair(method, alloc));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
         
         /** Visit a put instance field instruction. */

@@ -27,9 +27,9 @@ public abstract class Solver {
     protected Map dependencies;
     protected Collection roots;
     
-    public static final boolean TIMINGS = false;
-    public static final boolean TRACE = false;
-    public static final boolean TRACE_WORKLIST = false;
+    public static final boolean TIMINGS = true;
+    public static final boolean TRACE = true;
+    public static final boolean TRACE_WORKLIST = true;
     
     protected boolean bottomUp = true;
     

@@ -3,10 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.io.IOException;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
 import joeq.Class.jq_FakeInstanceMethod;
@@ -18,13 +18,11 @@ import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.InlineMapping;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.UTF.Utf8;
-import jwutil.collections.Pair;
 import jwutil.io.ByteSequence;
 import jwutil.io.Textualizable;
 import jwutil.io.Textualizer;
@@ -89,7 +87,8 @@ public abstract class ProgramLocation implements Textualizable {
     public String getEmacsName() {
         Utf8 source = getSourceFile();
         if (source != null) {
-            return source+":"+getLineNumber();
+            int lineno = getLineNumber();
+            return source+":"+lineno;
         } else {
             String className = getContainingClass().getJDKName();
             String method = m.getNameAndDesc().toString();
@@ -209,9 +208,9 @@ public abstract class ProgramLocation implements Textualizable {
                 if (isSingleTarget())
                     sb.append("*");
             }
-            sb.append(" [");
-            sb.append(getEmacsName());
-            sb.append("]");
+//            sb.append(" [");
+//            sb.append(getEmacsName());
+//            sb.append("]");
             
             return sb.toString();
         }
@@ -257,15 +256,6 @@ public abstract class ProgramLocation implements Textualizable {
         public void write(Textualizer t) throws IOException {
             t.writeString("quad "+q.getID()+" ");
             t.writeObject(m);
-        }
-        
-        public String getEmacsName() {
-            String oldLocation = InlineMapping.getOldLocation(getQuad());
-            if(oldLocation != null) {
-                return "Inlined from " + oldLocation;
-            }
-            
-            return super.getEmacsName();
         }
     }
     

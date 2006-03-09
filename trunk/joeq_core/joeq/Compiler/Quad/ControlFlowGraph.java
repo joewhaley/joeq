@@ -401,10 +401,7 @@ public class ControlFlowGraph implements Graph {
         updateOperand(map, that_q.getOp2());
         updateOperand(map, that_q.getOp3());
         updateOperand(map, that_q.getOp4());
-        //if(this_q.getOperator() instanceof Operator.New || this_q.getOperator() instanceof Operator.NewArray) {
-            System.err.println("Mapping " + this_q + " to " + that_q);
-            InlineMapping.add(this_q, that_q, getMethod());
-        //}
+        
         return that_q;
     }
     
