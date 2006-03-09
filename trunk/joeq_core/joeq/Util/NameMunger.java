@@ -102,6 +102,7 @@ public class NameMunger {
     }
     
     public static String getJavadocSignature(jq_Method method) {
+        if (method == null) return "null";
         String jvmSig = method.toString();
         
         return getJavadocSignature(jvmSig, method.getReturnType().getName());
