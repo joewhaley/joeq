@@ -5421,6 +5421,21 @@ public class PA {
             } finally {
                 if (dos != null) dos.close();
             }
+            dos = null;
+            try {
+                dos = new BufferedWriter(new FileWriter(dumpPath+"unmunged_name.map"));
+                for (int j = 0; j < Nmap.size(); ++j) {
+                    Object o = Nmap.get(j);
+                    if (o instanceof Dummy) {
+                        dos.write(o.toString()+"\n");
+                        continue;
+                    }
+                    jq_Method m = (jq_Method) o;
+                    dos.write(NameMunger.getJavadocSignature(m) + "\n");
+                }
+            } finally {
+                if (dos != null) dos.close();
+            }
         }
 
         if(SPECIAL_MAP_INFO) {
