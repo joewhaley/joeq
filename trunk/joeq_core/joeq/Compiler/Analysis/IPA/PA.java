@@ -32,7 +32,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -64,9 +63,7 @@ import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
-import joeq.Compiler.Quad.InlineMapping;
 import joeq.Compiler.Quad.LoadedCallGraph;
-import joeq.Compiler.Quad.MethodInline;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -78,7 +75,6 @@ import joeq.Util.NameMunger;
 import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
-import jwutil.collections.Triple;
 import jwutil.graphs.DumpDotGraph;
 import jwutil.graphs.GlobalPathNumbering;
 import jwutil.graphs.Navigator;
@@ -173,7 +169,6 @@ public class PA {
     boolean USE_CASTS_FOR_REFLECTION = !System.getProperty("pa.usecastsforreflection", "no").equals("no");
     boolean RESOLVE_FORNAME = !System.getProperty("pa.resolveforname", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
-    public boolean TRACE_INLINING = !System.getProperty("pa.traceinlining", "no").equals("no");;
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
@@ -192,7 +187,6 @@ public class PA {
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
-    boolean INLINE_MAPS = false;
     
     boolean USE_VCONTEXT;
     boolean USE_HCONTEXT;
@@ -260,8 +254,6 @@ public class PA {
     BDD IEfilter; // V2cxIxV1cxM, context-sensitive edge filter
     
     BDD visited; // M, visited methods
-    BDD removeCalls;    // I, calls to remove from consideration because of inlining
-    BDD inlineSites;    // HxI, allocation sites that were created as a result of inlining
     
     // maps to SSA form
     BDD forNameMap; // IxH1, heap allocation sites for forClass.Name
@@ -522,10 +514,6 @@ public class PA {
         IE = bdd.zero();
         hP = bdd.zero();
         visited = bdd.zero();
-        if(INLINE_MAPS) {
-            removeCalls = bdd.zero();
-            inlineSites = bdd.zero();
-        }
         forNameMap =  bdd.zero();
         
         if (OBJECT_SENSITIVE || CARTESIAN_PRODUCT) staticCalls = bdd.zero();
@@ -589,10 +577,6 @@ public class PA {
             STRmap.get(new Dummy());
         }
         Mmap.get(new Dummy());
-        for(Iterator iter = InlineMapping.fakeMethods.keySet().iterator(); iter.hasNext();) {
-            jq_Method fakeMethod = (jq_Method) iter.next();
-            Mmap.get(fakeMethod);
-        }
         if (ADD_THREADS) {
             PrimordialClassLoader.getJavaLangThread().prepare();
             PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;").prepare();
@@ -3498,53 +3482,6 @@ public class PA {
         
         PA dis = new PA();
         dis.cg = null;
-        dis.INLINE_MAPS = System.getProperty("pa.inlinemaps", "no").equals("yes");
-        if(dis.INLINE_MAPS){
-             System.out.println("===================== Starting ========================");
-             CodeCache.addDefaultPass(new MethodInline(dis));
-             CodeCache.invalidate();                        
-             MethodSummary.BuildMethodSummary.PATCH_UP_FAKE = true;
-
-             dis.DUMP_INITIAL        = false;
-             dis.SKIP_SOLVE          = false;
-             dis.DUMP_RESULTS        = false;
-             dis.DUMP_FLY            = false;
-             dis.DISCOVER_CALL_GRAPH = true;
-             dis.CONTEXT_SENSITIVE   = false;
-             dis.DUMP_CALLGRAPH      = false;
-             
-             System.out.println("===================== First pass ========================");
-             dis.run("java", null, rootMethods);
-             dis.cg = new PACallGraph(dis);
-             
-             // remember the methods
-             List methods = Traversals.postOrder(dis.cg.getNavigator(), rootMethods);
-             
-             dis = new PA();
-             dis.INLINE_MAPS         = true;
-             dis.DUMP_INITIAL        = false;
-             dis.SKIP_SOLVE          = false;
-             dis.DUMP_RESULTS        = true;
-             dis.DUMP_FLY            = false;
-             dis.DISCOVER_CALL_GRAPH = true;
-             dis.CONTEXT_SENSITIVE   = false;                        
-             
-             CodeCache.invalidate();
-             CodeCache.clearDefaultPasses();
-             CodeCache.addDefaultPass(new MethodInline(dis));
-             InlineMapping.invalidate();
-             for(Iterator iter = methods.iterator(); iter.hasNext();) {
-                 jq_Method m = (jq_Method) iter.next();
-                 if(m.getBytecode() != null) {
-                     CodeCache.getCode(m);
-                 }
-             }
-             System.out.println("===================== Second pass ========================");
-             dis.run(null, rootMethods);
-             
-             System.out.println("===================== Done ========================");
-             return;             
-        }
 
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             if(dis.ALWAYS_START_WITH_A_FRESH_CALLGRAPH) {
@@ -3579,11 +3516,6 @@ public class PA {
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
                     dis.DISCOVER_CALL_GRAPH = true;
-                    if (dis.INLINE_MAPS) {
-                        System.out.println("Adding the inlining pass");
-                        CodeCache.addDefaultPass(new MethodInline(dis));
-                        //CodeCache.invalidate();
-                    }
                 }
             } else if (dis.cg != null) {
                 rootMethods = dis.cg.getRoots();
@@ -5099,30 +5031,6 @@ public class PA {
     
     Collection removedCalls = new ArrayList();
 
-    public void removeCall(ProgramLocation pl, jq_Method callee) {
-        removedCalls.add(pl);
-        if(TRACE_INLINING) System.out.println("INLINING: Removing invocation site " + pl);
-    }
-    
-    public void addInlinedSiteToMap(ProgramLocation pl, Quad alloc, Quad quad, jq_Method callerMethod) {
-        //pl = LoadedCallGraph.mapCall(pl);
-        if(TRACE_INLINING) {
-            System.out.println("INLINING: Adding " + 
-                                alloc + ", " + quad + ", " + callerMethod + " to the inline map");
-        }
-            
-        inlinedSites.add(new Triple(alloc, quad, callerMethod));
-        Assert._assert(pl instanceof QuadProgramLocation);
-        QuadProgramLocation qpl = (QuadProgramLocation) pl;
-        Assert._assert(qpl.getQuad() == quad && qpl.getMethod() == callerMethod);
-//        if(Imap != null) {
-//            int index = Imap.get(pl);
-//            if(TRACE_INLINING) System.out.println(qpl.getQuad() + ", " + qpl.getMethod() + " index is " + index);
-//        }
-    }
-    
-    Set inlinedSites = new HashSet();
-    
     void addToNmap(jq_Method m) {
         Assert._assert(!m.isStatic());
         Assert._assert(!m.isPrivate());
@@ -5241,10 +5149,6 @@ public class PA {
             }
             mC.orWith(m);
         }
-        if(INLINE_MAPS/* && CONTEXT_SENSITIVE*/) {
-            saveRemovedCalls(dumpPath);            
-            saveInlinedSites(dumpPath);            
-        }
         bdd_save(dumpPath+"IE0.bdd", IE.exist(V1cV2cset));        
         bdd_save(dumpPath+"vP0.bdd", vP.exist(V1cH1cset));
         bdd_save(dumpPath+"hP0.bdd", hP);
@@ -5277,18 +5181,9 @@ public class PA {
 
         if (threadRuns != null)
             bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
-        //if (IEfilter != null && CONTEXT_SENSITIVE) {
-            //System.out.println(IE.toStringWithDomains());
-         
-            if(INLINE_MAPS) {
-                cg = new CachedCallGraph(new PACallGraph(this));
-                callgraphFileName = "results/callgraph_inlined";
-                dumpCallGraph();
-//                numberPaths(cg, ocg, true);
-//                calculateIEfilter(cg);
-            }
-            //bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
-        //}
+        if (IEfilter != null) {
+            bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
+        }
         bdd_save(dumpPath+"roots.bdd", getRoots());
         
         if (V1c.length > 0 && H1c.length > 0) {
@@ -5322,17 +5217,7 @@ public class PA {
             for (int j = 0; j < Hmap.size(); ++j) {
                 Node o = (Node) Hmap.get(j);
 
-                if(true || o instanceof ConcreteTypeNode) {
-                    BDD h = H1.ithVar(j);
-                    BDD iBDD = inlineSites.and(h);
-                    if(!iBDD.isZero()) {
-                        ProgramLocation invoke = (ProgramLocation) Imap.get(iBDD.scanVar(I).intValue()); 
-                        dos.write(o.id+": "+ "Heap object " + invoke.getEmacsName()+"\n");
-                    } else {
-                        dos.write(o.id+": "+ o+"\n");
-                    }
-                    iBDD.free(); h.free();
-                }
+                dos.write(o.id+": "+ o+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -5465,81 +5350,6 @@ public class PA {
         }
     }
     
-    void saveRemovedCalls(String dumpPath) throws IOException {
-        if(TRACE_INLINING) System.out.println("INLINING: Dumping removeCalls: " + removedCalls.size() + " calls"); 
-        for(Iterator iter = removedCalls.iterator(); iter.hasNext();){
-            ProgramLocation call = (ProgramLocation) iter.next();
-            int i = Imap.get(call);
-            if(TRACE_INLINING) System.out.println("Removing " + call);
-            removeCalls.orWith(I.ithVar(i));
-        }
-        bdd_save(dumpPath+"removeCalls.bdd", removeCalls);
-    }
-
-//    private int getBytecodeIndex(jq_Method method, Quad quad) {
-//        Map map = CodeCache.getBCMap((jq_Method) method);
-//        if (map == null) return -1;
-//        Integer i = (Integer) map.get(quad);
-//        if (i == null) return -1;
-//        return i.intValue();
-//    }
-    
-    void saveInlinedSites(String dumpPath) throws IOException {
-        if(TRACE_INLINING) System.out.println("INLINING: Dumping inlinedSites: " + inlinedSites.size() + " triples");
-        for(Iterator iter = InlineMapping.fakeMap.entrySet().iterator(); iter.hasNext();){
-            Map.Entry e     = (Entry) iter.next(); 
-            Quad alloc      = (Quad) ((Pair) e.getValue()).right;
-            Quad callSite   = (Quad) ((Pair) e.getKey()).right;
-            
-            ProgramLocation callLoc = null;
-            for (Iterator iMapIter = Imap.iterator(); iMapIter.hasNext();) {
-                ProgramLocation loc = (ProgramLocation) iMapIter.next();
-   
-                if (loc instanceof QuadProgramLocation) {
-                    QuadProgramLocation qpl = (QuadProgramLocation) loc;
-                    if(qpl.getQuad() == callSite /* && qpl.getMethod() == method*/){
-                        callLoc = qpl;                            
-                        break;
-                    }
-                }
-            }
-            
-            Assert._assert(callLoc != null, "No location corresponds to " + callSite);
-            jq_Method method = callLoc.getMethod();
-            int c_i = Imap.get(callLoc);
-            jq_Method target = Invoke.getMethod(callSite).getMethod();
-            addToIE(I.ithVar(c_i), target);
-            addToMI(M.ithVar(Mmap.get(target)), I.ithVar(c_i), target);
-            /*
-            BDD retBDD = Iret.and(I.ithVar(c_i));
-            System.out.println("Size of Iret " + Iret.satCount(Iset.and(V1set)));            
-            System.out.println("Iret for " + c_i + " is " + 
-                callLoc + " -> " + retBDD.toStringWithDomains());
-            */            
-       
-            for(Iterator heapIter = Hmap.iterator(); heapIter.hasNext();) {
-                MethodSummary.Node node = (Node) heapIter.next();
-                
-                if(node instanceof ConcreteTypeNode) {
-                    ProgramLocation pl = ((ConcreteTypeNode)node).getLocation();
-                    if(pl instanceof QuadProgramLocation) {
-                        Quad q = ((QuadProgramLocation) pl).getQuad();
-                        if(q == alloc) {
-                            if(TRACE_INLINING) System.out.println("INLINING: Found an inlined allocation site in method " + method);                            
-                            int h_i = Hmap.get(node);                            
-                            if(TRACE_INLINING) System.out.println("INLINING: Mapping " + c_i + " to " + h_i);
-                            
-                            BDD h = H1.ithVar(h_i);
-                            inlineSites.orWith(I.ithVar(c_i).and(h));
-                            //addToVP(retBDD, node);
-                        }
-                    }
-                }
-            }
-        }
-        bdd_save(dumpPath+"inlineSites.bdd", inlineSites);
-    }
-
     class Dummy implements Textualizable {
         public void addEdge(String edge, Textualizable t) {
         }
