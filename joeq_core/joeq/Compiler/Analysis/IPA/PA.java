@@ -5426,6 +5426,10 @@ public class PA {
                 dos = new BufferedWriter(new FileWriter(dumpPath+"unmunged_name.map"));
                 for (int j = 0; j < Nmap.size(); ++j) {
                     Object o = Nmap.get(j);
+                    if (o == null) {
+                        dos.write ("(null)"+"\n");
+                        continue;
+                    }
                     if (o instanceof Dummy) {
                         dos.write(o.toString()+"\n");
                         continue;
