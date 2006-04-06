@@ -98,7 +98,7 @@ public class CodeCache {
 
     private void _invalidateBCMap(jq_Method m) {
         if(bcmap.get(m) != null) {
-            System.err.println("Replacing " + m);
+            // System.err.println("Replacing " + m);
         }
         bcmap.put(m, null);        
     }

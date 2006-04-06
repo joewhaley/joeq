@@ -3503,8 +3503,9 @@ public class PA {
                     dis.SKIP_SOLVE = false;
                     dis.DUMP_FLY = false;
                
-                    System.out.println("Finished discovering call graph.");
                     dis.run("java", dis.cg, rootMethods);
+                    System.out.println("Finished discovering call graph.");
+
                     //dis.traceNoDestanation();
                     dis = new PA();
 
