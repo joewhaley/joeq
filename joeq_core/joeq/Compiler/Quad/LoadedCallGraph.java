@@ -137,7 +137,7 @@ public class LoadedCallGraph extends CallGraph {
     protected MultiMap/*<jq_Method,Integer>*/ callSites;
     protected InvertibleMultiMap/*<ProgramLocation,jq_Method>*/ edges;
     protected boolean bcCallSites;
-    private static final boolean MAPPING_OFF = true;
+    private static final boolean MAPPING_OFF = false;
 
     public LoadedCallGraph(String filename) throws IOException {
         this.methods = new LinkedHashSet();
@@ -354,7 +354,7 @@ public class LoadedCallGraph extends CallGraph {
             if (callSite instanceof ProgramLocation.QuadProgramLocation) {
                 jq_Method m = (jq_Method) callSite.getMethod();
                 Map map = CodeCache.getBCMap(m);
-                CodeCache.invalidateBCMap(m);
+                //CodeCache.invalidateBCMap(m);
                 Quad q = ((ProgramLocation.QuadProgramLocation) callSite).getQuad();
                 if (q == null) {
                     Assert.UNREACHABLE("Error: cannot find call site "+callSite);
