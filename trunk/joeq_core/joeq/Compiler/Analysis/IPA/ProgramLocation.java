@@ -38,7 +38,7 @@ import jwutil.util.Convert;
  * @version $Id$
  */
 public abstract class ProgramLocation implements Textualizable {
-    
+    public static final boolean GIVE_SIGNATURES = !System.getProperty("pa.signaturesinlocs", "no").equals("no");
     /** The method of this location. **/
     protected final jq_Method m;
     
@@ -203,8 +203,12 @@ public abstract class ProgramLocation implements Textualizable {
             sb.append((q==null)?-1:q.getID());
             if (q.getOperator() instanceof Invoke) {
                 sb.append(" => ");
-                sb.append(Invoke.getMethod(q).getMethod().getName());
-                sb.append("()");
+                if (GIVE_SIGNATURES) {
+                    sb.append(Invoke.getMethod(q).getMethod().getNameAndDesc());
+                } else {                    
+                    sb.append(Invoke.getMethod(q).getMethod().getName());
+                    sb.append("()");
+                }
                 if (isSingleTarget())
                     sb.append("*");
             }
@@ -367,8 +371,15 @@ public abstract class ProgramLocation implements Textualizable {
             return false;
         }
         public String toString() {
-            String s = super.m.getDeclaringClass().getName()+"."+super.m.getName()+"() @ "+bcIndex;
-            return s;
+            StringBuffer sb = new StringBuffer(super.m.getDeclaringClass().getName());
+            sb.append('.');
+            if (GIVE_SIGNATURES) {
+                sb.append(super.m.getNameAndDesc());
+            } else {
+                sb.append(super.m.getName()).append("()");                
+            }                
+            sb.append(" @ ").append(bcIndex);
+            return sb.toString();
         }
         
         public byte getInvocationType() {
