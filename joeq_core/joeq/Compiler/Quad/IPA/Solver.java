@@ -24,12 +24,12 @@ import jwutil.util.Assert;
 public abstract class Solver {
     
     protected CallGraph cg;
-    protected Map dependencies;
+    protected Map dependents;
     protected Collection roots;
     
-    public static final boolean TIMINGS = true;
-    public static final boolean TRACE = true;
-    public static final boolean TRACE_WORKLIST = true;
+    public static final boolean TIMINGS = false;
+    public static final boolean TRACE = false;
+    public static final boolean TRACE_WORKLIST = false;
     
     protected boolean bottomUp = true;
     
@@ -44,9 +44,17 @@ public abstract class Solver {
         /* Get the predecessor map and build SCCs. */
         if (TRACE) System.out.print("Building and sorting SCCs...");
         Navigator navigator = cg.getNavigator();
-        dependencies = Traversals.buildPredecessorMap(navigator, roots);
+        
+        if (bottomUp) {
+            dependents = Traversals.buildPredecessorMap(navigator, roots);
+        }
+        else {
+            dependents = Traversals.buildSuccessorMap(navigator, roots);
+        }
+        
         Set sccs = SCComponent.buildSCC(roots, navigator);
         SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
+        
         if (TRACE) System.out.print("done.");
         
         if (TIMINGS) System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
@@ -59,6 +67,7 @@ public abstract class Solver {
         else {
             scc = graph.getFirst();
         }
+        
         while (scc != null) {
             /* Visit each method in the SCC. */
             if (TRACE_WORKLIST) System.out.println("Visiting SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)"));
@@ -75,17 +84,15 @@ public abstract class Solver {
                 if (TRACE_WORKLIST) System.out.println("Loop changed, redoing SCC.");
                 continue;
             }
-            
-            // TODO: this is wrong for topDown
             /* Finished SCC, remove edges from nodes in this SCC. */
             if (TRACE_WORKLIST) System.out.println("Finished SCC"+scc.getId());
             for (int i=0; i<nodes.length; ++i) {
                 jq_Method m1 = (jq_Method) nodes[i];
-                for (Iterator j=bottomUp ? navigator.prev(m1).iterator() 
-                                         : navigator.next(m1).iterator();
+                for (Iterator j = bottomUp ? navigator.next(m1).iterator()
+                                           : navigator.prev(m1).iterator();
                      j.hasNext(); ) {
                     jq_Method m2 = (jq_Method) j.next();
-                    Set ps = (Set) dependencies.get(m2);
+                    Set ps = (Set) dependents.get(m2);
                     boolean b = ps.remove(m1);
                     Assert._assert(b);
                     if (ps.isEmpty()) {
@@ -96,6 +103,7 @@ public abstract class Solver {
                     }
                 }
             }
+            
             if (bottomUp) {
                 scc = scc.prevTopSort();
             }
