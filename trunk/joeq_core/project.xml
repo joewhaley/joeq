@@ -21,9 +21,9 @@
   <siteDirectory>/home/groups/j/jo/joeq/htdocs/</siteDirectory>
   <distributionDirectory>/home/groups/j/jo/joeq/</distributionDirectory>
   <repository>
-    <connection>scm:cvs:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq:joeq_core</connection>
-    <developerConnection>scm:cvs:ext:joewhaley@cvs.sourceforge.net:/cvsroot/joeq:joeq_core</developerConnection>
-    <url>http://cvs.sourceforge.net/viewcvs.py/joeq/</url>
+    <connection>scm:cvs:pserver:anonymous@joeq.cvs.sourceforge.net:/cvsroot/joeq:joeq_core</connection>
+    <developerConnection>scm:cvs:ext:joewhaley@joeq.cvs.sourceforge.net:/cvsroot/joeq:joeq_core</developerConnection>
+    <url>http://joeq.cvs.sourceforge.net/joeq/</url>
   </repository>
   <mailingLists>
     <mailingList>
