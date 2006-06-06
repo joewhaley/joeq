@@ -133,7 +133,6 @@ public abstract class Utf8 {
      * Returns the new offset in the byte array.
      */
     public static int toUtf8(char c, byte[] to, int off, int end) {
-        int k = 0;
         if ((c >= 0x0001) && (c <= 0x007F)) {
             to[off++] = (byte) c;
         } else {
