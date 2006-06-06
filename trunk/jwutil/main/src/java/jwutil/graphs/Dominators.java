@@ -64,11 +64,6 @@ public class Dominators {
     private int[] semi;
 
     /**
-     * Map for labeling the nodes.
-     */
-    private Map map;
-
-    /**
      * True if we are computing post-dominators, false otherwise.
      */
     private boolean post;
@@ -83,7 +78,6 @@ public class Dominators {
 
         int num = setLabels(start);
 
-        map = new HashMap(1 + num / 4);
         vertex = new Object[num];
         semi = new int[num];
         parent = new Object[num];
@@ -115,7 +109,6 @@ public class Dominators {
         ancestor = null;
         label = null;
         buckets = null;
-        map = null;
     }
 
     private IndexMap labels;
