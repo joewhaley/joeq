@@ -57,11 +57,11 @@ public class ResidentJava {
             public void checkAccept(String host, int port) {}
             public void checkAccess(Thread t) {}
             public void checkAccess(ThreadGroup t) {}
-            public void checkAwtEventQueueAccess(ThreadGroup t) {}
+            public void checkAwtEventQueueAccess() {}
             public void checkConnect(String host, int port) {}
             public void checkConnect(String host, int port, Object context) {}
             public void checkCreateClassLoader() {}
-            public void checkDelete() {}
+            public void checkDelete(String file) {}
             public void checkExec(String file) {}
             public void checkExit(int status) {
                 throw new SystemExitException(status);
@@ -98,7 +98,6 @@ public class ResidentJava {
     public static String readLine(InputStream in) throws IOException {
         char[] buf = new char[256];
         StringBuffer s = null;
-        outer:
         for (;;) {
             int j;
             for (j = 0; j < buf.length; ++j) {
