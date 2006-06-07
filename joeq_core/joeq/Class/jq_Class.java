@@ -2677,7 +2677,7 @@ uphere2:
     }
 
     private static Delegate attemptDelegate(String s) {
-        String type = "class delegate";
+        //String type = "class delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();

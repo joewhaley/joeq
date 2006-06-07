@@ -1874,7 +1874,7 @@ public class PA {
                     } else {
                         for (Iterator m = r.iterator(V1cset); m.hasNext(); ) {
                             BDD t = (BDD) m.next();
-                            System.out.println("        context "+s.exist(IMset.and(V2cset)).toStringWithDomains(TS));
+                            System.out.println("        context "+t.exist(IMset.and(V2cset)).toStringWithDomains(TS));
                         }
                     }
                 }
@@ -2120,11 +2120,9 @@ public class PA {
                     
                     BigInteger pos = BigInteger.ZERO;
                     int maxSkip = -1;
-                    boolean hasDontCare = false;
                     for (i=0; i<domain_n_varnum; ++i) {
                         int val = set[var[i]];
                         if (val == 0) {
-                            hasDontCare = true;
                             if (maxSkip == i-1)
                                 maxSkip = i;
                         }
@@ -2556,12 +2554,12 @@ public class PA {
                     Node n = (Node) Hmap.get(h_i);
                     if(n instanceof MethodSummary.ConcreteTypeNode){
                         ConcreteTypeNode cn = (ConcreteTypeNode) n;
-                        String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
+                        String stringConst = (String) MethodSummary.stringNodes2Values.get(cn);
                         if(stringConst != null){
 //                            System.out.println(I_bdd.toStringWithDomains(TS) + " -> " + stringConst);
                             if(stringConst == null){
                                 if(missingConst.get(stringConst) == null){
-                                    if(TRACE_FORNAME) System.err.println("No constant string for " + n + " at " + n);                                    
+                                    if(TRACE_FORNAME) System.err.println("No constant string for " + cn + " at " + n);                                    
                                     missingConst.put(stringConst, new Integer(0));
                                 }                
                                 continue;
@@ -3652,10 +3650,6 @@ public class PA {
         }
     }
    
-    private void dumpCallGraphAsDot(CallGraph cg, String dotFileName) throws IOException {
-        PathNumbering pn = countCallGraph(cg, null, false);
-        dumpCallGraphAsDot(pn, cg, dotFileName);
-    }
     private void dumpCallGraphAsDot(PathNumbering pn, CallGraph cg, String dotFileName) throws IOException {
         if (pn != null) {
             BufferedWriter dos = null;
@@ -5457,7 +5451,6 @@ public class PA {
         Assert._assert(DUMP_SSA);
         String dumpPath = System.getProperty("pa.dumppath", "");
         jq_MethodVisitor mv = null;
-        ControlFlowGraphVisitor cfgv = null;
         Assert._assert(bddIRBuilder != null);
         mv = new ControlFlowGraphVisitor.CodeCacheVisitor(bddIRBuilder,
                 true);

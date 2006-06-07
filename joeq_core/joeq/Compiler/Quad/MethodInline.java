@@ -3,25 +3,21 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
-import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.Quad.Operand.ConditionOperand;
 import joeq.Compiler.Quad.Operand.IConstOperand;
-import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
@@ -50,7 +46,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 
     Oracle oracle;
     CallGraph cg;
-    private static Map fakeMethodOperand = new HashMap();
+    //private static Map fakeMethodOperand = new HashMap();
 
     public MethodInline(Oracle o) {
         this.oracle = o;
@@ -571,47 +567,4 @@ outer:
         if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).getRegisterFactory().fullDump());
     }
         
-    private static jq_Class getClassByName(String className) {
-        jq_Class theClass = (jq_Class)jq_Type.parseType(className);
-        Assert._assert(theClass != null, className + " is not available.");
-        theClass.prepare();
-        
-        return theClass;
-    }
-    /**
-     * @param fakeString
-     * @param originalMethod
-     * @return  replacement method or null
-     */
-    private static jq_Method findReplacementMethod(jq_Class fakeString, jq_Method originalMethod) {
-        for(Iterator iter = fakeString.getMembers().iterator(); iter.hasNext();){
-            Object o = iter.next();
-            if(!(o instanceof jq_Method)) continue;
-            jq_Method m = (jq_Method) o;
-            
-            if(!m.getName().toString().equals(originalMethod.getName().toString())){
-                continue;
-            }
-            
-            if(m.getParamTypes().length != originalMethod.getParamTypes().length){
-                continue;            
-            }
-            
-            boolean allMatch = true;
-            for(int i = 0; i < originalMethod.getParamTypes().length; i++){
-                if(m.getParamTypes()[i] != originalMethod.getParamTypes()[i]){
-                    allMatch = false;
-                    break;
-                }
-            }
-            if(!allMatch) {
-                continue;
-            }
-         
-            // done with the tests: m is good
-            return m;
-        }
-        
-        return null;
-    }
 }

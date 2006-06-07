@@ -225,7 +225,6 @@ public class ObjectNamingSupport {
     
     String readSources(String namesFile) throws IOException {
         BufferedReader di = new BufferedReader(new FileReader(namesFile));
-        int lineno = 1;
         String line = di.readLine();
         String firstLine = null;
         

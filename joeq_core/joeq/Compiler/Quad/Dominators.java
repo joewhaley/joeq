@@ -235,7 +235,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
             //        for each Z in {idom(z) = X} do
             for (Iterator z = getDominatorNode(X).getChildren().iterator(); z.hasNext();) {
                 DominatorNode zVertex = (DominatorNode) z.next();
-                BasicBlock Z = zVertex.getBasicBlock();
+                //BasicBlock Z = zVertex.getBasicBlock();
                 // for each Y in DF(Z) do
                 for (BitStringIterator y = zVertex.dominance_frontier
                         .iterator(); y.hasNext();) {

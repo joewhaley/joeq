@@ -25,9 +25,6 @@ public class ControlFlowGraph {
     
     /** Array of basic blocks, ordered by their appearance in the bytecode. */
     private final BasicBlock[] basic_blocks;
-    /** Array of exception handler entrypoints, ordered by their appearance
-     * in the bytecode. */
-    private final BasicBlock[] handler_entries;
     /** Map from basic blocks to their JSR info.
      * There is JSR info associated with the entry and exit blocks of each
      * JSR subroutine. */
@@ -36,7 +33,6 @@ public class ControlFlowGraph {
     /** Creates new ControlFlowGraph */
     private ControlFlowGraph(int n_bb, int n_handlers) {
         basic_blocks = new BasicBlock[n_bb];
-        handler_entries = new BasicBlock[n_handlers];
     }
 
     /** Returns the entry basic block. */

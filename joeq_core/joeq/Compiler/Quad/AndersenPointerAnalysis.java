@@ -279,7 +279,6 @@ public class AndersenPointerAnalysis {
             }
             int numTypes = PrimordialClassLoader.loader.getNumTypes();
             System.out.println("Number of RTA classes: "+numTypes);
-            int nMethods = 0;
             jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
             Set methods = new HashSet();
             for (int i = 0; i < numTypes; ++i) {

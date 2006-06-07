@@ -54,7 +54,7 @@ public class LivenessAnalysis extends Problem {
         
         if (TRACE) System.out.println("Bit vector size: "+bitVectorSize);
         
-        Map regToDefs = new HashMap();
+        //Map regToDefs = new HashMap();
         transferFunctions = new HashMap();
         emptySet = new UnionBitVectorFact(bitVectorSize);
         emptyTF = new GenKillTransferFunction(bitVectorSize);

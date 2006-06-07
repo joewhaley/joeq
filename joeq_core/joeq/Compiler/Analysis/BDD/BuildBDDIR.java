@@ -244,7 +244,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         time = System.currentTimeMillis() - time;
         totalTime += time;
         System.out.println("Method: " + cfg.getMethod() + " time: " + time);
-        int qSize = totalQuads;
+        //int qSize = totalQuads;
         //int nodes = allQuads.nodeCount();
         //System.out.println("Quads: " +qSize+", nodes: "+nodes+", average:
         // "+(float)nodes/qSize);

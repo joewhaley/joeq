@@ -120,7 +120,6 @@ public class EnterSSA implements ControlFlowGraphVisitor {
                         }
                     }
                     if (copyNeeded) {
-                        boolean copyRequested = false;
                         Iterator out2 = ehl.mayCatch(pei.getThrownExceptions()).iterator();
                         while (out2.hasNext()) {
                             ExceptionHandler eh = (ExceptionHandler) out2.next();

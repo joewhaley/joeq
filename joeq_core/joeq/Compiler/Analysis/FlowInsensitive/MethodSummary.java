@@ -5454,7 +5454,6 @@ outer:
                     for (Iterator k = bb.iterator(); k.hasNext(); ) {
                         Quad q = (Quad) k.next();
                         t.writeString("quad "+q.getID()+" ");
-                        int num = 0;
                         for (Iterator l = q.getUsedRegisters().iterator(); l.hasNext(); ) {
                             RegisterOperand op = (RegisterOperand) l.next();
                             t.writeString("op ");
