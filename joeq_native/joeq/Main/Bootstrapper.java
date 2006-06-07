@@ -361,7 +361,7 @@ public abstract class Bootstrapper {
                 public int compare(Object o1, Object o2) {
                     return ((jq_Type)o1).getDesc().toString().compareTo(((jq_Type)o2).getDesc().toString());
                 }
-                public boolean equals(Object o1, Object o2) { return o1 == o2; }
+                public boolean equals(Object o) { return this == o; }
             });
             System.out.println("Types:");
             Set packages = new LinearSet();
@@ -538,13 +538,10 @@ public abstract class Bootstrapper {
         it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type) it.next();
-            if (t.isReferenceType()) {
-                jq_Reference r = (jq_Reference) t;
-                if (t.isClassType()) {
-                    jq_Class k = (jq_Class) t;
-                    objmap.initStaticData(k);
-                    objmap.addStaticFieldRelocs(k);
-                }
+            if (t.isClassType()) {
+                jq_Class k = (jq_Class) t;
+                objmap.initStaticData(k);
+                objmap.addStaticFieldRelocs(k);
             }
         }
         
