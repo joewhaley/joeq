@@ -774,7 +774,6 @@ public class SimpleAllocator extends HeapAllocator {
             boolean lastWasFree = false;
             
             // Walk over current block.
-            outer:
             while (currBlockEnd.difference(p) > 0) {
                 
                 if (TRACE_FREELIST) Debug.write("ptr=", p);

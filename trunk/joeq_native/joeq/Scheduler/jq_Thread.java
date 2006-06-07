@@ -37,7 +37,6 @@ public class jq_Thread implements jq_DontAlign {
     private volatile int thread_switch_enabled;
     // C code relies on this field being third.
     private jq_NativeThread native_thread;
-    private Throwable exception_object;
     private final Thread thread_object;
     jq_Thread next;
     private jq_CompiledCode entry_point;
