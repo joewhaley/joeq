@@ -3888,7 +3888,7 @@ public abstract class Operator {
     }
 
     private static Delegate attemptDelegate(String s) {
-        String type = "quad-operator delegate";
+        //String type = "quad-operator delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();

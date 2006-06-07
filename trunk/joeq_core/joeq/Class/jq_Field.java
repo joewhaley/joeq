@@ -79,7 +79,7 @@ public abstract class jq_Field extends jq_Member {
     }
 
     private static Delegate attemptDelegate(String s) {
-        String type = "field delegate";
+        //String type = "field delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();

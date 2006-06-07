@@ -481,7 +481,6 @@ uphere:
         Set s = (Set) methodToSpecializations.get(m);
         int current = 0;
         if (s != null) {
-uphere:
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Specialization s2 = (Specialization) i.next();
                 Assert._assert(s2.target.getMethod() == m);

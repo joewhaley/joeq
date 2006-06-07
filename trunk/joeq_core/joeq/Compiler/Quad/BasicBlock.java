@@ -58,8 +58,6 @@ public class BasicBlock {
     private static final int EXCEPTION_HANDLER_ENTRY = 0x1;
     /** JSR subroutine entry point. */
     private static final int JSR_ENTRY = 0x2;
-    /** This basic block ends in a 'ret'. */
-    private static final int ENDS_IN_RET = 0x4;
     
     /** Creates new entry node. Only to be called by ControlFlowGraph. */
     static BasicBlock createStartNode() {

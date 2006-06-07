@@ -95,7 +95,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     private RegisterFactory rf;
     
     private boolean[] visited;
-    private boolean uncond_branch;
     private LinkedList regenerate;
 
     private HashMap quad2bci = new HashMap();
@@ -233,7 +232,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         this.quad_bb.removeAllQuads();
         this.bc_bb = bc_bb;
-        this.uncond_branch = false;
         this.current_state.overwriteWith(start_states[bc_bb.id]);
         if (this.quad_bb.isExceptionHandlerEntry()) {
             // TODO: find non-exceptional branches to exception handler entries and split the basic block.
@@ -1031,7 +1029,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitGOTO(int target) {
         super.visitGOTO(target);
-        this.uncond_branch = true;
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(target).id];
         Quad q = Goto.create(quad_cfg.getNewQuadID(), Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
@@ -1046,7 +1043,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitJSR(int target) {
         super.visitJSR(target);
-        this.uncond_branch = true;
         joeq.Compiler.BytecodeAnalysis.BasicBlock target_bcbb = bc_cfg.getBasicBlockByBytecodeIndex(target);
         BasicBlock target_bb = quad_bbs[target_bcbb.id];
         BasicBlock successor_bb = quad_bbs[bc_bb.id+1];
@@ -1087,7 +1083,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitRET(int i) {
         super.visitRET(i);
-        this.uncond_branch = true;
         saveStackIntoRegisters();
         RegisterOperand op0 = makeLocal(i, jq_ReturnAddressType.INSTANCE);
         Quad q = Ret.create(quad_cfg.getNewQuadID(), Ret.RET.INSTANCE, op0);
@@ -1138,7 +1133,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitTABLESWITCH(int default_target, int low, int high, int[] targets) {
         super.visitTABLESWITCH(default_target, low, high, targets);
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_I();
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(default_target).id];
@@ -1153,7 +1147,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitLOOKUPSWITCH(int default_target, int[] values, int[] targets) {
         super.visitLOOKUPSWITCH(default_target, values, targets);
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_I();
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(default_target).id];
@@ -1167,7 +1160,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitIRETURN() {
         super.visitIRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_I();
         Quad q = Return.create(quad_cfg.getNewQuadID(), Return.RETURN_I.INSTANCE, op0);
         appendQuad(q);
@@ -1175,7 +1167,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitLRETURN() {
         super.visitLRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_L();
         Quad q = Return.create(quad_cfg.getNewQuadID(), Return.RETURN_L.INSTANCE, op0);
         appendQuad(q);
@@ -1183,7 +1174,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitFRETURN() {
         super.visitFRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_F();
         Quad q = Return.create(quad_cfg.getNewQuadID(), Return.RETURN_F.INSTANCE, op0);
         appendQuad(q);
@@ -1191,7 +1181,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitDRETURN() {
         super.visitDRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_D();
         Quad q = Return.create(quad_cfg.getNewQuadID(), Return.RETURN_D.INSTANCE, op0);
         appendQuad(q);
@@ -1199,7 +1188,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitARETURN() {
         super.visitARETURN();
-        this.uncond_branch = true;
         // could be A or R
         Operand op0 = current_state.pop();
         jq_Type t = getTypeOf(op0);
@@ -1218,7 +1206,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitVRETURN() {
         super.visitVRETURN();
-        this.uncond_branch = true;
         Quad q = Return.create(quad_cfg.getNewQuadID(), Return.RETURN_V.INSTANCE);
         appendQuad(q);
         current_state.clearStack();
@@ -2019,7 +2006,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitATHROW() {
         super.visitATHROW();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_A();
         Quad q = Return.create(quad_cfg.getNewQuadID(), Return.THROW_A.INSTANCE, op0);
         appendQuad(q);
@@ -2757,6 +2743,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
 
     public static class jq_ReturnAddressType extends jq_Reference {
         public static final jq_ReturnAddressType INSTANCE = new jq_ReturnAddressType();
+        public static jq_ReturnAddressType create(BasicBlock bb) {
+            return new jq_ReturnAddressType(bb);
+        }
         private BasicBlock returnTarget;
         private jq_ReturnAddressType() { super(Utf8.get("L&ReturnAddress;"), PrimordialClassLoader.loader); }
         private jq_ReturnAddressType(BasicBlock returnTarget) {
@@ -2786,6 +2775,11 @@ public class BytecodeToQuad extends BytecodeVisitor {
         public String toString() { return "<retaddr> (target="+returnTarget+")"; }
         public boolean equals(Object rat) {
             if (!(rat instanceof jq_ReturnAddressType)) return false;
+            BasicBlock rt = ((jq_ReturnAddressType)rat).returnTarget;
+            if (rt == null)
+                return returnTarget == null;
+            if (returnTarget == null)
+                return false;
             return ((jq_ReturnAddressType)rat).returnTarget.equals(this.returnTarget);
         }
         public int hashCode() {
@@ -2813,7 +2807,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
 
     private static UnsafeHelper attemptDelegate(String s) {
-        String type = "BC2Q delegate";
+        //String type = "BC2Q delegate";
         try {
             Class c = Class.forName(s);
             return (UnsafeHelper)c.newInstance();

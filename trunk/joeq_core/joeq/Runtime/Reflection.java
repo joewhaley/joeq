@@ -385,7 +385,7 @@ public abstract class Reflection {
     }
 
     private static Delegate attemptDelegate(String s) {
-        String type = "reflection delegate";
+        //String type = "reflection delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();

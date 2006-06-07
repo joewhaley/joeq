@@ -356,7 +356,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     }
 
     private static Delegate attemptDelegate(String s) {
-        String type = "array delegate";
+        //String type = "array delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();

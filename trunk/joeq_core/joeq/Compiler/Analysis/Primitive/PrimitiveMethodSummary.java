@@ -881,8 +881,8 @@ public class PrimitiveMethodSummary {
             Register dest_r = InstanceOf.getDest(obj).getRegister();            
             Operand src = InstanceOf.getSrc(obj);
             if (src instanceof RegisterOperand) {
-                RegisterOperand rop = ((RegisterOperand)src);
-                Register src_r = rop.getRegister();
+                //RegisterOperand rop = ((RegisterOperand)src);
+                //Register src_r = rop.getRegister();
                 setRegister(dest_r, UnknownTypeNode.get(dest_r.getType()));
             } else {
                 Node n = handleConst((ConstOperand) src, new QuadProgramLocation(method, obj));

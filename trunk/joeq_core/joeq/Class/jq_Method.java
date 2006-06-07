@@ -426,7 +426,7 @@ public abstract class jq_Method extends jq_Member {
     }
 
     private static Delegate attemptDelegate(String s) {
-        String type = "method delegate";
+        //String type = "method delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();

@@ -25,7 +25,6 @@ import joeq.Compiler.Analysis.FlowInsensitive.ReflectionInformationProvider;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.FakeParamNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
@@ -34,7 +33,6 @@ import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.MethodInline.InlineSelectedCalls;
 import joeq.Main.HostedVM;
 import jwutil.collections.Pair;
 import jwutil.util.Assert;
@@ -250,7 +248,6 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
             jq_Method replacement = null;            
             if(pa.USE_BOGUS_SUMMARIES) {
-                jq_Type[] paramTypes = mc.getParamTypes();
                 Operand.ParamListOperand listOp = Operator.Invoke.getParamList(q);
                 jq_Type type = listOp.length() > 0 ? listOp.get(0).getType() : null;
                 replacement = PA.getBogusSummaryProvider().getReplacementMethod(target, type);

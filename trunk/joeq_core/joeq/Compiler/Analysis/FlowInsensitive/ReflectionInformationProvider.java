@@ -220,7 +220,6 @@ public abstract class ReflectionInformationProvider {
      * reads answers from a file. 
      * */
     public static class CribSheetReflectionInformationProvider extends ReflectionInformationProvider {
-        private static boolean TRACE = true;
         private static final String DEFAULT_CRIB_FILE = "reflection.spec";
 
         public CribSheetReflectionInformationProvider(String cribSheetFileName){
@@ -239,7 +238,6 @@ public abstract class ReflectionInformationProvider {
         public static void main(String[] args) {
             HostedVM.initialize();
             CodeCache.AlwaysMap = true;
-            TRACE = true;
             
             CribSheetReflectionInformationProvider provider = 
                 new CribSheetReflectionInformationProvider(args[0]);

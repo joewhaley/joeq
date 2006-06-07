@@ -67,7 +67,7 @@ public class FindBestPermutation extends Thread {
         String ordering = System.getProperty("bddordering");
         boolean reverse = System.getProperty("bddnoreverse") == null;
         String filename = args[0];
-        int nDomains = countDomains(ordering);
+        //int nDomains = countDomains(ordering);
         //pg = new PermutationGenerator(nDomains);
         boolean flip = false;
         boolean updated = true;
