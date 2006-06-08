@@ -266,7 +266,7 @@ public final class SCComponent implements Comparable, Serializable {
                 }
             }
             Collection next = nav.next(node);
-            for (Iterator j = prev.iterator(); j.hasNext();) {
+            for (Iterator j = next.iterator(); j.hasNext();) {
                 Object jnext = j.next();
                 if (!nodes.contains(jnext)) {
                     isExit[i] = true;
