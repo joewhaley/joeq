@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package jwutil.collections;
 
-import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 import java.io.Serializable;
@@ -260,8 +259,6 @@ public class SortedIntArraySet implements Cloneable, Serializable, RandomAccess 
     public boolean equals(Object arg0) {
         if (arg0 instanceof SortedIntArraySet)
             return equals((SortedIntArraySet)arg0);
-        if (arg0 instanceof Collection)
-            return equals((Collection)arg0);
         return false;
     }
 
