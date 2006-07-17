@@ -231,7 +231,7 @@ public class PAResultSelector {
         BDD fBDD = r.F.ithVar(fieldIndex); // F            
         
         // 2. project out H1, get all H2 elements
-        BDD h2 = r.H1FH2set.relprod(fBDD, r.H1set); // H2
+        BDD h2 = r.hP.relprod(fBDD, r.H1set.union(r.Fset)); // H2
         
         // 3. get all types of H2 elements
         TypedBDD typesOfH2 = (TypedBDD) h2.replace(r.H2toH1).relprod(r.hT, r.H1set);

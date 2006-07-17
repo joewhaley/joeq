@@ -71,7 +71,9 @@ import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDDomain;
 import net.sf.javabdd.BDDFactory;
 import net.sf.javabdd.BDDPairing;
+import net.sf.javabdd.BDDVarSet;
 import net.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.TypedBDDFactory.TypedBDDVarSet;
 
 /**
  * Records results for pointer analysis.  The results can be saved and reloaded.
@@ -190,7 +192,7 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("relprod")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
-                    TypedBDD set = parseBDDset(results, st.nextToken());
+                    TypedBDDVarSet set = parseBDDset(results, st.nextToken());
                     TypedBDD r = (TypedBDD) bdd1.relprod(bdd2, set);
                     results.add(r);
                 } else if (command.equals("replace")) {
@@ -215,7 +217,7 @@ public class PAResults implements PointerAnalysisResults {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD r = bdd1;
                     while (st.hasMoreTokens()) {
-                        TypedBDD set = parseBDDset(results, st.nextToken());
+                        TypedBDDVarSet set = parseBDDset(results, st.nextToken());
                         r = (TypedBDD) r.exist(set);
                     }
                     results.add(r);
@@ -743,12 +745,12 @@ public class PAResults implements PointerAnalysisResults {
     /** For a given TypedBDD, return its domains.
      * This duplicates TypedBDD.getDomains() which for unknown reasons is not public.
      */
-    TypedBDD getDomains(TypedBDD b) {
-        TypedBDD dset = (TypedBDD) b.getFactory().one();
+    TypedBDDVarSet getDomains(TypedBDD b) {
+        TypedBDDVarSet dset = (TypedBDDVarSet) b.getFactory().emptySet();
         Set domains = b.getDomainSet();
         for (Iterator i = domains.iterator(); i.hasNext(); ) {
             BDDDomain d = (BDDDomain) i.next();
-            dset.andWith(d.set());
+            dset.unionWith(d.set());
         }
         return dset;
     }
@@ -835,12 +837,12 @@ public class PAResults implements PointerAnalysisResults {
         return null;
     }
 
-    TypedBDD parseBDDset(List a, String s) {
+    TypedBDDVarSet parseBDDset(List a, String s) {
         BDDDomain d = parseDomain(s);
         if (d != null) {
-            return (TypedBDD) d.set();
+            return (TypedBDDVarSet) d.set();
         }
-        return parseBDD(a, s);
+        return (TypedBDDVarSet) parseBDD(a, s).toVarSet();
     }
 
     public static final int DEFAULT_NUM_TO_PRINT = 10;
@@ -848,11 +850,11 @@ public class PAResults implements PointerAnalysisResults {
     public String toString(TypedBDD b, int numToPrint) {
         if (b == null) return "<you passed 'null' to PAResult.toString>";
         if (b.isZero()) return "<empty>";
-        TypedBDD dset = (TypedBDD) b.getFactory().one();
+        TypedBDDVarSet dset = (TypedBDDVarSet) b.getFactory().emptySet();
         Set domains = b.getDomainSet();
         for (Iterator i = domains.iterator(); i.hasNext(); ) {
             BDDDomain d = (BDDDomain) i.next();
-            dset.andWith(d.set());
+            dset.unionWith(d.set());
         }
         StringBuffer sb = new StringBuffer();
         int j = 0;
@@ -1080,7 +1082,7 @@ public class PAResults implements PointerAnalysisResults {
         BDD result = r.bdd.zero();
         BDD allInvokes = r.mI.exist(r.Nset);
         BDD new_m = method_plus_context0.id();
-        BDD V2cIset = r.Iset.and(r.V2cset);
+        BDDVarSet V2cIset = r.Iset.union(r.V2cset);
         BDD IEcs = (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) ? r.IEcs : r.IE;
         for (int k=1; ; ++k) {
             //System.out.println("Iteration "+k);
@@ -1180,7 +1182,7 @@ public class PAResults implements PointerAnalysisResults {
     
     BDDDomain H3;
     BDDPairing H1toH3, H3toH1;
-    BDD H3set;
+    BDDVarSet H3set;
     
     public void initializeExtraDomains() {
         if (H3 == null) {
@@ -1198,7 +1200,7 @@ public class PAResults implements PointerAnalysisResults {
         BDD invokes = r.IE.relprod(m_bdd, r.Mset);
         invokes.andWith(r.Z.ithVar(0));
         System.out.println("Invokes: "+invokes.toStringWithDomains());
-        BDD bar = r.actual.relprod(invokes, r.Iset.and(r.Zset));
+        BDD bar = r.actual.relprod(invokes, r.Iset.union(r.Zset));
         System.out.println("Actual: "+bar.toStringWithDomains());
         bar.replaceWith(r.V2toV1);
         
@@ -1208,12 +1210,12 @@ public class PAResults implements PointerAnalysisResults {
         invokes = r.IE.relprod(m_bdd, r.Mset);
         invokes.andWith(r.Z.ithVar(1));
         System.out.println("Invokes: "+invokes.toStringWithDomains());
-        BDD bar2 = r.actual.relprod(invokes, r.Iset.and(r.Zset));
+        BDD bar2 = r.actual.relprod(invokes, r.Iset.union(r.Zset));
         System.out.println("Actual: "+bar2.toStringWithDomains());
         bar2.replaceWith(r.V2toV1);
         bar.orWith(bar2);
         
-        if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) bar.andWith(r.V1cset);
+        if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) bar.andWith(r.V1c[0].domain());
         return bar;
     }
     
@@ -1222,10 +1224,10 @@ public class PAResults implements PointerAnalysisResults {
         
         // find objects that are pointed to by only one object.
         BDD hP_ci = r.hP.exist(r.H1cH2cset).exist(r.Fset);
-        BDD set = r.H1.set().and(r.H2.set());
+        BDDVarSet set = r.H1.set().unionWith(r.H2.set());
         
         BDD one_to_one = r.H1.buildEquals(H3).andWith(r.H2.domain());
-        BDD my_set = r.H1.set().andWith(H3.set());
+        BDDVarSet my_set = r.H1.set().unionWith(H3.set());
         
         BDD b = hP_ci.replace(H1toH3); // H3xH2
         b.andWith(hP_ci.id());     // H1xH3xH2
@@ -1292,7 +1294,7 @@ public class PAResults implements PointerAnalysisResults {
             int outer = 0;
             
             while (!relationsToCheck.isZero()) {
-                System.out.print((long)relationsToCheck.satCount(r.H1set.and(H3set))+" relations remaining.        \r");
+                System.out.print((long)relationsToCheck.satCount(r.H1set.union(H3set))+" relations remaining.        \r");
                 ++outer;
                 BDD h_a = relationsToCheck.satOne(r.H1set, false);
                 BDD h1 = h_a.exist(H3set); h_a.free();
@@ -1313,7 +1315,7 @@ public class PAResults implements PointerAnalysisResults {
                     BDD r1 = a1.relprod(sameType23, r.H2set); // FxH3
                     BDD r3 = a3.relprod(sameType23, r.H2set); // H1xFxH3
     
-                    ok = r3.relprod(r1, r.Fset.and(H3set)); // H1
+                    ok = r3.relprod(r1, r.Fset.union(H3set)); // H1
                     //System.out.println("Match approx: "+ok.toStringWithDomains(r.TS));
                     foo.applyWith(ok, BDDFactory.diff);
                     
@@ -1380,7 +1382,7 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("Number of fields="+r.Fmap.size());
         //System.out.println("Number of stores="+r.S.satCount(r.V1.set().andWith(r.F.set()).andWith(r.V2.set())));
         //System.out.println("Number of loads="+r.L.satCount(r.V1.set().andWith(r.F.set()).andWith(r.V2.set())));
-        System.out.println("Number of callgraph edges="+r.IE.satCount(r.Iset.and(r.Mset)));
+        System.out.println("Number of callgraph edges="+r.IE.satCount(r.Iset.union(r.Mset)));
         
         BDD all_v1 = r.vP.exist(r.H1set);
         all_v1.orWith(r.A.exist(r.V2set));
@@ -1509,7 +1511,7 @@ public class PAResults implements PointerAnalysisResults {
         }
         
         {
-            BDD vCalls = r.mI.exist(r.Mset.and(r.Nset));
+            BDD vCalls = r.mI.exist(r.Mset.union(r.Nset));
             double d = vCalls.satCount(r.Iset);
             System.out.println("Virtual call sites: "+d);
             double e = r.IE.satCount(r.IMset);
@@ -1646,7 +1648,7 @@ public class PAResults implements PointerAnalysisResults {
             }
             int I_i = r.Imap.get(loc);
             BDD i   = r.I.ithVar(I_i);
-            BDD m_c = r.IEcs.relprod(i, r.V2cset.and(r.Iset));
+            BDD m_c = r.IEcs.relprod(i, r.V2cset.union(r.Iset));
             // get transitive mod set for this particular method call   
             BDD s   = getTransitiveModSet(m_c);             
             BDD q   = s.exist(r.H1cset);
@@ -1672,7 +1674,7 @@ public class PAResults implements PointerAnalysisResults {
             }
             int I_i = r.Imap.get(invoke);
             BDD i   = r.I.ithVar(I_i);
-            BDD m_c = r.IEcs.relprod(i, r.V2cset.and(r.Iset));
+            BDD m_c = r.IEcs.relprod(i, r.V2cset.union(r.Iset));
             BDD s   = getTransitiveRefSet(m_c);
             BDD q   = s.exist(r.H1cset);
                 
@@ -1756,14 +1758,14 @@ public class PAResults implements PointerAnalysisResults {
          * @see java.util.AbstractCollection#size()
          */
         public int size() {
-            return (int) heapLocations.satCount(r.H1.set().and(r.Fset));
+            return (int) heapLocations.satCount(r.H1.set().union(r.Fset));
         }
 
         /* (non-Javadoc)
          * @see java.util.AbstractCollection#iterator()
          */
         public Iterator iterator() {
-            final Iterator i = heapLocations.iterator(r.H1.set().and(r.Fset));
+            final Iterator i = heapLocations.iterator(r.H1.set().union(r.Fset));
             return new UnmodifiableIterator() {
                 public boolean hasNext() {
                     return i.hasNext();

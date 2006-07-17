@@ -39,6 +39,7 @@ import jwutil.util.Assert;
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDDomain;
 import net.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDDVarSet;
 
 /**
  * BuildBDDIR
@@ -505,11 +506,11 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     void dumpRelation(BufferedWriter dos, String name, BDD relation) throws IOException {
-        int[] a = relation.support().scanSetDomains();
+        BDDDomain[] a = relation.support().getDomains();
         dos.write(name+" ( ");
         for (int i = 0; i < a.length; ++i) {
             if (i > 0) dos.write(", ");
-            BDDDomain d = bdd.getDomain(a[i]);
+            BDDDomain d = a[i];
             dos.write(d.toString()+" : ");
             if (d == quad || d == fallthrough || d == target) dos.write("quad ");
             else if (d == method) dos.write("method ");
@@ -576,37 +577,42 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                 return;
             }
             Assert._assert(!relation.isOne());
-            BDD rsup = relation.support();
-            int[] a = rsup.scanSetDomains();
+            BDDVarSet rsup = relation.support();
+            BDDDomain[] a = rsup.getDomains();
             rsup.free();
-            BDD allDomains = bdd.one();
+            BDDVarSet allDomains = bdd.emptySet();
+            BDDDomain primaryDomain = null;
+            BDDVarSet allButPrimary = bdd.emptySet();
             System.out.print(fileName+" domains {");
             dos.write("#");
             for (int i = 0; i < a.length; ++i) {
-                BDDDomain d = bdd.getDomain(a[i]);
+                BDDDomain d = a[i];
                 System.out.print(" "+d.toString());
                 dos.write(" "+d.toString()+":"+d.varNum());
-                allDomains.andWith(d.set());
+                allDomains.unionWith(d.set());
+                if (i == 0)
+                    primaryDomain = d;
+                else
+                    allButPrimary.unionWith(d.set());
             }
             dos.write("\n");
             System.out.println(" } = "+relation.nodeCount()+" nodes");
-            BDDDomain primaryDomain = bdd.getDomain(a[0]);
             int lines = 0;
-            BDD foo = relation.exist(allDomains.exist(primaryDomain.set()));
+            BDD foo = relation.exist(allButPrimary);
             for (Iterator i = foo.iterator(primaryDomain.set()); i.hasNext(); ) {
                 BDD q = (BDD) i.next();
                 q.andWith(relation.id());
                 while (!q.isZero()) {
                     BDD sat = q.satOne(allDomains, false);
-                    BDD sup = q.support();
-                    int[] b = sup.scanSetDomains();
+                    BDDVarSet sup = q.support();
+                    BDDDomain[] b = sup.getDomains();
                     sup.free();
                     BigInteger[] v = sat.scanAllVar();
                     sat.free();
                     BDD t = bdd.one();
                     for (int j = 0, k = 0, l = 0; j < bdd.numberOfDomains(); ++j) {
                         BDDDomain d = bdd.getDomain(j);
-                        if (k >= a.length || a[k] != j) {
+                        if (k >= a.length || a[k].getIndex() != j) {
                             Assert._assert(v[j].signum() == 0, "v["+j+"] is "+v[j]);
                             //dos.write("* ");
                             t.andWith(d.domain());
@@ -614,7 +620,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                         } else {
                             ++k;
                         }
-                        if (l >= b.length || b[l] != j) {
+                        if (l >= b.length || b[l].getIndex() != j) {
                             Assert._assert(v[j].signum() == 0, "v["+j+"] is "+v[j]);
                             dos.write("* ");
                             t.andWith(d.domain());

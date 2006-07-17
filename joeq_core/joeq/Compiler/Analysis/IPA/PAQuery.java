@@ -67,7 +67,7 @@ public class PAQuery {
             BDD params = _r.formal.relprod(methodBDD, _r.Mset);
             //System.out.println("params: " + params.toStringWithDomains());
             TypedBDD contexts = (TypedBDD)params.relprod(_r.vP, 
-                _r.V1.set().andWith(_r.H1cset).andWith(_r.H1.set()).andWith(_r.Z.set()) );
+                _r.V1.set().unionWith(_r.H1cset).unionWith(_r.H1.set()).unionWith(_r.Z.set()) );
             //System.out.println("contexts: \n" + paResults.toString(contexts, -1));
             //TypedBDD pointsTo = (TypedBDD)params.relprod(r.vP, r.V1cH1cset);
             //System.out.println("pointsTo: \n" + paResults.toString(pointsTo, -1));
@@ -91,12 +91,12 @@ public class PAQuery {
             t = t2;
                 
             //TypedBDD t = (TypedBDD)params.relprod(r.vP, r.V1.set());
-            TypedBDD pointsTo = (TypedBDD)context.relprod(t, _r.V1cset.andWith(_r.H1cset));                
+            TypedBDD pointsTo = (TypedBDD)context.relprod(t, _r.V1cset.union(_r.H1cset));                
             t.free();
                 
             t = (TypedBDD)pointsTo.exist(_r.Z.set());
             //System.out.println(t.satCount() + ", " + pointsTo.satCount());
-            int pointsToSize = (int)pointsTo.satCount(_r.H1.set().and(_r.Zset));
+            int pointsToSize = (int)pointsTo.satCount(_r.H1.set().union(_r.Zset));
             int projSize     = (int)t.satCount( _r.H1.set() ); 
             if(projSize < pointsToSize) {
                 if(!printedInfo.getValue()) {
@@ -185,7 +185,7 @@ public class PAQuery {
                 // these are the modified heap locations
                 mods = _r.S.relprod(param, _r.V1set);                           // H1xH1cxFxV2xV1cxV2c
             } else {
-                BDD method_plus_context0 = methodBDD.andWith(_r.V1cset);
+                BDD method_plus_context0 = methodBDD.andWith(_r.V1c[0].ithVar(0));
                 BDD reachableVars = _paResults.getReachableVars(method_plus_context0); // V1xV1c
                 reachableVars = reachableVars.exist(_r.V1cset);
                 reachableVars.or(param);
