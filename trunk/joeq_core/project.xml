@@ -81,8 +81,8 @@
     <dependency>
       <groupId>javabdd</groupId>
       <artifactId>javabdd</artifactId>
-      <version>1.0b2</version>
-      <jar>javabdd-1.0b2.jar</jar>
+      <version>2.0</version>
+      <jar>javabdd-2.0.jar</jar>
       <type>jar</type>
       <url>http://javabdd.sourceforge.net</url>
     </dependency>
