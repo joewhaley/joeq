@@ -78,7 +78,7 @@ class ParameterAliasing {
             Assert._assert(_r.H1.set() != null);
             Assert._assert(_r.Z.set() != null);
             TypedBDD contexts =                                         // V1c
-                (TypedBDD)params.relprod ( _r.vP, _r.V1.set().and(_r.H1cset).andWith(_r.H1.set()).andWith(_r.Z.set()) );
+                (TypedBDD)params.relprod ( _r.vP, _r.V1.set().union(_r.H1cset).unionWith(_r.H1.set()).unionWith(_r.Z.set()) );
             //System.out.println("contexts: \n" + contexts.toStringWithDomains());
             //TypedBDD pointsTo = (TypedBDD)params.relprod(r.vP, r.V1cH1cset);
             //System.out.println("pointsTo: \n" + paResults.toString(pointsTo, -1));
@@ -95,7 +95,7 @@ class ParameterAliasing {
 
                 Assert._assert(_r.vPfilter != null);
                 TypedBDD pointsTo  = (TypedBDD)_r.vP.and(_r.vPfilter.id());   // restrict by the type filter
-                TypedBDD t2 = (TypedBDD)params.relprod(pointsTo, _r.V1.set().and(_r.V1cset));
+                TypedBDD t2 = (TypedBDD)params.relprod(pointsTo, _r.V1.set().union(_r.V1cset));
                 pointsTo.free();
                 pointsTo = t2;
                 //t = (TypedBDD)t2.exist(_r.Z.set());
@@ -143,7 +143,7 @@ class ParameterAliasing {
         boolean processContext(jq_Method m, MethodSummary ms, BDD t, TypedBDD context, ModifiableBoolean printedInfo){
             boolean result = false;  
 
-            TypedBDD pointsTo = (TypedBDD)context.relprod(t, (TypedBDD) _r.V1cset.and(_r.H1cset));   // H1xZ
+            TypedBDD pointsTo = (TypedBDD)context.relprod(t, _r.V1cset.union(_r.H1cset));   // H1xZ
             //System.out.println("pointsTo: " + pointsTo.toStringWithDomains());
             t.free();
             

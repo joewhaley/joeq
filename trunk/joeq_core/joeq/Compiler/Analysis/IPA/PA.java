@@ -3,20 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +18,20 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -95,6 +95,7 @@ import net.sf.javabdd.BDDBitVector;
 import net.sf.javabdd.BDDDomain;
 import net.sf.javabdd.BDDFactory;
 import net.sf.javabdd.BDDPairing;
+import net.sf.javabdd.BDDVarSet;
 import net.sf.javabdd.TypedBDDFactory;
 import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 /**
@@ -274,11 +275,11 @@ public class PA {
     BDDPairing V1toV2, V2toV1, H1toH2, ItoI2, I2toI, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDDPairing V1ctoV2c, V1cV2ctoV2cV1c, V1cH1ctoV2cV1c;
     BDDPairing T2toT1, T1toT2;
-    BDDPairing H1toV1c[], V1ctoH1[]; BDD V1csets[], V1cH1equals[];
-    BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Cset, Iset, I2set, Zset;
-    BDD V1V2set, V1Fset, V2Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1H2set, H1FH2set;
-    BDD IMset, INset, INH1set, INT2set, T2Nset, MZset;
-    BDD V1cset, V2cset, H1cset, H2cset, V1cV2cset, V1cH1cset, H1cH2cset;
+    BDDPairing H1toV1c[], V1ctoH1[]; BDDVarSet V1csets[]; BDD V1cH1equals[];
+    BDDVarSet V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Cset, Iset, I2set, Zset;
+    BDDVarSet V1V2set, V1Fset, V2Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1H2set, H1FH2set;
+    BDDVarSet IMset, INset, INH1set, INT2set, T2Nset, MZset;
+    BDDVarSet V1cset, V2cset, H1cset, H2cset, V1cV2cset, V1cH1cset, H1cH2cset;
     BDD V1cdomain, V2cdomain, H1cdomain, H2cdomain;
     
     BDDDomain makeDomain(String name, int bits) {
@@ -418,43 +419,43 @@ public class PA {
         
         V1set = V1.set();
         if (V1c.length > 0) {
-            V1cset = bdd.one();
+            V1cset = bdd.emptySet();
             V1cdomain = bdd.one();
             for (int i = 0; i < V1c.length; ++i) {
-                V1cset.andWith(V1c[i].set());
+                V1cset.unionWith(V1c[i].set());
                 V1cdomain.andWith(V1c[i].domain());
             }
-            V1set.andWith(V1cset.id());
+            V1set.unionWith(V1cset.id());
         }
         V2set = V2.set();
         if (V2c.length > 0) {
-            V2cset = bdd.one();
+            V2cset = bdd.emptySet();
             V2cdomain = bdd.one();
             for (int i = 0; i < V2c.length; ++i) {
-                V2cset.andWith(V2c[i].set());
+                V2cset.unionWith(V2c[i].set());
                 V2cdomain.andWith(V2c[i].domain());
             }
-            V2set.andWith(V2cset.id());
+            V2set.unionWith(V2cset.id());
         }
         H1set = H1.set();
         if (H1c.length > 0) {
-            H1cset = bdd.one();
+            H1cset = bdd.emptySet();
             H1cdomain = bdd.one();
             for (int i = 0; i < H1c.length; ++i) {
-                H1cset.andWith(H1c[i].set());
+                H1cset.unionWith(H1c[i].set());
                 H1cdomain.andWith(H1c[i].domain());
             }
-            H1set.andWith(H1cset.id());
+            H1set.unionWith(H1cset.id());
         }
         H2set = H2.set();
         if (H2c.length > 0) {
-            H2cset = bdd.one();
+            H2cset = bdd.emptySet();
             H2cdomain = bdd.one();
             for (int i = 0; i < H2c.length; ++i) {
-                H2cset.andWith(H2c[i].set());
+                H2cset.unionWith(H2c[i].set());
                 H2cdomain.andWith(H2c[i].domain());
             }
-            H2set.andWith(H2cset.id());
+            H2set.unionWith(H2cset.id());
         }
         T1set = T1.set();
         T2set = T2.set();
@@ -465,28 +466,28 @@ public class PA {
         Iset = I.set();
         I2set = I2.set();
         Zset = Z.set();
-        V1cV2cset = (V1c.length > 0) ? V1cset.and(V2cset) : bdd.zero();
-        H1cH2cset = (H1c.length > 0) ? H1cset.and(H2cset) : bdd.zero();
+        V1cV2cset = (V1c.length > 0) ? V1cset.union(V2cset) : bdd.emptySet();
+        H1cH2cset = (H1c.length > 0) ? H1cset.union(H2cset) : bdd.emptySet();
         if (V1c.length > 0) {
-            V1cH1cset = (H1c.length > 0) ? V1cset.and(H1cset) : V1cset;
+            V1cH1cset = (H1c.length > 0) ? V1cset.union(H1cset) : V1cset;
         } else {
-            V1cH1cset = (H1c.length > 0) ? H1cset : bdd.zero();
+            V1cH1cset = (H1c.length > 0) ? H1cset : bdd.emptySet();
         }
-        V1V2set = V1set.and(V2set);
-        V1FV2set = V1V2set.and(Fset);
-        V1H1set = V1set.and(H1set);
-        V1Fset = V1set.and(Fset);
-        V2Fset = V2set.and(Fset);
-        IMset = Iset.and(Mset);
-        INset = Iset.and(Nset);
-        INH1set = INset.and(H1set);
-        INT2set = INset.and(T2set);
-        H1Fset = H1set.and(Fset);
-        H2Fset = H2set.and(Fset);
-        H1H2set = H1set.and(H2set);
-        H1FH2set = H1Fset.and(H2set);
-        T2Nset = T2set.and(Nset);
-        MZset = Mset.and(Zset);
+        V1V2set = V1set.union(V2set);
+        V1FV2set = V1V2set.union(Fset);
+        V1H1set = V1set.union(H1set);
+        V1Fset = V1set.union(Fset);
+        V2Fset = V2set.union(Fset);
+        IMset = Iset.union(Mset);
+        INset = Iset.union(Nset);
+        INH1set = INset.union(H1set);
+        INT2set = INset.union(T2set);
+        H1Fset = H1set.union(Fset);
+        H2Fset = H2set.union(Fset);
+        H1H2set = H1set.union(H2set);
+        H1FH2set = H1Fset.union(H2set);
+        T2Nset = T2set.union(Nset);
+        MZset = Mset.union(Zset);
         
         A = bdd.zero();
         vP = bdd.zero();
@@ -548,7 +549,7 @@ public class PA {
         if (CARTESIAN_PRODUCT && false) {
             H1toV1c = new BDDPairing[MAX_PARAMS];
             V1ctoH1 = new BDDPairing[MAX_PARAMS];
-            V1csets = new BDD[MAX_PARAMS];
+            V1csets = new BDDVarSet[MAX_PARAMS];
             V1cH1equals = new BDD[MAX_PARAMS];
             for (int i = 0; i < MAX_PARAMS; ++i) {
                 H1toV1c[i] = bdd.makePair(H1, V1c[i]);
@@ -679,8 +680,8 @@ public class PA {
      *  Finds invocation sites with no destinations.
      */
     void traceNoDestanation() {
-        System.out.println("IE consists of " + IE.satCount(Iset.and(Mset)) + " elements.");
-        for(Iterator iter = IE.iterator(Iset.and(Mset)); iter.hasNext(); ) {
+        System.out.println("IE consists of " + IE.satCount(Iset.union(Mset)) + " elements.");
+        for(Iterator iter = IE.iterator(Iset.union(Mset)); iter.hasNext(); ) {
             BDD b = (BDD) iter.next();
             int I_i = b.scanVar(I).intValue();
             int M_i = b.scanVar(M).intValue();
@@ -1798,7 +1799,7 @@ public class PA {
         }
     }
     
-    public void dumpWithV1c(BDD z, BDD set) {
+    public void dumpWithV1c(BDD z, BDDVarSet set) {
         BDD a = z.exist(V1cset);
         for (Iterator i = a.iterator(set); i.hasNext(); ) {
             BDD b = (BDD) i.next();
@@ -1842,7 +1843,7 @@ public class PA {
             BDD q = (BDD) i.next(); // V2cxIxV1cxM
             BigInteger I_i = q.scanVar(I);
             System.out.println("Invocation site "+TS.elementName(I.getIndex(), I_i));
-            BDD a = q.exist(IMset.and(V1cset)); // V2c
+            BDD a = q.exist(IMset.union(V1cset)); // V2c
             Iterator k = null;
             boolean bool1;
             if (a.isOne()) {
@@ -1860,13 +1861,13 @@ public class PA {
             for ( ; k.hasNext(); ) {
                 BDD s = (BDD) k.next(); // V2cxIxV1cxM
                 if (!bool1) {
-                    System.out.println("    under context "+s.exist(IMset.and(V1cset)).toStringWithDomains(TS));
+                    System.out.println("    under context "+s.exist(IMset.union(V1cset)).toStringWithDomains(TS));
                 }
                 for (Iterator j = s.iterator(Mset); j.hasNext(); ) {
                     BDD r = (BDD) j.next(); // V2cxIxV1cxM
                     BigInteger M_i = r.scanVar(M);
                     System.out.println(" calls "+TS.elementName(M.getIndex(), M_i));
-                    BDD b = r.exist(IMset.and(V2cset));
+                    BDD b = r.exist(IMset.union(V2cset));
                     if (b.isOne()) {
                         System.out.println("        all contexts");
                     } else if (b.satCount(V1cset) > 16) {
@@ -1874,7 +1875,7 @@ public class PA {
                     } else {
                         for (Iterator m = r.iterator(V1cset); m.hasNext(); ) {
                             BDD t = (BDD) m.next();
-                            System.out.println("        context "+t.exist(IMset.and(V2cset)).toStringWithDomains(TS));
+                            System.out.println("        context "+t.exist(IMset.union(V2cset)).toStringWithDomains(TS));
                         }
                     }
                 }
@@ -1892,7 +1893,7 @@ public class PA {
                 BigInteger H_i = r.scanVar(H1);
                 System.out.println("  "+TS.elementName(H1.getIndex(), H_i));
                 if (USE_VCONTEXT) {
-                    BDD a = r.exist(V1.set().and(H1set));
+                    BDD a = r.exist(V1.set().union(H1set));
                     if (a.isOne()) {
                         System.out.println("    under all contexts");
                     } else {
@@ -1979,7 +1980,7 @@ public class PA {
             IEcs.orWith(t7);
             
             // Add the context for statically-bound call edges.
-            BDD t8 = staticCalls.relprod(vP, V1.set().and(H1.set())); // V1xIxM x V1cxV1xH1cxH1 = V1cxIxH1cxM
+            BDD t8 = staticCalls.relprod(vP, V1.set().union(H1.set())); // V1xIxM x V1cxV1xH1cxH1 = V1cxIxH1cxM
             t8.replaceWith(V1cH1ctoV2cV1c); // V2cxIxV1cxM
             IEcs.orWith(t8);
         } else if (CARTESIAN_PRODUCT) {
@@ -2018,7 +2019,7 @@ public class PA {
                 BDD t9 = t8.relprod(vP, V1.set()); // IxV1 x V1cxV1xH1cxH1 = V1cxIxH1cxH1
                 if (TRACE_BIND) {
                     System.out.println("t9 =");
-                    dumpWithV1c(t9, Iset.and(H1set));
+                    dumpWithV1c(t9, Iset.union(H1set));
                 }
                 t8.free();
                 
@@ -2046,7 +2047,7 @@ public class PA {
             // Now, filter out unrealizables.
             // IxV1c[i]xV1xH1cxH1 x V2cxIxV1c[i] = V1cxV1xH1cxH1
 // 13%
-            BDD newPt2 = newPt.relprod(context, V2cset.and(Iset));
+            BDD newPt2 = newPt.relprod(context, V2cset.union(Iset));
             newPt.free();
             if (TRACE_BIND) dumpVP(newPt2);
             
@@ -2188,7 +2189,7 @@ public class PA {
         if(REFLECTION_STAT){
             System.out.println("There are " + (int)t11.satCount(Iset) + " calls to Class.newInstance");
         }
-        BDD t3  = t2.relprod(t11, bdd.zero());          // IxV1
+        BDD t3  = t2.and(t11);          // IxV1
         t11.free();
         t1.free();
         BDD t31 = t3.replace(ItoI2);                    // I2xV1
@@ -2208,7 +2209,7 @@ public class PA {
         t4.free();
         if(TRACE_REFLECTION && TRACE) out.println("t41: " + t41.toStringWithDomains(TS) + " of size " + t41.satCount(Iset));
         
-        BDD t6 = t41.relprod(actual, Iset.and(H1set));  // V2xI2xZ
+        BDD t6 = t41.relprod(actual, Iset.union(H1set));  // V2xI2xZ
         if(TRACE_REFLECTION_DOMAINS) out.println("t6: " + getBDDDomains(t6));
         t41.free();
         BDD t7 = t6.restrict(Z.ithVar(1));              // V2xI2
@@ -2228,7 +2229,7 @@ public class PA {
             out.println("t9: " + getBDDDomains(t9));
         }
         BDD constructorIE = bdd.zero(); 
-        for(Iterator iter = t9.iterator(H1set.and(I2set)); iter.hasNext();){
+        for(Iterator iter = t9.iterator(H1set.union(I2set)); iter.hasNext();){
             BDD h = (BDD) iter.next();
             //if(TRACE_REFLECTION_DOMAINS) out.println("h: " + getBDDDomains(h));
             int h_i = h.scanVar(H1).intValue();
@@ -2321,7 +2322,7 @@ public class PA {
         constructorIE.free();
         if(TRACE_REFLECTION && !reflectiveCalls.isZero()){
             out.println("reflectiveCalls: " + reflectiveCalls.toStringWithDomains(TS) + 
-                " of size " + reflectiveCalls.satCount(Iset.and(Mset)));
+                " of size " + reflectiveCalls.satCount(Iset.union(Mset)));
         }
         
         BDD new_reflectiveCalls = reflectiveCalls.apply(old_reflectiveCalls, BDDFactory.diff);
@@ -2331,11 +2332,11 @@ public class PA {
             if(TRACE_REFLECTION) {
                 out.println("Discovered new_reflectiveCalls: " + 
                     new_reflectiveCalls.toStringWithDomains(TS) + 
-                    " of size " + new_reflectiveCalls.satCount(Iset.and(H1set)));
+                    " of size " + new_reflectiveCalls.satCount(Iset.union(H1set)));
             }
             
             // add the new points-to for reflective calls
-            for(Iterator iter = new_reflectiveCalls.iterator(Iset.and(Mset)); iter.hasNext();){
+            for(Iterator iter = new_reflectiveCalls.iterator(Iset.union(Mset)); iter.hasNext();){
                 BDD i_bdd = (BDD) iter.next();
                 int I_i = i_bdd.scanVar(I).intValue();
                 ProgramLocation mc = (ProgramLocation) Imap.get(I_i);
@@ -2398,21 +2399,21 @@ public class PA {
         if(REFLECTION_STAT){
             System.out.println("There are " + (int)t1.satCount(Iset) + " calls to Class.newInstance");
         }
-        BDD t3  = Iret.relprod(t1, bdd.zero()).replace(V1toV2);         // IxV2                      
-        BDD t32 = t3.relprod(A, bdd.zero());                            // I1xV2 x V1xV2 = I1xV1xV2
+        BDD t3  = Iret.and(t1).replace(V1toV2);         // IxV2                      
+        BDD t32 = t3.and(A);                            // I1xV2 x V1xV2 = I1xV1xV2
         //System.out.println("t32: " + t32.toStringWithDomains(TS));
         Assert._assert(T1.size().equals(T2.size()));
         BDD notEqualTypes = (buildEquals(T1, T2)).not();
-        BDD t33 = t32.relprod(vT, bdd.zero());                          // I1xV1xV2 x V1xT1 = I1xV1xV2xT1
+        BDD t33 = t32.and(vT);                          // I1xV1xV2 x V1xT1 = I1xV1xV2xT1
         //System.out.println("t33: " + t33.toStringWithDomains(TS));
-        BDD t34 = t33.relprod(vT.replace(V1toV2).replace(T1toT2), bdd.zero());          // I2xV1xV2xT1 x V2xT2 = I2xV1xV2xT1xT2
+        BDD t34 = t33.and(vT.replace(V1toV2).replace(T1toT2));          // I2xV1xV2xT1 x V2xT2 = I2xV1xV2xT1xT2
         //System.out.println("t34: " + t34.toStringWithDomains(TS));
         BDD tuples = t34.relprod(notEqualTypes, T2set);
         //System.out.println("t35: " + t35.toStringWithDomains(TS));      // V1xV2xIxT1
         t1.free(); t3.free(); t32.free(); t33.free(); t34.free();
         
         BDD constructorIE = bdd.zero();
-        for(Iterator iter = tuples.iterator(V1set.and(V2set).and(Iset).and(T1set)); iter.hasNext();){
+        for(Iterator iter = tuples.iterator(V1set.union(V2set).union(Iset).union(T1set)); iter.hasNext();){
             BDD tuple = (BDD) iter.next();
             int V1_i = tuple.scanVar(V1).intValue();
             int V2_i = tuple.scanVar(V2).intValue();
@@ -2466,7 +2467,7 @@ public class PA {
 
         if(TRACE_REFLECTION && !reflectiveCalls.isZero()){
             out.println("reflectiveCalls: " + reflectiveCalls.toStringWithDomains(TS) + 
-                " of size " + reflectiveCalls.satCount(Iset.and(Mset)));
+                " of size " + reflectiveCalls.satCount(Iset.union(Mset)));
         }
         
         BDD new_reflectiveCalls = reflectiveCalls.apply(old_reflectiveCalls, BDDFactory.diff);
@@ -2476,11 +2477,11 @@ public class PA {
             if(TRACE_REFLECTION) {
                 out.println("Discovered new_reflectiveCalls: " + 
                     new_reflectiveCalls.toStringWithDomains(TS) + 
-                    " of size " + new_reflectiveCalls.satCount(Iset.and(Mset)));
+                    " of size " + new_reflectiveCalls.satCount(Iset.union(Mset)));
             }
             
             // add the new points-to for reflective calls
-            for(Iterator iter = new_reflectiveCalls.iterator(Iset.and(Mset)); iter.hasNext();){
+            for(Iterator iter = new_reflectiveCalls.iterator(Iset.union(Mset)); iter.hasNext();){
                 BDD i_bdd = (BDD) iter.next();
                 int I_i = i_bdd.scanVar(I).intValue();
                 ProgramLocation mc = (ProgramLocation) Imap.get(I_i);
@@ -2790,7 +2791,7 @@ public class PA {
                 BDD t9_i = t8_i.relprod(vP, V1.set()); // IxV1 x V1cxV1xH1cxH1 = V1cxIxH1cxH1
                 if (TRACE_BIND) {
                     System.out.println("t9 =");
-                    dumpWithV1c(t9_i, Iset.and(H1set));
+                    dumpWithV1c(t9_i, Iset.union(H1set));
                 }
                 t8_i.free();
                 
@@ -2820,7 +2821,7 @@ public class PA {
             // Now, filter out unrealizables.
             // IxV1c[i]xV1xH1cxH1 x V2cxIxV1c[i] = V1cxV1xH1cxH1
 // 13%
-            BDD newPt2 = newPt.relprod(newContext, V2cset.and(Iset));
+            BDD newPt2 = newPt.relprod(newContext, V2cset.union(Iset));
             newPt.free();
             if (TRACE_BIND) dumpVP(newPt2);
             
@@ -3677,15 +3678,10 @@ public class PA {
     }
     
     public static List activeDomains(BDD r) {
-        BDDFactory bdd = r.getFactory();
-        BDD s = r.support();
-        int[] a = s.scanSetDomains();
+        BDDVarSet s = r.support();
+        BDDDomain[] a = s.getDomains();
         s.free();
-        if (a == null) return null;
-        List result = new ArrayList(a.length);
-        for (int i = 0; i < a.length; ++i) {
-            result.add(bdd.getDomain(a[i]));
-        }
+        List result = Arrays.asList(a);
         return result;
     }
     
@@ -3747,31 +3743,31 @@ public class PA {
         bdd_save(dumpfilename+".S", S);
         System.out.println("L: "+(long) L.satCount(V1FV2set)+" relations, "+L.nodeCount()+" nodes");
         bdd_save(dumpfilename+".L", L);
-        System.out.println("vT: "+(long) vT.satCount(V1.set().and(T1set))+" relations, "+vT.nodeCount()+" nodes");
+        System.out.println("vT: "+(long) vT.satCount(V1.set().union(T1set))+" relations, "+vT.nodeCount()+" nodes");
         bdd_save(dumpfilename+".vT", vT);
-        System.out.println("hT: "+(long) hT.satCount(H1.set().and(T2set))+" relations, "+hT.nodeCount()+" nodes");
+        System.out.println("hT: "+(long) hT.satCount(H1.set().union(T2set))+" relations, "+hT.nodeCount()+" nodes");
         bdd_save(dumpfilename+".hT", hT);
-        System.out.println("aT: "+(long) aT.satCount(T1set.and(T2set))+" relations, "+aT.nodeCount()+" nodes");
+        System.out.println("aT: "+(long) aT.satCount(T1set.union(T2set))+" relations, "+aT.nodeCount()+" nodes");
         bdd_save(dumpfilename+".aT", aT);
-        System.out.println("cha: "+(long) cha.satCount(T2Nset.and(Mset))+" relations, "+cha.nodeCount()+" nodes");
+        System.out.println("cha: "+(long) cha.satCount(T2Nset.union(Mset))+" relations, "+cha.nodeCount()+" nodes");
         bdd_save(dumpfilename+".cha", cha);
-        System.out.println("actual: "+(long) actual.satCount(Iset.and(Zset).and(V2.set()))+" relations, "+actual.nodeCount()+" nodes");
+        System.out.println("actual: "+(long) actual.satCount(Iset.union(Zset).union(V2.set()))+" relations, "+actual.nodeCount()+" nodes");
         bdd_save(dumpfilename+".actual", actual);
-        System.out.println("formal: "+(long) formal.satCount(MZset.and(V1.set()))+" relations, "+formal.nodeCount()+" nodes");
+        System.out.println("formal: "+(long) formal.satCount(MZset.union(V1.set()))+" relations, "+formal.nodeCount()+" nodes");
         bdd_save(dumpfilename+".formal", formal);
-        System.out.println("Iret: "+(long) Iret.satCount(Iset.and(V1.set()))+" relations, "+Iret.nodeCount()+" nodes");
+        System.out.println("Iret: "+(long) Iret.satCount(Iset.union(V1.set()))+" relations, "+Iret.nodeCount()+" nodes");
         bdd_save(dumpfilename+".Iret", Iret);
-        System.out.println("Mret: "+(long) Mret.satCount(Mset.and(V2.set()))+" relations, "+Mret.nodeCount()+" nodes");
+        System.out.println("Mret: "+(long) Mret.satCount(Mset.union(V2.set()))+" relations, "+Mret.nodeCount()+" nodes");
         bdd_save(dumpfilename+".Mret", Mret);
-        System.out.println("Ithr: "+(long) Ithr.satCount(Iset.and(V1.set()))+" relations, "+Ithr.nodeCount()+" nodes");
+        System.out.println("Ithr: "+(long) Ithr.satCount(Iset.union(V1.set()))+" relations, "+Ithr.nodeCount()+" nodes");
         bdd_save(dumpfilename+".Ithr", Ithr);
-        System.out.println("Mthr: "+(long) Mthr.satCount(Mset.and(V2.set()))+" relations, "+Mthr.nodeCount()+" nodes");
+        System.out.println("Mthr: "+(long) Mthr.satCount(Mset.union(V2.set()))+" relations, "+Mthr.nodeCount()+" nodes");
         bdd_save(dumpfilename+".Mthr", Mthr);
-        System.out.println("mI: "+(long) mI.satCount(INset.and(Mset))+" relations, "+mI.nodeCount()+" nodes");
+        System.out.println("mI: "+(long) mI.satCount(INset.union(Mset))+" relations, "+mI.nodeCount()+" nodes");
         bdd_save(dumpfilename+".mI", mI);
-        System.out.println("mV: "+(long) mV.satCount(Mset.and(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
+        System.out.println("mV: "+(long) mV.satCount(Mset.union(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
         bdd_save(dumpfilename+".mV", mV);
-        System.out.println("mC: "+(long) mC.satCount(Mset.and(C.set()))+" relations, "+mC.nodeCount()+" nodes");
+        System.out.println("mC: "+(long) mC.satCount(Mset.union(C.set()))+" relations, "+mC.nodeCount()+" nodes");
         bdd_save(dumpfilename+".mC", mC);
         System.out.println("sync: "+(long) sync.satCount(V1.set())+" relations, "+sync.nodeCount()+" nodes");
         bdd_save(dumpfilename+".sync", sync);
@@ -3783,15 +3779,15 @@ public class PA {
         bdd_save(dumpfilename+".IE", IE);
         BuildBDDIR.dumpTuples(bdd, dumpfilename+".IE.tuples", IE);
         if (IEcs != null) {
-            System.out.println("IEcs: "+(long) IEcs.satCount(IMset.and(V1cV2cset))+" relations, "+IEcs.nodeCount()+" nodes");
+            System.out.println("IEcs: "+(long) IEcs.satCount(IMset.union(V1cV2cset))+" relations, "+IEcs.nodeCount()+" nodes");
             bdd_save(dumpfilename+".IEcs", IEcs);
         }
         if (vPfilter != null) {
-            System.out.println("vPfilter: "+(long) vPfilter.satCount(V1.set().and(H1.set()))+" relations, "+vPfilter.nodeCount()+" nodes");
+            System.out.println("vPfilter: "+(long) vPfilter.satCount(V1.set().union(H1.set()))+" relations, "+vPfilter.nodeCount()+" nodes");
             bdd_save(dumpfilename+".vPfilter", vPfilter);
         }
         if (hPfilter != null) {
-            System.out.println("hPfilter: "+(long) hPfilter.satCount(H1.set().and(Fset).and(H1.set()))+" relations, "+hPfilter.nodeCount()+" nodes");
+            System.out.println("hPfilter: "+(long) hPfilter.satCount(H1.set().union(Fset).union(H1.set()))+" relations, "+hPfilter.nodeCount()+" nodes");
             bdd_save(dumpfilename+".hPfilter", hPfilter);
         }
         if (IEfilter != null) {
@@ -5490,15 +5486,15 @@ public class PA {
         BDDDomain quad = bddIRBuilder.getQuadDomain();
         BDDDomain member = bddIRBuilder.getMemberDomain();
         System.out.println("vReg: "
-                + (long) vReg.satCount(V1.set().and(reg.set().and(M.set())))
+                + (long) vReg.satCount(V1.set().union(reg.set().union(M.set())))
                 + " relations, " + vReg.nodeCount() + " nodes");
         bdd_save(dumpPath + "/vReg.bdd", vReg);
         System.out.println("iQuad: "
-                + (long) iQuad.satCount(I.set().and(quad.set()))
+                + (long) iQuad.satCount(I.set().union(quad.set()))
                 + " relations, " + iQuad.nodeCount() + " nodes");
         bdd_save(dumpPath + "/iQuad.bdd", iQuad);
         System.out.println("fMember: "
-                + (long) fMember.satCount(F.set().and(member.set()))
+                + (long) fMember.satCount(F.set().union(member.set()))
                 + " relations, " + fMember.nodeCount() + " nodes");
         bdd_save(dumpPath + "/fMember.bdd", fMember);
         //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");

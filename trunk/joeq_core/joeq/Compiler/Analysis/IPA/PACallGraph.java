@@ -18,6 +18,7 @@ import jwutil.util.Assert;
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDDomain;
 import net.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDDVarSet;
 
 /**
  * PACallGraph
@@ -92,7 +93,7 @@ public class PACallGraph extends CallGraph {
     public static class BDDSet extends AbstractSet {
         BDD b;
         BDDDomain d;
-        BDD dset;
+        BDDVarSet dset;
         IndexedMap map;
         public BDDSet(BDD b, BDDDomain d, IndexedMap map) {
             this.b = b;
