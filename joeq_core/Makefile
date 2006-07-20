@@ -1,6 +1,6 @@
 #MODULES = $(wildcard ../*)
 MODULES = ../joeq_core ../joeq_native ../joeq_x86
-SUPPORT_LIBS = joeq/Support/javabdd-1.0b2.jar joeq/Support/jwutil-1.0.jar
+SUPPORT_LIBS = joeq/Support/javabdd-2.0.jar joeq/Support/jwutil-1.0.jar
 JDK14SUPPORT_LIB = joeq/Support/java14.jar
 
 ifeq (${OS},Windows_NT)
@@ -70,7 +70,7 @@ commit:
 ### RULES FOR BUILDING BOOT IMAGES
 #
 bootstrap:	joeq/Main/Bootstrapper.class
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx480M joeq.Main.Bootstrapper
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx600M joeq.Main.Bootstrapper
 
 bootstrap-sun142-linux:	javac
 	java -cp $(BOOTSTRAP_CLASSPATH) -ms320M -mx320M joeq.Main.Bootstrapper -cl ../joeq_native/joeq/ClassLib/sun142_linux/classlist.txt
