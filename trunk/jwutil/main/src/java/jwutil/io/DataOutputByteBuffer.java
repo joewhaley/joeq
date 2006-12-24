@@ -31,7 +31,7 @@ public class DataOutputByteBuffer implements DataOutput {
      * @see java.io.DataOutput#write(int)
      */
     public void write(int b) throws IOException {
-        buf.putInt(b);
+        buf.put((byte)b);
     }
 
     /* (non-Javadoc)

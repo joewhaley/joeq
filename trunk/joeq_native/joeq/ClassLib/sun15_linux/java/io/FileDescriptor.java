@@ -15,10 +15,17 @@ class FileDescriptor {
     static FileDescriptor out;
     static FileDescriptor err;
     
+    private /* */ FileDescriptor(int fd) {
+	this.fd = fd;
+    }
+    
     public static void init() {
-        in.fd = 0;
-        out.fd = 1;
-        err.fd = 2;
+        in = new FileDescriptor(0);
+        out = new FileDescriptor(0);
+        err = new FileDescriptor(0);
+        //in.fd = 0;
+        //out.fd = 1;
+        //err.fd = 2;
     }
     
 }

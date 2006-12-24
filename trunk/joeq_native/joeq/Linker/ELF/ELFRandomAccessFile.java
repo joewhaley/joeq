@@ -96,7 +96,7 @@ public class ELFRandomAccessFile extends ELFImpl {
     }
     
     public void write_byte(byte v) throws IOException {
-        file.write(v);
+        file.writeByte(v);
     }
     
     public void write_bytes(byte[] v) throws IOException {
@@ -105,25 +105,25 @@ public class ELFRandomAccessFile extends ELFImpl {
     
     public void write_half(int v) throws IOException {
         if (isLittleEndian()) {
-            file.write((byte)v);
-            file.write((byte)(v>>8));
+            file.writeByte((byte)v);
+            file.writeByte((byte)(v>>8));
         } else {
-            file.write((byte)(v>>8));
-            file.write((byte)v);
+            file.writeByte((byte)(v>>8));
+            file.writeByte((byte)v);
         }
     }
     
     public void write_word(int v) throws IOException {
         if (isLittleEndian()) {
-            file.write((byte)v);
-            file.write((byte)(v>>8));
-            file.write((byte)(v>>16));
-            file.write((byte)(v>>24));
+            file.writeByte((byte)v);
+            file.writeByte((byte)(v>>8));
+            file.writeByte((byte)(v>>16));
+            file.writeByte((byte)(v>>24));
         } else {
-            file.write((byte)(v>>24));
-            file.write((byte)(v>>16));
-            file.write((byte)(v>>8));
-            file.write((byte)v);
+            file.writeByte((byte)(v>>24));
+            file.writeByte((byte)(v>>16));
+            file.writeByte((byte)(v>>8));
+            file.writeByte((byte)v);
         }
     }
     

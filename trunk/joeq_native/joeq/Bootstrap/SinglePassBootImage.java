@@ -1443,7 +1443,13 @@ public class SinglePassBootImage implements ELFConstants {
             e = new SymbolTableEntry("joeq_code_startaddress", 0, 0, STB_GLOBAL, STT_OBJECT, text);
             symtab.addSymbol(e);
 
+            e = new SymbolTableEntry("joeq_code_endaddress", bca.size(), 0, STB_GLOBAL, STT_OBJECT, text);
+            symtab.addSymbol(e);
+
             e = new SymbolTableEntry("joeq_data_startaddress", 0, 0, STB_GLOBAL, STT_OBJECT, data);
+            symtab.addSymbol(e);
+
+            e = new SymbolTableEntry("joeq_data_endaddress", heapCurrent, 0, STB_GLOBAL, STT_OBJECT, data);
             symtab.addSymbol(e);
         }
 
@@ -1521,7 +1527,7 @@ public class SinglePassBootImage implements ELFConstants {
                 byte[] b;
                 if (heapBuffer.hasArray()) b = heapBuffer.array();
                 else {
-                    b = new byte[heapBuffer.position()];
+                    b = new byte[heapCurrent];
                     heapBuffer.position(0);
                     heapBuffer.get(b);
                 }
