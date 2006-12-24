@@ -22,7 +22,7 @@ public class ELFOutput extends ELFImpl {
     public DataOutput getOutput() { return out; }
     
     public void write_byte(byte v) throws IOException {
-        out.write(v);
+        out.writeByte(v);
     }
     
     public void write_bytes(byte[] v) throws IOException {

@@ -50,6 +50,11 @@ public class Interface extends joeq.ClassLib.sun142_linux.Interface {
             k = (jq_Class) PrimordialClassLoader.getJavaLangClass();
             nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
             
+            // generated during reflective access.
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Field;");
+            nullInstanceFields.add(k.getOrCreateInstanceField("fieldAccessor", "Lsun/reflect/FieldAccessor;"));
+            nullInstanceFields.add(k.getOrCreateInstanceField("overrideFieldAccessor", "Lsun/reflect/FieldAccessor;"));
+
             // crashes on reflective access.
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/reflect/UnsafeStaticFieldAccessorImpl;");
             nullInstanceFields.add(k.getOrCreateInstanceField("base", "Ljava/lang/Object;"));
@@ -74,6 +79,12 @@ public class Interface extends joeq.ClassLib.sun142_linux.Interface {
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/misc/Cleaner;");
             nullStaticFields.add(k.getOrCreateStaticField("first", "Lsun/misc/Cleaner;"));
             nullStaticFields.add(k.getOrCreateStaticField("dummyQueue", "Ljava/lang/ref/ReferenceQueue;"));
+
+            // reflective access not allowed.
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
+            nullStaticFields.add(k.getOrCreateStaticField("in", "Ljava/io/FileDescriptor;"));
+            nullStaticFields.add(k.getOrCreateStaticField("out", "Ljava/io/FileDescriptor;"));
+            nullStaticFields.add(k.getOrCreateStaticField("err", "Ljava/io/FileDescriptor;"));
 
             // we need to reinitialize in/out/err on startup.
             if (jq.on_vm_startup != null) {
