@@ -80,37 +80,15 @@ public class Interface extends joeq.ClassLib.sun142_linux.Interface {
             nullStaticFields.add(k.getOrCreateStaticField("first", "Lsun/misc/Cleaner;"));
             nullStaticFields.add(k.getOrCreateStaticField("dummyQueue", "Ljava/lang/ref/ReferenceQueue;"));
 
-            // reflective access not allowed.
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
-            nullStaticFields.add(k.getOrCreateStaticField("in", "Ljava/io/FileDescriptor;"));
-            nullStaticFields.add(k.getOrCreateStaticField("out", "Ljava/io/FileDescriptor;"));
-            nullStaticFields.add(k.getOrCreateStaticField("err", "Ljava/io/FileDescriptor;"));
+            // Leads to an open file handle.
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/security/provider/NativePRNG;");
+            nullStaticFields.add(k.getOrCreateStaticField("INSTANCE", "Lsun/security/provider/NativePRNG$RandomIO;"));
 
-            // we need to reinitialize in/out/err on startup.
-            if (jq.on_vm_startup != null) {
-                Object[] args = { } ;
-                k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
-                joeq.Class.jq_Method init_fd = k.getOrCreateStaticMethod("init", "()V");
-                joeq.Bootstrap.MethodInvocation mi = new joeq.Bootstrap.MethodInvocation(init_fd, args);
-                jq.on_vm_startup.add(mi);
-                System.out.println("Added call to reinitialize in/out/err file descriptors on joeq startup: "+mi);
-            }
+            // Leads to an open file handle.
+            // TODO: needs reinit.
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/security/provider/SeedGenerator;");
+            nullStaticFields.add(k.getOrCreateStaticField("instance", "Lsun/security/provider/SeedGenerator;"));
         }
-        
-        /*
-        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
-            if (o instanceof FileDescriptor) {
-                String fieldName = f.getName().toString();
-                if (fieldName.equals("fd")) {
-                    if (o == FileDescriptor.in) return Integer.valueOf(0);
-                    if (o == FileDescriptor.out) return Integer.valueOf(1);
-                    if (o == FileDescriptor.err) return Integer.valueOf(2);
-                    System.out.println("File descriptor will be stale: "+o);
-                }
-            }
-            return super.mapInstanceField(o, f);
-        }
-        */
         
         public static final jq_StaticField valueOffsetField;
         
@@ -130,4 +108,5 @@ public class Interface extends joeq.ClassLib.sun142_linux.Interface {
             return super.mapStaticField(f);
         }
     }
+
 }

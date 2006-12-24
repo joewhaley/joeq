@@ -116,6 +116,9 @@ public abstract class ObjectTraverser {
         } catch (IllegalAccessException x) {
             Assert.UNREACHABLE();
             return null;
+        } catch (IllegalArgumentException x) {
+            System.err.println("Cannot access "+f2+" in object of type "+base.getClass());
+            throw x;
         }
     }
     

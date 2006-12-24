@@ -1379,7 +1379,13 @@ public class MultiPassBootImage implements ELFConstants {
             e = new SymbolTableEntry("joeq_code_startaddress", 0, 0, STB_GLOBAL, STT_OBJECT, text);
             symtab.addSymbol(e);
 
+            e = new SymbolTableEntry("joeq_code_endaddress", bca.size(), 0, STB_GLOBAL, STT_OBJECT, text);
+            symtab.addSymbol(e);
+
             e = new SymbolTableEntry("joeq_data_startaddress", 0, 0, STB_GLOBAL, STT_OBJECT, data);
+            symtab.addSymbol(e);
+
+            e = new SymbolTableEntry("joeq_data_endaddress", heapCurrent, 0, STB_GLOBAL, STT_OBJECT, data);
             symtab.addSymbol(e);
         }
 

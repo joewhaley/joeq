@@ -357,6 +357,19 @@ public class SinglePassBootImage implements ELFConstants {
         jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
         if (TRACE)
             out.println("Laying out object @"+addr.stringRep()+": "+objType+" "+Strings.hex(System.identityHashCode(o)));
+        if (o instanceof java.io.FileDescriptor &&
+            o != java.io.FileDescriptor.in &&
+            o != java.io.FileDescriptor.out &&
+            o != java.io.FileDescriptor.err) {
+            int fd = Reflection.getfield_I(o, ((jq_Class)jqType).getOrCreateInstanceField("fd", "I"));
+            out.println("Warning: File descriptor "+fd+" will not be valid in bootstrap image.");
+            HashSet visited = new HashSet();
+            UnknownObjectException x = new UnknownObjectException(o);
+            boolean found = findReferencePath(o, x, visited);
+            if (found) {
+                SinglePassBootImage.out.println(x);
+            }
+        }
         int status = 0;
         HeapAddress p_vtable = (HeapAddress) addr.offset(ObjectLayout.VTABLE_OFFSET);
         HeapAddress vtable = getAddressOf(p_vtable, jqType.getVTable());

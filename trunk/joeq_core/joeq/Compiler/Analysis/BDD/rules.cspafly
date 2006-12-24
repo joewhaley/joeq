@@ -5,7 +5,7 @@ hP(h1,f,h2) :- vP(vc1,v1,h1), S(v1,f,v2), vP(vc1,v2,h2). split
 vP(vc1,v2,h2) :- vP(vc1,v1,h1), L(v1,f,v2), hP(h1,f,h2), vPfilter(v2,h2). split
 A(vc1,v1,vc2,v2) :- formal(m,z,v1), IE(vc2,i,vc1,m), actual(i,z,v2).
 A(vc2,v2,vc1,v1) :- Mret(m,v1), IE(vc2,i,vc1,m), Iret(i,v2).
-A(vc2,v2,vc1,v1) :- Mthr(m,v1), IE(vc2,i,vc1,m), Ithr(i,v2).
+# A(vc2,v2,vc1,v1) :- Mthr(m,v1), IE(vc2,i,vc1,m), Ithr(i,v2).
 
 IE(vc2,i,vc1,m2) :- mI(m1,i,n), actual(i,0,v), vP(vc2,v,h), hT(h,t), cha(t,n,m2), IEfilter(vc2,i,vc1,m2). split
 
