@@ -61,7 +61,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     Map/*ProgramLocation,Quad*/ allocMap;
     
     String dumpDir = System.getProperty("bdddumpdir", "");
-    boolean DUMP_TUPLES = !System.getProperty("dumptuples", "yes").equals("no");
+    boolean DUMP_TUPLES = !System.getProperty("dumptuples", "no").equals("no");
 
     String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_opc_srcs_dest_srcNum";
     
@@ -699,7 +699,9 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     
     public int quadIdFromInvokeBCLocation(ProgramLocation.BCProgramLocation bc) {
         Object o = invokeMap.get(bc);
-        Assert._assert(o != null);
+        if (o == null) {
+            Assert.UNREACHABLE(bc+" has no mapping");
+        }
         return quadMap.get(o);
     }
     
