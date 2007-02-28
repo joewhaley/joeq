@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Interpreter;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,8 +30,10 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import joeq.Main.HostedVM;
 import joeq.Memory.Address;
 import joeq.Runtime.Reflection;
+import joeq.UTF.Utf8;
 import joeq.Util.Templates.ListIterator;
 import jwutil.collections.Filter;
 import jwutil.util.Assert;
@@ -261,6 +264,36 @@ public class QuadInterpreter extends joeq.Compiler.Quad.QuadVisitor.EmptyVisitor
             public void checkWrite(String file) {}
         };
         System.setSecurityManager(sm);
+    }
+    
+    public static void main(String[] s_args) throws Throwable {
+        String s = s_args[0];
+        int dotloc = s.lastIndexOf('.');
+        String rootMethodClassName = s.substring(0, dotloc);
+        String rootMethodName = s.substring(dotloc+1);
+        
+        HostedVM.initialize();
+        
+        jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
+        c.cls_initialize();
+
+        jq_StaticMethod rootm = null;
+        Utf8 rootm_name = Utf8.get(rootMethodName);
+        for(Iterator it = Arrays.asList(c.getDeclaredStaticMethods()).iterator();
+            it.hasNext(); ) {
+            jq_StaticMethod m = (jq_StaticMethod)it.next();
+            if (m.getName() == rootm_name) {
+                rootm = m;
+                break;
+            }
+        }
+        if (rootm == null)
+            Assert.UNREACHABLE("root method not found: "+rootMethodClassName+"."+rootMethodName);
+        Object[] args = ReflectiveInterpreter.parseMethodArgs(rootm.getParamWords(), rootm.getParamTypes(), s_args, 0);
+        
+        QuadInterpreter q = interpretMethod(rootm, args);
+        
+        System.out.println(q);
     }
     
     public static QuadInterpreter interpretMethod(jq_Method f, Object[] params) {
