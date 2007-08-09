@@ -14,7 +14,7 @@ The joeq bootstrapping technique is detailed in the following paper:
 </p>
 <p>
 John Whaley.
-<a href="http://www.stanford.edu/~jwhaley/papers/reflection01.pdf">System
+<a href="http://suif.stanford.edu/~jwhaley/papers/reflection01.pdf">System
 Checkpointing Using Reflection and Program Analysis</a>.
 Proceedings of the Third International Conference on Metalevel Architectures
 and Separation of Crosscutting Concerns, REFLECTION 2001, Kyoto, Japan,
@@ -81,7 +81,7 @@ on an object that requires some code to be executed, we add that code to
 a list in jq.on_vm_startup.  Code in that list is executed at program startup.
 </p>
 <p>
-<a href="http://www.stanford.edu/~jwhaley/papers/reflection01.pdf">System
+<a href="http://suif.stanford.edu/~jwhaley/papers/reflection01.pdf">System
 Checkpointing Using Reflection and Program Analysis</a>.
 </p>
     </section>
