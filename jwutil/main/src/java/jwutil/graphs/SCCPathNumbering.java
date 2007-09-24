@@ -87,14 +87,14 @@ public class SCCPathNumbering extends PathNumbering {
         if (TRACE_NUMBERING) System.out.print("done.");
         if (TRACE_NUMBERING) System.out.print("Root SCCs: " + sccs);
         
-        DumpDotGraph ddg = new DumpDotGraph();
+        /* DumpDotGraph ddg = new DumpDotGraph();
         ddg.setNavigator(graph.getNavigator());
         ddg.setNodeSet(new HashSet(graph.list()));
         try {
             ddg.dump("out.txt");
         } catch (IOException e1) {
             e1.printStackTrace();
-        }
+        } */
         
         SCComponent scc = graph.getFirst();
         while (scc != null) {
@@ -198,9 +198,6 @@ public class SCCPathNumbering extends PathNumbering {
     }
     
     private void addEdges(SCComponent scc1) {
-        if(scc1.getId() == 36 || scc1.getId() == 14) {
-            System.out.println("HERE");
-        }
         if (TRACE_NUMBERING) System.out.println("Adding edges SCC"+scc1.getId());
         Range r1 = (Range) sccNumbering.get(scc1);
         if (scc1.prevLength() == 0) {
