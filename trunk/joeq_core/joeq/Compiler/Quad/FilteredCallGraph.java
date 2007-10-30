@@ -35,7 +35,7 @@ public class FilteredCallGraph extends CallGraph {
     }
     
     public void setRoots(Collection roots) {
-        Assert.UNREACHABLE();
+        base.setRoots(roots);
     }
     
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
