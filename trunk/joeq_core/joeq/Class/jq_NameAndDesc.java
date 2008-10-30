@@ -25,7 +25,14 @@ public class jq_NameAndDesc {
     public final Utf8 getName() { return name; }
     public final Utf8 getDesc() { return desc; }
     
-    public boolean equals(Object o) { return equals((jq_NameAndDesc)o); }
+    public boolean equals(Object o) {
+        if (o instanceof jq_NameAndDesc) {
+            return equals((jq_NameAndDesc)o);
+        }
+        else {
+            return false;
+        }
+    } 
     public boolean equals(jq_NameAndDesc that) {
         return this.name == that.name && this.desc == that.desc;
     }
