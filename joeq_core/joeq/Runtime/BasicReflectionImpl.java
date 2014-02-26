@@ -528,44 +528,44 @@ uphere:
     }
     public void putstatic_I(jq_StaticField f, int v) {
         Assert._assert(f.getType() == jq_Primitive.INT);
-        f.getDeclaringClass().setStaticData(f, v);
+        Reflection.obj_trav.putStaticFieldValue(f, new Integer(v));
     }
     public void putstatic_L(jq_StaticField f, long v) {
         Assert._assert(f.getType() == jq_Primitive.LONG);
-        f.getDeclaringClass().setStaticData(f, v);
+        Reflection.obj_trav.putStaticFieldValue(f, new Long(v));
     }
     public void putstatic_F(jq_StaticField f, float v) {
         Assert._assert(f.getType() == jq_Primitive.FLOAT);
-        f.getDeclaringClass().setStaticData(f, v);
+        Reflection.obj_trav.putStaticFieldValue(f, new Float(v));
     }
     public void putstatic_D(jq_StaticField f, double v) {
         Assert._assert(f.getType() == jq_Primitive.DOUBLE);
-        f.getDeclaringClass().setStaticData(f, v);
+        Reflection.obj_trav.putStaticFieldValue(f, new Double(v));
     }
     public void putstatic_A(jq_StaticField f, Object v) {
         Assert._assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
         Assert._assert(!f.getType().isAddressType());
-        f.getDeclaringClass().setStaticData(f, v);
+        Reflection.obj_trav.putStaticFieldValue(f, v);
     }
     public void putstatic_P(jq_StaticField f, Address v) {
         Assert._assert(f.getType().isAddressType());
-        f.getDeclaringClass().setStaticData(f, v);
+        Reflection.obj_trav.putStaticFieldValue(f, v);
     }
     public void putstatic_Z(jq_StaticField f, boolean v) {
         Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
-        f.getDeclaringClass().setStaticData(f, v?1:0);
+        Reflection.obj_trav.putStaticFieldValue(f, Convert.getBoolean(v));
     }
     public void putstatic_B(jq_StaticField f, byte v) {
         Assert._assert(f.getType() == jq_Primitive.BYTE);
-        f.getDeclaringClass().setStaticData(f, (int)v);
+        Reflection.obj_trav.putStaticFieldValue(f, new Byte(v));
     }
     public void putstatic_S(jq_StaticField f, short v) {
         Assert._assert(f.getType() == jq_Primitive.SHORT);
-        f.getDeclaringClass().setStaticData(f, (int)v);
+        Reflection.obj_trav.putStaticFieldValue(f, new Short(v));
     }
     public void putstatic_C(jq_StaticField f, char v) {
         Assert._assert(f.getType() == jq_Primitive.CHAR);
-        f.getDeclaringClass().setStaticData(f, (int)v);
+        Reflection.obj_trav.putStaticFieldValue(f, new Character(v));
     }
     
     public int arraylength(Object o) {
